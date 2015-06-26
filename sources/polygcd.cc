@@ -886,9 +886,7 @@ const poly polygcd::gcd_modular_dense_interpolation (const poly &a, const poly &
 
 	// if univariate, then use Euclidean algorithm
 	if (x.size() == 1) {
-		poly gcd = gcd_Euclidean(a,b);
-		if (gcd.degree(x[0]) == 0) return poly(BHEAD 1);
-		else return gcd;
+		return gcd_Euclidean(a,b);
 	}
 
 	// if shape is known, use sparse interpolation
@@ -912,8 +910,12 @@ const poly polygcd::gcd_modular_dense_interpolation (const poly &a, const poly &
 	poly lcoeffb(ppb.lcoeff_multivar(X));
 	poly gcdlcoeffs(gcd_Euclidean(lcoeffa,lcoeffb));
 
-	int n = MiN(ppa.degree(X), ppb.degree(X));
+	// calculate the degree bound for each variable
+	std::vector<int> degbound = ppa.compare_degree_vector(ppb) == -1 ? ppa.degree_vector() : ppb.degree_vector();
+	// TODO: quick way out if degbound[X] == 0?
+
 	poly res(BHEAD 0);
+	poly oldres(BHEAD 0);
 	poly newshape(BHEAD 0);
 	poly modpoly(BHEAD 1,a.modp);
 	
@@ -928,20 +930,21 @@ const poly polygcd::gcd_modular_dense_interpolation (const poly &a, const poly &
 
 		// calculate gcd recursively
 		poly gcdmodc(gcd_modular_dense_interpolation(amodc,bmodc,vector<int>(x.begin(),x.end()-1), newshape));
-		int m = gcdmodc.degree(x[x.size() - 2]);
+		int degcomp = gcdmodc.compare_degree_vector(degbound); // compare the maximum degrees
 
 		// normalize
 		gcdmodc = (gcdmodc * substitute(gcdlcoeffs,X,c)) / gcdmodc.integer_lcoeff();
 		poly simple(poly::simple_poly(BHEAD X,c,1,a.modp)); // (X-c) mod p
 
 		// if power is smaller, the old one was wrong
-		if (res.is_zero() || m < n) {
-			n = m;
+		if ((res.is_zero() && !degcomp) || degcomp < 0) {
+			degbound = gcdmodc.degree_vector();
 			res = gcdmodc;
 			newshape = gcdmodc; // set a new shape
 			modpoly = simple;
 		}
-		else if (m == n) {
+		else if (!degcomp) {
+			oldres = res;
 			// equal powers, so interpolate results
 			poly coeff_poly(substitute(modpoly,X,c));
 			WORD coeff_word = coeff_poly[2+AN.poly_num_vars] * coeff_poly[3+AN.poly_num_vars];
@@ -955,7 +958,7 @@ const poly polygcd::gcd_modular_dense_interpolation (const poly &a, const poly &
 		}
 
 		// check whether this is the complete gcd
-		if (res.lcoeff_multivar(X) == gcdlcoeffs) {
+		if (!res.is_zero() && res == oldres) {
 			poly nres = res / content_multivar(res, X);
 			if (poly::divides(nres,ppa) && poly::divides(nres,ppb)) {
 #ifdef DEBUG
@@ -963,9 +966,12 @@ const poly polygcd::gcd_modular_dense_interpolation (const poly &a, const poly &
 						 << x << "," << "," << s <<") = " << gcdconts * nres << endl;
 #endif
 				return gcdconts * nres;
-			} else if (m == 0) {
-				return gcdconts;
 			}
+
+			// At this point, the gcd may be too large due to bad luck
+			// TODO: create an efficient fail state that tries to find a smaller
+			// polynomial without interpolating bad ones?
+			newshape = poly(BHEAD 0); // reset the shape, important!
 		}
 	}
 }
@@ -999,8 +1005,9 @@ const poly polygcd::gcd_modular (const poly &origa, const poly &origb, const vec
 
 	POLY_GETIDENTITY(origa);
 
-	if (origa.is_zero() || origb.is_zero())
-		return poly(BHEAD 0);
+	if (origa.is_zero()) return origa.modp==0 ? origb : origb / origb.integer_lcoeff();
+	if (origb.is_zero()) return origa.modp==0 ? origa : origa / origa.integer_lcoeff();
+	if (origa==origb) return origa.modp==0 ? origa : origa / origa.integer_lcoeff();
 
 	poly ac = integer_content(origa);
 	poly bc = integer_content(origb);
@@ -1479,35 +1486,6 @@ const poly polygcd::gcd (const poly &a, const poly &b) {
 	// If gcd==0, the heuristic algorithm failed, so we do more extensive checks.
 	// First, we filter out variables that appear in only one of the expressions.
 	if (res.is_zero()) {
-		// filling in variables can currently be done only using modulo. this could
-		// yield wrong results
-		/*
-		x.clear();
-
-		WORD p = NextPrime(BHEAD 0);
-
-		// Substitute all the variables that do not appear in both terms with a
-		// numerical value, since these will never be part of the gcd.
-		// We can calculate the gcd on these smaller polynomials.
-		// TODO: do not make them modular?
-		poly na = poly(ppa, p);
-		poly nb = poly(ppb, p);
-
-		for (int i=0; i<AN.poly_num_vars; i++) {
-			if (used[i] != 2) {
-				na = substitute(na, i, 17);
-				nb = substitute(nb, i, 17);
-			} else
-				x.push_back(i);
-		}
-
-		na = na.normalize();
-		nb = nb.normalize();
-
-		res = gcd_linear(na, nb);
-		res.setmod(0);
-		*/
-
 		bool unusedVars = false;
 		for (unsigned int i = 0; i < used.size(); i++) {
 			if (used[i] == 1) {
@@ -1516,8 +1494,9 @@ const poly polygcd::gcd (const poly &a, const poly &b) {
 			}
 		}
 
+		// if there are no unused variables, go to the linear routine directly
 		if (!unusedVars) {
-			res = gcd_modular(ppa,ppb,x);
+			res = gcd_linear(ppa,ppb);
 		}
 
 		// if res is not the gcd, it is 0 or larger than the gcd.
@@ -1549,7 +1528,7 @@ const poly polygcd::gcd (const poly &a, const poly &b) {
 			for (unsigned int i = 0; i < bracketsorted.size(); i++) {
 				if (!poly::divides(res,bracketsorted[i])) {
 					// if we can filter out more variables, call gcd again
-					if (bracketsorted[i].all_variables().size() < x.size())
+					if (res.all_variables() != bracketsorted[i].all_variables())
 						res = gcd(bracketsorted[i],res);
 					else
 						res = gcd_linear(bracketsorted[i],res);
