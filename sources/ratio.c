@@ -1122,7 +1122,7 @@ CalledFrom:
 WORD *GCDfunction3(PHEAD WORD *in1, WORD *in2)
 {
 	GETBIDENTITY
-	WORD oldsorttype = AR.SortType;
+	WORD oldsorttype = AR.SortType, *ow = AT.WorkPointer;;
 	WORD *t, *tt, *gcdout, *term1, *term2, *confree1, *confree2, *gcdout1, *proper1, *proper2;
 	int i, actionflag1, actionflag2;
 	WORD startebuf = cbuf[AT.ebufnum].numrhs;
@@ -1137,6 +1137,7 @@ WORD *GCDfunction3(PHEAD WORD *in1, WORD *in2)
 			 && gcdout[2] == 1 && gcdout[3] == 3 ) break;
 			t += *t;
 		}
+		AT.WorkPointer = ow;
 		return(gcdout);
 	}
 /*
@@ -1190,11 +1191,12 @@ WORD *GCDfunction3(PHEAD WORD *in1, WORD *in2)
 	Now multiply gcdout by term1
 */
 	if ( term1[0] != 4 || term1[3] != 3 || term1[1] != 1 || term1[2] != 1 ) {
-		if ( ( gcdout1 = MultiplyWithTerm(BHEAD gcdout,term1,0) ) == 0 ) goto CalledFrom;
+		if ( ( gcdout1 = MultiplyWithTerm(BHEAD gcdout,term1,2) ) == 0 ) goto CalledFrom;
 		M_free(gcdout,"gcdout");
 		gcdout = gcdout1;
 	}
 	TermFree(term1,"GCDfunction3-a");
+	AT.WorkPointer = ow;
 	return(gcdout);
 CalledFrom:
 	MLOCK(ErrorMessageLock);
@@ -1284,7 +1286,7 @@ WORD *MultiplyWithTerm(PHEAD WORD *in, WORD *term, WORD par)
 	void *oldcompareroutine = AR.CompareRoutine;
 	AR.CompareRoutine = (void *)&CompareSymbols;
 
-	if ( par == 0 ) AR.SortType = SORTHIGHFIRST;
+	if ( par == 0 || par == 2 ) AR.SortType = SORTHIGHFIRST;
 	else            AR.SortType = SORTLOWFIRST;
 	termout = AT.WorkPointer;
 	NewSort(BHEAD0);
@@ -1304,7 +1306,12 @@ WORD *MultiplyWithTerm(PHEAD WORD *in, WORD *term, WORD par)
 		StoreTerm(BHEAD termout);
 		in += *in;
 	}
-	if ( EndSort(BHEAD termout,1) < 0 ) goto CalledFrom;
+	if ( par == 2 ) {
+		if ( EndSort(BHEAD (WORD *)((VOID *)(&termout)),2) < 0 ) goto CalledFrom;
+	}
+	else {
+		if ( EndSort(BHEAD termout,1) < 0 ) goto CalledFrom;
+	}
 
 	AR.CompareRoutine = oldcompareroutine;
 
@@ -1711,7 +1718,7 @@ nextr1:;
 	if ( action ) {
 		*tterm = tt - tterm;
 		AT.WorkPointer = tt;
-		inp = MultiplyWithTerm(BHEAD in,tterm,0);
+		inp = MultiplyWithTerm(BHEAD in,tterm,2);
 		AT.WorkPointer = tterm;
 		in = inp;
 	}
@@ -2366,7 +2373,7 @@ didwork:;
 		*term = tout - term; *tout = 0;
 		*tterm = tt - tterm; *tt = 0;
 		AT.WorkPointer = tt;
-		inp = MultiplyWithTerm(BHEAD in,tterm,0);
+		inp = MultiplyWithTerm(BHEAD in,tterm,2);
 		AT.WorkPointer = tterm;
 		t = inp; while ( *t ) t += *t;
 		j = (t-inp); t = inp;

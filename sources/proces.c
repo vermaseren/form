@@ -4455,8 +4455,11 @@ WORD PrepPoly(PHEAD WORD *term)
 	purposes, we don't do anything about it. (30-aug-2011)
 */
 	if ( AR.PolyFunType == 2 && AR.PolyFunExp != 2 ) {
+		WORD oldtype = AR.SortType;
+		AR.SortType = SORTHIGHFIRST;
 		if ( poly_ratfun_normalize(BHEAD term) != 0 ) Terminate(-1);
 		oldworkpointer = AT.WorkPointer;
+		AR.SortType = oldtype;
 	}
 	AT.PolyAct = 0;
 	t = term;
@@ -4748,8 +4751,12 @@ WORD PrepPoly(PHEAD WORD *term)
 		i = v - m;
 		NCOPY(w,m,i);
 		*w++ = 1; *w++ = 1; *w++ = 3; *term = w - term;
-
-		poly_ratfun_normalize(BHEAD term);
+		{
+			WORD oldtype = AR.SortType;
+			AR.SortType = SORTHIGHFIRST;
+			poly_ratfun_normalize(BHEAD term);
+			AR.SortType = oldtype;
+		}
 		goto endofit;
 /*
  		#] Two arguments : 
@@ -4801,7 +4808,12 @@ WORD PolyFunMul(PHEAD WORD *term)
 			t += t[1];
 		}
 		if ( count1 <= 1 ) return(0);
-		retval = poly_ratfun_normalize(BHEAD term);
+		{
+			WORD oldtype = AR.SortType;
+			AR.SortType = SORTHIGHFIRST;
+			retval = poly_ratfun_normalize(BHEAD term);
+			AR.SortType = oldtype;
+		}
 	
 		t = term + 1; t1 = term + *term; t1 -= ABS(t1[-1]);
 		while ( t < t1 ) {

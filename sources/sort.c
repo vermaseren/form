@@ -1994,12 +1994,14 @@ WORD AddPoly(PHEAD WORD **ps1, WORD **ps2)
 		WORD **oldSplitScratch = AN.SplitScratch;
 		LONG oldSplitScratchSize = AN.SplitScratchSize;
 		LONG oldInScratch = AN.InScratch;
+		WORD oldtype = AR.SortType;
 		if ( (WORD *)((UBYTE *)w + AM.MaxTer) >= AT.WorkTop ) {
 			MLOCK(ErrorMessageLock);
 			MesPrint("Program was adding polyratfun arguments");
 			MesWork();
 			MUNLOCK(ErrorMessageLock);
 		}
+		AR.SortType = SORTHIGHFIRST;
 		S->PolyWise = 0;
 		AN.SplitScratch = AN.SplitScratch1;
 		AN.SplitScratchSize = AN.SplitScratchSize1;
@@ -2013,6 +2015,7 @@ WORD AddPoly(PHEAD WORD **ps1, WORD **ps2)
 		AN.SplitScratchSize = oldSplitScratchSize;
 		AN.InScratch = oldInScratch;
 		AT.WorkPointer = w;
+		AR.SortType = oldtype;
 		if ( w[1] <= FUNHEAD ||
 			( w[FUNHEAD] == -SNUMBER && w[FUNHEAD+1] == 0 ) ) {
 			*ps1 = *ps2 = 0; return(0);
@@ -2124,7 +2127,7 @@ WORD AddPoly(PHEAD WORD **ps1, WORD **ps2)
 }
 
 /*
- 		#] AddPoly : 
+ 		#] AddPoly :
  		#[ AddArgs :				VOID AddArgs(arg1,arg2,to)
 */
  

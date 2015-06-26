@@ -496,7 +496,7 @@ donumber:		i = 0;
 				if ( *in != '!' || leftright == RHSIDE
 				|| object != 1 || out[-1] != TWILDCARD ) goto IllPos;
 				*out++ = TNOT;
-				if ( FG.cTable[in[1]] == 0 || in[1] == '[' ) object = 0;
+				if ( FG.cTable[in[1]] == 0 || in[1] == '[' || in[1] == '{' ) object = 0;
 				in++;
 				break;
 			default:
