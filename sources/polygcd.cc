@@ -1288,7 +1288,7 @@ const poly polygcd::gcd_heuristic (const poly &a, const poly &b, const vector<in
   	#[ bracket :
 */
 
-const map<vector<int>,poly> polygcd::bracket(const poly &a, const vector<int>& filter) {
+const map<vector<int>,poly> polygcd::full_bracket(const poly &a, const vector<int>& filter) {
 	POLY_GETIDENTITY(a);
 
 	map<vector<int>,poly> bracket;
@@ -1319,7 +1319,63 @@ const map<vector<int>,poly> polygcd::bracket(const poly &a, const vector<int>& f
 	return bracket;
 }
 
-bool poly_fewer_terms (const poly& a, const poly& b) { return a.number_of_terms() < b.number_of_terms(); }
+const poly polygcd::bracket(const poly &a, const vector<int>& pattern, const vector<int>& filter) {
+	POLY_GETIDENTITY(a);
+
+	poly bracket(BHEAD 0);
+	for (int ai=1; ai<a[0]; ai+=a[ai]) {
+		bool ispat = true;
+		for (int i=0; i<AN.poly_num_vars; i++)
+			if (filter[i] == 1 && pattern[i] != a[ai + i + 1]) {
+				ispat = false;
+				break;
+			}
+
+		if (ispat) {
+			poly mon(BHEAD 1);
+			mon.setmod(a.modp);
+			mon[0] = a[ai] + 1;
+			for (int i=0; i<a[ai]; i++)
+				if (i > 0 && i <= AN.poly_num_vars && pattern[i - 1])
+					mon[1+i] = 0;
+				else
+					mon[1+i] = a[ai+i];
+			bracket += mon;
+		}
+	}
+
+	return bracket;
+}
+
+const map<vector<int>,int> polygcd::bracket_count(const poly &a, const vector<int>& filter) {
+	POLY_GETIDENTITY(a);
+
+	map<vector<int>,int> bracket;
+	for (int ai=1; ai<a[0]; ai+=a[ai]) {
+		vector<int> varpattern(AN.poly_num_vars);
+		for (int i=0; i<AN.poly_num_vars; i++)
+			if (filter[i] == 1 && a[ai + i + 1] > 0)
+				varpattern[i] = a[ai + i + 1];
+
+		map<vector<int>,int>::iterator i = bracket.find(varpattern);
+		if (i == bracket.end()) {
+			bracket.insert(std::make_pair(varpattern, 0));
+		} else {
+			i->second++;
+		}
+	}
+
+	return bracket;
+}
+
+struct BracketInfo {
+	std::vector<int> pattern;
+	int num_terms;
+	poly* p;
+
+	BracketInfo(const std::vector<int>& pattern, int num_terms, poly* p) : pattern(pattern), num_terms(num_terms), p(p) {}
+	bool operator<(const BracketInfo& rhs) const { return num_terms > rhs.num_terms; } // biggest should be first!
+};
 
 /*
   	#] bracket :
@@ -1335,7 +1391,7 @@ const poly gcd_linear_helper (const poly &a, const poly &b) {
 			filter[i] = 1;
 
 			// bracket the linear variable
-			map<vector<int>,poly> ba = polygcd::bracket(a, filter);
+			map<vector<int>,poly> ba = polygcd::full_bracket(a, filter);
 
 			poly subgcd(BHEAD 1);
 			if (ba.size() == 2)
@@ -1505,34 +1561,39 @@ const poly polygcd::gcd (const poly &a, const poly &b) {
 		bool diva = !res.is_zero() && poly::divides(res,ppa);
 		bool divb = !res.is_zero() && poly::divides(res,ppb);
 		if (!diva || !divb) {
-			vector<poly> bracketsorted;
+			vector<BracketInfo> bracketinfo;
 
 			if (!diva) {
-				map<vector<int>,poly> ba = bracket(ppa, used);
-				for(map<vector<int>,poly>::iterator it = ba.begin(); it != ba.end(); it++)
-					bracketsorted.push_back(it->second);
+				map<vector<int>,int> ba = bracket_count(ppa, used);
+				for(map<vector<int>,int>::iterator it = ba.begin(); it != ba.end(); it++)
+					bracketinfo.push_back(BracketInfo(it->first, it->second, &ppa));
 			}
 
 			if (!divb) {
-				map<vector<int>,poly> bb = bracket(ppb, used);
-				for(map<vector<int>,poly>::iterator it = bb.begin(); it != bb.end(); it++)
-					bracketsorted.push_back(it->second);
+				map<vector<int>,int> bb = bracket_count(ppb, used);
+				for(map<vector<int>,int>::iterator it = bb.begin(); it != bb.end(); it++)
+					bracketinfo.push_back(BracketInfo(it->first, it->second, &ppb));
 			}
 
-			sort(bracketsorted.begin(), bracketsorted.end(), poly_fewer_terms);
+			// sort so that the smallest bracket will be last
+			sort(bracketinfo.begin(), bracketinfo.end());
 
 			if (res.is_zero()) {
-				res = bracketsorted[0];
+				res = bracket(*bracketinfo.back().p, bracketinfo.back().pattern, used);
+				bracketinfo.pop_back();
 			}
 
-			for (unsigned int i = 0; i < bracketsorted.size(); i++) {
-				if (!poly::divides(res,bracketsorted[i])) {
+			while (bracketinfo.size() > 0) {
+				poly subpoly(bracket(*bracketinfo.back().p, bracketinfo.back().pattern, used));
+				if (!poly::divides(res,subpoly)) {
 					// if we can filter out more variables, call gcd again
-					if (res.all_variables() != bracketsorted[i].all_variables())
-						res = gcd(bracketsorted[i],res);
+					if (res.all_variables() != subpoly.all_variables())
+						res = gcd(subpoly,res);
 					else
-						res = gcd_linear(bracketsorted[i],res);
+						res = gcd_linear(subpoly,res);
 				}
+
+				bracketinfo.pop_back();
 			}
 		}
 

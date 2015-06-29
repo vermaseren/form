@@ -73,6 +73,8 @@ namespace polygcd {
 	
 	const poly chinese_remainder (const poly &a1, const poly &m1, const poly &a2, const poly &m2);
 	const poly substitute(const poly &a, int x, int c);
-	const std::map<std::vector<int>,poly> bracket(const poly &a, const std::vector<int>& filter);
+	const std::map<std::vector<int>,poly> full_bracket(const poly &a, const std::vector<int>& filter);
+	const poly bracket(const poly &a, const std::vector<int>& pattern, const std::vector<int>& filter);
+	const std::map<std::vector<int>,int> bracket_count(const poly &a, const std::vector<int>& filter);
 	const poly gcd_linear (const poly &a, const poly &b);
 }
