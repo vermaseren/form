@@ -5045,6 +5045,7 @@ void DropSymbols(PHEAD WORD *term)
 
 int SymbolNormalize(WORD *term)
 {
+	GETIDENTITY
 	WORD buffer[7*NORMSIZE], *t, *b, *bb, *tt, *m, *tstop;
 	int i;
 	b = buffer;
