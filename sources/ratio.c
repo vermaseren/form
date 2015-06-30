@@ -1326,7 +1326,7 @@ CalledFrom:
 }
 
 /*
- 		#] MultiplyWithTerm : 
+ 		#] MultiplyWithTerm :
  		#[ TakeContent :
 */
 /**
@@ -2982,7 +2982,9 @@ NormArg:;
 /*
 		We can use MultiplyWithTerm.
 */
+		AT.LeaveNegative = 1;
 		numerator = MultiplyWithTerm(BHEAD arg1+ARGHEAD,rmininv,0);
+		AT.LeaveNegative = 0;
 		r[-1] = rcopy;
 		r = numerator; while ( *r ) r += *r;
 		AT.WorkPointer = r+1;
@@ -3106,7 +3108,7 @@ onerror:
 }
 
 /*
-  	#] ExpandRat : 
+  	#] ExpandRat :
   	#[ InvPoly :
 
 	The input polynomial is represented as a sequence of terms in ascending

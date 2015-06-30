@@ -5101,15 +5101,17 @@ Nexti:;
 /*
 	Veto negative powers
 */
-	b = buffer; bb = b + b[1]; b += 3;
-	while ( b < bb ) {
-		if ( *b < 0 ) {
-			MLOCK(ErrorMessageLock);
-			MesPrint("Negative power in SymbolNormalize");
-			MUNLOCK(ErrorMessageLock);
-			return(-1);
+	if ( AT.LeaveNegative == 0 ) {
+		b = buffer; bb = b + b[1]; b += 3;
+		while ( b < bb ) {
+			if ( *b < 0 ) {
+				MLOCK(ErrorMessageLock);
+				MesPrint("Negative power in SymbolNormalize");
+				MUNLOCK(ErrorMessageLock);
+				return(-1);
+			}
+			b += 2;
 		}
-		b += 2;
 	}
 /*
 	Now we use the fact that the new term will not be longer than the old one

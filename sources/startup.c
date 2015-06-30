@@ -1339,6 +1339,7 @@ WORD IniVars()
 	AT.inprimelist = -1;
 	AT.sizeprimelist = 0;
 	AT.primelist = 0;
+	AT.LeaveNegative = 0;
 	AT.TrimPower = 0;
 	AN.SplitScratch = 0;
 	AN.SplitScratchSize = AN.InScratch = 0;

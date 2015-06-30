@@ -1967,7 +1967,7 @@ struct T_const {
     int     ListSymbolsSize;
     int     NumListSymbols;
     int     numpoly;
-    int     ListPolySize;
+    int     LeaveNegative;
     int     TrimPower;             /* Indicates trimming in polyratfun expansion */
     WORD    small_power_maxx;      /*     size of the cache for small powers  */
     WORD    small_power_maxn;      /*     size of the cache for small powers */
