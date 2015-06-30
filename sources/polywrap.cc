@@ -476,7 +476,6 @@ void poly_sort(PHEAD WORD *a) {
 #ifdef DEBUG
 	cout << "*** [" << thetime() << "]  CALL : poly_sort" << endl;
 #endif
-	
 	if (NewSort(BHEAD0)) { Terminate(-1); }
 	AR.CompareRoutine = (void *)&CompareSymbols;
 	

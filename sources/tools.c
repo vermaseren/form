@@ -40,9 +40,9 @@
 	      system. To work properly it needs MEMORYMACROS in declare.h
 	      not to be defined to make sure that all calls will be diverted
 	      to the routines here.
-#define MALLOCDEBUG 1
 #define MALLOCDEBUGOUTPUT
 #define TERMMALLOCDEBUG
+#define MALLOCDEBUG 1
 */
 
 /*

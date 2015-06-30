@@ -1890,7 +1890,7 @@ WORD InFunction(PHEAD WORD *term, WORD *termout)
 			oldncmod = AN.ncmod;
 			while ( t < r ) {	/* t points at an argument */
 				if ( *t > 0 && t[1] ) {	/* Argument has been modified */
-
+					WORD oldsorttype = AR.SortType;
 					/* This whole argument must be redone */
 
 					if ( ( AN.ncmod != 0 )
@@ -1908,6 +1908,7 @@ WORD InFunction(PHEAD WORD *term, WORD *termout)
 					NewSort(BHEAD0);
 					if ( *u == AR.PolyFun && AR.PolyFunType == 2 ) {
 						AR.CompareRoutine = &CompareSymbols;
+						AR.SortType = SORTHIGHFIRST;
 					}
 					AR.PolyFun = 0;
 					while ( t < v ) {
@@ -1933,6 +1934,7 @@ WORD InFunction(PHEAD WORD *term, WORD *termout)
 					AR.PolyFun = oldPolyFun;
 					if ( *u == AR.PolyFun && AR.PolyFunType == 2 ) {
 						AR.CompareRoutine = &Compare1;
+						AR.SortType = oldsorttype;
 					}
 					while ( *m ) m += *m;
 					*to = WORDDIF(m,to);
@@ -4797,19 +4799,69 @@ endofit:;
 WORD PolyFunMul(PHEAD WORD *term)
 {
 	GETBIDENTITY
-	WORD *t, *fun1, *fun2, *t1, *t2, *m, *w, *tt1, *tt2, *arg1, *arg2;
-	WORD *tstop;
+	WORD *t, *fun1, *fun2, *t1, *t2, *m, *w, *ww, *tt1, *tt2, *tt4, *arg1, *arg2;
+	WORD *tstop, i;
 	WORD n1, n2, i1, i2, l1, l2, l3, l4, action = 0, noac = 0;
 	if ( AR.PolyFunType == 2 && AR.PolyFunExp != 2 ) {
-		WORD retval, count1 = 0, count2 = 0;
+		WORD retval, count1 = 0, count2 = 0, count3;
+		WORD oldtype = AR.SortType;
 		t = term + 1; t1 = term + *term; t1 -= ABS(t1[-1]);
 		while ( t < t1 ) {
-			if ( *t == AR.PolyFun ) { count1++; }
+			if ( *t == AR.PolyFun ) {
+			  t2 = t + t[1]; tt2 = t+FUNHEAD; count3 = 0;
+			  while ( tt2 < t2 ) { count3++; NEXTARG(tt2); }
+			  if ( count3 == 2 ) {
+				count1++;
+				if ( ( t[2] & CLEANPRF ) != 0 ) {	/* Better civilize this guy */
+					w = AT.WorkPointer;
+					AR.SortType = SORTHIGHFIRST;
+					t2 = t + t[1]; tt2 = t+FUNHEAD;
+					while ( tt2 < t2 ) {
+						if ( *tt2 > 0 ) {
+							tt4 = tt2; tt1 = tt2 + ARGHEAD; tt2 += *tt2;
+							NewSort(BHEAD0);
+							while ( tt1 < tt2 ) {
+								i = *tt1; ww = w; NCOPY(ww,tt1,i);
+								AT.WorkPointer = ww;
+								Normalize(BHEAD w);
+								StoreTerm(BHEAD w);
+							}
+							EndSort(BHEAD w,1);
+							ww = w; while ( *ww ) ww += *ww;
+							if ( ww-w != *tt4-ARGHEAD ) { /* Little problem */
+/*
+								Solution: brute force copy
+								Maybe it will never come here????
+*/
+								WORD *r1 = TermMalloc("PolyFunMul");
+								WORD ii = (ww-w)-(*tt4-ARGHEAD); /* increment */
+								WORD *r2 = tt4+ARGHEAD, *r3, *r4 = r1;
+								i = r2 - term; r3 = term; NCOPY(r4,r3,i);
+								i = ww-w; ww = w; NCOPY(r4,ww,i);
+								r3 = tt2; i = term+*term-tt2; NCOPY(r4,r3,i);
+								*r1 = i = r4-r1; r4 = term; r3 = r1;
+								NCOPY(r4,r3,i);
+								t[1] += ii; t1 += ii; *tt4 += ii;
+								tt2 = tt4 + *tt4;
+								TermFree(r1,"PolyFunMul");
+							}
+							else {
+								i = ww-w; ww = w; tt1 = tt4+ARGHEAD;
+								NCOPY(tt1,ww,i);
+								AT.WorkPointer = w;
+							}
+						}
+						else if ( *tt2 <= -FUNCTION ) tt2++;
+						else tt2 += 2;
+					}
+					AR.SortType = oldtype;
+				}
+			  }
+			}
 			t += t[1];
 		}
 		if ( count1 <= 1 ) return(0);
 		{
-			WORD oldtype = AR.SortType;
 			AR.SortType = SORTHIGHFIRST;
 			retval = poly_ratfun_normalize(BHEAD term);
 			AR.SortType = oldtype;
@@ -4817,7 +4869,13 @@ WORD PolyFunMul(PHEAD WORD *term)
 	
 		t = term + 1; t1 = term + *term; t1 -= ABS(t1[-1]);
 		while ( t < t1 ) {
-			if ( *t == AR.PolyFun ) count2++;
+			if ( *t == AR.PolyFun ) {
+			  t2 = t + t[1]; tt2 = t+FUNHEAD; count3 = 0;
+			  while ( tt2 < t2 ) { count3++; NEXTARG(tt2); }
+			  if ( count3 == 2 ) {
+				count2++;
+			  }
+			}
 			t += t[1];
 		}
 		if ( count1 >= count2 ) {

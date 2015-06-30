@@ -470,7 +470,7 @@ const poly polygcd::chinese_remainder (const poly &a1, const poly &m1, const pol
 
 /*
   	#] chinese_remainder : 
-	 	#[ substitute :
+ 		#[ substitute :
 */
 
 /**  Substitute a variable of a polynomial with a number.
@@ -563,7 +563,7 @@ const poly polygcd::substitute(const poly &a, int x, int c) {
 }
 
 /*
-		#] substitute : 
+ 		#] substitute : 
  		#[ sparse_interpolation helper functions :
 */
 
@@ -1370,7 +1370,7 @@ const map<vector<int>,int> polygcd::bracket_count(const poly &a, const vector<in
 
 struct BracketInfo {
 	std::vector<int> pattern;
-	int num_terms;
+	int num_terms, dummy;
 	poly* p;
 
 	BracketInfo(const std::vector<int>& pattern, int num_terms, poly* p) : pattern(pattern), num_terms(num_terms), p(p) {}
@@ -1378,7 +1378,7 @@ struct BracketInfo {
 };
 
 /*
-  	#] bracket :
+  	#] bracket : 
   	#[ gcd_linear:
 */
 
@@ -1445,8 +1445,8 @@ const poly polygcd::gcd_linear (const poly &a, const poly &b) {
 }
 
 /*
-		#] gcd_linear:
-		#[ gcd:
+  	#] gcd_linear: 
+  	#[ gcd :
 */
 
 /**  Greatest common divisor (gcd) of multivariate polynomials
