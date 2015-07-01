@@ -4190,8 +4190,8 @@ int SortBotMerge(PHEAD0)
 */
 					to = Bin1->T.SB.MasterStart[1];
 					from = Bin1->T.SB.MasterStop[Bin1->T.SB.MasterNumBlocks];
-					while ( from > term1 ) *--to = *--from;
-					term1 = to;
+					while ( from > next ) *--to = *--from;
+					next = to;
 					blin1 = 1;
 				}
 				else {
@@ -4200,7 +4200,7 @@ int SortBotMerge(PHEAD0)
 				LOCK(Bin1->T.SB.MasterBlockLock[blin1]);
 				Bin1->T.SB.MasterBlock = blin1;
 			}
-			term1 += im;
+			term1 = next;
 /*
 			#] One is smallest : 
 */
@@ -4232,8 +4232,8 @@ next2:		im = *term2;
 */
 					to = Bin2->T.SB.MasterStart[1];
 					from = Bin2->T.SB.MasterStop[Bin2->T.SB.MasterNumBlocks];
-					while ( from > term2 ) *--to = *--from;
-					term2 = to;
+					while ( from > next ) *--to = *--from;
+					next = to;
 					blin2 = 1;
 				}
 				else {
@@ -4242,7 +4242,7 @@ next2:		im = *term2;
 				LOCK(Bin2->T.SB.MasterBlockLock[blin2]);
 				Bin2->T.SB.MasterBlock = blin2;
 			}
-			term2 += im;
+			term2 = next;
 /*
 			#] Two is smallest : 
 */
@@ -4402,8 +4402,8 @@ cancelled:;		/* Now we need two new terms */
 */
 					to = Bin1->T.SB.MasterStart[1];
 					from = Bin1->T.SB.MasterStop[Bin1->T.SB.MasterNumBlocks];
-					while ( from > term1 ) *--to = *--from;
-					term1 = to;
+					while ( from > next ) *--to = *--from;
+					next = to;
 					blin1 = 1;
 				}
 				else {
@@ -4412,7 +4412,7 @@ cancelled:;		/* Now we need two new terms */
 				LOCK(Bin1->T.SB.MasterBlockLock[blin1]);
 				Bin1->T.SB.MasterBlock = blin1;
 			}
-			term1 += im;
+			term1 = next;
 			goto next2;
 /*
 			#] Equal : 
@@ -4450,8 +4450,8 @@ cancelled:;		/* Now we need two new terms */
 */
 					to = Bin1->T.SB.MasterStart[1];
 					from = Bin1->T.SB.MasterStop[Bin1->T.SB.MasterNumBlocks];
-					while ( from > term1 ) *--to = *--from;
-					term1 = to;
+					while ( from > next ) *--to = *--from;
+					next = to;
 					blin1 = 1;
 				}
 				else {
@@ -4460,7 +4460,7 @@ cancelled:;		/* Now we need two new terms */
 				LOCK(Bin1->T.SB.MasterBlockLock[blin1]);
 				Bin1->T.SB.MasterBlock = blin1;
 			}
-			term1 += im;
+			term1 = next;
 		}
 /*
 			#] Tail in one : 
@@ -4494,8 +4494,8 @@ cancelled:;		/* Now we need two new terms */
 */
 					to = Bin2->T.SB.MasterStart[1];
 					from = Bin2->T.SB.MasterStop[Bin2->T.SB.MasterNumBlocks];
-					while ( from > term2 ) *--to = *--from;
-					term2 = to;
+					while ( from > next ) *--to = *--from;
+					next = to;
 					blin2 = 1;
 				}
 				else {
@@ -4504,7 +4504,7 @@ cancelled:;		/* Now we need two new terms */
 				LOCK(Bin2->T.SB.MasterBlockLock[blin2]);
 				Bin2->T.SB.MasterBlock = blin2;
 			}
-			term2 += im;
+			term2 = next;
 		}
 /*
 			#] Tail in two : 
