@@ -163,7 +163,7 @@ int CoCollect(UBYTE *s)
 	}
 	else {
 		if ( *t ) goto syntaxerror;
-		x = 100;
+		x = 40;
 	}
 	if ( ( ( type = GetName(AC.varnames,s,&numfun,WITHAUTO) ) != CFUNCTION )
 	|| ( functions[numfun].spec != 0 ) ) {

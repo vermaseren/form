@@ -2790,7 +2790,7 @@ Found2:;
 		we have already 1+dd terms
 */
 		while ( ( dd < thrbufsiz ) &&
-			( tt - thr->threadbuffer ) < ( thr->threadbuffersize - AM.MaxTer - 2 ) ) {
+			( tt - thr->threadbuffer ) < ( thr->threadbuffersize - AM.MaxTer/((LONG)sizeof(WORD)) - 2 ) ) {
 /*
 			First check:
 */
