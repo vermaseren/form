@@ -569,7 +569,6 @@ const poly polygcd::substitute(const poly &a, int x, int c) {
 
 // Returns a list of size #terms(a) with entries PROD(ci^powi, i=2..n)
 const vector<int> polygcd::sparse_interpolation_get_mul_list (const poly &a, const vector<int> &x, const vector<int> &c) {
-
 	// cache size for variable x is bounded by the degree in x, twice
 	// the number of terms of the polynomial and a constant
 	vector<vector<WORD> > cache(c.size());
@@ -694,7 +693,7 @@ const poly polygcd::gcd_modular_sparse_interpolation (const poly &origa, const p
 	// for non-monic cases, we need to normalize with the gcd of the lcoeffs of a poly in x[0]
 	// or else the shape fitting does not work.
 	// FIXME: the current implementation still rejects some valid shapes.
-	poly lcgcd(BHEAD 1);
+	poly lcgcd(BHEAD 1, a.modp);
 	if (!s.lcoeff_univar(x[0]).is_integer()) {
 		lcgcd = gcd_modular_dense_interpolation(a.lcoeff_univar(x[0]), b.lcoeff_univar(x[0]), x, poly(BHEAD 0));
 	}
@@ -859,7 +858,7 @@ const poly polygcd::gcd_modular_sparse_interpolation (const poly &origa, const p
 	res.setmod(a.modp,1);
 
 	if (!poly::divides(res, lcgcd * a) || !poly::divides(res, lcgcd * b)) {
-		res = poly(BHEAD 0); // bad shape
+		return poly(BHEAD 0); // bad shape
 	} else {
 		// refine gcd
 		if (!poly::divides(res, a))
