@@ -2577,11 +2577,13 @@ void GCDclean(PHEAD WORD *num, WORD *den)
 {
 	WORD *out1 = TermMalloc("GCDclean");
 	WORD *out2 = TermMalloc("GCDclean");
-	WORD *t1, *t2, *r1, *r2, *t1stop, *t2stop, csize1, csize2, csize3, pow;
+	WORD *t1, *t2, *r1, *r2, *t1stop, *t2stop, csize1, csize2, csize3, pow, sign;
 	int i;
 	
-	t1stop = num+*num; csize1 = ABS(t1stop[-1]); t1stop -= csize1;
-	t2stop = den+*den; csize2 = ABS(t2stop[-1]); t2stop -= csize2;
+	t1stop = num+*num; sign = ( t1stop[-1] < 0 ) ? -1 : 1;
+	csize1 = ABS(t1stop[-1]); t1stop -= csize1;
+	t2stop = den+*den; if ( t2stop[-1] < 0 ) sign = -sign;
+	csize2 = ABS(t2stop[-1]); t2stop -= csize2;
 	t1 = num+1; t2 = den+1;
 	r1 = out1+3; r2 = out2+3;
 	if ( t1 == t1stop ) {
@@ -2653,6 +2655,7 @@ void GCDclean(PHEAD WORD *num, WORD *den)
 	csize1 = INCLENG(csize1); *r1++ = csize1; *out1 = r1-out1;
 
 	t1 = num; t2 = out1; i = *out1; NCOPY(t1,t2,i); *t1 = 0;
+	if ( sign < 0 ) t1[-1] = -t1[-1];
 	t1 = den; t2 = out2; i = *out2; NCOPY(t1,t2,i); *t1 = 0;
 
 	TermFree(out2,"GCDclean");
