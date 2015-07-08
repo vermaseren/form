@@ -1326,7 +1326,7 @@ CalledFrom:
 }
 
 /*
- 		#] MultiplyWithTerm :
+ 		#] MultiplyWithTerm : 
  		#[ TakeContent :
 */
 /**
@@ -2200,6 +2200,161 @@ int GCDterms(PHEAD WORD *term1, WORD *term2, WORD *termout)
 
 /*
  		#] GCDterms : 
+ 		#[ ReadPolyRatFun :
+*/
+
+int ReadPolyRatFun(PHEAD WORD *term)
+{
+	WORD *oldworkpointer = AT.WorkPointer;
+	int flag, i;
+	WORD *t, *fun, *nextt, *num, *den, *t1, *t2, size, numsize, densize;
+	WORD *term1, *term2, *confree1, *confree2, *gcd, *num1, *den1, move, *newnum, *newden;
+	WORD *tstop, *m1, *m2;
+	WORD oldsorttype = AR.SortType;
+	void *oldcompareroutine = AR.CompareRoutine;
+	AR.SortType = SORTHIGHFIRST;
+	AR.CompareRoutine = (void *)&CompareSymbols;
+
+	tstop = term + *term; tstop -= ABS(tstop[-1]);
+	if ( term + *term == AT.WorkPointer ) flag = 1;
+	else flag = 0;
+	t = term+1;
+	while ( t < tstop ) {
+		if ( *t != AR.PolyFun ) { t += t[1]; continue; }
+		if ( ( t[2] & CLEANPRF ) == 0 ) { t += t[1]; continue; }
+		fun = t;
+		nextt = t + t[1];
+		if ( FromPolyRatFun(BHEAD fun, &num, &den) > 0 ) { t = nextt; continue; }
+/*
+		Now we have num and den. Both are in general argument notation,
+		but can also be used as expressions as in num+ARGHEAD, den+ARGHEAD.
+		We need the gcd. For this we have to take out the contents
+		because PreGCD does not like contents.
+*/
+		term1 = TermMalloc("ReadPolyRatFun");
+		term2 = TermMalloc("ReadPolyRatFun");
+		confree1 = TakeSymbolContent(BHEAD num+ARGHEAD,term1);
+		confree2 = TakeSymbolContent(BHEAD den+ARGHEAD,term2);
+		GCDclean(BHEAD term1,term2);
+/*		gcd = PreGCD(BHEAD confree1,confree2,1); */
+		gcd = poly_gcd(BHEAD confree1,confree2);
+		newnum = PolyDiv(BHEAD confree1,gcd,"ReadPolyRatFun");
+		newden = PolyDiv(BHEAD confree2,gcd,"ReadPolyRatFun");
+		TermFree(confree2,"ReadPolyRatFun");
+		TermFree(confree1,"ReadPolyRatFun");
+		num1 = MULfunc(BHEAD term1,newnum);
+		den1 = MULfunc(BHEAD term2,newden);
+		TermFree(newnum,"ReadPolyRatFun");
+		TermFree(newden,"ReadPolyRatFun");
+		M_free(gcd,"poly_gcd");
+		TermFree(term1,"ReadPolyRatFun");
+		TermFree(term2,"ReadPolyRatFun");
+/*
+		Now we can put the function back together.
+		Notice that we cannot use ToFast, because there is no reservation
+		for the header of the argument. Fortutately there are only two
+		types of fast arguments.
+*/
+		if ( num1[0] == 4 && num1[2] == 1 && num1[1] > 0 ) {
+			numsize = 2; num1[0] = -SNUMBER;
+			if ( num1[3] < 0 ) num1[1] = -num1[1];
+		}
+		else if ( num1[0] == 8 && num1[7] == 3 && num1[6] == 1 && num1[5] == 1
+			&& num1[1] == SYMBOL && num1[4] == 1 ) {
+			numsize = 2; num1[0] = -SYMBOL; num1[1] = num1[3];
+		}
+/*		if ( ToFast(num1,num1) ) { numsize = 2; } */
+		else { m1 = num1; while ( *m1 ) m1 += *m1; numsize = (m1-num1)+ARGHEAD; }
+		if ( den1[0] == 4 && den1[2] == 1 && den1[1] > 0 ) {
+			densize = 2; den1[0] = -SNUMBER;
+			if ( den1[3] < 0 ) den1[1] = -den1[1];
+		}
+		else if ( den1[0] == 8 && den1[7] == 3 && den1[6] == 1 && den1[5] == 1
+			&& den1[1] == SYMBOL && den1[4] == 1 ) {
+			densize = 2; den1[0] = -SYMBOL; den1[1] = den1[3];
+		}
+/*		if ( ToFast(den1,den1) ) { densize = 2; } */
+		else { m2 = den1; while ( *m2 ) m2 += *m2; densize = (m2-den1)+ARGHEAD; }
+		size = FUNHEAD+numsize+densize;
+
+		if ( size > fun[1] ) {
+			move = size - fun[1];
+			t1 = term+*term; t2 = t1+move;
+			while ( t1 > nextt ) *--t2 = *--t1;
+			tstop += move; nextt += move;
+			*term += move;
+		}
+		else if ( size < fun[1] ) {
+			move = fun[1]-size;
+			t2 = fun+size; t1 = nextt;
+			tstop -= move; nextt -= move;
+			t = term+*term;
+			while ( t1 < t ) *t2++ = *t1++;
+			*term -= move;
+		}
+		else { /* no need to move anything */ }
+		fun[1] = size; fun[2] = 0;
+		t2 = fun+FUNHEAD; t1 = num1;
+		if ( *num1 < 0 ) { *t2++ = num1[0]; *t2++ = num1[1]; }
+		else { *t2++ = numsize; *t2++ = 0; FILLARG(t2);
+			i = numsize-ARGHEAD; NCOPY(t2,t1,i) }
+		t1 = den1;
+		if ( *den1 < 0 ) { *t2++ = den1[0]; *t2++ = den1[1]; }
+		else { *t2++ = densize; *t2++ = 0; FILLARG(t2);
+			i = densize-ARGHEAD; NCOPY(t2,t1,i) }
+
+		TermFree(num1,"MULfunc");
+		TermFree(den1,"MULfunc");
+		t = nextt;
+	}
+	if ( flag ) AT.WorkPointer = term +*term;
+	else AT.WorkPointer = oldworkpointer;
+	AR.CompareRoutine = oldcompareroutine;
+	AR.SortType = oldsorttype;
+	return(0);
+}
+
+/*
+ 		#] ReadPolyRatFun : 
+ 		#[ FromPolyRatFun :
+*/
+
+int FromPolyRatFun(PHEAD WORD *fun, WORD **numout, WORD **denout)
+{
+	WORD *nextfun, *tt, *num, *den;
+	int i;
+	nextfun = fun + fun[1];
+	fun += FUNHEAD;
+	num = AT.WorkPointer;
+	if ( *fun < 0 ) {
+		if ( *fun != -SNUMBER && *fun != -SYMBOL ) goto Improper;
+		ToGeneral(fun,num,0);
+		tt = num + *num; *tt++ = 0;
+		fun += 2;
+	}
+	else { i = *fun; tt = num; NCOPY(tt,fun,i); *tt++ = 0; }
+	den = tt;
+	if ( *fun < 0 ) {
+		if ( *fun != -SNUMBER && *fun != -SYMBOL ) goto Improper;
+		ToGeneral(fun,den,0);
+		tt = den + *den; *tt++ = 0;
+		fun += 2;
+	}
+	else { i = *fun; tt = den; NCOPY(tt,fun,i); *tt++ = 0; }
+	*numout = num; *denout = den;
+	if ( fun != nextfun ) { return(1); }
+	AT.WorkPointer = tt;
+	return(0);
+Improper:
+	MLOCK(ErrorMessageLock);
+	MesPrint("Improper use of PolyRatFun");
+	MesCall("FromPolyRatFun");
+	MUNLOCK(ErrorMessageLock);
+	SETERROR(-1);
+}
+
+/*
+ 		#] FromPolyRatFun : 
  		#[ TakeSymbolContent :
 */
 /**
@@ -2403,7 +2558,7 @@ OverWork:
 	MUNLOCK(ErrorMessageLock);
 CalledFrom:
 	MLOCK(ErrorMessageLock);
-	MesCall("TakeContent");
+	MesCall("TakeSymbolContent");
 	MUNLOCK(ErrorMessageLock);
 	Terminate(-1);
 	return(0);
@@ -2411,6 +2566,132 @@ CalledFrom:
 
 /*
  		#] TakeSymbolContent : 
+ 		#[ GCDclean :
+
+		Takes a numerator and a denominator that each consist of a
+		single term with only a coefficient and symbols and makes them
+		into a proper fraction. Output overwrites input.
+*/
+
+void GCDclean(PHEAD WORD *num, WORD *den)
+{
+	WORD *out1 = TermMalloc("GCDclean");
+	WORD *out2 = TermMalloc("GCDclean");
+	WORD *t1, *t2, *r1, *r2, *t1stop, *t2stop, csize1, csize2, csize3, pow;
+	int i;
+	
+	t1stop = num+*num; csize1 = ABS(t1stop[-1]); t1stop -= csize1;
+	t2stop = den+*den; csize2 = ABS(t2stop[-1]); t2stop -= csize2;
+	t1 = num+1; t2 = den+1;
+	r1 = out1+3; r2 = out2+3;
+	if ( t1 == t1stop ) {
+		if ( t2 < t2stop ) {
+			for ( i = 2; i < t2[1]; i += 2 ) {
+				if ( t2[i+1] < 0 ) { *r1++ = t2[i]; *r1++ = -t2[i+1]; }
+				else { *r2++ = t2[i]; *r2++ = t2[i+1]; }
+			}
+		}
+	}
+	else if ( t2 == t2stop ) {
+		for ( i = 2; i < t1[1]; i += 2 ) {
+			if ( t1[i+1] < 0 ) { *r2++ = t1[i]; *r2++ = -t1[i+1]; }
+			else { *r1++ = t1[i]; *r1++ = t1[i+1]; }
+		}
+	}
+	else {
+		t1 += 2; t2 += 2;
+		while ( t1 < t1stop && t2 < t2stop ) {
+			if ( *t1 < *t2 ) {
+				if ( t1[1] > 0 ) { *r1++ = *t1; *r1++ = t1[1]; t1 += 2; }
+				else if ( t1[1] < 0 ) { *r2++ = *t1; *r2++ = -t1[1]; t1 += 2; }
+			}
+			else if ( *t1 > *t2 ) {
+				if ( t2[1] > 0 ) { *r2++ = *t2; *r2++ = t2[1]; t2 += 2; }
+				else if ( t2[1] < 0 ) { *r1++ = *t2; *r1++ = -t2[1]; t2 += 2; }
+			}
+			else {
+				pow = t1[1]-t2[1];
+				if ( pow > 0 ) { *r1++ = *t1; *r1++ = pow; }
+				else if ( pow < 0 ) { *r2++ = *t1; *r2++ = -pow; }
+				t1 += 2; t2 += 2;
+			}
+		}
+		while ( t1 < t1stop ) {
+			if ( t1[1] < 0 ) { *r2++ = *t1; *r2++ = -t1[1]; }
+			else { *r1++ = *t1; *r1++ = t1[1]; }
+			t1 += 2;
+		}
+		while ( t2 < t2stop ) {
+			if ( t2[1] < 0 ) { *r1++ = *t2; *r1++ = -t2[1]; }
+			else { *r2++ = *t2; *r2++ = t2[1]; }
+			t2 += 2;
+		}
+	}
+	if ( r1 > out1+3 ) { out1[1] = SYMBOL; out1[2] = r1 - out1 - 1; }
+	else r1 = out1+1;
+	if ( r2 > out2+3 ) { out2[1] = SYMBOL; out2[2] = r2 - out2 - 1; }
+	else r2 = out2+1;
+/*
+	Now the coefficients.
+*/
+	csize1 = REDLENG(csize1);
+	csize2 = REDLENG(csize2);
+	if ( DivRat(BHEAD (UWORD *)t1stop,csize1,(UWORD *)t2stop,csize2,(UWORD *)r1,&csize3) ) {
+		MLOCK(ErrorMessageLock);
+		MesCall("GCDclean");
+		MUNLOCK(ErrorMessageLock);
+		Terminate(-1);
+	}
+	UnPack((UWORD *)r1,csize3,&csize1,&csize2);
+	t2 = r1+ABS(csize3);
+	for ( i = 0; i < csize2; i++ ) r2[i] = t2[i];
+	r2 += csize2; *r2++ = 1;
+	for ( i = 1; i < csize2; i++ ) *r2++ = 0;
+	csize2 = INCLENG(csize2); *r2++ = csize2; *out2 = r2-out2;
+	r1 += ABS(csize1); *r1++ = 1;
+	for ( i = 1; i < ABS(csize1); i++ ) *r1++ = 0;
+	csize1 = INCLENG(csize1); *r1++ = csize1; *out1 = r1-out1;
+
+	t1 = num; t2 = out1; i = *out1; NCOPY(t1,t2,i); *t1 = 0;
+	t1 = den; t2 = out2; i = *out2; NCOPY(t1,t2,i); *t1 = 0;
+
+	TermFree(out2,"GCDclean");
+	TermFree(out1,"GCDclean");
+}
+
+/*
+ 		#] GCDclean : 
+ 		#[ PolyDiv :
+
+		Special stub function for polynomials that should fit inside a term.
+		We make sure that the space is allocated by TermMalloc.
+		This makes things much easier on the calling routines.
+*/
+
+WORD *PolyDiv(PHEAD WORD *a,WORD *b,char *text)
+{
+	WORD *quo, *qq;
+	WORD *x, *xx;
+	LONG i;
+	quo = poly_div(BHEAD a,b);
+	x = TermMalloc(text);
+	qq = quo; while ( *qq ) qq += *qq;
+	i = (qq-quo+1);
+	if ( i*sizeof(WORD) > (size_t)(AM.MaxTer) ) {
+		DUMMYUSE(text);
+		MLOCK(ErrorMessageLock);
+		MesPrint("PolyDiv: Term too complex. Maybe increasing MaxTermSize can help");
+		MUNLOCK(ErrorMessageLock);
+		Terminate(-1);
+	}
+	xx = x; qq = quo;
+	NCOPY(xx,qq,i)
+	M_free(quo,"poly_div");
+	return(x);
+}
+
+/*
+ 		#] PolyDiv : 
   	#] GCDfunction : 
   	#[ DIVfunction :
 
@@ -2812,13 +3093,13 @@ NormArg:;
 			if ( *arg1 < 0 ) {
 				if ( *arg1 == -SYMBOL ) {
 					if ( arg1[1] == AR.PolyFunVar ) {
-						*r++ = 4; *r++ = 1; *r++ = 1; *r++ = 3; *r++ = 0;
+						*r++ = 4; *r++ = 1; *r++ = 1; *r++ = 3; *r = 0;
 					}
 					else {
 						*r++ = 10; *r++ = SYMBOL; *r++ = 6;
 						*r++ = arg1[1]; *r++ = 1;
 						*r++ = AR.PolyFunVar; *r++ = -1;
-						*r++ = 1; *r++ = 1; *r++ = 3; *r++ = 0;
+						*r++ = 1; *r++ = 1; *r++ = 3; *r = 0;
 						Normalize(BHEAD rr);
 					}
 				}
@@ -2831,7 +3112,7 @@ NormArg:;
 						*r++ = ABS(nco); *r++ = 1;
 						if ( nco < 0 ) *r++ = -3;
 						else *r++ = 3;
-						*r++ = 0;
+						*r = 0;
 					}
 				}
 				else { error = 2; goto onerror; }  /* should not happen! */
@@ -2881,7 +3162,7 @@ NormArg:;
 					if ( ( arg1[1] < 0 && arg2[1] > 0 ) ||
 					     ( arg1[1] > 0 && arg2[1] < 0 ) ) *r++ = -3;
 					else *r++ = 3;
-					*r++ = 0;
+					*r = 0;
 				}
 			}
 			else if ( *arg1 == -SYMBOL ) {
@@ -2890,7 +3171,7 @@ NormArg:;
 				*r++ = 1; *r++ = ABS(arg2[1]);
 				if ( arg2[1] < 0 ) *r++ = -3;
 				else *r++ = 3;
-				*r++ = 0;
+				*r = 0;
 			}
 			else if ( *arg1 < 0 ) { error = 2; goto onerror; }
 			else {	/* Multi-term numerator. */
@@ -3108,7 +3389,7 @@ onerror:
 }
 
 /*
-  	#] ExpandRat :
+  	#] ExpandRat : 
   	#[ InvPoly :
 
 	The input polynomial is represented as a sequence of terms in ascending

@@ -4459,7 +4459,8 @@ WORD PrepPoly(PHEAD WORD *term)
 	if ( AR.PolyFunType == 2 && AR.PolyFunExp != 2 ) {
 		WORD oldtype = AR.SortType;
 		AR.SortType = SORTHIGHFIRST;
-		if ( poly_ratfun_normalize(BHEAD term) != 0 ) Terminate(-1);
+/*		if ( poly_ratfun_normalize(BHEAD term) != 0 ) Terminate(-1); */
+		if ( ReadPolyRatFun(BHEAD term) != 0 ) Terminate(-1);
 		oldworkpointer = AT.WorkPointer;
 		AR.SortType = oldtype;
 	}
@@ -4756,7 +4757,8 @@ WORD PrepPoly(PHEAD WORD *term)
 		{
 			WORD oldtype = AR.SortType;
 			AR.SortType = SORTHIGHFIRST;
-			poly_ratfun_normalize(BHEAD term);
+/*			poly_ratfun_normalize(BHEAD term); */
+			ReadPolyRatFun(BHEAD term);
 			AR.SortType = oldtype;
 		}
 		goto endofit;
@@ -4800,14 +4802,21 @@ WORD PolyFunMul(PHEAD WORD *term)
 {
 	GETBIDENTITY
 	WORD *t, *fun1, *fun2, *t1, *t2, *m, *w, *ww, *tt1, *tt2, *tt4, *arg1, *arg2;
-	WORD *tstop, i;
+	WORD *tstop, i, dirty = 0;
 	WORD n1, n2, i1, i2, l1, l2, l3, l4, action = 0, noac = 0;
+ReStart:
 	if ( AR.PolyFunType == 2 && AR.PolyFunExp != 2 ) {
 		WORD retval, count1 = 0, count2 = 0, count3;
 		WORD oldtype = AR.SortType;
 		t = term + 1; t1 = term + *term; t1 -= ABS(t1[-1]);
 		while ( t < t1 ) {
 			if ( *t == AR.PolyFun ) {
+			  if ( t[2] && dirty == 0 ) {
+				dirty = 1;
+				ReadPolyRatFun(BHEAD term);
+/*				poly_ratfun_normalize(BHEAD term); */
+				goto ReStart;
+			  }
 			  t2 = t + t[1]; tt2 = t+FUNHEAD; count3 = 0;
 			  while ( tt2 < t2 ) { count3++; NEXTARG(tt2); }
 			  if ( count3 == 2 ) {
@@ -4863,6 +4872,7 @@ WORD PolyFunMul(PHEAD WORD *term)
 		if ( count1 <= 1 ) return(0);
 		{
 			AR.SortType = SORTHIGHFIRST;
+/*			retval = ReadPolyRatFun(BHEAD term); */
 			retval = poly_ratfun_normalize(BHEAD term);
 			AR.SortType = oldtype;
 		}
