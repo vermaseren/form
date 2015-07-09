@@ -2644,7 +2644,7 @@ void GCDclean(PHEAD WORD *num, WORD *den)
 		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
-	UnPack((UWORD *)r1,csize3,&csize1,&csize2);
+	UnPack((UWORD *)r1,csize3,&csize2,&csize1);
 	t2 = r1+ABS(csize3);
 	for ( i = 0; i < csize2; i++ ) r2[i] = t2[i];
 	r2 += csize2; *r2++ = 1;

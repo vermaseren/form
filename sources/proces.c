@@ -4733,7 +4733,8 @@ WORD PrepPoly(PHEAD WORD *term)
 		v = m;
 		*v++ = AR.PolyFun;
 		*v++ = FUNHEAD + 2*(ARGHEAD+sizenum+sizeden+2);
-		FILLFUN(v);
+		*v++ = CLEANPRF;
+		FILLFUN3(v);
 		*v++ = ARGHEAD+2*sizenum+2;
 		*v++ = 0;
 		FILLARG(v);
@@ -4757,13 +4758,15 @@ WORD PrepPoly(PHEAD WORD *term)
 		{
 			WORD oldtype = AR.SortType;
 			AR.SortType = SORTHIGHFIRST;
-/*			poly_ratfun_normalize(BHEAD term); */
-			ReadPolyRatFun(BHEAD term);
+			if ( count > 0 )
+				poly_ratfun_normalize(BHEAD term);
+			else
+				ReadPolyRatFun(BHEAD term);
 			AR.SortType = oldtype;
 		}
 		goto endofit;
 /*
- 		#] Two arguments : 
+ 		#] Two arguments :
 */
 	}
 	else {
@@ -4784,7 +4787,7 @@ endofit:;
 }
 
 /*
- 		#] PrepPoly : 
+ 		#] PrepPoly :
  		#[ PolyFunMul :			WORD PolyFunMul(term)
 */
 /**
