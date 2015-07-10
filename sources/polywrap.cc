@@ -749,6 +749,8 @@ int poly_ratfun_normalize (PHEAD WORD *term) {
 
 void poly_fix_minus_signs (factorized_poly &a) {
 
+	if ( a.factor.empty() ) return;
+
 	POLY_GETIDENTITY(a.factor[0]);
 	
 	int overall_sign = +1;
