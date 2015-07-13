@@ -2402,6 +2402,12 @@ WORD *TakeSymbolContent(PHEAD WORD *in, WORD *term)
 					for ( i = 0; i < t[1]; i++ ) tout[i] = t[i];
 					goto didwork;
 				}
+				else {
+					MLOCK(ErrorMessageLock);
+					MesPrint ((char*)"ERROR: polynomials and polyratfuns must contain symbols only");
+					MUNLOCK(ErrorMessageLock);
+					Terminate(1);
+				}
 			}
 			else if ( *t == SYMBOL ) {
 				MergeSymbolLists(BHEAD tout,t,-1);
