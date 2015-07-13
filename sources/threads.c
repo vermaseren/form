@@ -1092,6 +1092,7 @@ int LoadOneThread(int from, int identity, THREADBUCKET *thr, int par)
 	AN.ncmod = AC.ncmod;
 	AT.BrackBuf = AT0.BrackBuf;
 	AT.bracketindexflag = AT0.bracketindexflag;
+	AN.PolyFunTodo = 0;
 /*
 	The relevant variables and the term are in their place.
 	There is nothing more to do.

@@ -2136,6 +2136,7 @@ struct N_const {
     WORD    WildArgs;              /* (R) */
     WORD    WildEat;               /* (R) */
     WORD    PolyNormFlag;          /* (R) For polynomial arithmetic */
+    WORD    PolyFunTodo;           /* deals with expansions and multiplications */
 	WORD	sizeselecttermundo;    /* () Used in pattern.c */
 	WORD	patternbuffersize;     /* () Used in pattern.c */
 	WORD	numlistinprint;        /* () Used in process.c */
@@ -2151,29 +2152,29 @@ struct N_const {
 #ifdef WITHPTHREADS
 #ifdef WHICHSUBEXPRESSION
 #ifdef WITHZLIB
-	PADPOSITION(54,11,23,24,sizeof(SHvariables));
+	PADPOSITION(54,11,23,25,sizeof(SHvariables));
 #else
-	PADPOSITION(52,11,23,24,sizeof(SHvariables));
+	PADPOSITION(52,11,23,25,sizeof(SHvariables));
 #endif
 #else
 #ifdef WITHZLIB
-	PADPOSITION(53,9,23,22,sizeof(SHvariables));
+	PADPOSITION(53,9,23,23,sizeof(SHvariables));
 #else
-	PADPOSITION(51,9,23,22,sizeof(SHvariables));
+	PADPOSITION(51,9,23,23,sizeof(SHvariables));
 #endif
 #endif
 #else
 #ifdef WHICHSUBEXPRESSION
 #ifdef WITHZLIB
-	PADPOSITION(52,9,23,24,sizeof(SHvariables));
+	PADPOSITION(52,9,23,25,sizeof(SHvariables));
 #else
-	PADPOSITION(50,9,23,24,sizeof(SHvariables));
+	PADPOSITION(50,9,23,25,sizeof(SHvariables));
 #endif
 #else
 #ifdef WITHZLIB
-	PADPOSITION(51,7,23,22,sizeof(SHvariables));
+	PADPOSITION(51,7,23,23,sizeof(SHvariables));
 #else
-	PADPOSITION(49,7,23,22,sizeof(SHvariables));
+	PADPOSITION(49,7,23,23,sizeof(SHvariables));
 #endif
 #endif
 #endif

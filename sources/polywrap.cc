@@ -656,17 +656,26 @@ int poly_ratfun_normalize (PHEAD WORD *term) {
 		}
 		
 	if (num_polyratfun <= 1) return 0;
+/*
+	When there are polyratfun's with only one variable: rename them
+	temporarily to TMPPOLYFUN.
+*/
+	for (WORD *t=term+1; t<tstop; t+=t[1]) {
+		if (*t == AR.PolyFun && (t[1] == FUNHEAD+t[FUNHEAD]
+			|| t[1] == FUNHEAD+2 ) ) { *t = TMPPOLYFUN; }
+	}
+
 	
 	// Extract all variables in the polyfuns
 	vector<WORD *> e;
 	
-	for (WORD *t=term+1; t<tstop; t+=t[1])
+	for (WORD *t=term+1; t<tstop; t+=t[1]) {
 		if (*t == AR.PolyFun) 
 			for (WORD *t2 = t+FUNHEAD; t2<t+t[1];) {
 				e.push_back(t2);
 				NEXTARG(t2);
 			}		
-
+	}
 	poly::get_variables(BHEAD e, true, true);
 
 	// Check for modulus calculus
@@ -738,7 +747,12 @@ int poly_ratfun_normalize (PHEAD WORD *term) {
 
 	// reset modulo calculation
 	AN.ncmod = AC.ncmod;
-	
+
+	tstop = term + *term; tstop -= ABS(tstop[-1]);
+	for (WORD *t=term+1; t<tstop; t+=t[1]) {
+		if (*t == TMPPOLYFUN ) *t = AR.PolyFun;
+	}
+
 	return 0;
 }
 

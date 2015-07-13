@@ -105,6 +105,7 @@ WORD Processor()
 	AR.KeptInHold = 0;
 	if ( AC.CollectFun ) AR.DeferFlag = 0;
 	AR.outtohide = 0;
+	AN.PolyFunTodo = 0;
 #ifdef HIDEDEBUG
 	MesPrint("Status at the start of Processor (HideLevel = %d)",AC.HideLevel);
 	for ( i = 0; i < NumExpressions; i++ ) {
@@ -2917,7 +2918,15 @@ WORD Generator(PHEAD WORD *term, WORD level)
 ReStart:
 	if ( ( replac = TestSub(BHEAD term,level) ) == 0 ) {
 		if ( applyflag ) { TableReset(); applyflag = 0; }
+/*
+		if ( AN.PolyNormFlag > 1 ) {
+			if ( PolyFunMul(BHEAD term) ) goto GenCall;
+			AN.PolyNormFlag = 0;
+			if ( !*term ) goto Return0;
+		}
+*/
 Renormalize:
+		AN.PolyNormFlag = 0;
 		if ( ( retnorm = Normalize(BHEAD term) ) != 0 ) {
 			if ( retnorm > 0 ) {
 				if ( AT.WorkPointer < term + *term ) AT.WorkPointer = term + *term;
@@ -2925,10 +2934,26 @@ Renormalize:
 			}
 			goto GenCall;
 		}
-		if ( !*term ) goto Return0;
+		if ( !*term ) { AN.PolyNormFlag = 0; goto Return0; }
 		if ( AN.PolyNormFlag ) {
-			if ( PolyFunMul(BHEAD term) ) goto GenCall;
-			if ( !*term ) goto Return0;
+			if ( AN.PolyFunTodo == 0 ) {
+				if ( PolyFunMul(BHEAD term) ) goto GenCall;
+				if ( !*term ) { AN.PolyNormFlag = 0; goto Return0; }
+			}
+			else {
+				WORD oldPolyFunExp = AR.PolyFunExp;
+				AR.PolyFunExp = 0;
+				if ( PolyFunMul(BHEAD term) ) goto GenCall;
+				AR.PolyFunExp = oldPolyFunExp;
+				if ( !*term ) { AN.PolyNormFlag = 0; goto Return0; }
+				if ( Normalize(BHEAD term) < 0 ) goto GenCall;
+				if ( !*term ) { AN.PolyNormFlag = 0; goto Return0; }
+				if ( AN.PolyNormFlag ) {
+					if ( PolyFunMul(BHEAD term) ) goto GenCall;
+					if ( !*term ) { AN.PolyNormFlag = 0; goto Return0; }
+				}
+				AN.PolyFunTodo = 0;
+			}
 		}
 		if ( AT.WorkPointer < (WORD *)(((UBYTE *)(term)) + AM.MaxTer) )
 			 AT.WorkPointer = (WORD *)(((UBYTE *)(term)) + AM.MaxTer);
@@ -4726,6 +4751,7 @@ WORD PrepPoly(PHEAD WORD *term)
 		we call poly_ratfun_normalize
 */
 		if ( m[-1] == 3 && m[-2] == 1 && m[-3] == 1 ) return(0);
+		if ( AR.PolyFunExp != 1 ) {
 		if ( m[-1] < 0 ) { sign = -1; size = -m[-1]; } else { sign = 1; size = m[-1]; }
 		num = m - size; size = (size-1)/2; den = num + size;
 		sizenum = size; while ( num[sizenum-1] == 0 ) sizenum--;
@@ -4754,6 +4780,10 @@ WORD PrepPoly(PHEAD WORD *term)
 		w = num;
 		i = v - m;
 		NCOPY(w,m,i);
+		}
+		else {
+			w = m-ABS(m[-1]);
+		}
 		*w++ = 1; *w++ = 1; *w++ = 3; *term = w - term;
 		{
 			WORD oldtype = AR.SortType;
@@ -4766,7 +4796,7 @@ WORD PrepPoly(PHEAD WORD *term)
 		}
 		goto endofit;
 /*
- 		#] Two arguments :
+ 		#] Two arguments : 
 */
 	}
 	else {
@@ -4787,7 +4817,7 @@ endofit:;
 }
 
 /*
- 		#] PrepPoly :
+ 		#] PrepPoly : 
  		#[ PolyFunMul :			WORD PolyFunMul(term)
 */
 /**
@@ -4807,8 +4837,82 @@ WORD PolyFunMul(PHEAD WORD *term)
 	WORD *t, *fun1, *fun2, *t1, *t2, *m, *w, *ww, *tt1, *tt2, *tt4, *arg1, *arg2;
 	WORD *tstop, i, dirty = 0;
 	WORD n1, n2, i1, i2, l1, l2, l3, l4, action = 0, noac = 0;
+	if ( AR.PolyFunType == 2 && AR.PolyFunExp == 1 ) {
+		WORD pow = 0, pow1;
+		t = term + 1; t1 = term + *term; t1 -= ABS(t1[-1]);
+		w = t;
+		while ( t < t1 ) {
+			if ( *t != AR.PolyFun ) {
+SkipFun:
+				if ( t == w ) { t += t[1]; w = t; }
+				else { i = t[1]; NCOPY(w,t,i) }
+				continue;
+			}
+			pow1 = 0;
+			t2 = t + t[1]; t += FUNHEAD;
+			if ( *t < 0 ) {
+				if ( *t == -SYMBOL && t[1] == AR.PolyFunVar ) pow1++;
+				else if ( *t != -SNUMBER ) goto NoLegal;
+				t += 2;
+			}
+			else if ( t[0] == ARGHEAD+8 && t[ARGHEAD] == 8
+			 && t[ARGHEAD+1] == SYMBOL && t[ARGHEAD+3] == AR.PolyFunVar
+			 && t[ARGHEAD+5] == 1 && t[ARGHEAD+6] == 1 && t[ARGHEAD+7] == 3 ) {
+				pow1 += t[ARGHEAD+4];
+				t += *t;
+			}
+			else {
+NoLegal:
+				MLOCK(ErrorMessageLock);
+				MesPrint("Illegal term with divergence in PolyRatFun");
+				MesCall("PolyFunMul");
+				MUNLOCK(ErrorMessageLock);
+				Terminate(-1);
+			}
+			if ( *t < 0 ) {
+				if ( *t == -SYMBOL && t[1] == AR.PolyFunVar ) pow1--;
+				else if ( *t != -SNUMBER ) goto NoLegal;
+				t += 2;
+			}
+			else if ( t[0] == ARGHEAD+8 && t[ARGHEAD] == 8
+			 && t[ARGHEAD+1] == SYMBOL && t[ARGHEAD+3] == AR.PolyFunVar
+			 && t[ARGHEAD+5] == 1 && t[ARGHEAD+6] == 1 && t[ARGHEAD+7] == 3 ) {
+				pow1 -= t[ARGHEAD+4];
+				t += *t;
+			}
+			else goto NoLegal;
+			if ( t == t2 ) pow += pow1;
+			else goto SkipFun;
+		}
+		m = w;
+		*w++ = AR.PolyFun; *w++ = 0; FILLFUN(w);
+		if ( pow > 1 ) {
+			*w++ = 8+ARGHEAD; *w++ = 0; FILLARG(w);
+			*w++ = 8; *w++ = SYMBOL; *w++ = 4; *w++ = AR.PolyFunVar; *w++ = pow;
+			*w++ = 1; *w++ = 1; *w++ = 3; *w++ = -SNUMBER; *w++ = 1;
+		}
+		else if ( pow == 1 ) {
+			*w++ = -SYMBOL; *w++ = AR.PolyFunVar; *w++ = -SNUMBER; *w++ = 1;
+		}
+		else if ( pow < -1 ) {
+			*w++ = -SNUMBER; *w++ = 1; *w++ = 8+ARGHEAD; *w++ = 0; FILLARG(w);
+			*w++ = 8; *w++ = SYMBOL; *w++ = 4; *w++ = AR.PolyFunVar; *w++ = -pow;
+			*w++ = 1; *w++ = 1; *w++ = 3;
+		}
+		else if ( pow == -1 ) {
+			*w++ = -SNUMBER; *w++ = 1; *w++ = -SYMBOL; *w++ = AR.PolyFunVar;
+		}
+		else {
+			*w++ = -SNUMBER; *w++ = 1; *w++ = -SNUMBER; *w++ = 1;
+		}
+		m[1] = w - m;
+		*w++ = 1; *w++ = 1; *w++ = 3;
+		*term = w - term;
+		return(0);
+	}
 ReStart:
-	if ( AR.PolyFunType == 2 && AR.PolyFunExp != 2 ) {
+	if ( AR.PolyFunType == 2 && ( ( AR.PolyFunExp != 2 )
+	 || ( AR.PolyFunExp == 2 && AN.PolyNormFlag > 1 ) ) ) {
 		WORD retval, count1 = 0, count2 = 0, count3;
 		WORD oldtype = AR.SortType;
 		t = term + 1; t1 = term + *term; t1 -= ABS(t1[-1]);
@@ -4818,6 +4922,7 @@ ReStart:
 				dirty = 1;
 				ReadPolyRatFun(BHEAD term);
 /*				poly_ratfun_normalize(BHEAD term); */
+				if ( term[0] == 0 ) return(0);
 				goto ReStart;
 			  }
 			  t2 = t + t[1]; tt2 = t+FUNHEAD; count3 = 0;
@@ -4873,10 +4978,15 @@ ReStart:
 			t += t[1];
 		}
 		if ( count1 <= 1 ) return(0);
+		if ( AR.PolyFunExp == 1 ) {
+			t = term + *term; t -= ABS(t[-1]);
+			*t++ = 1; *t++ = 1; *t++ = 3; *term = t - term;
+		}
 		{
 			AR.SortType = SORTHIGHFIRST;
 /*			retval = ReadPolyRatFun(BHEAD term); */
 			retval = poly_ratfun_normalize(BHEAD term);
+			if ( *term == 0 ) return(retval);
 			AR.SortType = oldtype;
 		}
 	

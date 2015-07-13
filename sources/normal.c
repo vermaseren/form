@@ -213,7 +213,7 @@ WORD Normalize(PHEAD WORD *term)
 	WORD *ReplaceSub;
 	WORD *fillsetexp;
 	CBUF *C = cbuf+AT.ebufnum;
-	WORD *ANsc = 0, *ANsm = 0, *ANsr = 0;
+	WORD *ANsc = 0, *ANsm = 0, *ANsr = 0, PolyFunMode;
 	LONG oldcpointer = 0;
 	n_coef = TermMalloc("NormCoef");
 	n_llnum = TermMalloc("n_llnum");
@@ -243,7 +243,7 @@ Restart:
 	termout = AT.WorkPointer;
     AT.WorkPointer = (WORD *)(((UBYTE *)(AT.WorkPointer)) + AM.MaxTer);
 	fillsetexp = termout+1;
-	AN.PolyNormFlag = 0;
+	AN.PolyNormFlag = 0; PolyFunMode = AN.PolyFunTodo;
 /*
 	termflag = 0;
 */
@@ -3116,7 +3116,12 @@ NextI:;
 			  if ( AR.PolyFunType == 1 ) { /* Regular PolyFun with one argument */
 				if ( t[FUNHEAD+1] == 0 && AR.Eside != LHSIDE && 
 				t[1] == FUNHEAD + 2 && t[FUNHEAD] == -SNUMBER ) goto NormZero;
-				if ( i > 0 && pcom[i-1][0] == AR.PolyFun ) AN.PolyNormFlag = 1;
+				if ( i > 0 && pcom[i-1][0] == AR.PolyFun ) {
+					if ( AN.PolyNormFlag == 0 ) {
+						AN.PolyNormFlag = 1;
+						AN.PolyFunTodo = 0;
+					}
+				}
 				k = t[1];
 				NCOPY(m,t,k);
 			  }
@@ -3147,23 +3152,59 @@ regularratfun:;
 					if ( *u == -SNUMBER && u[1] == 0 ) goto NormInf;
 				}
 				if ( i > 0 && pcom[i-1][0] == AR.PolyFun ) AN.PolyNormFlag = 1;
+				else if ( i < ncom-1 && pcom[i+1][0] == AR.PolyFun ) AN.PolyNormFlag = 1;
 				k = t[1];
-				if ( AR.PolyFunExp == 0 ) {
-					NCOPY(m,t,k);
-				}
-				else if ( AR.PolyFunExp == 1 ) { /* get highest divergence */
-					WORD *mmm = m;
-					NCOPY(m,t,k);
-					if ( TreatPolyRatFun(BHEAD mmm) != 0 )
-							goto FromNorm;
-					m = mmm+mmm[1];
+				if ( AN.PolyNormFlag ) {
+					if ( AR.PolyFunExp == 0 ) {
+						AN.PolyFunTodo = 0;
+						NCOPY(m,t,k);
+					}
+					else if ( AR.PolyFunExp == 1 ) { /* get highest divergence */
+						if ( PolyFunMode == 0 ) {
+							NCOPY(m,t,k);
+							AN.PolyFunTodo = 1;
+						}
+						else {
+							WORD *mmm = m;
+							NCOPY(m,t,k);
+							if ( TreatPolyRatFun(BHEAD mmm) != 0 )
+									goto FromNorm;
+							m = mmm+mmm[1];
+						}
+					}
+					else {
+						if ( PolyFunMode == 0 ) {
+							NCOPY(m,t,k);
+								AN.PolyFunTodo = 1;
+						}
+						else {
+							WORD *mmm = m;
+							NCOPY(m,t,k);
+							if ( ExpandRat(BHEAD mmm) != 0 )
+									goto FromNorm;
+							m = mmm+mmm[1];
+						}
+					}
 				}
 				else {
-					WORD *mmm = m;
-					NCOPY(m,t,k);
-					if ( ExpandRat(BHEAD mmm) != 0 )
-							goto FromNorm;
-					m = mmm+mmm[1];
+					if ( AR.PolyFunExp == 0 ) {
+						AN.PolyFunTodo = 0;
+						NCOPY(m,t,k);
+					}
+					else if ( AR.PolyFunExp == 1 ) { /* get highest divergence */
+						WORD *mmm = m;
+						NCOPY(m,t,k);
+						if ( TreatPolyRatFun(BHEAD mmm) != 0 )
+								goto FromNorm;
+						m = mmm+mmm[1];
+					}
+					else {
+						WORD *mmm = m;
+						NCOPY(m,t,k);
+						if ( ExpandRat(BHEAD mmm) != 0 )
+								goto FromNorm;
+						m = mmm+mmm[1];
+					}
 				}
 			  }
 			}
@@ -3778,227 +3819,6 @@ NoRep:
 			}
 		}
 /*
- 		#[ normalize replacements :
-
-		At this point we have the problem that we may have to treat functions
-		with a dirtyflag. In the original setting DIRTYFLAG is replaced
-		in the redo by DIRTYSYMFLAG but that doesn't take care of things
-		like  f(y*x) -> f(x*y) etc. This is why we need to redo the arguments
-		in the style that TestSub uses for dirty arguments, But this again
-		involves calls to Normalize itself (and to the sorting system).
-		This is the reason why Normalize has to be reentrant.
-
-		To do things 100% right we have to call TestSub and potentially
-		invoke Generator, because there could be Table elements that
-		suddenly can be substituted!
-
-		It seems best to get the term through Generator again, but that means
-		we have to catch the output via the sort mechanism. It may be a bit
-		wasteful, but it is definitely the most correct.
-*/
-#ifdef OLDNORMREPLACE
-		{
-			WORD oldpolynorm = AN.PolyNormFlag;
-			WORD *oldcterm = AN.cTerm, *tstop, *argstop, *rnext, *tt, *wt;
-			WORD *oldwork, olddefer;
-			LONG newspace, oldspace, numterms;
-			AT.WorkPointer = termout;
-			if ( AT.WorkPointer < term + *term && term >= AT.WorkSpace
-			&& term < AT.WorkTop ) AT.WorkPointer = term + *term;
-/*
-			To do things 100% right we have to call TestSub and potentially
-			invoke Generator, because there could be Table elements that
-			suddenly can be substituted!
-			That last possibility we will omit!
-*/
-			tstop = term + *term; tstop -= ABS(tstop[-1]);
-			t = term +1;
-			while ( t < tstop ) {
-				if ( *t >= FUNCTION && ( ( t[2] & DIRTYFLAG ) != 0 )
-				&& ( functions[*t-FUNCTION].spec == 0 ) ) {
-					VOID *oldcompareroutine = AR.CompareRoutine;
-					r = t + FUNHEAD; argstop = t + t[1];
-					while ( r < argstop ) {
-						if ( *r > 0 && ( r[1] != 0 ) ) {
-							m  = r + ARGHEAD; rnext = r + *r;
-							oldwork = AT.WorkPointer;
-							olddefer = AR.DeferFlag;
-							AR.DeferFlag = 0;
-							if ( *t == AR.PolyFun && AR.PolyFunType == 2 ) {
-								AR.CompareRoutine = &CompareSymbols;
-							}
-							NewSort(BHEAD0);
-							m  = r + ARGHEAD; rnext = r + *r;
-							while ( m < rnext ) {
-								i = *m; tt = m; wt = oldwork;
-								NCOPY(wt,tt,i);
-								AT.WorkPointer = wt;
-								if ( Generator(BHEAD oldwork,AR.Cnumlhs) ) {
-									LowerSortLevel(); goto FromNorm;
-								}
-								m += *m;
-							}
-						    AT.WorkPointer = (WORD *)(((UBYTE *)(oldwork)) + AM.MaxTer);
-							if ( AT.WorkPointer > AT.WorkTop ) goto OverWork;
-							m = AT.WorkPointer;
-							if ( EndSort(BHEAD m,1) < 0 ) goto FromNorm;
-							if ( *t == AR.PolyFun && AR.PolyFunType == 2 ) {
-								AR.CompareRoutine = oldcompareroutine;
-							}
-/*
-							Now we have to analyse the output
-							Count terms and space
-*/
-							AR.DeferFlag = olddefer;
-							numterms = 0; wt = m;
-							while ( *wt ) { numterms++; wt += *wt; }
-							newspace = wt - m;
-							oldspace = *r - ARGHEAD;
-/*
-							Now the special cases
-*/
-							if ( numterms == 0 ) {
-								m[0] = -SNUMBER; m[1] = 0;
-								newspace = 2;
-							}
-							else if ( numterms == 1 ) {
-								if ( *m == 4+FUNHEAD && m[3+FUNHEAD] == 3
-								&& m[2+FUNHEAD] == 1 && m[1+FUNHEAD] == 1
-								&& m[1] >= FUNCTION ) {
-									m[0] = -m[1];
-									newspace = 1;
-								}
-								else if ( *m == 8 && m[7] == 3
-								&& m[6] == 1 && m[5] == 1
-								&& m[1] == SYMBOL && m[4] == 1 ) {
-									m[0] = -SYMBOL; m[1] = m[3];
-									newspace = 2;
-								}
-								else if ( *m == 7 && m[6] == 3
-								&& m[5] == 1 && m[4] == 1
-								&& m[1] == INDEX ) {
-									if ( m[3] >= 0 ) {
-										m[0] = -INDEX; m[1] = m[3];
-									}
-									else {
-										m[0] = -VECTOR; m[1] = m[3];
-									}
-									newspace = 2;
-								}
-								else if ( *m == 7 && m[6] == -3
-								&& m[5] == 1 && m[4] == 1
-								&& m[1] == INDEX && m[3] < 0 ) {
-									m[0] = -MINVECTOR; m[1] = m[3];
-									newspace = 2;
-								}
-								else if ( *m == 4
-								&& m[2] == 1 && (UWORD)(m[1]) <= MAXPOSITIVE ) {
-									m[0] = -SNUMBER;
-									if ( m[3] < 0 ) m[1] = -m[1];
-									newspace = 2;
-								}
-							}
-/*
-							Now the old argument takes oldspace spaces.
-							The new argument takes newspace places.
-							The new argument sits at m. There should be enough
-							space in the term to accept it, but we may have to
-							move the tail of the term
-*/
-							if ( newspace <= 2 ) {
-								oldspace = *r;
-								i = oldspace - newspace;
-								*r = *m;
-								if ( newspace > 1 ) r[1] = m[1];
-								m = r + newspace;
-								wt = rnext;
-								tt = term + *term;
-								while ( wt < tt ) *m++ = *wt++;
-								*term -= i;
-								t[1] -= i;
-								tstop -= i;
-								argstop -= i;
-							}
-							else if ( oldspace == newspace ) {
-								i = newspace; tt = r+ARGHEAD; wt = m;
-								NCOPY(tt,wt,i);
-								r[1] = 0;
-							}
-							else if ( oldspace > newspace ) {
-								i = newspace; tt = r+ARGHEAD; wt = m;
-								NCOPY(tt,wt,i);
-								wt = rnext; m = term + *term;
-								while ( wt < m ) *tt++ = *wt++;
-								i = oldspace - newspace;
-								*term -= i;
-								t[1] -= i;
-								tstop -= i;
-								argstop -= i;
-								*r -= i;
-								r[1] = 0;
-							}
-							else if ( (*term+newspace-oldspace)*sizeof(WORD) > AM.MaxTer ) {
-								MLOCK(ErrorMessageLock);
-								MesPrint("Term too complex. Maybe increasing MaxTermSize can help");
-								MesCall("Norm");
-								MUNLOCK(ErrorMessageLock);
-								TermFree(n_llnum,"n_llnum");
-								TermFree(n_coef,"NormCoef");
-								return(-1);
-							}
-							else {
-								i = newspace - oldspace;
-								tt = term + *term; wt = rnext;
-								while ( tt > rnext ) { tt--; tt[i] = tt[0]; }
-								*term += i;
-								t[1] += i;
-								tstop += i;
-								argstop += i;
-								*r += i;
-								i = newspace; tt = r+ARGHEAD; wt = m;
-								NCOPY(tt,wt,i);
-								r[1] = 0;
-							}
-							AT.WorkPointer = oldwork;
-						}
-						NEXTARG(r)
-					}
-				}
-				if ( *t >= FUNCTION && ( t[2] & DIRTYFLAG ) != 0 ) {
-					t[2] &= ~DIRTYFLAG;
-					if ( functions[*t-FUNCTION].symmetric ) t[2] |= DIRTYSYMFLAG;
-				}
-				t += t[1];
-			}
-
-			AN.PolyNormFlag = oldpolynorm;
-			AN.cTerm = oldcterm;
-		}
-		{
-			WORD *oldwork = AT.WorkPointer;
-			WORD olddefer = AR.DeferFlag;
-			AR.DeferFlag = 0;
-			NewSort(BHEAD0);
-			if ( Generator(BHEAD term,AR.Cnumlhs) ) {
-				LowerSortLevel(); goto FromNorm;
-			}
-		    AT.WorkPointer = oldwork;
-			if ( EndSort(BHEAD term,1) < 0 ) goto FromNorm;
-			if ( *term == 0 ) goto NormZero;
-			AR.DeferFlag = olddefer;
-		}
-#endif
-/*
- 		#] normalize replacements : 
-*/
-#ifdef OLDNORMREPLACE
-		AT.WorkPointer = termout;
-		if ( ReplaceType == 0 ) {
-			regval = 1;
-			goto Restart;
-		}
-#endif
-/*
 		The next 'reset' cannot be done. We still need the expression
 		in the buffer. Note though that this may cause a runaway pointer
 		if we are not very careful.
@@ -4074,17 +3894,6 @@ FromNorm:
 	TermFree(n_llnum,"n_llnum");
 	TermFree(n_coef,"NormCoef");
 	return(-1);
-
-#ifdef OLDNORMREPLACE
-OverWork:
-	MLOCK(ErrorMessageLock);
-	MesWork();
-	MesCall("Norm");
-	MUNLOCK(ErrorMessageLock);
-	TermFree(n_llnum,"n_llnum");
-	TermFree(n_coef,"NormCoef");
-	return(-1);
-#endif
 
 /*
   	#] Errors and Finish : 
@@ -4954,6 +4763,7 @@ int TreatPolyRatFun(PHEAD WORD *prf)
 	we never can have arguments that consist of just a function.
 */
 	exp1 = exp1-exp2;
+/*	if ( exp1 > 0 ) exp1 = 0; */
 	t = prf+FUNHEAD;
 	if ( exp1 == 0 ) {
 		*t++ = -SNUMBER; *t++ = 1;

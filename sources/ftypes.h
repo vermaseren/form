@@ -357,6 +357,7 @@ typedef int (*TFUN1)();
 #define HAAKJE0 9
 #define FUNCTION 20
 
+#define TMPPOLYFUN 14
 #define ARGFIELD 15
 #define SNUMBER 16
 #define LNUMBER 17
