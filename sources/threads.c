@@ -1040,6 +1040,7 @@ int LoadOneThread(int from, int identity, THREADBUCKET *thr, int par)
 	AR.Stage4Name = AR0.Stage4Name;
 	AR.GetOneFile = AR0.GetOneFile;
 	AR.PolyFun = AR0.PolyFun;
+	AR.PolyFunInv = AR0.PolyFunInv;
 	AR.PolyFunType = AR0.PolyFunType;
 	AR.PolyFunExp = AR0.PolyFunExp;
 	AR.PolyFunVar = AR0.PolyFunVar;
