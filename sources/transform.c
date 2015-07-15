@@ -2298,7 +2298,7 @@ OverWork:;
 
 WORD RunAddArg(PHEAD WORD *fun, WORD *args)
 {
-	WORD *tt, totarg, *tstop, arg1, arg2, n, num, i, *f, *f1, *f2;
+	WORD *tt, totarg, *tstop, arg1, arg2, n, num, *f, *f1, *f2;
 	WORD scribble[10+ARGHEAD];
 	LONG space;
 	if ( *args != ARGRANGE ) {
@@ -2333,7 +2333,7 @@ WORD RunAddArg(PHEAD WORD *fun, WORD *args)
 	if ( arg2 > totarg ) return(0);
 	num = arg2-arg1+1;
 	if ( num == 1 ) return(0);
-	f = fun+FUNHEAD; n = 1; i = 0;
+	f = fun+FUNHEAD; n = 1;
 	while ( n < arg1 ) { n++; NEXTARG(f) }
 	f1 = f;
 	NewSort(BHEAD0);

@@ -4623,7 +4623,8 @@ WORD PrepPoly(PHEAD WORD *term)
 				*m++ = t[1];
 				*m++ = 1;
 				NCOPY(m,r,i);
-				AT.WorkPointer = m;
+				if ( m >= AT.WorkSpace && m < AT.WorkTop )
+					AT.WorkPointer = m;
 				if ( Normalize(BHEAD v) ) Terminate(-1);
 				AT.WorkPointer = oldworkpointer;
 				m = w;
@@ -5021,7 +5022,8 @@ ReStart:
 		return(retval);
 	}
 retry:
-	AT.WorkPointer = term + *term;
+	if ( term >= AT.WorkSpace && term+*term < AT.WorkTop )
+		AT.WorkPointer = term + *term;
 	GETSTOP(term,tstop);
 	t = term+1;
 	while ( *t != AR.PolyFun && t < tstop ) t += t[1];

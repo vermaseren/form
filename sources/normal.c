@@ -3846,8 +3846,8 @@ NoRep:
   	#[ Errors and Finish :
 */
 RegEnd:
-	AT.WorkPointer = termout;
 	if ( termout < term + *term && termout >= term ) AT.WorkPointer = term + *term;
+	else AT.WorkPointer = termout;
 /*
 	if ( termflag ) {	We have to assign the term to $variable(s)
 		TermAssign(term);

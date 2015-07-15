@@ -1274,6 +1274,7 @@ void *RunThread(void *dummy)
 				AR.expchanged = AB[0]->R.expchanged;
 				AR.expflags = AB[0]->R.expflags;
 				AR.PolyFun = AB[0]->R.PolyFun;
+				AR.PolyFunInv = AB[0]->R.PolyFunInv;
 				AR.PolyFunType = AB[0]->R.PolyFunType;
 				AR.PolyFunExp = AB[0]->R.PolyFunExp;
 				AR.PolyFunVar = AB[0]->R.PolyFunVar;
@@ -1908,6 +1909,7 @@ void *RunSortBot(void *dummy)
 			case INISORTBOT:
 				AR.CurExpr = AB[0]->R.CurExpr;
 				AR.PolyFun = AB[0]->R.PolyFun;
+				AR.PolyFunInv = AB[0]->R.PolyFunInv;
 				AR.PolyFunType = AB[0]->R.PolyFunType;
 				AR.PolyFunExp = AB[0]->R.PolyFunExp;
 				AR.PolyFunVar = AB[0]->R.PolyFunVar;

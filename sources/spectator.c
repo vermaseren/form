@@ -160,6 +160,7 @@ int CoCreateSpectator(UBYTE *inp)
 	AM.SpectatorFiles[specnum].name = (char *)(strDup1(inp,"Spectator expression name"));
 	AM.SpectatorFiles[specnum].fh = fh;
 	AM.SpectatorFiles[specnum].exprnumber = numexpr;
+	*p = cc;
 	return(0);
 Syntax:
 	MesPrint("&Proper syntax is: CreateSpectator,exprname,\"filename\";");
@@ -372,8 +373,8 @@ int PutInSpectator(WORD *term,WORD specnum)
 		*p++ = *term++;
 	} while ( --i > 0 );
 	fi->POfull = fi->POfill = p;
-	UNLOCK(fi->pthreadslock);
 	Expressions[AM.SpectatorFiles[specnum].exprnumber].counter++;
+	UNLOCK(fi->pthreadslock);
 	return(ret);
 }
 

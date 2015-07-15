@@ -3027,7 +3027,7 @@ char *TheErrorMessage[] = {
 int ExpandRat(PHEAD WORD *fun)
 {
 	WORD *r, *rr, *rrr, *tt, *tnext, *arg1, *arg2, *rmin = 0, *rmininv;
-	WORD *rcoef, rsize, rcopy, *oldworkpointer, *ow = AT.WorkPointer;
+	WORD *rcoef, rsize, rcopy, *ow = AT.WorkPointer;
 	WORD *numerator, *denominator, *rnext;
 	WORD *thecopy, *rc, ncoef, newcoef, *m, *mm, nco, *outarg = 0;
 	UWORD co[2], co1[2], co2[2];
@@ -3197,7 +3197,8 @@ NormArg:;
 					*r++ = arg2[0]; *r++ = arg2[1];
 					m++; while ( m < mm ) *r++ = *m++;
 					*rrr = r-rrr;
-					AT.WorkPointer = r;
+					if ( AT.WorkPointer < AT.WorkTop && AT.WorkPointer >= AT.WorkSpace )
+								AT.WorkPointer = r;
 					Normalize(BHEAD rrr);
 					StoreTerm(BHEAD rrr);
 				}
@@ -3253,7 +3254,7 @@ NormArg:;
 		if ( AT.WorkPointer + (AM.MaxTer/sizeof(WORD)) >= AT.WorkTop ) {
 			error = 4; goto onerror;
 		}
-		oldworkpointer = rmininv = r = AT.WorkPointer;
+		rmininv = r = AT.WorkPointer;
 		rr = rmin; i = *rmin; NCOPY(r,rr,i)
 		if ( minpow != 0 ) { rmininv[4] = -rmininv[4]; }
 		rsize = ABS(r[-1]);
