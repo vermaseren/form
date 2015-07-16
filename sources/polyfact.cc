@@ -667,10 +667,13 @@ const vector<poly> polyfact::lift_variables (const poly &A, const vector<poly> &
 	// Calculate the maximum degree of A in x2,...,xm
 	int maxdegA=0;
 	for (int i=1; i<(int)x.size(); i++)
-		maxdegA = MaX(maxdegA, 1+A.degree(x[i]));
+		maxdegA = MaX(maxdegA, A.degree(x[i]));
 
 	// Iteratively add the variables x2,...,xm
 	for (int xi=1; xi<(int)x.size(); xi++) {
+		// replace the current leading coefficients by the correct ones
+		for (int i=0; i<(int)a.size(); i++)
+			a[i] += (lc[i] - a[i].lcoeff_univar(x[0])) * poly::simple_poly(BHEAD x[0],0,a[i].degree(x[0]));
 
 		vector<poly> anew(a);
 		for (int i=0; i<(int)anew.size(); i++)
