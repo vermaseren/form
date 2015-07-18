@@ -933,7 +933,7 @@ const poly polygcd::gcd_modular_dense_interpolation (const poly &a, const poly &
 	poly gcdlcoeffs(gcd_Euclidean(lcoeffa,lcoeffb));
 
 	// calculate the degree bound for each variable
-	int m = MiN(ppa.degree(x[x.back() - 2]),ppb.degree(x[x.back() - 2]));
+	int m = MiN(ppa.degree(x[x.size() - 2]),ppb.degree(x[x.size() - 2]));
 
 	poly res(BHEAD 0);
 	poly oldres(BHEAD 0);
@@ -951,7 +951,7 @@ const poly polygcd::gcd_modular_dense_interpolation (const poly &a, const poly &
 
 		// calculate gcd recursively
 		poly gcdmodc(gcd_modular_dense_interpolation(amodc,bmodc,vector<int>(x.begin(),x.end()-1), newshape));
-		int n = gcdmodc.degree(x[x.back() - 2]);
+		int n = gcdmodc.degree(x[x.size() - 2]);
 
 		// normalize
 		gcdmodc = (gcdmodc * substitute(gcdlcoeffs,X,c)) / gcdmodc.integer_lcoeff();
