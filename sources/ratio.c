@@ -3197,7 +3197,7 @@ NormArg:;
 					*r++ = arg2[0]; *r++ = arg2[1];
 					m++; while ( m < mm ) *r++ = *m++;
 					*rrr = r-rrr;
-					if ( AT.WorkPointer < AT.WorkTop && AT.WorkPointer >= AT.WorkSpace )
+					if ( r < AT.WorkTop && r >= AT.WorkSpace )
 								AT.WorkPointer = r;
 					Normalize(BHEAD rrr);
 					StoreTerm(BHEAD rrr);
