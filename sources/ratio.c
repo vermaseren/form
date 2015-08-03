@@ -3364,7 +3364,7 @@ NormArg:;
 				*thecopy = rr - thecopy;
 				AT.WorkPointer = rr;
 				Normalize(BHEAD thecopy);
-				StoreTerm(BHEAD thecopy);
+				if ( *thecopy > 0 ) StoreTerm(BHEAD thecopy);
 				AT.WorkPointer = thecopy;
 			}
 			r = rnext;

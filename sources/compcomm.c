@@ -5212,6 +5212,8 @@ int CoPolyRatFun(UBYTE *s)
 			}
 			AR.PolyFunExp = AC.lPolyFunExp = 1;
 			AR.PolyFunVar = AC.lPolyFunVar;
+			symbols[AC.lPolyFunVar].minpower = -MAXPOWER;
+			symbols[AC.lPolyFunVar].maxpower =  MAXPOWER;
 		}
 		else if ( StrICmp(s,(UBYTE *)"expand") == 0 ) {
 			WORD x = 0;
@@ -5244,6 +5246,8 @@ int CoPolyRatFun(UBYTE *s)
 			AR.PolyFunExp = AC.lPolyFunExp = 2;
 			AR.PolyFunVar = AC.lPolyFunVar;
 			AR.PolyFunPow = AC.lPolyFunPow = x;
+			symbols[AC.lPolyFunVar].minpower = -MAXPOWER;
+			symbols[AC.lPolyFunVar].maxpower =  MAXPOWER;
 		}
 		else {
 			MesPrint("&Illegal option %s in PolyRatFun statement.",s);

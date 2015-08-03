@@ -960,6 +960,11 @@ skippar:		error = 1;
 			if ( type != CSYMBOL ) error = NameConflict(type,name);
 			else {
 				SYMBOLS sym = (SYMBOLS)(AC.Symbols->lijst) + numsymbol;
+				if ( ( numsymbol == AC.lPolyFunVar ) && ( AC.lPolyFunType > 0 )
+					 && ( AC.lPolyFun != 0 ) && ( minpow > -MAXPOWER || maxpow < MAXPOWER ) ) {
+					MesPrint("&The symbol %s is used by power expansions in the PolyRatFun!",name);
+					error = 1;
+				}
 				sym->complex  = cplx;
 				sym->minpower = minpow;
 				sym->maxpower = maxpow;
@@ -976,7 +981,7 @@ eol:	while ( *s == ',' ) s++;
 }
 
 /*
-  	#] CoSymbol : 
+  	#] CoSymbol :
   	#[ AddIndex :
 
 	The actual addition. Special routine for additions 'on the fly'
