@@ -597,6 +597,7 @@ int AllocSetups()
 	AM.CompressSize = sp->value;
 #ifndef WITHPTHREADS
 	AR.CompressBuffer = (WORD *)Malloc1((AM.CompressSize+10)*sizeof(WORD),"compresssize");
+	AR.CompressPointer = AR.CompressBuffer;
 	AR.ComprTop = AR.CompressBuffer + AM.CompressSize;
 #endif
 	sp = GetSetupPar((UBYTE *)"bracketindexsize");
