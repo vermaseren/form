@@ -1326,9 +1326,13 @@ IndAll:				i = m[1] - WILDOFFSET;
 			else goto endofloop;
 		}
 		else if ( *m > 0 && *t > 0 ) {
+			WORD ii = *t-*m;
 			i = *m;
 			do { if ( *m++ != *t++ ) break; } while ( --i > 0 );
-			if ( i > 0 ) {
+			if ( i == 1 && ii == 0 ) {	/* sign difference */
+				goto endofloop;
+			}
+			else if ( i > 0 ) {
 				WORD *cto, *cfrom, *csav, ci;
 				WORD oRepFunNum;
 				WORD *oRepFunList;
@@ -1429,6 +1433,21 @@ nomatch:
 /*				if ( *m == 1 || m[1] < FUNCTION || functions[m[1]-FUNCTION].spec >= TENSORFUNCTION ) { */
 				if ( *m == 1 || m[1] < FUNCTION ) {
 					if ( AN.ExpectedSign ) goto nomatch;
+				}
+				else {
+					if ( m[1] > FUNCTION + WILDOFFSET ) {
+						if ( functions[m[1]-FUNCTION-WILDOFFSET].spec >= TENSORFUNCTION ) {
+							if ( AN.ExpectedSign != AN.RepFunList[AN.RepFunNum-1] ) goto nomatch;
+						}
+					}
+             		else {
+						if ( AN.ExpectedSign != AN.RepFunList[AN.RepFunNum-1] ) goto nomatch;
+/*
+						if ( functions[m[1]-FUNCTION].spec >= TENSORFUNCTION ) {
+							if ( AN.ExpectedSign != AN.RepFunList[AN.RepFunNum-1] ) goto nomatch;
+						}
+*/
+					}
 				}
 				AN.nogroundlevel--;
 				AN.ExpectedSign = oExpectedSign;
