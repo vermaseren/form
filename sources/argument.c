@@ -66,7 +66,7 @@ WORD execarg(PHEAD WORD *term, WORD level)
 	WORD *oldwork = AT.WorkPointer, *oldwork2, scale, renorm;
 	WORD kLCM = 0, kGCD = 0, kGCD2, kkLCM = 0, jLCM = 0, jGCD, sign = 1;
 	int ii;
-	UWORD *EAscrat, *GCDbuffer, *GCDbuffer2, *LCMbuffer, *LCMb, *LCMc;
+	UWORD *EAscrat, *GCDbuffer = 0, *GCDbuffer2, *LCMbuffer, *LCMb, *LCMc;
 	AT.WorkPointer += *term;
 	start = C->lhs[level];
 	AR.Cnumlhs = start[2];
@@ -430,8 +430,10 @@ HaveTodo:
 								r3[jGCD+kLCM] = LCMbuffer[jGCD];
 							k = kLCM;
 						}
-						NumberFree(GCDbuffer,"execarg"); NumberFree(GCDbuffer2,"execarg");
-						NumberFree(LCMbuffer,"execarg"); NumberFree(LCMb,"execarg"); NumberFree(LCMc,"execarg");
+/*						NumberFree(GCDbuffer,"execarg"); GCDbuffer = 0; */
+						NumberFree(GCDbuffer2,"execarg");
+						NumberFree(LCMbuffer,"execarg");
+						NumberFree(LCMb,"execarg"); NumberFree(LCMc,"execarg");
 						j = 2*k+1;
 /*
 						Now we have to correct the overal factor
@@ -1559,7 +1561,7 @@ nextterm:						mm = mnext;
 						}
  					}
 /*
-			#] Numerical factor : 
+			#] Numerical factor :
 */
 					else {
 oneterm:;
@@ -1605,6 +1607,7 @@ oneterm:;
 	AT.WorkPointer = oldwork;
 	if ( AT.WorkPointer < term + *term ) AT.WorkPointer = term + *term;
 	AT.pWorkPointer = oldppointer;
+	if ( GCDbuffer ) NumberFree(GCDbuffer,"execarg");
 	return(action);
 execargerr:
 	AT.WorkPointer = oldwork;
