@@ -1332,13 +1332,12 @@ CalledFrom:
 /**
  *	Implements part of the old ExecArg in which we take common factors
  *	from arguments with more than one term.
- *	The common pieces are put in argout as a sequence of arguments.
- *	The part with the multiple terms that are now relative prime is
- *	put in argfree which is allocated via TermMalloc and is given as the
- *	return value.
- *	The difference with the old code is that negative powers are always
- *	removed. Hence it is as in MakeInteger in which only numerators will
- *	be left: now only zero or positive powers will be remaining.
+ *	Here the input is a sequence of terms in 'in' and the answer is a
+ *	content-free sequence of terms. This sequence has been allocated by
+ *	the Malloc1 routine in a call to EndSort, unless the expression was
+ *	already content-free. In that case the input pointer is returned.
+ *	The content is returned in term. This is supposed to be a separate
+ *	allocation, made by TermMalloc in the calling routine.
  */
 
 WORD *TakeContent(PHEAD WORD *in, WORD *term)
@@ -1574,6 +1573,15 @@ nextr1:;
 	tterm = AT.WorkPointer; tt = tterm+1;
 	tout[0] = SYMBOL; tout[1] = 2;
 	t = in;
+	tnext = t + *t; tstop = tnext - ABS(tnext[-1]); t++;
+	while ( t < tstop ) {
+		if ( *t == SYMBOL ) {
+			for ( i = 0; i < t[1]; i++ ) tout[i] = t[i];
+			break;
+		}
+		t += t[1];
+	}
+	t = tnext;
 	while ( *t ) {
 		tnext = t + *t; tstop = tnext - ABS(tnext[-1]); t++;
 		while ( t < tstop ) {

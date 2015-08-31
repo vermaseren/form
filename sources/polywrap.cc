@@ -122,6 +122,23 @@ WORD *poly_gcd(PHEAD WORD *a, WORD *b) {
 #ifdef DEBUG
 	cout << "*** [" << thetime() << "]  CALL : poly_gcd" << endl;
 #endif
+
+//
+//MesPrint("Calling poly_gcd with:");
+//{
+//	WORD *at = a;
+//	MesPrint("      a:");
+//	while ( *at ) {
+//		MesPrint("   %a",*at,at);
+//		at += *at;
+//	}
+//	MesPrint("      b:");
+//	at = b;
+//	while ( *at ) {
+//		MesPrint("   %a",*at,at);
+//		at += *at;
+//	}
+//}
 	
 	// Extract variables
 	vector<WORD *> e;

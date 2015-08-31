@@ -2805,6 +2805,7 @@ WORD TestEndDoLoop(PHEAD WORD *lhsbuf, WORD level)
  */
 
 /* #define STEP2 */
+#define STEP2
 
 int DollarFactorize(PHEAD WORD numdollar)
 {
@@ -2904,7 +2905,9 @@ int DollarFactorize(PHEAD WORD numdollar)
  		#[ Step 2: take out the 'content'.
 */
 #ifdef STEP2
-	if ( ( buf2 = TakeDollarContent(BHEAD buf1,&buf1content) ) == 0 ) {
+	buf1content = TermMalloc("DollarContent");
+	if ( ( buf2 = TakeContent(BHEAD buf1,buf1content) ) == 0 ) {
+		TermFree(buf1content,"DollarContent");
 		M_free(buf1,"DollarFactorize-1");
 		AR.SortType = oldsorttype;
 		MLOCK(ErrorMessageLock);
@@ -2917,6 +2920,7 @@ int DollarFactorize(PHEAD WORD numdollar)
 		      ( buf1content[2] == 1 ) && ( buf1content[3] == 3 ) &&
 			  ( buf1content[4] == 0 ) ) { /* Nothing happened */
 		M_free(buf2,"DollarFactorize-2");
+		buf2 = buf1;
 		factorsincontent = 0;
 	}
 	else {
@@ -2994,7 +2998,7 @@ int DollarFactorize(PHEAD WORD numdollar)
 		MesPrint("Cannot factorize a $-expression with more than one noncommuting object");
 		AR.SortType = oldsorttype;
 		M_free(buf1,"DollarFactorize-2");
-		if ( buf1content ) M_free(buf1content,"DollarFactorize-4");
+		if ( buf1content ) TermFree(buf1content,"DollarContent");
 		MesCall("DollarFactorize");
 		Terminate(-1);
 		return(-1);
@@ -3009,7 +3013,7 @@ int DollarFactorize(PHEAD WORD numdollar)
 getout:
 				AR.SortType = oldsorttype;
 				M_free(buf1,"DollarFactorize-2");
-				if ( buf1content ) M_free(buf1content,"DollarFactorize-4");
+				if ( buf1content ) TermFree(buf1content,"DollarContent");
 				MesCall("DollarFactorize");
 				Terminate(-1);
 				return(-1);
@@ -3033,7 +3037,7 @@ getout:
 		AR.SortType = oldsorttype;
 		if ( buf2 != buf1 && buf2 ) M_free(buf2,"DollarFactorize-3");
 		M_free(buf1,"DollarFactorize-3");
-		if ( buf1content ) M_free(buf1content,"DollarFactorize-4");
+		if ( buf1content ) TermFree(buf1content,"DollarContent");
 		Terminate(-1);
 		return(-1);
 	}
@@ -3093,7 +3097,7 @@ getout:
 			M_free(buf3,"DollarFactorize-4");
 			if ( buf2 != buf1 && buf2 ) M_free(buf2,"DollarFactorize-4");
 			M_free(buf1,"DollarFactorize-4");
-			if ( buf1content ) M_free(buf1content,"DollarFactorize-4");
+			if ( buf1content ) TermFree(buf1content,"DollarContent");
 			return(0);
 		}
 		else {
@@ -3133,7 +3137,7 @@ getout2:			AR.SortType = oldsorttype;
 					M_free(buf3,"DollarFactorize-4");
 					if ( buf2 != buf1 && buf2 ) M_free(buf2,"DollarFactorize-4");
 					M_free(buf1,"DollarFactorize-4");
-					if ( buf1content ) M_free(buf1content,"DollarFactorize-4");
+					if ( buf1content ) TermFree(buf1content,"DollarContent");
 					return(-3);
 				}
 				AT.WorkPointer = argextra + *argextra;
@@ -3319,7 +3323,7 @@ getout2:			AR.SortType = oldsorttype;
 		j++;
 	}
 	d->nfactors = j;
-	if ( buf1content ) M_free(buf1content,"DollarFactorize-5");
+	if ( buf1content ) TermFree(buf1content,"DollarContent");
 /*
  		#] Step 7: 
  		#[ Step 8: Sorting the factors
