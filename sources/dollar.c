@@ -2917,9 +2917,8 @@ int DollarFactorize(PHEAD WORD numdollar)
 		return(1);
 	}
 	else if ( ( buf1content[0] == 4 ) && ( buf1content[1] == 1 ) &&
-		      ( buf1content[2] == 1 ) && ( buf1content[3] == 3 ) &&
-			  ( buf1content[4] == 0 ) ) { /* Nothing happened */
-		M_free(buf2,"DollarFactorize-2");
+		      ( buf1content[2] == 1 ) && ( buf1content[3] == 3 ) ) { /* Nothing happened */
+		if ( buf2 != buf1 ) M_free(buf2,"DollarFactorize-2");
 		buf2 = buf1;
 		factorsincontent = 0;
 	}
@@ -2927,7 +2926,7 @@ int DollarFactorize(PHEAD WORD numdollar)
 /*
 		The way we took out objects is rather brutish. We have to normalize
 */
-		M_free(buf1,"DollarFactorize-1");
+		if ( buf2 != buf1 ) M_free(buf1,"DollarFactorize-1");
 		buf1 = buf2;
 		t = buf1; while ( *t ) t += *t;
 		insize = t - buf1;
