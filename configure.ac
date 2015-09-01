@@ -10,6 +10,7 @@ AC_PREREQ(2.59)
 AC_INIT([FORM], FORM_VERSION, [form@nikhef.nl])
 AC_CONFIG_SRCDIR([sources/form3.h])
 AC_CONFIG_HEADERS([config.h])
+AC_CONFIG_AUX_DIR([build-aux])
 
 dnl Use the serial-tests option if automake >= 1.13.
 dnl Assume the automake command is ${AUTOMAKE:-automake} as autoreconf does.
@@ -637,10 +638,6 @@ AM_CONDITIONAL(CONFIG_HTLATEX, [test ! -z "$HTLATEX"])
 AC_PATH_PROG(RUBY, ruby, "")
 AM_CONDITIONAL(CONFIG_RUBY, [test ! -z "$RUBY"])
 
-# Check for strace
-AC_PATH_PROG(STRACE, strace, "")
-AM_CONDITIONAL(CONFIG_STRACE, [test ! -z "$STRACE"])
-
 AC_CONFIG_FILES([
 	Makefile
 	sources/Makefile
@@ -666,6 +663,20 @@ echo
 outputdir=$(eval "echo $bindir")
 outputdir=$(eval "echo $outputdir")
 echo "Compiling for: $print_cpu $print_os ($print_data_model $print_api)"
+echo
+echo "Optionally linked libraries:"
+atleastone=no
+if test "x$with_gmp" = xyes; then
+	echo "    gmp"
+	atleastone=yes
+fi
+if test "x$with_zlib" = xyes; then
+	echo "    zlib"
+	atleastone=yes
+fi
+if test $atleastone = no; then
+	echo "    <NONE>"
+fi
 echo
 echo "The following executables can be compiled:"
 atleastone=no

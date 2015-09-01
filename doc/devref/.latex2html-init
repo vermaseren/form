@@ -1,0 +1,15 @@
+$DVIPSOPT = ' -E';
+$TITLE = `grep '\\title{' devref.tex`;
+$TITLE =~ s/^\s*\\title\s*{//;
+$TITLE =~ s/}\s*$//;
+$TITLE =~ s/\\\s*(Huge|huge|Large|large|\\)//g;
+$TITLE =~ s/^\s+//;
+$TITLE =~ s/\s+$//;
+$TITLE =~ s/\s+/ /g;
+$MAX_SPLIT_DEPTH = 0;
+$NO_NAVIGATION = 1;
+$NO_FOOTNODE = 1;
+$ADDRESS = '';
+$INFO = '';
+
+1;

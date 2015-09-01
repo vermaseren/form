@@ -1,7 +1,20 @@
+TEST_BINS =
+if BUILD_FORM
+TEST_BINS += form
+endif
+if BUILD_TFORM
+TEST_BINS += tform
+endif
+if BUILD_PARFORM
+TEST_BINS += parform
+endif
 if CONFIG_RUBY
-if CONFIG_STRACE
-TESTS_ENVIRONMENT = bindir="$(top_builddir)/sources"; export bindir; $(RUBY) -I $(srcdir)
-TESTS = form.rb
+TESTS_ENVIRONMENT = \
+	PATH="$(top_builddir)/sources:$$PATH" \
+	RUBY="$(RUBY)" \
+	CHECK_RB="$(srcdir)/check.rb" \
+	TEST_BINS="$(TEST_BINS)" \
+	$(SHELL)
+TESTS = check-help.sh
 endif
-endif
-EXTRA_DIST = form.rb examples.rb parser.rb symmetrize.rb table.rb
+EXTRA_DIST = check-help.sh check.rb examples.frm fixes.frm

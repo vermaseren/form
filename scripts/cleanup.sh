@@ -9,16 +9,10 @@
 FILES="\
 Makefile.in \
 aclocal.m4 \
-compile \
-config.guess \
+build-aux/ \
 config.h.in \
 config.h.in~ \
-config.sub \
 configure \
-depcomp \
-install-sh \
-missing \
-mkinstalldirs \
 check/Makefile.in \
 doc/Makefile.in \
 doc/devref/Makefile.in \
@@ -33,7 +27,7 @@ read answer
 
 if [ x"$answer" == "xy" -o x"$answer" == "xY" ]
 then
-    rm -f $FILES
+    rm -fr $FILES
 else
 	echo "Exit. No deletions."
 fi

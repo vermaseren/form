@@ -1,0 +1,35 @@
+sudo: false
+language: cpp
+
+addons:
+  apt:
+    packages:
+      - libgmp-dev
+      - libopenmpi-dev
+      - openmpi-bin
+      - zlib1g-dev
+
+matrix:
+  include:
+    - compiler: gcc
+      env: BUILD=scalar
+    - compiler: gcc
+      env: BUILD=threaded
+    - compiler: gcc
+      env: BUILD=parform
+    - compiler: clang
+      env: BUILD=scalar
+    - compiler: clang
+      env: BUILD=threaded
+    - compiler: clang
+      env: BUILD=parform
+
+script:
+  - autoreconf -iv
+  - ./configure --disable-scalar --disable-threaded --disable-parform
+    --enable-$BUILD
+  - make
+  - make check
+
+notifications:
+  email: false

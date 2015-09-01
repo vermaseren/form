@@ -1,11 +1,26 @@
 \documentclass[11pt,titlepage]{article}
+\usepackage{makeidx}
+
+%begin{latexonly}
 
 \makeatletter
 \renewcommand*\l@section{\@dottedtocline{1}{1.5em}{3.0em}}
 \renewcommand*\l@subsection{\@dottedtocline{2}{1.5em}{3.0em}}
 \makeatother
 
-\usepackage{makeidx}
+% Use hyperref package (hyperlinks) with correct option for pdflatex/latex:
+\usepackage{ifpdf}
+\ifpdf
+\RequirePackage[pdftex]{hyperref}
+\else
+\RequirePackage[hypertex]{hyperref}
+\fi
+% and link indices back to text:
+\hypersetup{hyperindex,pagebackref,pdfpagemode={None},draft=false}
+
+%end{latexonly}
+
+\providecommand{\texorpdfstring}[2]{#1}% htmlonly
 
 \newcommand{\emptypage}{\newpage \thispagestyle{empty} \tiny{.} \normalsize}
 \newcommand{\clearemptydoublepage}{\newpage{\pagestyle{empty}\cleardoublepage}}
@@ -22,12 +37,8 @@
 \begin{document}
 
 \thispagestyle{empty}
-\title{\Huge FORM \\ \Large version
-@VERSION@
-\\ \huge Developer's reference manual}
-\date{
-\input{devrefdate}
-}
+\title{\Huge FORM \\ \Large version @VERSION@ \\ \huge Developer's reference manual}
+\date{\input{devrefdate}}
 \author{J.A.M.Vermaseren et al.}
 \maketitle
 

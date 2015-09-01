@@ -24,17 +24,17 @@ MAIN = manual
 
 TEXFILES = $(TEXSRC) $(MAIN).tex
 
-EXTRA_DIST = $(TEXSRC)
+EXTRA_DIST = $(TEXSRC) .latex2html-init
 
 .PHONY: FORCE dvi html ps pdf clean-local
 
 DATEFILE = manualdate.tex
 $(DATEFILE): FORCE
-	$(SHELL) $(top_srcdir)/gendate.sh -t $(srcdir)/$(DATEFILE).in $(DATEFILE) "$(DATE)"
+	$(SHELL) $(top_srcdir)/scripts/gendate.sh -t -r $(srcdir) -i $(srcdir)/$(DATEFILE).in -o $(DATEFILE) "$(DATE)"
 FORCE:
 
 dist-hook:
-	$(SHELL) $(top_srcdir)/gendate.sh -t $(srcdir)/$(DATEFILE).in $(distdir)/$(DATEFILE).in "$(DATE)"
+	$(SHELL) $(top_srcdir)/scripts/gendate.sh -t -r $(srcdir) -i $(srcdir)/$(DATEFILE).in -o $(distdir)/$(DATEFILE).in "$(DATE)"
 
 CLEANFILES = \
 	$(MAIN).4ct $(MAIN).4dx $(MAIN).4ix $(MAIN).4tc $(MAIN).aux $(MAIN).css $(MAIN).dvi \
@@ -44,6 +44,13 @@ CLEANFILES = \
 
 clean-local:
 	rm -rf html
+
+latex2html: $(MAIN).dvi
+	latex2html -init_file $(srcdir)/.latex2html-init $(MAIN).tex
+	cat $(MAIN)/index.html | sed 's/$(MAIN).html#/#/g' >$(MAIN)/index.html.tmp
+	mv $(MAIN)/index.html.tmp $(MAIN)/index.html
+	cat $(MAIN)/$(MAIN).html | sed 's/$(MAIN).html#/#/g' >$(MAIN)/$(MAIN).html.tmp
+	mv $(MAIN)/$(MAIN).html.tmp $(MAIN)/$(MAIN).html
 
 #################### CONFIG_TEX
 if CONFIG_TEX

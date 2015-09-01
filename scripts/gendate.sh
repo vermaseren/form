@@ -6,9 +6,10 @@ prog=`basename "$0"`
 #   gendate.sh -t manualdate.tex.in manualdate.tex [<date>]
 #   gendate.sh -c production-date.h.in production-date.h [<date>]
 
+# Try to format the date.
+#   safe_date <fmt>
+#   safe_date <iso-date> <fmt>
 safe_date() {
-  # safe_date <fmt>
-  # safe_date <iso-date> <fmt>
   while [ $# -gt 1 ] && [ "x$1" = x ]; do
     shift
   done
@@ -42,34 +43,63 @@ perl with Time::Piece." >&2
   echo "$ret"
 }
 
+# Print the usage help.
+show_help() {
+  echo "Usage: $prog [-h|--help] [-c|-t] [-r <refdir>] [-i <ifile>] [-o <ofile>] [<date>]"
+}
+
 fmt=tex
+refdir=
+ifile=
+ofile=
+date=
 
-case $1 in
-  -c)
-    fmt=c
+# Prase arguments.
+opt_next=
+for opt_arg do
+  if [ "x$opt_next" != x ]; then
+    eval "$opt_next=\"$1\""
+    opt_next=
     shift
-    ;;
-  -t)
-    fmt=tex
-    shift
-    ;;
-esac
-
-if [ $# -lt 2 ]; then
-  echo "Usage: $prog [-c|-t] [<ifile>|--] [<ofile>|-] [<date>]" >&2
+    continue
+  fi
+  case $opt_arg in
+    -h|--help)
+      show_help
+      exit 0
+      ;;
+    -c)
+      fmt=c
+      ;;
+    -t)
+      fmt=tex
+      ;;
+    -r)
+      opt_next=refdir
+      ;;
+    -i)
+      opt_next=ifile
+      ;;
+    -o)
+      opt_next=ofile
+      ;;
+    *)
+      break
+      ;;
+  esac
+  shift
+done
+if [ "x$opt_next" != x ]; then
+  echo "$prog: error: missing argument for <$opt_next>" >&2
   exit 1
 fi
 
-ifile=$1
-ofile=$2
-shift
-shift
 date="$@"
 isodate=
 old=
 new=
 
-if [ "x$ofile" != x- ] && [ -f "$ofile" ]; then
+if [ -f "$ofile" ]; then
   old=`cat "$ofile"`
 fi
 
@@ -82,12 +112,24 @@ fi
 
 if [ "x$date" != x ]; then
   :
-elif [ "x$ifile" != x-- ] && [ -f "$ifile" ]; then
+elif [ -f "$ifile" ]; then
   new=`cat "$ifile"`
 elif type git >/dev/null 2>&1; then
-  if git update-index -q --refresh 2>/dev/null &&
-     git diff-index --quiet HEAD -- 2>/dev/null; then
-    isodate=`git log -1 --pretty=%ci 2>/dev/null || :`
+  if [ "x$refdir" != x ]; then
+#   If refdir is given, change the directory and check files and subdirectories
+#   under the directory.
+    if (cd "$refdir" &&
+        git update-index -q --refresh 2>/dev/null &&
+        git diff-index --quiet HEAD . 2>/dev/null); then
+      isodate=`(cd "$refdir" && git log -1 --pretty=%ci . 2>/dev/null || :)`
+    fi
+  else
+#   If refdir is not given, check the GIT repository containing the current
+#   directory.
+    if git update-index -q --refresh 2>/dev/null &&
+       git diff-index --quiet HEAD -- 2>/dev/null; then
+      isodate=`git log -1 --pretty=%ci -- 2>/dev/null || :`
+    fi
   fi
 fi
 if [ "x$new" = x ]; then
@@ -114,7 +156,7 @@ fi
 
 # Write the output file if changed.
 
-if [ "x$ofile" != x- ]; then
+if [ "x$ofile" != x ]; then
   if [ "x$old" != "x$new" ]; then
     echo "$new" >"$ofile"
     echo "$prog: file $ofile updated."
