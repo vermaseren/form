@@ -1,6 +1,8 @@
 FORM
 ====
 
+[![Build Status](https://travis-ci.org/vermaseren/form.svg?branch=master)](https://travis-ci.org/vermaseren/form)
+
 FORM is a Symbolic Manipulation System. It reads symbolic expressions from files
 and executes symbolic/algebraic transformations upon them. The answers are
 returned in a textual mathematical representation. As its landmark feature, the
