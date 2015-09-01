@@ -1143,8 +1143,8 @@ WORD *GCDfunction3(PHEAD WORD *in1, WORD *in2)
 /*
 	We need to take out the content from the two expressions
 	and determine their GCD. This plays with the negative powers!
-*/
 	AR.SortType = SORTHIGHFIRST;
+*/
 	term1 = TermMalloc("GCDfunction3-a");
 	term2 = TermMalloc("GCDfunction3-b");
 
@@ -1369,6 +1369,7 @@ WORD *TakeContent(PHEAD WORD *in, WORD *term)
 			tnext = t + *t;
 			rstop = tnext - ABS(tnext[-1]);
 			r = t+1;
+			if ( r == rstop ) goto noindices;
 			while ( r < rstop ) {
 				if ( *r != INDEX ) { r += r[1]; continue; }
 				m = tstore+2;
@@ -1409,6 +1410,7 @@ WORD *TakeContent(PHEAD WORD *in, WORD *term)
 			}
 			*w = 0;
 		}
+noindices:
 		tstore = tout;
 	}
 /*
@@ -1433,6 +1435,7 @@ WORD *TakeContent(PHEAD WORD *in, WORD *term)
 			tnext = t + *t;
 			rstop = tnext - ABS(tnext[-1]);
 			r = t+1;
+			if ( r == rstop ) { tstore = tout; goto novectors; }
 			while ( r < rstop ) {
 				if ( *r != code[k] ) { r += r[1]; continue; }
 				m = tstore+2;
@@ -1477,6 +1480,7 @@ WORD *TakeContent(PHEAD WORD *in, WORD *term)
 		tstore = tout;
 	  }
 	}
+novectors:;
 /*
   	#] VECTOR/DELTA : 
   	#[ FUNCTIONS :
@@ -1509,6 +1513,7 @@ WORD *TakeContent(PHEAD WORD *in, WORD *term)
 		t = tnext;
 		while ( *t ) {
 			tnext = t + *t; tstop = tnext - ABS(tnext[-1]); t++;
+			if ( t == tstop ) goto nofunctions;
 			r = tstore;
 			while ( r < tout ) {
 				tt = t;
@@ -1559,6 +1564,7 @@ nextr1:;
 			r += r[1];
 			*w = 0;
 		}
+nofunctions:
 		tstore = tout;
 	}
 /*
@@ -1584,14 +1590,20 @@ nextr1:;
 	t = tnext;
 	while ( *t ) {
 		tnext = t + *t; tstop = tnext - ABS(tnext[-1]); t++;
-		while ( t < tstop ) {
-			if ( *t == SYMBOL ) {
-				MergeSymbolLists(BHEAD tout,t,-1);
-				break;
-			}
-			t += t[1];
+		if ( t == tstop ) {
+			tout[1] = 2;
+			break;
 		}
-		t = tnext;
+		else {
+			while ( t < tstop ) {
+				if ( *t == SYMBOL ) {
+					MergeSymbolLists(BHEAD tout,t,-1);
+					break;
+				}
+				t += t[1];
+			}
+			t = tnext;
+		}
 	}
 	if ( tout[1] > 2 ) {
 		t = tout;
@@ -1616,6 +1628,10 @@ nextr1:;
 	t = in;
 	while ( *t ) {
 		tnext = t + *t; tstop = tnext - ABS(tnext[-1]); t++;
+		if ( t == tstop ) {
+			tout[1] = 2;
+			break;
+		}
 		while ( t < tstop ) {
 			if ( *t == DOTPRODUCT ) {
 				MergeDotproductLists(BHEAD tout,t,-1);
@@ -1714,6 +1730,7 @@ nextr1:;
 		*tt++ = 1; *tt++ = 1; *tt++ = 3*sign;
 		if ( sign != 1 ) action++;
 	  }
+	  *tout = 0;
 	  NumberFree(LCMbuffer2,"MakeInteger");
 	  NumberFree(LCMbuffer ,"MakeInteger");
 	  NumberFree(GCDbuffer2,"MakeInteger");
