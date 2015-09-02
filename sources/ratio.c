@@ -1143,8 +1143,8 @@ WORD *GCDfunction3(PHEAD WORD *in1, WORD *in2)
 /*
 	We need to take out the content from the two expressions
 	and determine their GCD. This plays with the negative powers!
-	AR.SortType = SORTHIGHFIRST;
 */
+	AR.SortType = SORTHIGHFIRST;
 	term1 = TermMalloc("GCDfunction3-a");
 	term2 = TermMalloc("GCDfunction3-b");
 
