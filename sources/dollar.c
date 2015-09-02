@@ -3070,7 +3070,8 @@ getout:
 #endif 
 		{
 			term += *term;
-			if ( *term == 0 ) { nfactors++; term++; }
+			while ( *term ) { term += *term; }
+			nfactors++; term++;
 		}
 	}
 /*
