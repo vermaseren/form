@@ -2821,7 +2821,7 @@ int DollarFactorize(PHEAD WORD numdollar)
 	int i, j, jj, action = 0, sign = 1;
 	LONG insize, ii;
 	WORD startebuf = cbuf[AT.ebufnum].numrhs;
-	WORD nfactors, factorsincontent;
+	WORD nfactors, factorsincontent, extrafactor = 0;
 	WORD oldsorttype = AR.SortType;
 
 #ifdef WITHPTHREADS
@@ -2918,8 +2918,10 @@ int DollarFactorize(PHEAD WORD numdollar)
 	}
 	else if ( ( buf1content[0] == 4 ) && ( buf1content[1] == 1 ) &&
 		      ( buf1content[2] == 1 ) && ( buf1content[3] == 3 ) ) { /* Nothing happened */
-		if ( buf2 != buf1 ) M_free(buf2,"DollarFactorize-2");
-		buf2 = buf1;
+		if ( buf2 != buf1 ) {
+			M_free(buf2,"DollarFactorize-2");
+			buf2 = buf1;
+		}
 		factorsincontent = 0;
 	}
 	else {
@@ -3065,6 +3067,7 @@ getout:
 			while ( tt2 < ttstop ) *tt1++ = *tt2++;
 			*tt1 = 0;
 			factorsincontent++;
+			extrafactor++;
 		}
 		else
 #endif 
@@ -3087,7 +3090,7 @@ getout:
 #ifdef WITHPTHREADS
 	if ( dtype > 0 && dtype != MODLOCAL ) { LOCK(d->pthreadslockread); }
 #endif
-	if ( nfactors ==  1 ) {	/* we can use the buf1 contents */
+	if ( nfactors ==  1 && extrafactor == 0 ) {	/* we can use the buf1 contents */
 		if ( factorsincontent == 0 ) {
 			d->nfactors = 1;
 #ifdef WITHPTHREADS
