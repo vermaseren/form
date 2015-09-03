@@ -421,7 +421,13 @@ module FormTest
 
   # true if the FORM job put run time errors.
   def runtime_error?
-    @stdout =~ /Program terminating at #{@filename} Line \d+ -->/
+    if serial?
+      @stdout =~ /Program terminating at #{@filename} Line \d+ -->/
+    elsif threaded?
+      @stdout =~ /Program terminating in thread \d+ at #{@filename} Line \d+ -->/
+    elsif mpi?
+      @stdout =~ /Program terminating in process \d+ at #{@filename} Line \d+ -->/
+    end
   end
 
   # true if the FORM job completed without any warnings/errors and

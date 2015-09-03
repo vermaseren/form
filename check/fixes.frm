@@ -119,6 +119,7 @@ PolyRatFun rat;
 L F = rat(a.a,1);
 P;
 .end
+#require not mpi?
 assert runtime_error?
 *--#] Issue39 :
 *--#[ Issue42_1 :
