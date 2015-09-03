@@ -3096,6 +3096,17 @@ getout:
 #ifdef WITHPTHREADS
 			if ( dtype > 0 && dtype != MODLOCAL ) { UNLOCK(d->pthreadslockread); }
 #endif
+/*
+			We used here (before 3-sep-2015) the original and did not make
+			provisions for having a factors struct, figuring that all info
+			is identical to the full dollar. This makes things too
+			complicated at later stages.
+*/
+			d->factors = (FACDOLLAR *)Malloc1(sizeof(FACDOLLAR),"factors in dollar");
+			term = buf1; while ( *term ) term += *term;
+			d->factors[0].size = i = term - buf1;
+			d->factors[0].where = t = (WORD *)Malloc1(sizeof(WORD)*(i+1),"DollarFactorize-5");
+			term = buf1; NCOPY(t,term,i); *t = 0;
 			AR.SortType = oldsorttype;
 			M_free(buf3,"DollarFactorize-4");
 			if ( buf2 != buf1 && buf2 ) M_free(buf2,"DollarFactorize-4");
