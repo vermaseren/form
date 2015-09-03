@@ -75,6 +75,26 @@ print;
 .end
 assert compile_error?
 *--#] NegDimension :
+*--#[ Issue37_1 :
+S ep;
+CF rat;
+PolyRatFun rat(expand,ep,6);
+L F  = rat(ep,ep);
+Print;
+.end
+assert succeeded?
+assert result("F") =~ expr("rat(1)")
+*--#] Issue37_1 :
+*--#[ Issue37_2 :
+S ep;
+CF rat;
+PolyRatFun rat(expand,ep,6);
+L F = rat(1,1)*rat(ep,ep);
+Print;
+.end
+assert succeeded?
+assert result("F") =~ expr("rat(1)")
+*--#] Issue37_2 :
 *--#[ Issue38 :
 CF num,rat;
 PolyRatFun rat;
@@ -92,6 +112,16 @@ assert result("F2") =~ expr("rat( - n1,2)")
 assert result("F3") =~ expr("0")
 assert result("F4") =~ expr("rat(x*ep + x,1)")
 *--#] Issue38 :
+*--#[ Issue39 :
+V a;
+CF rat;
+PolyRatFun rat;
+L F = rat(a.a,1);
+P;
+.end
+#require not mpi?
+assert runtime_error?
+*--#] Issue39 :
 *--#[ Issue42_1 :
 * Performance issue of FactDollar.
 CF num;
@@ -210,3 +240,28 @@ assert succeeded?
 assert result("F1") =~ expr("(-1)*(-1+x)*(1+y)")
 assert result("F2") =~ expr("(-1+y)*(-1+x)")
 *--#] Issue42_4 :
+*--#[ Issue45 :
+#procedure PrintFactorizedDollar(name,dollar)
+  #write " `name' = (%$)%", `dollar'[1]
+  #do i=2,``dollar'[0]'
+    #write "*(%$)%", `dollar'[`i']
+  #enddo
+  #write ";"
+#endprocedure
+
+S x,y;
+#$a = 1+x-y;  * <-- The bug was found for this.
+#$b = 2*(1+x-y);
+#$c = (1+x+y)*(1+x-y);
+#factdollar $a
+#factdollar $b
+#factdollar $c
+#call PrintFactorizedDollar(F1,$a)
+#call PrintFactorizedDollar(F2,$b)
+#call PrintFactorizedDollar(F3,$c)
+.end
+assert succeeded?
+assert result("F1") =~ expr("(-1)*(-1+y-x)")
+assert result("F2") =~ expr("(-1+y-x)*(-2)")
+assert result("F3") =~ expr("(-1)*(-1+y-x)*(1+y+x)")
+*--#] Issue45 :
