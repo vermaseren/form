@@ -1043,7 +1043,7 @@ VOID StartVariables()
 	AC.pfirstnum = 0;
 	AC.numpfirstnum = AC.sizepfirstnum = 0;
 #endif
-	AC.MemDebugFlag = 0;
+	AC.MemDebugFlag = 1;
 
 #ifdef WITHEXTERNALCHANNEL
 	AX.currentExternalChannel=0;
@@ -1705,18 +1705,22 @@ VOID PrintRunningTime()
 		mastertime = AM.SumTime + TimeCPU(1);
 		wallclocktime = TimeWallClock(1);
 		totaltime = mastertime+workertime;
+		if ( !AM.silent ) {
 		MesPrint("  %l.%2i sec + %l.%2i sec: %l.%2i sec out of %l.%2i sec",
 			mastertime/1000,(WORD)((mastertime%1000)/10),
 			workertime/1000,(WORD)((workertime%1000)/10),
 			totaltime/1000,(WORD)((totaltime%1000)/10),
 			wallclocktime/100,(WORD)(wallclocktime%100));
+		}
 	}
 #else
 	LONG mastertime = AM.SumTime + TimeCPU(1);
 	LONG wallclocktime = TimeWallClock(1);
+	if ( !AM.silent ) {
 	MesPrint("  %l.%2i sec out of %l.%2i sec",
 		mastertime/1000,(WORD)((mastertime%1000)/10),
 		wallclocktime/100,(WORD)(wallclocktime%100));
+	}
 #endif
 }
 

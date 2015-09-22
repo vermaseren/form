@@ -40,10 +40,14 @@
 	      system. To work properly it needs MEMORYMACROS in declare.h
 	      not to be defined to make sure that all calls will be diverted
 	      to the routines here.
-#define MALLOCDEBUGOUTPUT
 #define TERMMALLOCDEBUG
+#define MALLOCDEBUGOUTPUT
 #define MALLOCDEBUG 1
+#define FILLVALUE 126
 */
+#ifndef FILLVALUE
+	#define FILLVALUE 0
+#endif
 
 /*
     The enhanced malloc debugger, see comments in the beginning of the
@@ -2150,7 +2154,7 @@ VOID *Malloc(LONG size)
 	}
 	t = (char *)mem;
 	u = t + size;
-	for ( i = 0; i < (int)BANNER; i++ ) { *t++ = 0; *--u = 0; }
+	for ( i = 0; i < (int)BANNER; i++ ) { *t++ = FILLVALUE; *--u = FILLVALUE; }
 	mem = (void *)t;
 	{
 		int j = nummalloclist-1, i;
@@ -2159,7 +2163,7 @@ VOID *Malloc(LONG size)
 			u = t + mallocsizes[j];
 			for ( i = 0; i < (int)BANNER; i++ ) {
 				u--;
-				if ( *t != 0 || *u != 0 ) {
+				if ( *t != FILLVALUE || *u != FILLVALUE ) {
 					MesPrint("Writing outside memory for %s",malloclist[i]);
 /*					MUNLOCK(ErrorMessageLock); */
 					UNLOCK(MallocLock);
@@ -2241,7 +2245,7 @@ VOID *Malloc1(LONG size, const char *messageifwrong)
 	
 	t = (char *)mem;
 	u = t + size;
-	for ( i = 0; i < (int)BANNER; i++ ) { *t++ = 0; *--u = 0; }
+	for ( i = 0; i < (int)BANNER; i++ ) { *t++ = FILLVALUE; *--u = FILLVALUE; }
 	mem = (void *)t;
 	M_check();
 /*	MUNLOCK(ErrorMessageLock); */
@@ -2288,7 +2292,7 @@ void M_free(VOID *x, const char *where)
 	}
 	else {
 		for ( k = 0, j = 0; k < (int)BANNER; k++ ) {
-			if ( *--t ) j++;
+			if ( *--t != FILLVALUE ) j++;
 		}
 		if ( j ) {
 			LONG *tt = (LONG *)x;
@@ -2297,7 +2301,7 @@ void M_free(VOID *x, const char *where)
 		}
 		t += size;
 		for ( k = 0, j = 0; k < (int)BANNER; k++ ) {
-			if ( *--t ) j++;
+			if ( *--t != FILLVALUE ) j++;
 		}
 		if ( j ) {
 			LONG *tt = (LONG *)x;
@@ -2345,7 +2349,7 @@ void M_check()
 	for ( i = 0; i < nummalloclist; i++ ) {
 		t = (char *)(malloclist[i]);
 		for ( k = 0, j = 0; k < (int)BANNER; k++ ) {
-			if ( *t++ ) j++;
+			if ( *t++ != FILLVALUE ) j++;
 		}
 		if ( j ) {
 			tt = (LONG *)(malloclist[i]);
@@ -2356,7 +2360,7 @@ void M_check()
 		}
 		t = (char *)(malloclist[i]) + mallocsizes[i];
 		for ( k = 0, j = 0; k < (int)BANNER; k++ ) {
-			if ( *--t ) j++;
+			if ( *--t != FILLVALUE ) j++;
 		}
 		if ( j ) {
 			tt = (LONG *)t;

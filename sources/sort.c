@@ -691,7 +691,7 @@ LONG EndSort(PHEAD WORD *buffer, int par)
 		else if ( S != AT.S0 ) {
 			ss[over] = 0;
 			if ( par == 2 ) {
-				sSpace = 1;
+				sSpace = 3;
 				while ( ( t = *ss++ ) != 0 ) { sSpace += *t; }
 				to = (WORD *)Malloc1(sSpace*sizeof(WORD),"$-sort space");
 				*((WORD **)buffer) = to;
@@ -869,7 +869,7 @@ LONG EndSort(PHEAD WORD *buffer, int par)
 						LOCK(newout->pthreadslock);
 #endif
 						SeekFile(newout->handle,&zeropos,SEEK_SET);
-						to = (WORD *)Malloc1(BASEPOSITION(newout->filesize)
+						to = (WORD *)Malloc1(BASEPOSITION(newout->filesize)+sizeof(WORD)*2
 								,"$-buffer reading");
 						if ( ( retval = ReadFile(newout->handle,(UBYTE *)to,BASEPOSITION(newout->filesize)) ) !=
 								BASEPOSITION(newout->filesize) ) {
@@ -899,7 +899,7 @@ TooLarge:
 						t = newout->PObuffer;
 						if ( par == 2 ) {
 							jj = newout->POfill - t;
-							to = (WORD *)Malloc1(jj*sizeof(WORD),"$-sort space");
+							to = (WORD *)Malloc1((jj+2)*sizeof(WORD),"$-sort space");
 							*((WORD **)buffer) = to;
 							NCOPY(to,t,jj);
 						}
@@ -1097,7 +1097,7 @@ RetRetval:
 				SeekFile(newout->handle,&position,SEEK_END);
 				PUTZERO(zeropos);
 				SeekFile(newout->handle,&zeropos,SEEK_SET);
-				to = (WORD *)Malloc1(BASEPOSITION(position)+sizeof(WORD)
+				to = (WORD *)Malloc1(BASEPOSITION(position)+sizeof(WORD)*3
 						,"$-buffer reading");
 				if ( ( retval = ReadFile(newout->handle,(UBYTE *)to,BASEPOSITION(position)) ) !=
 				BASEPOSITION(position) ) {
@@ -1120,7 +1120,7 @@ RetRetval:
 				output resides in the cache buffer and the file was never opened
 */
 				LONG wsiz = newout->POfill - newout->PObuffer;
-				to = (WORD *)Malloc1(wsiz*sizeof(WORD),"$-buffer reading");
+				to = (WORD *)Malloc1((wsiz+2)*sizeof(WORD),"$-buffer reading");
 				*((WORD **)buffer) = to; t = newout->PObuffer;
 				retval = wsiz;
 				NCOPY(to,t,wsiz);
@@ -4536,20 +4536,17 @@ WORD *PolyRatFunSpecial(PHEAD WORD *t1, WORD *t2)
 		if ( t[1] != AR.PolyFunVar ) goto Illegal;
 		exp1 = 1;
 		if ( t[2] != -SNUMBER ) goto Illegal;
-/*		if ( t[3] != 1 ) goto Illegal; */
-			t[3] = 1;
+		t[3] = 1;
 	}
 	else if ( *t == -SNUMBER ) {
-/*		if ( t[1] != 1 ) goto Illegal; */
-			t[1] = 1;
+		t[1] = 1;
 		t += 2;
 		if ( *t == -SYMBOL ) {
 			if ( t[1] != AR.PolyFunVar ) goto Illegal;
 			exp1 = -1;
 		}
 		else if ( *t == -SNUMBER ) {
-/*			if ( t[1] != 1 ) goto Illegal; */
-				t[1] = 1;
+			t[1] = 1;
 			exp1 = 0;
 		}
 		else if ( *t == ARGHEAD+8 && t[ARGHEAD] == 8 && t[ARGHEAD+1] == SYMBOL
@@ -4569,8 +4566,7 @@ WORD *PolyRatFunSpecial(PHEAD WORD *t1, WORD *t2)
 		exp1 = t[ARGHEAD+4];
 		t += *t;
 		if ( *t != -SNUMBER ) goto Illegal;
-/*		if ( t[1] != 1 ) goto Illegal; */
-			t[1] = 1;
+		t[1] = 1;
 	}
 	else goto Illegal;
 
@@ -4579,20 +4575,17 @@ WORD *PolyRatFunSpecial(PHEAD WORD *t1, WORD *t2)
 		if ( t[1] != AR.PolyFunVar ) goto Illegal;
 		exp2 = 1;
 		if ( t[2] != -SNUMBER ) goto Illegal;
-/*		if ( t[3] != 1 ) goto Illegal; */
-			t[3] = 1;
+		t[3] = 1;
 	}
 	else if ( *t == -SNUMBER ) {
-/*		if ( t[1] != 1 ) goto Illegal; */
-			t[1] = 1;
+		t[1] = 1;
 		t += 2;
 		if ( *t == -SYMBOL ) {
 			if ( t[1] != AR.PolyFunVar ) goto Illegal;
 			exp2 = -1;
 		}
 		else if ( *t == -SNUMBER ) {
-/*			if ( t[1] != 1 ) goto Illegal; */
-				t[1] = 1;
+			t[1] = 1;
 			exp2 = 0;
 		}
 		else if ( *t == ARGHEAD+8 && t[ARGHEAD] == 8 && t[ARGHEAD+1] == SYMBOL
@@ -4612,13 +4605,12 @@ WORD *PolyRatFunSpecial(PHEAD WORD *t1, WORD *t2)
 		exp2 = t[ARGHEAD+4];
 		t += *t;
 		if ( *t != -SNUMBER ) goto Illegal;
-/*		if ( t[1] != 1 ) goto Illegal; */
-			t[1] = 1;
+		t[1] = 1;
 	}
 	else goto Illegal;
 
 	if ( exp1 <= exp2 ) { i = t1[1]; r = t1; }
-	else                { i = t1[1]; r = t2; }
+	else                { i = t2[1]; r = t2; }
 	t = oldworkpointer;
 	NCOPY(t,r,i)
 

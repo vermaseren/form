@@ -3261,6 +3261,7 @@ CommonEnd:
 						MesPrint("%s",C->lhs[level]+3);
 						MUNLOCK(ErrorMessageLock);
 					}
+					Terminate(-1);
 					goto GenCall;
 				  case TYPESETEXIT:
 					AM.exitflag = 1; /* no danger of race conditions */
