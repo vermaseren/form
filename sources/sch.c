@@ -874,7 +874,7 @@ VOID WriteLists()
 		*skip = 3;
 		FiniLine();
 		for ( i = startvalue; i < j; i++ ) {
-			Out = StrCopy(FindIndex(i),OutScr);
+			Out = StrCopy(FindIndex(i)+AM.OffsetIndex,OutScr);
 			Out = StrCopy(VARNAME(indices,i),OutScr);
 			if ( indices[i].dimension >= 0 ) {
 				if ( indices[i].dimension != AC.lDefDim ) {
