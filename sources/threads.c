@@ -1289,11 +1289,13 @@ void *RunThread(void *dummy)
 			#[ LOWESTLEVELGENERATION :
 */
 			case LOWESTLEVELGENERATION:
+#ifdef INNERTEST
 				if ( AC.InnerTest ) {
-					if ( StrCmp(AC.TestValue,(UBYTE *)"d206") == 0 ) {
+					if ( StrCmp(AC.TestValue,(UBYTE *)INNERTEST) == 0 ) {
 						MesPrint("Testing(Worker%d): value = %s",AT.identity,AC.TestValue);
 					}
 				}
+#endif
 				e = Expressions + AR.CurExpr;
 				thr = AN.threadbuck;
 				ppdef = thr->deferbuffer;
@@ -4823,6 +4825,7 @@ void SetHideFiles() {
 	ALLPRIVATES *B, *B0 = AB[0];
 	for ( i = 1; i <= numberofworkers; i++ ) {
 		B = AB[i];
+		AR.hidefile->handle = AR0.hidefile->handle;
 		if ( AR.hidefile->handle < 0 ) {
 			AR.hidefile->PObuffer = AR0.hidefile->PObuffer;
 			AR.hidefile->POstop = AR0.hidefile->POstop;
