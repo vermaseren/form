@@ -176,6 +176,11 @@ WORD Processor()
 	}
 #endif
 	for ( i = 0; i < NumExpressions; i++ ) {
+		if ( AC.InnerTest ) {
+			if ( StrCmp(AC.TestValue,(UBYTE *)"d206") == 0 ) {
+				MesPrint("Testing(Processor): value = %s",AC.TestValue);
+			}
+		}
 		e = Expressions+i;
 #ifdef WITHPTHREADS
 		if ( AC.partodoflag > 0 && e->partodo > 0 && AM.totalnumberofthreads > 2 ) {

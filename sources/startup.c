@@ -796,6 +796,8 @@ VOID StartVariables()
 	AC.DubiousList.size = sizeof(struct DuBiOuS);
 	AC.TableBaseList.message = "list of tablebases";
 	AC.TableBaseList.size = sizeof(DBASE);
+	AC.TestValue = 0;
+	AC.InnerTest = 0;
 
 	AC.AutoSymbolList.message = "autosymbol";
 	AC.AutoSymbolList.size = sizeof(struct SyMbOl);

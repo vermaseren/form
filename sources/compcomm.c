@@ -126,6 +126,7 @@ static KEYWORD onoffoptions[] = {
 	,{"oldfactarg",		(TFUN)&(AC.OldFactArgFlag),	1,	0}
 	,{"memdebugflag",	(TFUN)&(AC.MemDebugFlag),	1,	0}
 	,{"oldgcd", 		(TFUN)&(AC.OldGCDflag),	1,	0}
+	,{"innertest",      (TFUN)&(AC.InnerTest),  1,  0}
 };
 
 static WORD one = 1;
@@ -335,6 +336,14 @@ int CoOff(UBYTE *s)
 		else if ( StrICont(t,(UBYTE *)"flag") == 0 ) {
 			*s = c;
 			return(CoFlags(s,0));
+		}
+		else if ( StrICont(t,(UBYTE *)"innertest") == 0 ) {
+			*s = c;
+			AC.InnerTest = 0;
+			if ( AC.TestValue ) {
+				M_free(AC.TestValue,"InnerTest");
+				AC.TestValue = 0;
+			}
 		}
 		*s = c;
 	 	*((int *)(onoffoptions[i].func)) = onoffoptions[i].flags; 
@@ -561,6 +570,27 @@ int CoOn(UBYTE *s)
 		else if ( StrICont(t,(UBYTE *)"flag") == 0 ) {
 			*s = c;
 			return(CoFlags(s,1));
+		}
+		else if ( StrICont(t,(UBYTE *)"innertest") == 0 ) {
+			UBYTE *t;
+			*s = c;
+			while ( *s == ' ' || *s == ',' || *s == '\t' ) s++;
+			if ( *s ) {
+				t = s; while ( *t ) t++;
+				while ( t[-1] == ' ' || t[-1] == '\t' ) t--;
+				c = *t; *t = 0;
+				if ( AC.TestValue ) M_free(AC.TestValue,"InnerTest");
+				AC.TestValue = strDup1(s,"InnerTest");
+				*t = c;
+				s = t;
+				while ( *s == ' ' || *s == ',' || *s == '\t' ) s++;
+			}
+			else {
+				if ( AC.TestValue ) {
+					M_free(AC.TestValue,"InnerTest");
+					AC.TestValue = 0;
+				}
+			}
 		}
 		else { *s = c; }
 	 	*((int *)(onoffoptions[i].func)) = onoffoptions[i].type; 

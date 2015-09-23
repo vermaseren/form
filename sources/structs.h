@@ -1603,6 +1603,7 @@ struct C_const {
                                         created the snapshot. =0 if no script shall be executed.*/
     WORD    *IfSumCheck;           /**< [D] Keeps track of if-nesting */
     WORD    *CommuteInSet;         /* groups of noncommuting functions that can commute */
+    UBYTE   *TestValue;            /* For debugging */
 #ifdef PARALLELCODE
     LONG    *inputnumbers;         /**< [D] For redefine */
     WORD    *pfirstnum;            /**< For redefine. Points into inputnumbers memory */
@@ -1744,17 +1745,18 @@ struct C_const {
 	WORD	extrasymbols;          /* Flag for the extra symbsols output mode */
     WORD    PolyRatFunChanged;     /* Keeps track whether we changed in the compiler */
     WORD    ToBeInFactors;
+    WORD    InnerTest;            /* For debugging */
 #ifdef WITHMPI
     WORD    RhsExprInModuleFlag;   /* (C) Set by the compiler if RHS expressions exists. */
 #endif
     UBYTE   Commercial[COMMERCIALSIZE+2]; /* (C) Message to be printed in statistics */
     UBYTE   debugFlags[MAXFLAGS+2];    /* On/Off Flag number(s) */
 #if defined(WITHPTHREADS)
-	PADPOSITION(46,8+3*MAXNEST,70,44+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17+sizeof(pthread_mutex_t));
+	PADPOSITION(47,8+3*MAXNEST,70,45+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17+sizeof(pthread_mutex_t));
 #elif defined(WITHMPI)
-	PADPOSITION(46,8+3*MAXNEST,70,45+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17);
+	PADPOSITION(47,8+3*MAXNEST,70,46+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17);
 #else
-	PADPOSITION(44,8+3*MAXNEST,68,44+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17);
+	PADPOSITION(45,8+3*MAXNEST,68,45+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17);
 #endif
 };
 /*

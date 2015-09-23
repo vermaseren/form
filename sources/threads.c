@@ -1289,6 +1289,11 @@ void *RunThread(void *dummy)
 			#[ LOWESTLEVELGENERATION :
 */
 			case LOWESTLEVELGENERATION:
+				if ( AC.InnerTest ) {
+					if ( StrCmp(AC.TestValue,(UBYTE *)"d206") == 0 ) {
+						MesPrint("Testing(Worker%d): value = %s",AT.identity,AC.TestValue);
+					}
+				}
 				e = Expressions + AR.CurExpr;
 				thr = AN.threadbuck;
 				ppdef = thr->deferbuffer;
