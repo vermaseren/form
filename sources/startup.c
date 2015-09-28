@@ -500,7 +500,7 @@ VOID ReserveTempFiles(int par)
 	s = AM.TempDir; i = 200;   /* Some extra for VMS */
 	while ( *s && *s != ':' ) { if ( *s == '\\' ) s++; s++; i++; }
 
-	FG.fname = (char *)Malloc1(sizeof(UBYTE)*(i+10),"name for temporary files");
+	FG.fname = (char *)Malloc1(sizeof(UBYTE)*(i+14),"name for temporary files");
 	s = AM.TempDir; t = (UBYTE *)FG.fname;
 	while ( *s && *s != ':' ) { if ( *s == '\\' ) s++; *t++ = *s++; }
 	if ( (char *)t > FG.fname && t[-1] != SEPARATOR && t[-1] != ALTSEPARATOR )
@@ -512,7 +512,7 @@ VOID ReserveTempFiles(int par)
 	s = AM.TempSortDir; i = 200;   /* Some extra for VMS */
 	while ( *s && *s != ':' ) { if ( *s == '\\' ) s++; s++; i++; }
 
-	FG.fname2 = (char *)Malloc1(sizeof(UBYTE)*(i+10),"name for sort files");
+	FG.fname2 = (char *)Malloc1(sizeof(UBYTE)*(i+14),"name for sort files");
 	s = AM.TempSortDir; t = (UBYTE *)FG.fname2;
 	while ( *s && *s != ':' ) { if ( *s == '\\' ) s++; *t++ = *s++; }
 	if ( (char *)t > FG.fname && t[-1] != SEPARATOR && t[-1] != ALTSEPARATOR )
@@ -541,7 +541,7 @@ VOID ReserveTempFiles(int par)
 	  }
 	  else{
 		/*[04nov2003 mt]:*/
-		/*FG.fname = "/formswapx/xxxxxxxxxxxxxxxxxxxxx";*/
+^		/*FG.fname = "/formswapx/xxxxxxxxxxxxxxxxxxxxx";*/
 		FG.fname = calloc(128,1);
 		strcpy(FG.fname,"/formswapx/xxxxxxxxxxxxxxxxxxxxx");
 		/*:[04nov2003 mt]*/

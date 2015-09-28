@@ -519,7 +519,7 @@ int LocateFile(UBYTE **name, int type)
 		if ( handle >= 0 ) return(handle);
 		MesPrint("Could not open setup file %s",(char *)(AM.SetupFile));
 	}
-	namesize = 2; s = *name;
+	namesize = 4; s = *name;
 	while ( *s ) { s++; namesize++; }
 	if ( type == SETUPFILE ) indir = AM.SetupDir;
 	else indir = AM.IncDir;
