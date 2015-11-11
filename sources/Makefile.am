@@ -128,10 +128,10 @@ if ONAPPLE
 COMPILEFLAGS += -Wall -ipo -O3 -no-prec-div
 else
 if OPTPENTIUM
-COMPILEFLAGS += -Wall -ipo -O3 -no-prec-div -xP
+COMPILEFLAGS += -Wall -ipo -O3 -no-prec-div -xHost
 else
 if OPTOPTERON
-COMPILEFLAGS += -Wall -ipo -O3 -no-prec-div -xP
+COMPILEFLAGS += -Wall -ipo -O3 -no-prec-div -xHost
 else
 COMPILEFLAGS += -Wall -ipo -O3
 endif
