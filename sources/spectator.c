@@ -397,8 +397,10 @@ void FlushSpectators(VOID)
 		if ( ( sp->flags & READSPECTATORFLAG ) != 0 ) { /* reset for writing */
 			sp->flags &= ~READSPECTATORFLAG;
 			fh->POfill = fh->PObuffer;
-			SeekFile(fh->handle,&(sp->position),SEEK_SET);
-			fh->POposition = sp->position;
+			if ( fh->handle >= 0 ) {
+				SeekFile(fh->handle,&(sp->position),SEEK_SET);
+				fh->POposition = sp->position;
+			}
 			continue;
 		}
 		if ( fh->POfill <= fh->PObuffer ) continue; /* is clean */
@@ -488,7 +490,9 @@ int CoCopySpectator(UBYTE *inp)
 	PUTZERO(sp->fh->POposition);
 	PUTZERO(sp->readpos);
 	sp->fh->POfill = sp->fh->PObuffer;
-	SeekFile(sp->fh->handle,&(sp->fh->POposition),SEEK_SET);
+	if ( sp->fh->handle >= 0 ) {
+		SeekFile(sp->fh->handle,&(sp->fh->POposition),SEEK_SET);
+	}
 /*
 	Now we have:
 	1: The name of the target expression: numexpr
@@ -574,6 +578,10 @@ WORD GetFromSpectator(WORD *term,WORD specnum)
 	FILEHANDLE *fh = sp->fh;
 	WORD i, size, *t = term;
 	LONG InIn;
+	if ( fh-> handle < 0 ) {
+		*term = 0;
+		return(0);
+	}
 /*
 	sp->position marks the 'end' of the file: the point where writing should
 	take place. sp->readpos marks from where to read.
