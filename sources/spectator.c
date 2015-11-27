@@ -74,6 +74,12 @@
 	change in later versions because both the writing and the reading are
 	purely sequential. Brackets are not possible.
 
+	Currently, ParFORM allows use of spectators only in the sequential
+	mode. The parallelization is switched off in modules containing
+	ToSpectator or CopySpectator. Workers never creates or accesses to
+	spectator files and their handles are always -1. We leave the
+	parallelization of modules with spectators for future work.
+
   	#] Commentary : 
   	#[ CoCreateSpectator :
 
@@ -207,6 +213,12 @@ int CoToSpectator(UBYTE *inp)
 	}
 	AM.SpectatorFiles[i].exprnumber = numexpr;
 	Add3Com(TYPETOSPECTATOR,i);
+#ifdef WITHMPI
+	/*
+	 * In ParFORM, ToSpectator has to be executed on the master.
+	 */
+	AC.mparallelflag |= NOPARALLEL_SPECTATOR;
+#endif
 	return(0);
 Syntax:
 	MesPrint("&Proper syntax is: ToSpectator,exprname;");
@@ -559,6 +571,12 @@ int CoCopySpectator(UBYTE *inp)
 		AT.WorkPointer = OldWork;
 		if ( AC.dumnumflag ) Add2Com(TYPEDETCURDUM)
 	}
+#ifdef WITHMPI
+	/*
+	 * In ParFORM, substitutions of spectators has to be done on the master.
+	 */
+	AC.mparallelflag |= NOPARALLEL_SPECTATOR;
+#endif
 	return(error);
 Syntax:
 	MesPrint("&Proper syntax is: CopySpectator,exprname=spectatorname;");

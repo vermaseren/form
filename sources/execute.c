@@ -781,6 +781,9 @@ WORD DoExecute(WORD par, WORD skip)
 		else if ( AC.mparallelflag & NOPARALLEL_CONVPOLY ) {
 			HighWarning("This module is forced to run in sequential mode due to topolynomial/frompolynomial");
 		}
+		else if ( AC.mparallelflag & NOPARALLEL_SPECTATOR ) {
+			HighWarning("This module is forced to run in sequential mode due to tospectator/copyspectator");
+		}
 		else if ( AC.mparallelflag & NOPARALLEL_TBLDOLLAR ) {
 			HighWarning("This module is forced to run in sequential mode due to $-variable assignments in tables");
 		}
