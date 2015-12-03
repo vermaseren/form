@@ -4917,6 +4917,7 @@ NoLegal:
 		m[1] = w - m;
 		*w++ = 1; *w++ = 1; *w++ = 3;
 		*term = w - term;
+		if ( w > AT.WorkSpace && w < AT.WorkTop ) AT.WorkPointer = w;
 		return(0);
 	}
 ReStart:
@@ -5026,7 +5027,8 @@ ReStart:
 				else t += t[1];
 			}
 		}
-
+		w = term + *term;
+		if ( w > AT.WorkSpace && w < AT.WorkTop ) AT.WorkPointer = w;
 		return(retval);
 	}
 retry:
