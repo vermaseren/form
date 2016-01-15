@@ -1211,7 +1211,7 @@ WORD IniVars()
 	AC.OutNumberType = RATIONALMODE;
 	AM.gOutNumberType = RATIONALMODE;
 #ifdef WITHZLIB
-	AR.gzipCompress = 0;
+	AR.gzipCompress = GZIPDEFAULT;
 #endif
 	AR.BracketOn = 0;
 	AC.bracketindexflag = 0;

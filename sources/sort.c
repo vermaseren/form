@@ -1560,7 +1560,7 @@ nocompress:
 				}
 #ifdef WITHZLIB
 				if ( !AR.NoCompress && ncomp > 0 && AR.gzipCompress > 0
-					&& dobracketindex == 0 ) {
+					&& dobracketindex == 0 && fi->zsp != 0 ) {
 					fi->POfill = p;
 					if ( PutOutputGZIP(fi) ) return(-1);
 					p = fi->PObuffer;
@@ -1691,7 +1691,7 @@ WORD FlushOut(POSITION *position, FILEHANDLE *fi, int compr)
 		}
 #ifdef WITHZLIB
 		if ( AT.SS == AT.S0 && !AR.NoCompress && AR.gzipCompress > 0
-		&& dobracketindex == 0 && ( compr > 0 ) ) {
+		&& dobracketindex == 0 && ( compr > 0 ) && fi->zsp != 0 ) {
 			if ( PutOutputGZIP(fi) ) return(-1);
 			fi->POfill = fi->PObuffer;
 		}
@@ -1754,7 +1754,7 @@ WORD FlushOut(POSITION *position, FILEHANDLE *fi, int compr)
 	if ( fi->handle >= 0 ) {
 #ifdef WITHZLIB
 		if ( AT.SS == AT.S0 && !AR.NoCompress && AR.gzipCompress > 0
-		&& dobracketindex == 0 && ( compr > 0 ) ) {
+		&& dobracketindex == 0 && ( compr > 0 ) && fi->zsp != 0 ) {
 			if ( FlushOutputGZIP(fi) ) return(-1);
 			fi->POfill = fi->PObuffer;
 		}
@@ -1810,7 +1810,7 @@ WORD FlushOut(POSITION *position, FILEHANDLE *fi, int compr)
 	}
 #ifdef WITHZLIB
 	if ( AT.SS == AT.S0 && !AR.NoCompress && AR.gzipCompress > 0
-		&& dobracketindex == 0 && ( compr > 0 ) ) {
+		&& dobracketindex == 0 && ( compr > 0 ) && fi->zsp != 0 ) {
 		PUTZERO(*position);
 		if ( fi->handle >= 0 ) {
 #ifdef ALLLOCK
