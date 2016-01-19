@@ -878,6 +878,10 @@ VOID PreProcessor()
 					AC.tablecheck = 1;
 					if ( TestTables() ) { error2++; AP.preError++; }
 				}
+				if ( AP.PreContinuation ) {
+					error1++; error2++;
+					MesPrint("&Unfinished statement. Missing ;?");
+				}
 				if ( moduletype == GLOBALMODULE ) MakeGlobal();
 				else {
 endmodule:			if ( error2 == 0 && AM.qError == 0 ) {
@@ -989,7 +993,7 @@ endmodule:			if ( error2 == 0 && AM.qError == 0 ) {
 }
 
 /*
- 		#] PreProcessor : 
+ 		#] PreProcessor :
  		#[ PreProInstruction :
 */
 
