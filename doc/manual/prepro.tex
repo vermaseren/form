@@ -80,6 +80,14 @@ any longer.
                processes in a job use the same number. A recovered session from
                a checkpoint (\ref{checkpoints}) keeps using the PID of the
                crushed session.
+\item[STOPWATCH\_] Same as `TIMER\_'.
+\item[TIME\_]  The running time\index{time\_} till the moment of call in the string format
+               with a decimal point and two digits after the decimal point. 
+               This is the same format as in the statistics.
+\item[TIMER\_] The running time\index{timer\_} since the last reset in milliseconds. Hence, 
+               unlike `time\_' this value can be used in the preprocessor 
+               calculator and in numerical compares in \#if instructions.
+               See also the \#reset (see \ref{prereset}) instruction.
 \end{description}
 
 \noindent If \FORM\ cannot find a preprocessor variable, because it has 
@@ -1578,6 +1586,22 @@ syntax of the operating system. Hence the \#remove instruction can always
 be used.
 
 %--#] remove : 
+%--#[ reset :
+ 
+\section{\#reset}
+\label{prereset}
+
+\noindent Syntax:
+
+\#reset [{\tt<}keyword{\tt>}]
+
+\noindent See also `TIMER\_' preprocessor variable.
+
+\noindent Currently the only keywords that are allowed are timer and 
+stopwatch. They have the same effect, which is to reset the timer for the 
+`timer\_' (or `stopwatch\_) preprocessor variable (see \ref{preprovariables}).
+
+%--#] reset : 
 %--#[ reverseinclude :
 
 \section{\#reverseinclude}
