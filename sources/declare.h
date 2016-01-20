@@ -801,6 +801,7 @@ extern int    DoPreClose(UBYTE *);
 extern int    DoPreRemove(UBYTE *);
 extern int    DoCommentChar(UBYTE *);
 extern int    DoPrcExtension(UBYTE *);
+extern int    DoPreReset(UBYTE *);
 extern VOID   WriteString(int,UBYTE *,int);
 extern VOID   WriteUnfinString(int,UBYTE *,int);
 extern UBYTE *AddToString(UBYTE *,UBYTE *,int);

@@ -85,6 +85,7 @@ static KEYWORD precommands[] = {
 	,{"prompt"       , DoPrompt       , 0, 0}
 	,{"redefine"     , DoRedefine     , 0, 0}
 	,{"remove"       , DoPreRemove    , 0, 0}
+	,{"reset"        , DoPreReset     , 0, 0}
 	,{"reverseinclude"   , DoReverseInclude   , 0, 0}
 	,{"rmexternal"   , DoRmExternal   , 0, 0}
 	,{"rmseparator"  , DoPreRmSeparator,0, 0}
@@ -477,6 +478,12 @@ UBYTE *GetPreVar(UBYTE *name, int flag)
     	sprintf(timestring,"%s.%1d%1d",millibuf,timepart1,timepart2);
 		return((UBYTE *)timestring);
 	}
+	else if ( ( StrICmp(name,(UBYTE *)"timer_") == 0 )
+	       || ( StrICmp(name,(UBYTE *)"stopwatch_") == 0 ) ) {
+		static char timestring[40];
+    	sprintf(timestring,"%ld",(GetRunningTime() - AP.StopWatchZero));
+		return((UBYTE *)timestring);
+	}
 	t = name;
 	while ( *t && *t != '_' ) t++;
 	for ( i = NumPre-1; i >= 0; i-- ) {
@@ -799,6 +806,7 @@ VOID PreProcessor()
 	int specialtype = 0;
 	int error1 = 0, error2 = 0, retcode, numstatement, retval;
 	UBYTE c, *t, *s;
+	AP.StopWatchZero = GetRunningTime();
 	AC.compiletype = 0;
 	AP.PreContinuation = 0;
 	AP.gNumPre = NumPre;
@@ -920,6 +928,7 @@ endmodule:			if ( error2 == 0 && AM.qError == 0 ) {
 								AM.SumTime += TimeCPU(1);
 								TimeCPU(0);
 							}
+							AP.StopWatchZero = GetRunningTime();
 							break;
 						case ENDMODULE:
 							Terminate( -( error1 | error2 ) );
@@ -993,7 +1002,7 @@ endmodule:			if ( error2 == 0 && AM.qError == 0 ) {
 }
 
 /*
- 		#] PreProcessor :
+ 		#] PreProcessor : 
  		#[ PreProInstruction :
 */
 
@@ -6576,5 +6585,39 @@ int DoSkipExtraSymbols(UBYTE *s)
 
 /*
  		#] DoSkipExtraSymbols : 
+ 		#[ DoPreReset :
+
+		Does a reset of variables.
+		Currently only the timer (stopwatch) of `timer_'
+*/
+
+int DoPreReset(UBYTE *s)
+{
+	UBYTE *ss, c;
+	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
+	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
+	while ( *s == ' ' || *s == '\t' ) s++;
+	if ( *s == 0 ) {
+		MesPrint("@proper syntax is #Reset variable");
+		return(-1);
+	}
+	ss = s;
+	while ( FG.cTable[*s] == 0 ) s++;
+	c = *s; *s = 0;
+	if ( ( StrICmp(ss,(UBYTE *)"timer") == 0 )
+	  || ( StrICmp(ss,(UBYTE *)"stopwatch") == 0 ) ) {
+		*s = c;
+		AP.StopWatchZero = GetRunningTime();
+		return(0);
+	}
+	else {
+		*s = c;
+		MesPrint("@proper syntax is #Reset variable");
+		return(-1);
+	}
+}
+
+/*
+ 		#] DoPreReset : 
  	# ] PreProcessor :
 */

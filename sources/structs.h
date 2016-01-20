@@ -1484,6 +1484,7 @@ struct P_const {
 #ifdef WITHPTHREADS
     pthread_mutex_t PreVarLock;    /* (P) */
 #endif
+    LONG    StopWatchZero;         /* For `timer_' and #reset timer */
     LONG    InOutBuf;              /* (P) Characters in the output buf in pre.c */
     LONG    pSize;                 /* (P) size of preStart */
     int     PreAssignFlag;         /* (C) Indicates #assign -> catch dollar */
@@ -1509,7 +1510,7 @@ struct P_const {
     WORD    preError;              /* (P) Blocks certain types of execution */
     UBYTE   ComChar;               /* (P) Commentary character */
     UBYTE   cComChar;              /* (P) Old commentary character for .clear */
-    PADPOINTER(2,19,2,2);
+    PADPOINTER(3,19,2,2);
 };
 
 /*
