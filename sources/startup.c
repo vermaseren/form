@@ -1084,6 +1084,7 @@ VOID StartVariables()
 	PutPreVar((UBYTE *)"optimscheme_",(UBYTE *)("0"),0,0);
 	PutPreVar((UBYTE *)"tolower_",(UBYTE *)("0"),(UBYTE *)("?a"),0);
 	PutPreVar((UBYTE *)"toupper_",(UBYTE *)("0"),(UBYTE *)("?a"),0);
+	PutPreVar((UBYTE *)"strlen_",(UBYTE *)("0"),(UBYTE *)("?a"),0);
 	{
 		char buf[41];  /* up to 128-bit */
 		LONG pid;

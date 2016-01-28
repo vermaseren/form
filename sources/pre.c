@@ -327,6 +327,17 @@ higherlevel:
 						PutPreVar(namebuf,s,(UBYTE *)"?a",1);
 						goto dostream;
 					}
+					else if ( StrICmp(namebuf,(UBYTE *)"strlen_") == 0 ) {
+						/*
+						 * `strlen_(STRING)' gives the number of characters in
+						 * STRING.
+						 */
+						char buf[41];  /* up to 128-bit */
+						LONG len = i-(s-namebuf)-2;
+						LongCopy(len,buf);
+						PutPreVar(namebuf,(UBYTE *)buf,(UBYTE *)"?a",1);
+						goto dostream;
+					}
 					while ( *s ) {
 						if ( *s == '\\' ) s++;
 						if ( *s == ',' ) { *s = 0; nargs++; }
