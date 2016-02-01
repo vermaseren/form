@@ -981,7 +981,7 @@ eol:	while ( *s == ',' ) s++;
 }
 
 /*
-  	#] CoSymbol :
+  	#] CoSymbol : 
   	#[ AddIndex :
 
 	The actual addition. Special routine for additions 'on the fly'
@@ -1588,9 +1588,11 @@ IllForm:	MesPrint("&Illegal name or option in table declaration");
 */
 		if      ( StrICmp(name,(UBYTE *)("check" )) == 0 ) checkflag = 1;
 		else if ( StrICmp(name,(UBYTE *)("zero"  )) == 0 ) checkflag = 2;
+		else if ( StrICmp(name,(UBYTE *)("one"   )) == 0 ) checkflag = 3;
 		else if ( StrICmp(name,(UBYTE *)("strict")) == 0 ) rflag = 1;
 		else if ( StrICmp(name,(UBYTE *)("relax" )) == 0 ) rflag = -1;
-		else if ( StrICmp(name,(UBYTE *)("zerofill" )) == 0 ) rflag = -2;
+		else if ( StrICmp(name,(UBYTE *)("zerofill" )) == 0 ) { rflag = -2; checkflag = 2; }
+		else if ( StrICmp(name,(UBYTE *)("onefill" )) == 0 ) { rflag = -3; checkflag = 3; }
 		else if ( StrICmp(name,(UBYTE *)("sparse")) == 0 ) sparseflag |= 1;
 		else if ( StrICmp(name,(UBYTE *)("base")) == 0 ) sparseflag |= 3;
 		else if ( StrICmp(name,(UBYTE *)("tablebase")) == 0 ) sparseflag |= 3;
@@ -1609,6 +1611,7 @@ IllForm:	MesPrint("&Illegal name or option in table declaration");
 	if ( sparseflag ) {
 		if ( checkflag == 1 ) rflag = 0;
 		else if ( checkflag == 2 ) rflag = -2;
+		else if ( checkflag == 3 ) rflag = -3;
 		else rflag = -1;
 	}
 	if ( ( ret = GetVar(name,&type,&funnum,CFUNCTION,NOAUTO) ) ==

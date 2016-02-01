@@ -225,6 +225,7 @@ static struct fixedfun {
 	,{"exteuclidean_",0 ,0            ,0               ,0} /* EXTEUCLIDEAN */
 	,{"makerational_",0 ,0            ,0               ,0} /* MAKERATIONAL */
 	,{"inverse_"    ,0 ,0             ,0               ,0} /* INVERSEFUNCTION */
+	,{"id_"         ,1 ,0             ,0               ,0} /* IDFUNCTION */
 };
 
 FIXEDSET fixedsets[] = {

@@ -1146,6 +1146,7 @@ extern DOLLARS DolToTerms(PHEAD WORD);
 extern WORD   EvalDoLoopArg(PHEAD WORD *,WORD);
 extern int    SetExprCases(int,int,int);
 extern int    TestSelect(WORD *,WORD *);
+extern int    TakeIDfunction(PHEAD WORD *);
 extern int    MakeSetupAllocs(VOID);
 extern int    TryFileSetups(VOID);
 extern void   ExchangeExpressions(int,int);
@@ -1503,6 +1504,6 @@ extern int AddToListPoly(PHEAD0);
 extern int InvPoly(PHEAD WORD *,WORD,WORD);
 
 /*
-  	#] Declarations :
+  	#] Declarations : 
 */
 #endif

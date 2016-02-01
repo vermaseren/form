@@ -486,6 +486,7 @@ ALLPRIVATES *InitializeOneThread(int identity)
 		AN.FunSorts = (SORTING **)Malloc1((AN.NumFunSorts+1)*sizeof(SORTING *),"FunSort pointers");
 		for ( i = 0; i <= AN.NumFunSorts; i++ ) AN.FunSorts[i] = 0;
 		AN.FunSorts[0] = AT.S0 = AT.SS;
+		AN.idfunctionflag = 0;
 
 		return(B);
 	}

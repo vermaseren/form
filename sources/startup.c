@@ -864,10 +864,14 @@ VOID StartVariables()
 	AM.zbufnum = inicbufs();		/* For very special values */
 	{
 		CBUF *C = cbuf+AM.zbufnum;
+		WORD one[5] = {4,1,1,3,0};
 		WORD zero = 0;
 		AddRHS(AM.zbufnum,1);
 		AM.zerorhs = C->numrhs;
 		AddNtoC(AM.zbufnum,1,&zero);
+		AddRHS(AM.zbufnum,1);
+		AM.onerhs = C->numrhs;
+		AddNtoC(AM.zbufnum,5,one);
 	}
 	AP.inside.inscbuf = inicbufs();	/* For the #inside instruction */
 /*
@@ -1347,6 +1351,7 @@ WORD IniVars()
 	AN.SplitScratchSize = AN.InScratch = 0;
 	AN.SplitScratch1 = 0;
 	AN.SplitScratchSize1 = AN.InScratch1 = 0;
+	AN.idfunctionflag = 0;
 #endif
 	AO.OutputLine = AO.OutFill = BufferForOutput;
 	AO.FactorMode = 0;

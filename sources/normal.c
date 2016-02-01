@@ -2861,6 +2861,7 @@ HaveCon:
 
 		for ( i = 0; i < nnco; i++ ) {
 			t = pnco[i];
+			if ( *t == IDFUNCTION ) AN.idfunctionflag = 1;
 			if ( *t >= GAMMA && *t <= GAMMASEVEN ) {
 				WORD gtype;
 				to = m;

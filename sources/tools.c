@@ -1273,6 +1273,9 @@ LONG WriteFileToFile(int handle, UBYTE *buffer, LONG size)
 		if ( retval == 0 ) return(totalwritten);
 		totalwritten += retval;
 	}
+/*
+if ( handle == AC.LogHandle || handle == ERROROUT ) FlushFile(handle);
+*/
 	return(totalwritten);
 }
 #ifndef WITHMPI
@@ -2888,7 +2891,8 @@ void ToGeneral(WORD *r, WORD *m, WORD par)
 	else { m[1] = 0; m += ARGHEAD + 1; }
 	j = -*r++;
 	k = 3;
-	if ( j >= FUNCTION ) { *m++ = j; *m++ = 2; }
+/*		JV: Bugfix 1-feb-2016. Old code assumed FUNHEAD to be 2 */
+	if ( j >= FUNCTION ) { *m++ = j; *m++ = FUNHEAD; FILLFUN(m) }
 	else {
 		switch ( j ) {
 			case SYMBOL: *m++ = j; *m++ = 4; *m++ = *r++; *m++ = 1; break;

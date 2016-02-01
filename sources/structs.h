@@ -1445,12 +1445,13 @@ struct M_const {
     WORD    gextrasymbols;
     WORD    ggextrasymbols;
     WORD    zerorhs;
+    WORD    onerhs;
     WORD    havesortdir;
     WORD    BracketFactors[8];
 #ifdef WITHPTHREADS
-	PADPOSITION(17,25,59,80,sizeof(pthread_rwlock_t)+sizeof(pthread_mutex_t)*2);
+	PADPOSITION(17,25,59,81,sizeof(pthread_rwlock_t)+sizeof(pthread_mutex_t)*2);
 #else
-	PADPOSITION(17,23,59,80,0);
+	PADPOSITION(17,23,59,81,0);
 #endif
 };
 /*
@@ -2148,6 +2149,7 @@ struct N_const {
 	WORD	SignCheck;             /** Used in pattern matching of antisymmetric functions */
 	WORD	IndDum;                /* Active dummy indices */
 	WORD    poly_num_vars;
+    WORD    idfunctionflag;
 #ifdef WHICHSUBEXPRESSION
 	WORD	nbino;                 /* () Used in proces.c */
 	WORD	last1;                 /* () Used in proces.c */
@@ -2155,29 +2157,29 @@ struct N_const {
 #ifdef WITHPTHREADS
 #ifdef WHICHSUBEXPRESSION
 #ifdef WITHZLIB
-	PADPOSITION(54,11,23,25,sizeof(SHvariables));
+	PADPOSITION(54,11,23,26,sizeof(SHvariables));
 #else
-	PADPOSITION(52,11,23,25,sizeof(SHvariables));
+	PADPOSITION(52,11,23,26,sizeof(SHvariables));
 #endif
 #else
 #ifdef WITHZLIB
-	PADPOSITION(53,9,23,23,sizeof(SHvariables));
+	PADPOSITION(53,9,23,24,sizeof(SHvariables));
 #else
-	PADPOSITION(51,9,23,23,sizeof(SHvariables));
+	PADPOSITION(51,9,23,24,sizeof(SHvariables));
 #endif
 #endif
 #else
 #ifdef WHICHSUBEXPRESSION
 #ifdef WITHZLIB
-	PADPOSITION(52,9,23,25,sizeof(SHvariables));
+	PADPOSITION(52,9,23,26,sizeof(SHvariables));
 #else
-	PADPOSITION(50,9,23,25,sizeof(SHvariables));
+	PADPOSITION(50,9,23,26,sizeof(SHvariables));
 #endif
 #else
 #ifdef WITHZLIB
-	PADPOSITION(51,7,23,23,sizeof(SHvariables));
+	PADPOSITION(51,7,23,24,sizeof(SHvariables));
 #else
-	PADPOSITION(49,7,23,23,sizeof(SHvariables));
+	PADPOSITION(49,7,23,24,sizeof(SHvariables));
 #endif
 #endif
 #endif

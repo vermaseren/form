@@ -1849,6 +1849,202 @@ dotensor:
 
 /*
  		#] TestSelect : 
+ 		#[ TakeIDfunction :
+*/
+
+#define PutInBuffers(pow) \
+	AddRHS(AT.ebufnum,1); \
+	*out++ = SUBEXPRESSION; \
+	*out++ = SUBEXPSIZE; \
+	*out++ = C->numrhs; \
+	*out++ = pow; \
+	*out++ = AT.ebufnum; \
+	FILLSUB(out) \
+	r = AT.pWorkSpace[rhs+i]; \
+	if ( *r > 0 ) { \
+		oldinr = r[*r]; r[*r] = 0; \
+		AddNtoC(AT.ebufnum,(*r+1-ARGHEAD),(r+ARGHEAD)); \
+		r[*r] = oldinr; \
+	} \
+	else { \
+		ToGeneral(r,buffer,1); \
+		buffer[buffer[0]] = 0; \
+		AddNtoC(AT.ebufnum,buffer[0]+1,buffer); \
+	}
+
+int TakeIDfunction(PHEAD WORD *term)
+{
+	WORD *tstop, *t, *r, *m, *f, *nextf, *funstop, *left, *l, *newterm;
+	WORD *oldworkpointer, *out, oldinr, pow;
+	WORD buffer[20];
+	int i, ii, j, numsub, numfound = 0, first;
+	LONG lhs,rhs;
+	CBUF *C;
+	GETSTOP(term,tstop);
+	for ( t = term+1; t < tstop; t += t[1] ) { if ( *t == IDFUNCTION ) break; }
+	if ( t >= tstop ) return(0);
+/*
+	Step 1: test validity
+*/
+	funstop = t + t[1]; f = t + FUNHEAD;
+	left = term + *term;
+	l = left+1; numsub = 0;
+	while ( f < funstop ) {
+		nextf = f; NEXTARG(nextf)
+		if ( nextf >= funstop ) { return(0); } /* odd number of arguments */
+		if ( *f == -SYMBOL ) { *l++ = SYMBOL; *l++ = 4; *l++ = f[1]; *l++ = 1; }
+		else if ( *f < -FUNCTION ) { *l++ = *f; *l++ = FUNHEAD; FILLFUN(l) }
+		else if ( *f > 0 ) {
+			if ( *f != f[ARGHEAD]+ARGHEAD ) goto noaction;
+			if ( nextf[-1] != 3 || nextf[-2] != 1 || nextf[-3] != 1 ) goto noaction;
+			if ( f[ARGHEAD] <= 4 ) goto noaction;
+			if ( f[ARGHEAD] != f[ARGHEAD+2]+4 ) goto noaction;
+			if ( f[ARGHEAD] == 8 && f[ARGHEAD+1] == SYMBOL ) {
+				for ( i = 0; i < 4; i++ ) *l++ = f[ARGHEAD+1+i];
+			}
+			else if ( f[ARGHEAD] == 9 && f[ARGHEAD+1] == DOTPRODUCT ) {
+				for ( i = 0; i < 5; i++ ) *l++ = f[ARGHEAD+1+i];
+			}
+			else if ( f[ARGHEAD+1] >= FUNCTION ) {
+				for ( i = 0; i < f[ARGHEAD+1]-4; i++ ) *l++ = f[ARGHEAD+1+i];
+			}
+			else goto noaction;
+		}
+		else goto noaction;
+		numsub++;
+		f = nextf;
+		NEXTARG(f)
+	}
+	C = cbuf+AT.ebufnum;
+	oldworkpointer = AT.WorkPointer;
+	AT.WorkPointer = l;
+	*left = l-left;
+/*
+	Put the pointers to the lhs and the rhs in the pointer workspace
+*/
+	WantAddPointers(2*numsub);
+	lhs = AT.pWorkPointer;
+	rhs = lhs+numsub;
+	AT.pWorkPointer = rhs+numsub;
+	f = t + FUNHEAD; l = left+1;
+	for ( i = 0; i < numsub; i++ ) {
+		AT.pWorkSpace[lhs+i] = l; l += l[1];
+		NEXTARG(f);
+		AT.pWorkSpace[rhs+i] = f;
+		NEXTARG(f);
+	}
+/*
+	Take out the patterns and replace them by SUBEXPRESSIONs pointing at
+	the e buffer. We put the resulting term above the left sides.
+	Note that we take out only the first id_ if there is more than one!
+*/
+	first = 1;
+	t = term+1; newterm = AT.WorkPointer; out = newterm+1;
+	while ( t < tstop ) {
+		if ( *t == IDFUNCTION && first ) { first = 0; t += t[1]; continue; }
+		if ( *t >= FUNCTION ) {
+			for ( i = 0; i < numsub; i++ ) {
+				m = AT.pWorkSpace[lhs+i];
+				if ( *m != *t ) continue;
+				for ( j = 1; j < t[1]; j++ ) {
+					if ( m[j] != t[j] ) break;
+				}
+				if ( j != t[1] ) continue;
+				numfound++;
+/*
+				We have a match! Set up a SUBEXPRESSION subterm and put the
+				corresponding rhs in the eBuffer.
+*/
+				PutInBuffers(1)
+				t += t[1];
+			}
+			if ( i == numsub ) {	/* no match. Just copy to output. */
+				j = t[1]; NCOPY(out,t,j)
+			}
+		}
+		else if ( *t == SYMBOL ) {
+			for ( i = 0; i < numsub; i++ ) {
+				m = AT.pWorkSpace[lhs+i];
+				if ( *m != SYMBOL ) continue;
+				for ( ii = 2; ii < t[1]; ii += 2 ) {
+					if ( m[2] != t[ii] ) continue;
+					pow = t[ii+1]/m[3];
+					if ( pow <= 0 ) continue;
+					t[ii+1] = t[ii+1]%m[3];
+					numfound++;
+/*
+					Create the proper rhs in the eBuffer and set up a
+					SUBEXPRESSION subterm.
+*/
+					PutInBuffers(pow)
+				}
+			}
+/*
+			Now we copy whatever remains of the SYMBOL subterm to the output
+*/
+			m = out; *out++ = t[0]; *out++ = t[1];
+			for ( ii = 2; ii < t[1]; ii += 2 ) {
+				if ( t[ii+1] ) { *out++ = t[ii]; *out++ = t[ii+1]; }
+			}
+			m[1] = out-m;
+			if ( m[1] == 2 ) out = m;
+			t += t[1];
+		}
+		else if ( *t == DOTPRODUCT ) {
+			for ( i = 0; i < numsub; i++ ) {
+				m = AT.pWorkSpace[lhs+i];
+				if ( *m != DOTPRODUCT ) continue;
+				for ( ii = 2; ii < t[1]; ii += 3 ) {
+					if ( m[2] != t[ii] || m[3] != t[ii+1] ) continue;
+					pow = t[ii+2]/m[4];
+					if ( pow <= 0 ) continue;
+					t[ii+2] = t[ii+2]%m[4];
+					numfound++;
+/*
+					Create the proper rhs in the eBuffer and set up a
+					SUBEXPRESSION subterm.
+*/
+					PutInBuffers(pow)
+				}
+			}
+/*
+			Now we copy whatever remains of the DOTPRODUCT subterm to the output
+*/
+			m = out; *out++ = t[0]; *out++ = t[1];
+			for ( ii = 2; ii < t[1]; ii += 3 ) {
+				if ( t[ii+2] ) { *out++ = t[ii]; *out++ = t[ii+1]; *out++ = t[ii+2]; }
+			}
+			m[1] = out-m;
+			if ( m[1] == 2 ) out = m;
+			t += t[1];
+		}
+		else {
+			j = t[1]; NCOPY(out,t,j)
+		}
+	}
+/*
+	Copy the coefficient and set the size.
+*/
+	t = tstop; r = term+*term; while ( t < r ) *out++ = *t++;
+	*newterm = out-newterm;
+/*
+	Finally we move the new term over the original term.
+*/
+	i = *newterm;
+	t = term; r = newterm; NCOPY(t,r,i)
+/*
+	At this point we can return and if the calling Generator jumps back to
+	its start, TestSub can take care of the expansions of SUBEXPRESSIONs.
+*/
+	AT.pWorkPointer = lhs;
+	AT.WorkPointer = t;
+	return(numfound);
+noaction:
+	return(0);
+}
+
+/*
+ 		#] TakeIDfunction : 
   	#] Patterns : 
 */
 

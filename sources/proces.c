@@ -257,7 +257,7 @@ WORD Processor()
 			if ( AR.expchanged ) AR.expflags |= ISUNMODIFIED;
 			AR.GetFile = 0;
 /*
-			#] in memory : 
+			#] in memory :
 */
 		}
 		else {
@@ -1660,17 +1660,41 @@ redosize:							i -= *t;
 						if ( i < T->numind ) goto teststrict;
 
 						isp = FindTableTree(T,t1+FUNHEAD,2);
-						if ( isp < 0 ) goto teststrict;
-						rhsnumber = T->tablepointers[isp+T->numind];
+						if ( isp < 0 ) {
+teststrict:					if ( T->strict == -2 ) {
+								rhsnumber = AM.zerorhs;
+								tbufnum = AM.zbufnum;
+							}
+							else if ( T->strict == -3 ) {
+								rhsnumber = AM.onerhs;
+								tbufnum = AM.zbufnum;
+							}
+							else if ( T->strict < 0 ) goto NextFun;
+							else {
+								MLOCK(ErrorMessageLock);
+								MesPrint("Element in table is undefined");
+								goto showtable;
+							}
+/*
+							Copy the indices;
+*/
+							t = t1+FUNHEAD+1;
+							for ( i = 0; i < T->numind; i++ ) {
+								*p = *t; p+=2; t+=2;
+							}
+						}
+						else {
+							rhsnumber = T->tablepointers[isp+T->numind];
 #if ( TABLEEXTENSION == 2 )
-						tbufnum = T->bufnum;
+							tbufnum = T->bufnum;
 #else
-						tbufnum = T->tablepointers[isp+T->numind+1];
+							tbufnum = T->tablepointers[isp+T->numind+1];
 #endif
-						t = t1+FUNHEAD+1;
-						ii = T->numind;
-						while ( --ii >= 0 ) {
-							*p = *t; t += 2; p += 2;
+							t = t1+FUNHEAD+1;
+							ii = T->numind;
+							while ( --ii >= 0 ) {
+								*p = *t; t += 2; p += 2;
+							}
 						}
 						goto caughttable;
 					}
@@ -1706,17 +1730,12 @@ showtable:							AO.OutFill = AO.OutputLine = (UBYTE *)m;
 */
 						i *= TABLEEXTENSION;
 						if ( T->tablepointers[i] == -1 ) {
-teststrict:					if ( T->strict == -2 ) {
-/*
-								AN.ncmod = oldncmod;
-								term[0] = 0;
-								return(0);
-
-								This goes wrong inside functions.
-								We need a pointer to a zero expression.
-								The following is slower but more general
-*/
+							if ( T->strict == -2 ) {
 								rhsnumber = AM.zerorhs;
+								tbufnum = AM.zbufnum;
+							}
+							else if ( T->strict == -3 ) {
+								rhsnumber = AM.onerhs;
 								tbufnum = AM.zbufnum;
 							}
 							else if ( T->strict < 0 ) goto NextFun;
@@ -2916,7 +2935,7 @@ WORD Generator(PHEAD WORD *term, WORD level)
 	CBUF *C = cbuf+AM.rbufnum, *CC = cbuf + AT.ebufnum;
 	LONG posisub, oldcpointer;
 	DOLLARS d = 0;
-	WORD numfac[5];
+	WORD numfac[5], idfunctionflag;
 #ifdef WITHPTHREADS
 	int nummodopt, dtype = -1, id;
 #endif
@@ -2934,6 +2953,7 @@ ReStart:
 */
 Renormalize:
 		AN.PolyNormFlag = 0;
+		AN.idfunctionflag = 0;
 		if ( ( retnorm = Normalize(BHEAD term) ) != 0 ) {
 			if ( retnorm > 0 ) {
 				if ( AT.WorkPointer < term + *term ) AT.WorkPointer = term + *term;
@@ -2941,7 +2961,9 @@ Renormalize:
 			}
 			goto GenCall;
 		}
+		idfunctionflag = AN.idfunctionflag;
 		if ( !*term ) { AN.PolyNormFlag = 0; goto Return0; }
+
 		if ( AN.PolyNormFlag ) {
 			if ( AN.PolyFunTodo == 0 ) {
 				if ( PolyFunMul(BHEAD term) ) goto GenCall;
@@ -2960,6 +2982,12 @@ Renormalize:
 					if ( !*term ) { AN.PolyNormFlag = 0; goto Return0; }
 				}
 				AN.PolyFunTodo = 0;
+			}
+		}
+		if ( idfunctionflag > 0 ) {
+			if ( TakeIDfunction(BHEAD term) ) {
+				AT.WorkPointer = term + *term;
+				goto ReStart;
 			}
 		}
 		if ( AT.WorkPointer < (WORD *)(((UBYTE *)(term)) + AM.MaxTer) )
