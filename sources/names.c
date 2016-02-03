@@ -1883,6 +1883,50 @@ int CoCTable(UBYTE *s)
 
 /*
   	#] CoCTable : 
+  	#[ EmptyTable :
+*/
+
+void EmptyTable(TABLES T)
+{
+	int j;
+	if ( T->sparse ) ClearTableTree(T);
+	if ( T->boomlijst ) M_free(T->boomlijst,"TableTree");
+	T->boomlijst = 0;
+	for (j = 0; j < T->buffersfill; j++ ) { /* was <= */
+		finishcbuf(T->buffers[j]);
+	}
+	if ( T->buffers ) M_free(T->buffers,"Table buffers");
+	finishcbuf(T->bufnum);
+	T->bufnum = inicbufs();
+	T->bufferssize = 8;
+	T->buffers = (WORD *)Malloc1(sizeof(WORD)*T->bufferssize,"Table buffers");
+	T->buffersfill = 0;
+	T->buffers[T->buffersfill++] = T->bufnum;
+	T->defined = T->mdefined = 0; T->flags = 0;
+	T->numtree = 0; T->rootnum = 0; T->MaxTreeSize = 0;
+	T->spare = 0; T->reserved = 0;
+	if ( T->spare ) {
+		TABLES TT = T->spare;
+		if ( TT->mm ) M_free(TT->mm,"tableminmax");
+		if ( TT->flags ) M_free(TT->flags,"tableflags");
+		if ( TT->tablepointers ) M_free(TT->tablepointers,"tablepointers");
+		for (j = 0; j < TT->buffersfill; j++ ) {
+			finishcbuf(TT->buffers[j]);
+		}
+		if ( TT->boomlijst ) M_free(TT->boomlijst,"TableTree");
+		if ( TT->buffers ) M_free(TT->buffers,"Table buffers");
+		M_free(TT,"table");
+		SpareTable(T);
+	}
+	else {
+		WORD *w = T->tablepointers;
+		j = T->totind;
+		for ( j = TABLEEXTENSION*T->totind; j > 0; j-- ) *w++ = -1; /* means: undefined */
+	}
+}
+
+/*
+  	#] EmptyTable :
   	#[ AddSet :
 */
 

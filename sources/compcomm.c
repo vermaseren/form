@@ -5542,28 +5542,31 @@ int CoClearTable(UBYTE *s)
 		c = *s; *s = 0;
 		if ( ( ( type = GetName(AC.varnames,t,&numfun,WITHAUTO) ) != CFUNCTION )
 		&& type != CDUBIOUS ) {
-nofunc:		MesPrint("&%s is not a sparse table",t);
+nofunc:		MesPrint("&%s is not a table",t);
 			error = 4;
 			if ( type < 0 ) numfun = AddFunction(t,0,0,0,0,0,-1,-1);
 			*s = c;
 			if ( *s == ',' ) s++;
 			continue;
 		}
+/*
 		else if ( ( ( T = functions[numfun].tabl ) == 0 )
 		 || ( T->sparse == 0 ) ) goto nofunc;
+*/
+		else if ( ( T = functions[numfun].tabl ) == 0 ) goto nofunc;
 		numfun += FUNCTION;
 		*s = c;
 		if ( *s == ',' ) s++;
 /*
 		Now we clear the table.
 */
+		if ( T->sparse ) {
 		if ( T->boomlijst ) M_free(T->boomlijst,"TableTree");
 		for (j = 0; j < T->buffersfill; j++ ) { /* was <= */
 			finishcbuf(T->buffers[j]);
 		}
 		if ( T->buffers ) M_free(T->buffers,"Table buffers");
 		finishcbuf(T->bufnum);
-		if ( T->tablepointers ) M_free(T->tablepointers,"tablepointers");
 
 		T->boomlijst = 0;
 		T->numtree = 0; T->rootnum = 0; T->MaxTreeSize = 0;
@@ -5575,12 +5578,13 @@ nofunc:		MesPrint("&%s is not a sparse table",t);
 		T->buffers[T->buffersfill++] = T->bufnum;
 
 		T->totind = 0;			/* At the moment there are this many */
-		T->tablepointers = 0;
 		T->reserved = 0;
 
 		ClearTableTree(T);
 
 		if ( T->spare ) {
+			if ( T->tablepointers ) M_free(T->tablepointers,"tablepointers");
+			T->tablepointers = 0;
 			TT = T->spare;
 			if ( TT->tablepointers ) M_free(TT->tablepointers,"tablepointers");
 			for (j = 0; j < TT->buffersfill; j++ ) {
@@ -5593,12 +5597,14 @@ nofunc:		MesPrint("&%s is not a sparse table",t);
 			M_free(TT,"table");
 			SpareTable(T);
 		}
+		}
+		else EmptyTable(T);
 	}
 	return(error);
 }
 
 /*
-  	#] CoClearTable : 
+  	#] CoClearTable :
   	#[ CoDenominators :
 */
 

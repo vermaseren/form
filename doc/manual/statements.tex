@@ -526,9 +526,10 @@ Syntax & ClearTable [{\tt<}list of tables{\tt>}]
 \end{tabular} \vspace{4mm}
 
 \noindent This statement clears the tables that are mentioned. Sometimes 
-sparse tables can take so much space that there is no room for new 
+(sparse) tables can take so much space that there is no room for new 
 elements, while old elements are not needed any longer. In that case one 
-can clear the table and start all over again with filling it.
+can clear the table and start all over again with filling it. It is also 
+useful when one wants to reuse a table, but now with a different content.
 \vspace{10mm}
 
 %--#] cleartable : 
@@ -3977,7 +3978,7 @@ polyratfun is much faster and gives fewer chances of mistakes.
 
 \vspace{10mm}
 
-%--#] polyratfun :
+%--#] polyratfun : 
 %--#[ pophide :
 
 \section{pophide}
@@ -5287,6 +5288,10 @@ table has been defined.}
 \lefttabitem{zerofill\index{table!zerofill}}
 \tabitem{Any undefined table element is considered to be 
 zero.}\vspace{10mm}
+
+\lefttabitem{onefill\index{table!onefill}}
+\tabitem{Any undefined table element is considered to be 
+one.}\vspace{10mm}
 
 \noindent The defaults are that the table is matrix like and table elements 
 that cannot be substituted will result in an error.\vspace{4mm}

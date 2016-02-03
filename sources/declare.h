@@ -1012,6 +1012,7 @@ extern int    CoTable(UBYTE *);
 extern int    CoTerm(UBYTE *);
 extern int    CoNTable(UBYTE *);
 extern int    CoCTable(UBYTE *);
+extern void   EmptyTable(TABLES);
 extern int    CoToTensor(UBYTE *);
 extern int    CoToVector(UBYTE *);
 extern int    CoTrace4(UBYTE *);

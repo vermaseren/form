@@ -542,6 +542,42 @@ to indicate its spin line. Its is identical to a regular gamma matrix with
 no Lorenz indices: \verb:gi_(n) = g_(n):
 
 %--#] gi_ : 
+%--#[ id_ :
+
+\section{id\_}\index{id\_}\index{function!id\_}
+\label{funid}
+\noindent This function is a crossbreed between the 
+replace\_\index{replace\_}\ref{funreplace} function and the id 
+statement\index{substaidentify}\ref{substaidentify}. To become active it 
+needs an even number of arguments. The odd numbered arguments can be 
+anything of the types:
+\begin{description}
+\item[] a single symbol, possibly to an integer power.
+\item[] a single dotproducts, possibly to an integer power.
+\item[] a single function, possibly with any number and type of arguments.
+\end{description}
+When \FORM encounters an id\_ function the last step of normalizing a term 
+is to replace the id function by a number substitutions in which the odd 
+arguments are replaced by the following even arguments. These are not 
+wildcard substitutions as in the replace\_ function, but substitutions as 
+in regular id statements. The matching of the odd arguemnts is done in a 
+single step as in an id-al construction\ref{substaalso}. Hence
+\begin{verbatim}
+    id_(x^2,y+z,y,u+v,x,z+u)
+\end{verbatim}
+effectively becomes
+\begin{verbatim}
+    id x^2 = y+z;
+    al y = u+v;
+    al x = z+u;
+\end{verbatim}
+\FORM treats multiple occurrences of the id\_ function one at a time. It 
+takes the leftmost occurrence first, takes the patterns from the term, 
+expands the right hand sides, tries to normalize the resulting terms and 
+only then continues with the next id\_ function. For this reason the id\_ 
+function is noncommuting.
+
+%--#] id_ : 
 %--#[ integer_ :
 
 \section{integer\_}\index{integer\_}\index{function!integer\_}
