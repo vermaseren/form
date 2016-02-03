@@ -483,7 +483,7 @@ not generate an error message.
 anticommutes with the other Dirac\index{Dirac} gamma\index{gamma matrices} 
 matrices. Anybody who does not like that should program private libraries 
 (this should not be too difficult with the cycle symmetric functions 
-(see \ref{substafunctions})). There should be a single index to indicate 
+(see~\ref{substafunctions}). There should be a single index to indicate 
 the spinline.
 
 %--#] g5_ : 
@@ -547,8 +547,8 @@ no Lorenz indices: \verb:gi_(n) = g_(n):
 \section{id\_}\index{id\_}\index{function!id\_}
 \label{funid}
 \noindent This function is a crossbreed between the 
-replace\_\index{replace\_}\ref{funreplace} function and the id 
-statement\index{substaidentify}\ref{substaidentify}. To become active it 
+replace\_\index{replace\_}~\ref{funreplace} function and the id 
+statement\index{substaidentify}~\ref{substaidentify}. To become active it 
 needs an even number of arguments. The odd numbered arguments can be 
 anything of the types:
 \begin{description}
@@ -556,12 +556,12 @@ anything of the types:
 \item[] a single dotproducts, possibly to an integer power.
 \item[] a single function, possibly with any number and type of arguments.
 \end{description}
-When \FORM encounters an id\_ function the last step of normalizing a term 
+When \FORM{} encounters an id\_ function the last step of normalizing a term 
 is to replace the id function by a number substitutions in which the odd 
 arguments are replaced by the following even arguments. These are not 
 wildcard substitutions as in the replace\_ function, but substitutions as 
-in regular id statements. The matching of the odd arguemnts is done in a 
-single step as in an id-al construction\ref{substaalso}. Hence
+in regular id statements. The matching of the odd arguments is done in a 
+single step as in an id-al construction~\ref{substaalso}. Hence
 \begin{verbatim}
     id_(x^2,y+z,y,u+v,x,z+u)
 \end{verbatim}
@@ -571,7 +571,7 @@ effectively becomes
     al y = u+v;
     al x = z+u;
 \end{verbatim}
-\FORM treats multiple occurrences of the id\_ function one at a time. It 
+\FORM{} treats multiple occurrences of the id\_ function one at a time. It 
 takes the leftmost occurrence first, takes the patterns from the term, 
 expands the right hand sides, tries to normalize the resulting terms and 
 only then continues with the next id\_ function. For this reason the id\_ 
@@ -770,8 +770,8 @@ polymul\_\index{polymul\_}\index{function!polymul\_},
 polynorm\_\index{polynorm\_}\index{function!polynorm\_},
 polyrem\_\index{polyrem\_}\index{function!polyrem\_} and
 polysub\_\index{polysub\_}\index{function!polysub\_}.
-See also the chapter on polynomials\ref{polynomials} and the functions 
-gcd\_\ref{fungcd}, div\_\ref{fundiv} and rem\_\ref{funrem}.
+See also the chapter on polynomials~\ref{polynomials} and the functions 
+gcd\_~\ref{fungcd}, div\_~\ref{fundiv} and rem\_~\ref{funrem}.
 
 %--#] poly_ : 
 %--#[ prime_ :
@@ -824,7 +824,7 @@ as described in vol 2 of the "Art of computer programming, vol2" by D.
 Knuth with the parameters set at 89,38 to give as long a cycle as possible. 
 For very large numbers the program pastes several random numbers together. 
 The generator can be initialized with the preprocessor 
-\#setrandom\ref{presetrandom}\index{\#setrandom} instruction. When running 
+\#setrandom~\ref{presetrandom}\index{\#setrandom} instruction. When running 
 with TFORM or ParFORM each worker runs an independent generator with its 
 own seed. The seeds of the workers are derived from the seed of the master 
 and the number of the worker in a non-trivial way. It should be noted 

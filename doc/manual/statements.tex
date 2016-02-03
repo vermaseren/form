@@ -1002,8 +1002,8 @@ The enddo statement should be in the same module as the do statement. In
 addition it should be properly nested with if, repeat, while and argument 
 constructions.
 
-\noindent The do-loop facility is in principle superfuous, because the 
-repeat(\ref{substarepeat}), if(\ref{substaif} and the pattern matcher can 
+\noindent The do-loop facility is in principle superfluous, because the 
+repeat~(\ref{substarepeat}), if~(\ref{substaif}) and the pattern matcher can 
 basically do everything the do-loop can do. Sometimes however the do-loop 
 is easier to program and gives more readable code as shown here:
 \begin{verbatim}
@@ -1337,7 +1337,7 @@ Syntax & extrasymbols,array\textbar{}vector\textbar{}underscore,name;
 
 \noindent Starting with version 4.0 of \FORM{} some built in operations or
 statements can only deal with symbols and numbers. Examples of this are 
-factorization(\ref{substafactarg}) (which uses the topolynomial facilities 
+factorization~(\ref{substafactarg}) (which uses the topolynomial facilities 
 automatically) and output simplification (see the Format 
 statement \ref{substaformat}).
 The ToPolynomial statement\index{topolynomial} takes each term, looks for 
@@ -1848,7 +1848,7 @@ Syntax & frompolynomial
 
 \noindent Starting with version 4.0 of \FORM{} some built in operations or
 statements can only deal with symbols and numbers. Examples of this are 
-factorization(\ref{substafactarg}) and output simplification (still to be 
+factorization~(\ref{substafactarg}) and output simplification (still to be 
 implemented). Whereas the ToPolynomial statement takes each term, looks for objects 
 that are not symbols to positive powers and replaces them by symbols the 
 FromPolynomial does the opposite: it replaces the newly defined extra 
@@ -2469,7 +2469,7 @@ traces over gamma matrices are considered (see \ref{substatrace} and
 \noindent \begin{tabular}{ll}
 Type & Executable statement\\
 Syntax & inexpression,name(s) of expression(s);
-\\ See also & endinexpression(\ref{substaendinexpression})
+\\ See also & endinexpression~(\ref{substaendinexpression})
 \end{tabular} \vspace{4mm}
 
 \noindent The combination\index{inexpression}
@@ -3551,7 +3551,7 @@ characters can be restored by turning this variable off. See also page
  
 \leftvitem{3.5cm}{oldfactarg\index{off!oldfactarg}}
 \rightvitem{13cm}{\label{staoffoldfactarg}Switches the use of the FactArg 
-statement\ref{substafactarg}\index{factarg} to the new mode of version 4 or 
+statement~\ref{substafactarg}\index{factarg} to the new mode of version 4 or 
 later in which expressions in the argument of the mentioned function are 
 completely factored over the rationals. The default is off.}
  
@@ -3610,7 +3610,7 @@ versions of \FORM\ will ignore this option.}
 \leftvitem{3.5cm}{totalsize\index{off!totalsize}}
 \rightvitem{13cm}{Switches the totalsize mode off. For a more detailed 
 description of the totalsize mode, see the "On TotalSize;" 
-command\ref{ontotalsize}.}
+command~\ref{ontotalsize}.}
 
 \leftvitem{3.5cm}{warnings\index{off!warnings}}
 \rightvitem{13cm}{Turns off the printing of warnings.}
@@ -3707,7 +3707,7 @@ blank characters can be omitted by turning this variable on. See also page
  
 \leftvitem{3.5cm}{oldfactarg\index{on!oldfactarg}}
 \rightvitem{13cm}{\label{staonoldfactarg}Switches the use of the FactArg 
-statement\ref{substafactarg}\index{factarg} to the old mode from before 
+statement~\ref{substafactarg}\index{factarg} to the old mode from before 
 version 4. This is a compatibility mode to allow oldprograms that rely on a 
 specific working of the FactArg statement to still run. The default is 
 off.}
@@ -5022,11 +5022,11 @@ be treated till there are only terms with a single occurrence of the
 function.
 
 The stuffle command takes also the effect of roots of 
-unity\ref{rootofunity}\index{root of unity} into account in the same way 
+unity~\ref{rootofunity}\index{root of unity} into account in the same way 
 that the signs of alternating sums are taken into account. This means that 
 the sum indices don't have to be integers, but could be multiples of a 
 single symbol that has been declared to be a root of 
-unity\ref{substasymbols}.
+unity~\ref{substasymbols}.
 \vspace{10mm}
 %
 %--#] stuffle : 
@@ -5287,7 +5287,7 @@ table has been defined.}
 
 \lefttabitem{zerofill\index{table!zerofill}}
 \tabitem{Any undefined table element is considered to be 
-zero.}\vspace{10mm}
+zero.}
 
 \lefttabitem{onefill\index{table!onefill}}
 \tabitem{Any undefined table element is considered to be 

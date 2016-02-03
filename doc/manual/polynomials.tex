@@ -8,9 +8,9 @@ creates many new possibilities, it brings a whole new category of commands
 with it. We will list most of these here.
 
 \noindent First there are the rational polynomials. These work a bit like 
-the PolyFun\ref{substapolyfun}, but now with two arguments: a numerator and 
+the PolyFun~\ref{substapolyfun}, but now with two arguments: a numerator and 
 a denominator. Instead of PolyFun the function is designated as 
-PolyRatFun\ref{substapolyratfun} as in the example below:
+PolyRatFun~\ref{substapolyratfun} as in the example below:
 \begin{verbatim}
     Symbol x,y;
     CFunction rat;
@@ -25,19 +25,19 @@ PolyRatFun\ref{substapolyratfun} as in the example below:
 Dealing with a PolyRatFun can be very handy, but one should realize that 
 there is a limit to the size of the arguments, because the PolyRatFun with 
 its arguments is part of a term and hence is limited by the maximum size of 
-a term\ref{setupmaxtermsize}. One should also take into account that the 
+a term~\ref{setupmaxtermsize}. One should also take into account that the 
 manipulation of multivariate polynomials, and in particular the GCD 
 operation, can be rather time consuming.
 
 \noindent The PolyRatFun has one limitation as compared to the regular 
 PolyFun: in its arguments one may use only symbols. Of course FORM is 
 equipped with a mechanism to replace other objects by extra internally 
-generated symbols\ref{substaextrasymbols}. One could imagine FORM to 
+generated symbols~\ref{substaextrasymbols}. One could imagine FORM to 
 automatically convert these objects to symbols, do the polynomial 
 arithmetic and then convert back. This is done with factorization and the 
-gcd\_\ref{fungcd}\index{gcd\_}\index{function!gcd\_}, 
-div\_\ref{fundiv}\index{div\_}\index{function!div\_} 
-and rem\_\ref{funrem}\index{rem\_}\index{function!rem\_} functions. But 
+gcd\_~\ref{fungcd}\index{gcd\_}\index{function!gcd\_}, 
+div\_~\ref{fundiv}\index{div\_}\index{function!div\_} 
+and rem\_~\ref{funrem}\index{rem\_}\index{function!rem\_} functions. But 
 because the addition of PolyRatFun's is such a frequent event, this would 
 be very costly in time. Hence it is better that the user does this once 
 in a controlled way.
@@ -66,7 +66,7 @@ the preprocessor or on a term by term basis. Let us start with function
 arguments.
 
 \noindent One can factorize function arguments with the FactArg 
-statement\ref{substafactarg}. The factors are each represented by a 
+statement~\ref{substafactarg}. The factors are each represented by a 
 separate argument as in
 \begin{verbatim}
     Symbol x,y;
@@ -81,7 +81,7 @@ separate argument as in
 \end{verbatim}
 Overall constants and overall signs are taken separately as one can see. If 
 one wants the factors in separate functions one can use the 
-ChainOut\ref{substachainout} command as in
+ChainOut~\ref{substachainout} command as in
 \begin{verbatim}
     Symbol x,y;
     CFunction f1,f2;
@@ -111,11 +111,11 @@ original unfactorized expression is replaced by the factorized version.
 After that we keep the factorized version only and that may bring some 
 restrictions with it. Of course, in the same way one can factorize an 
 expression, one can unfactorize it. The corresponding statements are 
-Factorize\ref{substafactorize}, NFactorize\ref{substanfactorize}, 
-UnFactorize\ref{substaunfactorize} and 
-NUnFactorize\ref{substanunfactorize}. These statements are used at the end 
+Factorize~\ref{substafactorize}, NFactorize~\ref{substanfactorize}, 
+UnFactorize~\ref{substaunfactorize} and 
+NUnFactorize~\ref{substanunfactorize}. These statements are used at the end 
 of the module in the same place as one might use the bracket 
-statement\ref{substabracket}. It should be noticed however that a 
+statement~\ref{substabracket}. It should be noticed however that a 
 factorized expression will never apply the bracket mechanism. They are 
 mutually exclusive, because internally we use the bracket mechanism with a 
 built in symbol factor\_ to indicate the factors. Here is an example:
@@ -231,8 +231,8 @@ bracket with the n-th power of the symbol factor\_ outside the bracket:
 
 \noindent It is also possible to put an expression in the input in a 
 factorized format. For this we have the 
-LocalFactorized\ref{substalfactorized} and 
-GlobalFactorized\ref{substagfactorized} commands. These commands can 
+LocalFactorized~\ref{substalfactorized} and 
+GlobalFactorized~\ref{substagfactorized} commands. These commands can 
 be abbreviated to LFactorized, GFactorized or even LF and GF. One should 
 notice that these commands do not execute a factorization. They accept the 
 factors as the user provides them:
@@ -376,7 +376,7 @@ factors that are zero. The zero factor will always be the first. Hence it
 is rather easy to test for whether the total expression should actually be 
 zero. We just have to look whether \verb:E[factor_]: is zero.
 
-\noindent The unfactorize\ref{substaunfactorize} statement is the opposite 
+\noindent The unfactorize~\ref{substaunfactorize} statement is the opposite 
 of the factorize statement. It takes the factorized expression and 
 multiplies out the factors. It also uses the current brackets for 
 formatting the output.
@@ -602,9 +602,9 @@ this by the following simple mechanism:
 \noindent In version 3 there were some experimental polynomial functions 
 like polygcd\_\index{polygcd\_}\index{function!polygcd\_}. These have been 
 removed as their functionality has been completely taken over by the new 
-functions gcd\_\ref{fungcd}, div\_\ref{fundiv} and rem\_\ref{funrem} and 
-some statements like normalize\ref{substanormalize}, 
-makeinteger\ref{substamakeinteger} and factarg\ref{substafactarg}. Unlike 
+functions gcd\_~\ref{fungcd}, div\_~\ref{fundiv} and rem\_~\ref{funrem} and 
+some statements like normalize~\ref{substanormalize}, 
+makeinteger~\ref{substamakeinteger} and factarg~\ref{substafactarg}. Unlike 
 regular functions, the functions gcd\_. div\_ and rem\_ have the 
 peculiarity that if one of the arguments is just an expression or a 
 \$-expression, this expression is not evaluated until the function is 
