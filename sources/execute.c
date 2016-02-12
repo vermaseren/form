@@ -28,7 +28,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */ 
+/* #] License : */
 /*
   	#[ Includes : execute.c
 */
@@ -36,7 +36,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes : 
+  	#] Includes :
 	#[ DoExecute :
  		#[ CleanExpr :
 
@@ -196,7 +196,7 @@ WORD CleanExpr(WORD par)
 }
 
 /*
- 		#] CleanExpr : 
+ 		#] CleanExpr :
  		#[ PopVariables :
 
 	Pops the local variables from the tables.
@@ -366,7 +366,7 @@ WORD PopVariables()
 }
 
 /*
- 		#] PopVariables : 
+ 		#] PopVariables :
  		#[ MakeGlobal :
 */
 
@@ -462,7 +462,7 @@ VOID MakeGlobal()
 }
 
 /*
- 		#] MakeGlobal : 
+ 		#] MakeGlobal :
  		#[ TestDrop :
 */
 
@@ -521,9 +521,13 @@ VOID TestDrop()
 			case HIDDENGEXPRESSION:
 				break;
 			case INTOHIDELEXPRESSION:
+				ClearBracketIndex(j);
+				e->bracketinfo = e->newbracketinfo; e->newbracketinfo = 0;
 				e->status = HIDDENLEXPRESSION;
 				break;
 			case INTOHIDEGEXPRESSION:
+				ClearBracketIndex(j);
+				e->bracketinfo = e->newbracketinfo; e->newbracketinfo = 0;
 				e->status = HIDDENGEXPRESSION;
 				break;
 			default:
@@ -535,7 +539,7 @@ VOID TestDrop()
 }
 
 /*
- 		#] TestDrop : 
+ 		#] TestDrop :
  		#[ PutInVflags :
 */
 
@@ -583,7 +587,7 @@ restart:;
 }
 
 /*
- 		#] PutInVflags : 
+ 		#] PutInVflags :
  		#[ DoExecute :
 */
 
@@ -972,7 +976,7 @@ skipexec:
 }
 
 /*
- 		#] DoExecute : 
+ 		#] DoExecute :
  		#[ PutBracket :
 
 	Routine uses the bracket info to split a term into two pieces:
@@ -1277,7 +1281,7 @@ nextdot:;
 }
 
 /*
- 		#] PutBracket : 
+ 		#] PutBracket :
  		#[ SpecialCleanup :
 */
 
@@ -1289,7 +1293,7 @@ VOID SpecialCleanup(PHEAD0)
 }
 
 /*
- 		#] SpecialCleanup : 
+ 		#] SpecialCleanup :
  		#[ SetMods :
 */
 
@@ -1307,7 +1311,7 @@ void SetMods()
 #endif
 
 /*
- 		#] SetMods : 
+ 		#] SetMods :
  		#[ UnSetMods :
 */
 
@@ -1322,7 +1326,7 @@ void UnSetMods()
 #endif
 
 /*
- 		#] UnSetMods : 
+ 		#] UnSetMods :
 	#] DoExecute :
 	#[ Expressions :
  		#[ ExchangeExpressions :
@@ -1398,7 +1402,7 @@ void ExchangeExpressions(int num1, int num2)
 }
 
 /*
- 		#] ExchangeExpressions : 
+ 		#] ExchangeExpressions :
  		#[ GetFirstBracket :
 */
 
@@ -1508,7 +1512,7 @@ int GetFirstBracket(WORD *term, int num)
 }
 
 /*
- 		#] GetFirstBracket : 
+ 		#] GetFirstBracket :
  		#[ GetFirstTerm :
 */
 
@@ -1603,7 +1607,7 @@ int GetFirstTerm(WORD *term, int num)
 }
 
 /*
- 		#] GetFirstTerm : 
+ 		#] GetFirstTerm :
  		#[ GetContent :
 */
 
@@ -1718,7 +1722,7 @@ CalledFrom:
 }
 
 /*
- 		#] GetContent : 
+ 		#] GetContent :
  		#[ CleanupTerm :
 
 		Removes noncommuting objects from the term
@@ -1744,7 +1748,7 @@ int CleanupTerm(WORD *term)
 }
 
 /*
- 		#] CleanupTerm : 
+ 		#] CleanupTerm :
  		#[ ContentMerge :
 */
 
@@ -1964,7 +1968,7 @@ CalledFrom:
 }
 
 /*
- 		#] ContentMerge : 
+ 		#] ContentMerge :
  		#[ TermsInExpression :
 */
 
@@ -1976,7 +1980,7 @@ LONG TermsInExpression(WORD num)
 }
 
 /*
- 		#] TermsInExpression : 
+ 		#] TermsInExpression :
  		#[ UpdatePositions :
 */
 
@@ -2027,7 +2031,7 @@ void UpdatePositions()
 }
 
 /*
- 		#] UpdatePositions : 
+ 		#] UpdatePositions :
  		#[ CountTerms1 :		LONG CountTerms1()
 
 		Counts the terms in the current deferred bracket
@@ -2127,7 +2131,7 @@ Thatsit:;
 }
 
 /*
- 		#] CountTerms1 : 
+ 		#] CountTerms1 :
  		#[ TermsInBracket :		LONG TermsInBracket(term,level)
 
 	The function TermsInBracket_()
@@ -2318,7 +2322,7 @@ IllBraReq:;
 	return(numterms);
 }
 /*
- 		#] TermsInBracket :		LONG TermsInBracket(term,level) 
+ 		#] TermsInBracket :		LONG TermsInBracket(term,level)
 	#] Expressions :
 */
 
