@@ -1376,6 +1376,12 @@ IndAll:				i = m[1] - WILDOFFSET;
 				AN.RepFunNum = 0;
 				AN.RepFunList = AT.WorkPointer;
 		        AT.WorkPointer = (WORD *)(((UBYTE *)(AT.WorkPointer)) + AM.MaxTer);
+				if ( AT.WorkPointer+*t+5 > AT.WorkTop ) {
+					MLOCK(ErrorMessageLock);
+					MesWork();
+					MUNLOCK(ErrorMessageLock);
+					return(-1);
+				}
 				csav = cto = AT.WorkPointer;
 				cfrom = t;
 				ci = *t;
