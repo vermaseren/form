@@ -2561,136 +2561,163 @@ static WORD cttarray[7] = { TYPEOPERATION,7,TENVEC,0,0,1,0 };
 
 int CoToTensor(UBYTE *s)
 {
-	UBYTE *t, c, *args[2], cc[2];
-	int j, type, error = 0, ex = 0;
-	WORD number, dol[2];
-	cttarray[3] = cttarray[4] = 0; cttarray[5] = 1;
-	dol[0] = dol[1] = 0;
-	for ( j = 0; j < 2; j++ ) {
-inloop:	args[j] = s;
-		if ( ( s = SkipAName(s) ) == 0 ) {
-proper:		MesPrint("&Syntax error in ToTensor statement");
-			return(1);
-		}
-		cc[j] = *s;
+	UBYTE c, *t;
+	int type, j, nargs, error = 0;
+	WORD number, dol[2] = { 0, 0 };
+	cttarray[1] = 6;  /* length */
+	cttarray[3] = 0;  /* tensor */
+	cttarray[4] = 0;  /* vector */
+	cttarray[5] = 1;  /* option flags */
+/*	cttarray[6] = 0;     set veto */
+/*
+	Count the number of the arguments. The validity of them is not checked here.
+*/
+	nargs = 0;
+	t = s;
+	for (;;) {
+		while ( *s == ' ' || *s == ',' || *s == '\t' ) s++;
+		if ( *s == 0 ) break;
 		if ( *s == '!' ) {
-			*s++ = 0;
-			if ( FG.cTable[*s] == 0 || *s == '[' || *s == '_' || *s == '$' ) {
-				if ( ( s = SkipAName(s) ) == 0 ) goto proper;
-			}
-			else if ( *s == '{' ) {
+			s++;
+			if ( *s == '{' ) {
 				SKIPBRA2(s)
 				s++;
+			} else {
+				if ( ( s = SkipAName(s) ) == 0 ) goto syntax_error;
 			}
-			else goto proper;
-			if ( *s == 0 ) break;
-			if ( *s != ',' ) goto proper;
-			*s = 0;
+		} else {
+			if ( ( s = SkipAName(s) ) == 0 ) goto syntax_error;
 		}
-		else {
-			*s = 0;
-			if ( cc[j] == 0 ) break;
-			if ( cc[j] != ',' ) goto proper;
-		}
-		s++;
+		nargs++;
 	}
-	if ( cc[1] == ',' ) {
-		if ( StrICmp(args[0],(UBYTE *)"nosquare") == 0 ) cttarray[5] |= 2;
-		else if ( StrICmp(args[0],(UBYTE *)"functions") == 0 ) cttarray[5] |= 4;
-		else {
-			MesPrint("&Unrecognized option in ToTensor statement: '%s'",args[0]);
-			error = 1;
+	if ( nargs < 2 ) goto not_enough_arguments;
+	s = t;
+/*
+	Parse options, which are given as the arguments except the last two.
+*/
+	for ( j = 2; j < nargs; j++ ) {
+		while ( *s == ' ' || *s == ',' || *s == '\t' ) s++;
+		if ( *s == '!' ) {
+/*
+			Handle !set or !{vector,...}. Note: If two or more sets are
+			specified, then only the last one is used.
+*/
+			s++;
+			cttarray[1] = 7;
+			cttarray[5] |= 8;
+			if ( FG.cTable[*s] == 0 || *s == '[' || *s == '_' ) {
+				t = s;
+				if ( ( s = SkipAName(s) ) == 0 ) goto syntax_error;
+				c = *s; *s = 0;
+				type = GetName(AC.varnames,t,&number,WITHAUTO);
+				if ( type == CVECTOR ) {
+/*
+					As written in the manual, "!p" (without "{}") should work.
+*/
+					cttarray[6] = DoTempSet(t,s);
+					*s = c;
+					goto check_tempset;
+				}
+				else if ( type != CSET ) {
+					MesPrint("&%s is not the name of a set or a vector",t);
+					error = 1;
+				}
+				*s = c;
+				cttarray[6] = number;
+			}
+			else if ( *s == '{' ) {
+				t = ++s; SKIPBRA2(s) *s = 0;
+				cttarray[6] = DoTempSet(t,s);
+				*s++ = '}';
+check_tempset:
+				if ( cttarray[6] < 0 ) {
+					error = 1;
+				}
+				if ( AC.wildflag ) {
+					MesPrint("&Improper use of wildcard(s) in set specification");
+					error = 1;
+				}
+			}
+		} else {
+/*
+			Other options.
+*/
+			t = s;
+			if ( ( s = SkipAName(s) ) == 0 ) goto syntax_error;
+			c = *s; *s = 0;
+			if ( StrICmp(t,(UBYTE *)"nosquare") == 0 ) cttarray[5] |= 2;
+			else if ( StrICmp(t,(UBYTE *)"functions") == 0 ) cttarray[5] |= 4;
+			else {
+				MesPrint("&Unrecognized option in ToTensor statement: '%s'",t);
+				*s = c;
+				return(1);
+			}
+			*s = c;
 		}
-		args[0] = args[1]; args[1][-1] = cc[0]; cc[0] = cc[1];
-		j = 1; goto inloop;
 	}
-	if ( cc[1] != '!' && cc[1] != 0 ) goto proper;
+/*
+	Now parse a vector and a tensor. The ordering doesn't matter.
+*/
 	for ( j = 0; j < 2; j++ ) {
-		if ( args[j][0] == '$' ) {
-			dol[j] = GetDollar(args[j]+1);
-			if ( dol[j] < 0 ) dol[j] = AddDollar(args[j]+1,DOLUNDEFINED,0,0);
+		while ( *s == ' ' || *s == ',' || *s == '\t' ) s++;
+		t = s;
+		if ( ( s = SkipAName(s) ) == 0 ) goto syntax_error;
+		c = *s; *s = 0;
+		if ( t[0] == '$' ) {
+			dol[j] = GetDollar(t+1);
+			if ( dol[j] < 0 ) dol[j] = AddDollar(t+1,DOLUNDEFINED,0,0);
+		} else {
+			type = GetName(AC.varnames,t,&number,WITHAUTO);
+			if ( type == CVECTOR ) {
+				cttarray[4] = number + AM.OffsetVector;
+			}
+			else if ( type == CFUNCTION && ( functions[number].spec > 0 ) ) {
+				cttarray[3] = number + FUNCTION;
+			}
+			else {
+				MesPrint("&%s is not a vector or a tensor",t);
+				error = 1;
+			}
 		}
-		else if ( ( type = GetName(AC.varnames,args[j],&number,WITHAUTO) ) == CVECTOR ) {
-			cttarray[4] = number + AM.OffsetVector;
-			if ( j == 0 ) ex = 1;
-		}
-		else if ( type == CFUNCTION && ( functions[number].spec > 0 ) ) {
-			cttarray[3] = number + FUNCTION;
-			if ( j == 1 ) ex = 1;
-		}
-		else {
-			MesPrint("&%s is not a vector or a tensor",args[j]);
-			error = 1;
-		}
+		*s = c;
 	}
 	if ( cttarray[3] == 0 || cttarray[4] == 0 ) {
-	 	if ( dol[0] == 0 && dol[1] == 0 ) {
-			MesPrint("&ToTensor statement needs a vector and a tensor");
-			error = 1;
+		if ( dol[0] == 0 && dol[1] == 0 ) {
+			goto not_enough_arguments;
 		}
 		else if ( cttarray[3] ) {
 			if ( dol[1] )        cttarray[4] = dol[1];
-			else if ( dol[0] ) { cttarray[4] = dol[0]; ex = 1; }
+			else if ( dol[0] ) { cttarray[4] = dol[0]; }
 			else {
-				MesPrint("&ToTensor statement needs a vector and a tensor");
-				error = 1;
+				goto not_enough_arguments;
 			}
 		}
 		else if ( cttarray[4] ) {
-			if ( dol[1] )    { cttarray[3] = -dol[1]; ex = 1; }
+			if ( dol[1] )    { cttarray[3] = -dol[1]; }
 			else if ( dol[0] ) cttarray[3] = -dol[0];
 			else {
-				MesPrint("&ToTensor statement needs a vector and a tensor");
-				error = 1;
+				goto not_enough_arguments;
 			}
 		}
 		else {
 			if ( dol[0] == 0 || dol[1] == 0 ) {
-				MesPrint("&ToTensor statement needs a vector and a tensor");
-				error = 1;
+				goto not_enough_arguments;
 			}
 			else {
 				cttarray[3] = -dol[0]; cttarray[4] = dol[1];
 			}
 		}
 	}
-	if ( ex ) j = 0;
-	else j = 1;
-	if ( cc[j] == '!' ) {
-		s = args[1-j]; while ( *s ) s++; *s = cc[1-j];
-		s = args[j]; while ( *s ) s++; *s++ = cc[j];
-		cttarray[5] |= 8;
-		if ( FG.cTable[*s] == 0 || *s == '[' || *s == '_' ) {
-			t = s;
-			if ( ( s = SkipAName(s) ) == 0 ) goto proper;
-			c = *s; *s = 0;
-			if ( ( type = GetName(AC.varnames,t,&number,WITHAUTO) ) != CSET ) {
-				MesPrint("&%s is not the name of a set",t);
-				error = 1;
-			}
-			*s = c;
-			cttarray[6] = number;
-		}
-		else if ( *s == '{' ) {
-			s++; t = s; SKIPBRA2(s) *s = 0;
-			cttarray[6] = DoTempSet(t,s);
-			if ( cttarray[6] < 0 ) error = 1;
-			*s++ = '}';
-			if ( AC.wildflag ) {
-				MesPrint("&Improper use of wildcard(s) in set specification");
-				error = 1;
-			}
-		}
-		if ( *s != 0 ) goto proper;
-		cttarray[1] = 7;
-		AddNtoL(7,cttarray);
-	}
-	else {
-		args[1][-1] = cc[0]; s[-1] = cc[1];
-		cttarray[1] = 6;
-		AddNtoL(6,cttarray);
-	}
+	AddNtoL(cttarray[1],cttarray);
 	return(error);
+
+syntax_error:
+	MesPrint("&Syntax error in ToTensor statement");
+	return(1);
+
+not_enough_arguments:
+	MesPrint("&ToTensor statement needs a vector and a tensor");
+	return(1);
 }
 
 /*
