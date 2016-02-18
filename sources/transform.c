@@ -1185,7 +1185,7 @@ WORD RunReplace(PHEAD WORD *fun, WORD *args, WORD *info)
 	WORD *t, *tt, *u, *tstop, *info1, *infoend, *oldwork = AT.WorkPointer;
 	WORD *term, *newterm, *nt, *term1, *term2;
 	WORD wild[4], mask, *term3, *term4;
-	WORD n1, n2;
+	WORD n1, n2, doanyway;
 	info++;
 	t = fun; tstop = fun + fun[1]; u = tstop;
 	for ( i = 0; i < FUNHEAD; i++ ) *u++ = *t++;
@@ -1323,6 +1323,7 @@ WORD RunReplace(PHEAD WORD *fun, WORD *args, WORD *info)
 
 		First we go for number -> something
 */
+		doanyway = 0;
 		if ( nfix > 0 ) {
 		  if ( functions[fun[0]-FUNCTION].spec != TENSORFUNCTION ) {
 			if ( *t == -SNUMBER ) {
@@ -1351,6 +1352,11 @@ WORD RunReplace(PHEAD WORD *fun, WORD *args, WORD *info)
 					NEXTARG(info1);
 				}
 			  }
+/*
+			  Here we had no match in the style of 1->2. It could however
+			  be that xarg_ does something
+*/
+			  doanyway = 1; n2 = t[1];
 			}
 		  }
 		  else {  /* Tensor */
@@ -1373,6 +1379,9 @@ WORD RunReplace(PHEAD WORD *fun, WORD *args, WORD *info)
 			  }
 			}
 		  }
+		}
+		else if ( *t == -SNUMBER ) {
+		  doanyway = 1; n2 = t[1];
 		}
 /*
 		First we try to catch those elements that have an exact match
@@ -1431,7 +1440,8 @@ WORD RunReplace(PHEAD WORD *fun, WORD *args, WORD *info)
 					AT.WildMask = &mask;
 					mask = 0;
 					AN.NumWild = 1;
-					if ( *t == -SYMBOL || ( *t > 0 && CheckWild(BHEAD WILDARGSYMBOL,SYMTOSUB,1,t) == 0 ) ) {
+					if ( *t == -SYMBOL || ( *t > 0 && CheckWild(BHEAD WILDARGSYMBOL,SYMTOSUB,1,t) == 0 )
+					|| doanyway ) {
 /*
 						We put the part in replace in a function and make
 						a replace_(xarg_,(t argument)).
