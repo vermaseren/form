@@ -1706,6 +1706,10 @@ int CoLabel(UBYTE *inp)
 		return(1);
 	}
 	x = GetLabel(inp);
+	if ( AC.Labels[x] >= 0 ) {
+		MesPrint("&Label %s defined more than once",AC.LabelNames[x]);
+		return(1);
+	}
 	AC.Labels[x] = cbuf[AC.cbufnum].numlhs;
 	return(0);
 }
