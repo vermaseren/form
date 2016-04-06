@@ -12,6 +12,12 @@ TIMEOUT = 10
 # The default directory for searching test cases.
 TESTDIR = File.dirname(__FILE__)
 
+# Check the Ruby version.
+if RUBY_VERSION < "1.8.0"
+  warn("ruby 1.8 required for the test suite")
+  exit
+end
+
 # Register the cleanup function before loading test/unit.
 at_exit { cleanup }
 
@@ -20,7 +26,16 @@ require "ostruct"
 require "optparse"
 require "set"
 require "tmpdir"
-require "test/unit"
+
+# We use test/unit, which is now not in the standard library.
+begin
+  require "test/unit"
+rescue LoadError
+  def cleanup
+  end
+  warn("test/unit required for the test suite")
+  exit
+end
 
 # The root temporary directory.
 $tmpdir = nil
@@ -96,12 +111,6 @@ def rm(file)
     rescue
     end
   end
-end
-
-# Check the Ruby version.
-if RUBY_VERSION < "1.8.0"
-  warn("ruby 1.8 required for the test suite")
-  exit
 end
 
 # Here create the root temporary directory.
