@@ -148,9 +148,6 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 	if ( AT.WorkPointer < term + *term ) AT.WorkPointer = term + *term;
 	ww = AT.WorkPointer;
 /*
-#ifdef WITHPTHREADS
-*/
-/*
 		Here we need to make a copy of the subexpression object because we
 		will be writing the values of the wildcards in it. 
 		Originally we copied it into the private version of the compiler buffer
@@ -176,26 +173,7 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 		m = ma + IDHEAD;
 		NCOPY(ma,ta,ja);
 		*ma = 0;
-/*
-		Old code
-
-		WORD *ma = AddRHS(AT.ebufnum,1);
-		CBUF *CC = cbuf+AT.ebufnum;
-		if ( ( ma+ja+2 ) > CC->Top ) {
-			ma = DoubleCbuffer(AT.ebufnum,ma);
-		}
-		m = ma + IDHEAD;
-		NCOPY(ma,ta,ja);
-		*ma++ = 0;
-		CC->rhs[CC->numrhs+1] = ma;
-		CC->Pointer = ma;
-*/
 	}
-/*
-#else
-	m = ll + IDHEAD;
-#endif
-*/
 	AN.FullProto = m;
 	AN.WildValue = w = m + SUBEXPSIZE;
 	protosize = IDHEAD + m[1];
@@ -516,7 +494,7 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 			AN.UseFindOnly = 0;
 			CC = cbuf+AT.allbufnum;
 			oldallnumrhs = CC->numrhs;
-			AddRHS(AT.allbufnum,1);
+			{ WORD *t = AddRHS(AT.allbufnum,1); *t = 0; }
 			AT.idallflag = 1;
 			AT.idallmaxnum = ll[3];
 			AT.idallnum = 0;
