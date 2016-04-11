@@ -1078,7 +1078,7 @@ extern UBYTE *WriteDollarToBuffer(WORD,WORD);
 extern UBYTE *WriteDollarFactorToBuffer(WORD,WORD,WORD);
 extern void   AddToDollarBuffer(UBYTE *);
 extern void   TermAssign(WORD *);
-extern void   WildDollars(PHEAD0);
+extern void   WildDollars(PHEAD WORD *);
 extern LONG   numcommute(WORD *,LONG *);
 extern int    FullRenumber(PHEAD WORD *,WORD);
 extern int    Lus(WORD *,WORD,WORD,WORD,WORD,WORD);

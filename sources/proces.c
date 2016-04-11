@@ -3772,6 +3772,7 @@ AutoGen:	i = *AT.TMout;
 		    AT.WorkPointer = (WORD *)(((UBYTE *)(AT.WorkPointer)) + AM.MaxTer);
 			if ( AT.WorkPointer > AT.WorkTop ) goto OverWork;
 			while ( StartBuf[posisub] ) {
+				if ( extractbuff == AT.allbufnum ) WildDollars(BHEAD &(StartBuf[posisub]));
 			    AT.WorkPointer = (WORD *)(((UBYTE *)(termout)) + AM.MaxTer);
 				if ( InsertTerm(BHEAD term,replac,extractbuff,
 					&(StartBuf[posisub]),termout,tepos) < 0 ) goto GenCall;

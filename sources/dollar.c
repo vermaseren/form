@@ -838,22 +838,33 @@ void TermAssign(WORD *term)
 	Note that we cannot upload wildcards into dollar variables when WITHPTHREADS.
 */
 
-void WildDollars(PHEAD0)
+void WildDollars(PHEAD WORD *term)
 {
 	GETBIDENTITY
 	DOLLARS d;
-	WORD *m, *t, *w, *ww, *orig = 0;
+	WORD *m, *t, *w, *ww, *orig = 0, *wildvalue, *wildstop;
 	int numdollar;
 	LONG weneed, i;
 #ifdef WITHPTHREADS
 	int dtype = -1;
 #endif
-	m = AN.WildValue;
-	while ( m < AN.WildStop ) {
+	if ( term == 0 ) {
+		m = wildvalue = AN.WildValue;
+		wildstop = AN.WildStop;
+	}
+	else {
+		ww = term + *term; ww -= ABS(ww[-1]); w = term+1;
+		while ( w < ww && *w != SUBEXPRESSION ) w += w[1];
+		if ( w >= ww ) return;
+		wildstop = w + w[1];
+		w += SUBEXPSIZE;
+		wildvalue = m = w;
+	}
+	while ( m < wildstop ) {
 		if ( *m != LOADDOLLAR ) { m += m[1]; continue; }
 		t = m - 4;
 		while ( *t == LOADDOLLAR || *t == FROMSET || *t == SETTONUM ) t -= 4;
-		if ( t < AN.WildValue ) {
+		if ( t < wildvalue ) {
 			MLOCK(ErrorMessageLock);
 			MesPrint("&Serious bug in wildcard prototype. Found in WildDollars");
 			MUNLOCK(ErrorMessageLock);

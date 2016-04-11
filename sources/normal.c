@@ -111,7 +111,9 @@ WORD CompareFunctions(WORD *fleft,WORD *fright)
 
 WORD Commute(WORD *fleft, WORD *fright)
 {
-	WORD fun1 = ABS(*fleft), fun2 = ABS(*fright);
+	WORD fun1, fun2;
+	if ( *fleft == DOLLAREXPRESSION || *fright == DOLLAREXPRESSION ) return(0);
+	fun1 = ABS(*fleft); fun2 = ABS(*fright);
 	if ( *fleft >= GAMMA && *fleft <= GAMMASEVEN
 	    && *fright >= GAMMA && *fright <= GAMMASEVEN ) {
 		if ( fleft[FUNHEAD] < AM.OffsetIndex && fleft[FUNHEAD] > fright[FUNHEAD] )
@@ -2931,7 +2933,8 @@ onegammamatrix:
 			}
 			else {
 				if ( ( t[2] & DIRTYFLAG ) == DIRTYFLAG
-						&& *t != REPLACEMENT && TestFunFlag(BHEAD t) ) ReplaceVeto = 1;
+						&& *t != REPLACEMENT && *t != DOLLAREXPRESSION
+						&& TestFunFlag(BHEAD t) ) ReplaceVeto = 1;
 				k = t[1];
 				NCOPY(m,t,k);
 			}

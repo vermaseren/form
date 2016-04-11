@@ -341,7 +341,7 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 						if ( msign ) term[term[0]-1] = -term[term[0]-1];
 						Substitute(BHEAD term,m,1);
 						if ( numdollars ) {
-							WildDollars(BHEAD0);
+							WildDollars(BHEAD (WORD *)0);
 							numdollars = 0;
 						}
 						if ( ww < term+term[0] ) ww = term+term[0];
@@ -374,7 +374,7 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 						if ( msign ) term[term[0]-1] = -term[term[0]-1];
 						Substitute(BHEAD term,m,1);
 						if ( numdollars ) {
-							WildDollars(BHEAD0);
+							WildDollars(BHEAD (WORD *)0);
 							numdollars = 0;
 						}
 						if ( ww < term+term[0] ) ww = term+term[0];
@@ -407,7 +407,7 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 						if ( msign ) term[term[0]-1] = -term[term[0]-1];
 						Substitute(BHEAD term,m,1);
 						if ( numdollars ) {
-							WildDollars(BHEAD0);
+							WildDollars(BHEAD (WORD *)0);
 							numdollars = 0;
 						}
 						if ( ww < term+term[0] ) ww = term+term[0];
@@ -497,7 +497,7 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 					}
 				}
 				if ( numdollars ) {
-					WildDollars(BHEAD0);
+					WildDollars(BHEAD (WORD *)0);
 					numdollars = 0;
 				}
 				match = 1;
@@ -583,7 +583,7 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 	if ( power ) {
 		Substitute(BHEAD term,m,power);
 		if ( numdollars ) {
-			WildDollars(BHEAD0);
+			WildDollars(BHEAD (WORD *)0);
 			numdollars = 0;
 		}
 		match = 1;
@@ -2103,7 +2103,7 @@ VOID SubsInAll(PHEAD0)
 }
 
 /*
- 		#] SubsInAll :
+ 		#] SubsInAll : 
  		#[ TransferBuffer :
 
 		Adds the whole content of a (compiler)buffer to another buffer.

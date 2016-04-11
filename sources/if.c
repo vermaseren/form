@@ -881,7 +881,7 @@ WORD HowMany(PHEAD WORD *ifcode, WORD *term)
 				FindOnly(BHEAD newterm,m) ) ) {
 				Substitute(BHEAD newterm,m,1);
 				if ( numdollars ) {
-					WildDollars(BHEAD0);
+					WildDollars(BHEAD (WORD *)0);
 					numdollars = 0;
 				}
 				ClearWild(BHEAD0);
@@ -905,7 +905,7 @@ WORD HowMany(PHEAD WORD *ifcode, WORD *term)
 					do {
 						Substitute(BHEAD newterm,m,1);
 						if ( numdollars ) {
-							WildDollars(BHEAD0);
+							WildDollars(BHEAD (WORD *)0);
 							numdollars = 0;
 						}
 						ClearWild(BHEAD0);
@@ -917,7 +917,7 @@ WORD HowMany(PHEAD WORD *ifcode, WORD *term)
 					do {
 						Substitute(BHEAD newterm,m,1);
 						if ( numdollars ) {
-							WildDollars(BHEAD0);
+							WildDollars(BHEAD (WORD *)0);
 							numdollars = 0;
 						}
 						ClearWild(BHEAD0);
@@ -930,7 +930,7 @@ WORD HowMany(PHEAD WORD *ifcode, WORD *term)
 					do {
 						Substitute(BHEAD newterm,m,1);
 						if ( numdollars ) {
-							WildDollars(BHEAD0);
+							WildDollars(BHEAD (WORD *)0);
 							numdollars = 0;
 						}
 						ClearWild(BHEAD0);
@@ -952,7 +952,7 @@ WORD HowMany(PHEAD WORD *ifcode, WORD *term)
 			if ( FindRest(BHEAD newterm,m) && ( AN.UsedOtherFind || FindOnce(BHEAD newterm,m) ) ) {
 				Substitute(BHEAD newterm,m,1);
 				if ( numdollars ) {
-					WildDollars(BHEAD0);
+					WildDollars(BHEAD (WORD *)0);
 					numdollars = 0;
 				}
 				ClearWild(BHEAD0);
