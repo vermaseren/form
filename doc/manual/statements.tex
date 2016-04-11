@@ -2174,6 +2174,57 @@ the functions in the term are in the order that \FORM\ would give them if
 they would be commuting (which depends on the order of declaration) there 
 will be no match. This can be rather handy when using wildcards as in {\tt 
 F(a?)*F(b?)}.}
+
+\lefttabitem{all\index{all}}
+\tabitem{This option is rather special in that it generates all possible 
+matches one by one. Normally, when there are many possible matches, \FORM\ 
+takes the first one it encounters. In the case of the all option it will 
+run through all possible matches and produce all of them. There are however 
+severe restrictions. First of all, other options are not allowed 
+simultaneously, although ifmatch$-\!\!>$ and ifnomatch$-\!\!>$ are allowed 
+because technically they are no options that concern the pattern matching. 
+In addition it is not allowed to be in an idold/also statement, and it 
+cannot be followed by such a statement. Most severely: it can have only 
+functions in the left hand side. These functions can have all kinds of 
+arguments, but outside the functions symbols, vectors, dotproducts etc. are 
+not allowed. This is due to the fact that the backtracking when a wildcard 
+combination fails, does not include such objects and it is this 
+backtracking mechanism that is used to generate all matches. For the 
+purpose of the all option tensors and unsubstituted tables count as 
+functions. It should also be known that the all option cannot be used in 
+the if(match()) construction. It would not make sense there anyway.}
+
+\noindent Example:
+\begin{verbatim}
+    Vector Q,p1,...,p5,q1,...,q5;
+    Cfunction V(s),replace;
+    Format 60;
+    *   This is a t1 topology:
+    L   F = V(Q,p1,p4)*V(p1,p2,p5)*
+            V(p2,p3,Q)*V(p3,p4,p5);
+    $t = term_;
+    id,all,$t*replace_(<p1,p1?>,...,<p5,p5?>) =
+         $t*replace(<p1,q1>,...,<p5,q5>);
+    Print +s;
+    .end
+
+   F =
+       + V(Q,p1,p4)*V(Q,p2,p3)*V(p1,p2,p5)*V(p3,p4,p5)*
+      replace(p1,q1,p2,q2,p3,q3,p4,q4,p5,q5)
+       + V(Q,p1,p4)*V(Q,p2,p3)*V(p1,p2,p5)*V(p3,p4,p5)*
+      replace(p2,q1,p1,q2,p4,q3,p3,q4,p5,q5)
+       + V(Q,p1,p4)*V(Q,p2,p3)*V(p1,p2,p5)*V(p3,p4,p5)*
+      replace(p3,q1,p4,q2,p1,q3,p2,q4,p5,q5)
+       + V(Q,p1,p4)*V(Q,p2,p3)*V(p1,p2,p5)*V(p3,p4,p5)*
+      replace(p4,q1,p3,q2,p2,q3,p1,q4,p5,q5)
+      ;
+\end{verbatim}
+This program produces all renumberings of the momenta in the t1 topology 
+that produce the same topology. The interesting thing here is that one does 
+not have to know the topology to produce all topologically equivalent 
+terms.
+
+
 \vspace{10mm}
 
 %--#] identify : 
