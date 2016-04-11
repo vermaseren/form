@@ -3813,6 +3813,7 @@ AutoGen:	i = *AT.TMout;
 					StartBuf = cbuf[extractbuff].Buffer;
 				}
 			}
+			if ( extractbuff == AT.allbufnum ) cbuf[extractbuff].numrhs--;
 #ifdef WITHPTHREADS
 			if ( dtype > 0 && dtype != MODLOCAL && dtype != MODSUM ) { UNLOCK(d->pthreadslockread); dtype = 0; }
 #endif

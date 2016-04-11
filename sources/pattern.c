@@ -97,7 +97,7 @@
 WORD TestMatch(PHEAD WORD *term, WORD *level)
 {
 	GETBIDENTITY
-	WORD *ll, *m, *w, *llf, *OldWork, *StartWork, *ww, *mm, *OldTermBuffer = 0;
+	WORD *ll, *m, *w, *llf, *OldWork, *StartWork, *ww, *mm, *t, *OldTermBuffer = 0;
 	WORD power = 0, match = 0, i, msign = 0;
 	int numdollars = 0, protosize, oldallnumrhs;
 	CBUF *C = cbuf+AM.rbufnum, *CC;
@@ -494,7 +494,8 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 			AN.UseFindOnly = 0;
 			CC = cbuf+AT.allbufnum;
 			oldallnumrhs = CC->numrhs;
-			{ WORD *t = AddRHS(AT.allbufnum,1); *t = 0; }
+			t = AddRHS(AT.allbufnum,1);
+			*t = 0;
 			AT.idallflag = 1;
 			AT.idallmaxnum = ll[3];
 			AT.idallnum = 0;
@@ -546,6 +547,7 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 				AN.termbuffer = OldTermBuffer;
 				AT.WorkPointer = AN.RepFunList;
 				AT.idallflag = 0;
+				CC->Pointer[0] = 0;
 				TransferBuffer(AT.aebufnum,AT.ebufnum,AT.allbufnum);
 				return(1);
 			}
@@ -2077,11 +2079,12 @@ VOID SubsInAll(PHEAD0)
 	And now we copy this to AT.allbufnum
 */
 	AddNtoC(AT.allbufnum,TemTerm[0],TemTerm);
+	cbuf[AT.allbufnum].Pointer[0] = 0;
 	AN.RepFunNum = 0;
 }
 
 /*
- 		#] SubsInAll : 
+ 		#] SubsInAll :
  		#[ TransferBuffer :
 
 		Adds the whole content of a (compiler)buffer to another buffer.
