@@ -2295,7 +2295,7 @@ defaultcase:;
 					goto NormMin;
 				}
 				if ( *t == REPLACEMENT ) {
-					ReplaceVeto--;
+					if ( AR.Eside != LHSIDE ) ReplaceVeto--;
 					pcom[ncom++] = t;
 					break;
 				}
