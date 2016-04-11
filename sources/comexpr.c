@@ -55,10 +55,11 @@ static struct id_options {
 	,{(UBYTE *)"ifnotmatch", SUBAFTERNOT ,0}
 	,{(UBYTE *)"disorder",   SUBDISORDER ,0}
 	,{(UBYTE *)"select",     SUBSELECT   ,0}
+	,{(UBYTE *)"all",        SUBALL      ,0}
 };
 
 /*
-  	#] Includes : 
+  	#] Includes :
   	#[ CoLocal :
 */
 
@@ -496,7 +497,7 @@ int CoIdExpression(UBYTE *inp, int type)
 		 oldnumrhs, *ow, oldEside;
 	UBYTE *p, *pp, c;
 	CBUF *C = cbuf+AC.cbufnum;
-	LONG oldcpointer;
+	LONG oldcpointer, x;
 	FirstWork = OldWork = AT.WorkPointer;
 /*
 	Don't forget to change in StudyPattern if we change/add_to the
@@ -669,6 +670,45 @@ readlabel:
 				OldWork[3] = GetLabel(inp);
 				*p++ = c; inp = p;
 				break;
+			case SUBALL:
+				x = 0;
+				if ( *pp == '(' ) {
+					while ( *inp >= '0' && *inp <= '9' ) x = 10*x+*inp++ - '0';
+					if ( *inp != ')' || inp+1 != p ) {
+						c = *p; *p = 0;
+						MesPrint("&Illegal ALL option in id-statement: ",pp);
+						*p++ = c;
+						error = 1;
+						continue;
+					}
+					pp = inp;
+					inp = pp+1;
+				}
+/*
+				Note that the following statement limits x to 
+*/
+				if ( x > MAXPOSITIVE ) {
+					MesPrint("&Requested maximum number of matches %l in ALL option in id-statement is greater than %l ",x,MAXPOSITIVE);
+					error = 1;
+				}
+				OldWork[3] = x;
+				if ( type != TYPEIDNEW ) {
+				  if ( type == TYPEIDOLD ) {
+					MesPrint("&Requested ALL option not allowed in idold/also statement.");
+					error = 1;
+				  }
+				  else if ( type == TYPEIF ) {
+					MesPrint("&Requested ALL option not allowed in if(match())");
+					error = 1;
+				  }
+				  else {
+					MesPrint("&ALL option only allowed in regular id-statement.");
+					error = 1;
+				  }
+				}
+				p++; inp = p;
+				AC.idoption = opt;
+				break;
 			default:
 				if ( pp != p ) {
 IllField:			c = *p; *p = 0;
@@ -810,7 +850,7 @@ IllLeft:MesPrint("&Illegal LHS");
 			error = 1;
 		}
 		AC.DumNum = AM.IndDum;
-		OldWork[2] = ( OldWork[2] - ( OldWork[2] & SUBMASK ) ) | SUBALL;
+		OldWork[2] = ( OldWork[2] - ( OldWork[2] & SUBMASK ) ) | SUBVECTOR;
 		c1 = w[3];
 			/* We overwrite the LHS */
 		*w++ = INDTOIND;
@@ -920,6 +960,18 @@ IllLeft:MesPrint("&Illegal LHS");
 	Actual adding happens only now after numrhs insertion
 */
 	/* if ( !error ) */ { AddNtoL(OldWork[1],OldWork); }
+	if ( type == TYPEIDOLD ) {
+		if ( C->numlhs <= 1 || 
+			( C->lhs[C->numlhs-1][0] != TYPEIDNEW &&
+				  C->lhs[C->numlhs-1][0] != TYPEIDOLD ) ) {
+			MesPrint("&Idold/also should follow an id/idnew statement.");
+			error = 1;
+		}
+		else if ( (C->lhs[C->numlhs-1][2] & SUBMASK) == SUBALL ) {
+			MesPrint("&Idold/also cannot follow an id,all statement.");
+			error = 1;
+		}
+	}
 AllDone:
 	AC.lhdollarflag = 0;
 	AT.WorkPointer = FirstWork;
@@ -927,7 +979,7 @@ AllDone:
 }
 
 /*
-  	#] CoIdExpression : 
+  	#] CoIdExpression :
   	#[ CoMultiply :
 */
 

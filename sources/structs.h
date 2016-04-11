@@ -1953,6 +1953,11 @@ struct T_const {
     int     mfac;                  /* (T) size of the pfac array. */
     int     ebufnum;               /* (R) extra compiler buffer */
     int     fbufnum;               /* extra compiler buffer for factorization cache */
+    int     allbufnum;             /* extra compiler buffer for id,all */
+    int     aebufnum;              /* extra compiler buffer for id,all */
+    int     idallflag;             /* indicates use of id,all buffers */
+    int     idallnum;
+    int     idallmaxnum;
     int     WildcardBufferSize;    /* () local copy for updates */
 #ifdef WITHPTHREADS
     int     identity;              /* () When we work with B->T */
@@ -2000,12 +2005,12 @@ struct T_const {
     WORD    fromindex;             /* Tells the compare routine whether call from index */
 #ifdef WITHPTHREADS
 #ifdef WITHSORTBOTS
-	PADPOINTER(4,20,100+SUBEXPSIZE*4+FUNHEAD*2+ARGHEAD*2,0);
+	PADPOINTER(4,25,100+SUBEXPSIZE*4+FUNHEAD*2+ARGHEAD*2,0);
 #else
-	PADPOINTER(4,18,100+SUBEXPSIZE*4+FUNHEAD*2+ARGHEAD*2,0);
+	PADPOINTER(4,23,100+SUBEXPSIZE*4+FUNHEAD*2+ARGHEAD*2,0);
 #endif
 #else
-	PADPOINTER(4,16,100+SUBEXPSIZE*4+FUNHEAD*2+ARGHEAD*2,0);
+	PADPOINTER(4,21,100+SUBEXPSIZE*4+FUNHEAD*2+ARGHEAD*2,0);
 #endif
 };
 /*
@@ -2064,6 +2069,7 @@ struct N_const {
 	TRACES	*tracestack;           /* () used in opera.c */
 	WORD	*selecttermundo;       /* () Used in pattern.c */
 	WORD	*patternbuffer;        /* () Used in pattern.c */
+	WORD	*termbuffer;           /* () Used in pattern.c */
 	WORD	**PoinScratch;         /* () used in reshuf.c */
 	WORD	**FunScratch;          /* () used in reshuf.c */
 	WORD	*RenumScratch;         /* () used in reshuf.c */
@@ -2157,29 +2163,29 @@ struct N_const {
 #ifdef WITHPTHREADS
 #ifdef WHICHSUBEXPRESSION
 #ifdef WITHZLIB
-	PADPOSITION(54,11,23,26,sizeof(SHvariables));
+	PADPOSITION(55,11,23,26,sizeof(SHvariables));
 #else
-	PADPOSITION(52,11,23,26,sizeof(SHvariables));
+	PADPOSITION(53,11,23,26,sizeof(SHvariables));
 #endif
 #else
 #ifdef WITHZLIB
-	PADPOSITION(53,9,23,24,sizeof(SHvariables));
+	PADPOSITION(54,9,23,24,sizeof(SHvariables));
 #else
-	PADPOSITION(51,9,23,24,sizeof(SHvariables));
+	PADPOSITION(52,9,23,24,sizeof(SHvariables));
 #endif
 #endif
 #else
 #ifdef WHICHSUBEXPRESSION
 #ifdef WITHZLIB
-	PADPOSITION(52,9,23,26,sizeof(SHvariables));
+	PADPOSITION(53,9,23,26,sizeof(SHvariables));
 #else
-	PADPOSITION(50,9,23,26,sizeof(SHvariables));
+	PADPOSITION(51,9,23,26,sizeof(SHvariables));
 #endif
 #else
 #ifdef WITHZLIB
-	PADPOSITION(51,7,23,24,sizeof(SHvariables));
+	PADPOSITION(52,7,23,24,sizeof(SHvariables));
 #else
-	PADPOSITION(49,7,23,24,sizeof(SHvariables));
+	PADPOSITION(50,7,23,24,sizeof(SHvariables));
 #endif
 #endif
 #endif

@@ -249,7 +249,7 @@ InVe:
 }
 
 /*
- 		#] FindVar :
+ 		#] FindVar : 
  		#[ DoIfStatement :				WORD DoIfStatement(PHEAD ifcode,term)
 
 		The execution time part of the if-statement.
@@ -963,7 +963,7 @@ WORD HowMany(PHEAD WORD *ifcode, WORD *term)
 		case SUBMULTI :
 			RetVal = FindMulti(BHEAD term,m);
 			break;
-		case SUBALL :
+		case SUBVECTOR :
 			RetVal = 0;
 			for ( i = 0; i < *term; i++ ) ww[i] = term[i];			
 			while ( ( power = FindAll(BHEAD ww,m,AR.Cnumlhs,ifcode) ) != 0 ) { RetVal += power; }
@@ -1021,6 +1021,6 @@ VOID DoubleIfBuffers()
 
 /*
  		#] DoubleIfBuffers : 
-  	#] If statement :
+  	#] If statement : 
 */
 

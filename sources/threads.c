@@ -586,6 +586,8 @@ ALLPRIVATES *InitializeOneThread(int identity)
 	LOCK(availabilitylock);
 	AT.ebufnum = inicbufs();		/* Buffer for extras during execution */
 	AT.fbufnum = inicbufs();		/* Buffer for caching in factorization */
+	AT.allbufnum = inicbufs();		/* Buffer for id,all */
+	AT.aebufnum = inicbufs();		/* Buffer for id,all */
 	UNLOCK(availabilitylock);
 
 	AT.RepCount = (int *)Malloc1((LONG)((AM.RepMax+3)*sizeof(int)),"repeat buffers");

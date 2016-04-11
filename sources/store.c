@@ -265,6 +265,91 @@ WORD ResetScratch()
 
 /*
  		#] ResetScratch : 
+ 		#[ ReadFromScratch :
+
+	Routine is used to copy files from scratch to hide.
+*/
+
+int ReadFromScratch(FILEHANDLE *fi, POSITION *pos, UBYTE *buffer, POSITION *length)
+{
+	GETIDENTITY
+	LONG l = BASEPOSITION(*length);
+	if ( fi->handle < 0 ) {
+		memcpy(buffer,fi->POfill,l);
+	}
+	else {
+		SeekFile(fi->handle,pos,SEEK_SET);
+		if ( ReadFile(fi->handle,buffer,l) != l ) {
+			if ( fi == AR.hidefile )
+				MesPrint("Error reading from hide file.");
+			else
+				MesPrint("Error reading from scratch file.");
+			return(-1);
+		}
+	}
+	return(0);
+}
+
+/*
+ 		#] ReadFromScratch : 
+ 		#[ AddToScratch :
+
+	Routine is used to copy files from scratch to hide.
+*/
+
+int AddToScratch(FILEHANDLE *fi, POSITION *pos, UBYTE *buffer, POSITION *length,
+			 int withflush)
+{
+	GETIDENTITY
+	LONG l = BASEPOSITION(*length), avail;
+	fi->POfill = fi->POfull;
+	while ( fi->POfill+l/sizeof(WORD) > fi->POstop ) {
+		avail = (fi->POstop-fi->POfill)*sizeof(WORD);
+		if ( avail > 0 ) {
+			memcpy(fi->POfill,buffer,avail);
+			l -= avail; buffer += avail;
+		}
+		if ( fi->handle < 0 ) {
+			if ( ( fi->handle = (WORD)CreateFile(fi->name) ) < 0 ) {
+				if ( fi == AR.hidefile )
+					MesPrint("Cannot create hide file %s",fi->name);
+				else
+					MesPrint("Cannot create scratch file %s",fi->name);
+				return(-1);
+			}
+			PUTZERO(fi->POposition);
+		}
+		SeekFile(fi->handle,&(fi->POposition),SEEK_SET);
+		if ( WriteFile(fi->handle,(UBYTE *)fi->PObuffer,fi->POsize) != fi->POsize )
+			goto writeerror;
+		ADDPOS(fi->POposition,fi->POsize);
+		fi->POfill = fi->POfull = fi->PObuffer;
+	}
+	if ( l > 0 ) {
+		memcpy(fi->POfill,buffer,l);
+		fi->POfill += l/sizeof(WORD);
+		fi->POfull = fi->POfill;
+	}
+	if ( withflush && fi->handle >= 0 && fi->POfill > fi->PObuffer ) {	/* flush */
+		l = (LONG)fi->POfill - (LONG)fi->PObuffer;
+		SeekFile(fi->handle,&(fi->POposition),SEEK_SET);
+		if ( WriteFile(fi->handle,(UBYTE *)fi->PObuffer,l) != l ) goto writeerror;
+		ADDPOS(fi->POposition,fi->POsize);
+		fi->POfill = fi->POfull = fi->PObuffer;
+	}
+	if ( withflush && fi->handle >= 0 )
+		SETBASEPOSITION(fi->filesize,TellFile(fi->handle));
+	return(0);
+writeerror:
+	if ( fi == AR.hidefile )
+		MesPrint("Error writing to hide file. Disk full?");
+	else
+		MesPrint("Error writing to scratch file. Disk full?");
+	return(-1);
+}
+
+/*
+ 		#] AddToScratch : 
  		#[ CoSave :
 
 		The syntax of the save statement is:

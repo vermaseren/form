@@ -48,7 +48,7 @@
 		level = C->lhs[level][2];
 		goto SkipCount;
 	}
-	Note that there will be cases that extra space is needed.
+	Note that there will be cases in which extra space is needed.
 	In addition the compare with C->numlhs isn't very fine, because we
 	need to insert a different value (C->lhs[level][2]).
 */
@@ -1561,7 +1561,7 @@ nextterm:						mm = mnext;
 						}
  					}
 /*
-			#] Numerical factor :
+			#] Numerical factor : 
 */
 					else {
 oneterm:;

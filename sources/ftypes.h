@@ -769,8 +769,9 @@ typedef int (*TFUN1)();
 #define SUBONCE 2
 #define SUBONLY 3
 #define SUBMANY 4
-#define SUBALL 5
+#define SUBVECTOR 5
 #define SUBSELECT 6
+#define SUBALL 7
 #define SUBMASK 15
 #define SUBDISORDER 16
 #define SUBAFTER 32

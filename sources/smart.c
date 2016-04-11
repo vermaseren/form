@@ -96,6 +96,16 @@ int StudyPattern(WORD *lhs)
 		p += p[1];
 	}
 	if ( numfun == 0 ) return(0);
+	if ( ( lhs[2] & SUBMASK ) == SUBALL ) {
+		p = pat + 1;
+		while ( p < info ) {
+			if ( *p == SYMBOL || *p == VECTOR || *p == DOTPRODUCT || *p == INDEX ) {
+				MesPrint("&id,all can have only functions and/or tensors in the lhs.");
+				return(1);
+			}
+			p += p[1];
+		}
+	}
 /*
 	We need now some room for the information about the functions
 */

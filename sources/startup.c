@@ -855,6 +855,8 @@ VOID StartVariables()
 #ifndef WITHPTHREADS
 	AT.ebufnum = inicbufs();		/* Buffer for extras during execution */
 	AT.fbufnum = inicbufs();		/* Buffer for caching in factorization */
+	AT.allbufnum = inicbufs();		/* Buffer for id,all */
+	AT.aebufnum = inicbufs();		/* Buffer for id,all */
 #else
 	AS.MasterSort = 0;
 #endif

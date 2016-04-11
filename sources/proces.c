@@ -257,7 +257,7 @@ WORD Processor()
 			if ( AR.expchanged ) AR.expflags |= ISUNMODIFIED;
 			AR.GetFile = 0;
 /*
-			#] in memory :
+			#] in memory : 
 */
 		}
 		else {
@@ -286,7 +286,12 @@ WORD Processor()
 			case INTOHIDELEXPRESSION:
 			case INTOHIDEGEXPRESSION:
 				AR.outtohide = 1;
+/*
+				BugFix 12-feb-2016
+				This may not work when the file is open and we move around.
 				AR.hidefile->POfill = AR.hidefile->POfull;
+*/
+				SetEndHScratch(AR.hidefile,&position);
 			case LOCALEXPRESSION:
 			case GLOBALEXPRESSION:
 				AR.GetFile = 0;

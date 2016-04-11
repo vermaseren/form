@@ -758,8 +758,8 @@ int CompileSubExpressions(SBYTE *tokens)
 			this minimum. Ignoring this might lead to really rare and
 			hard to find errors, years from now.
 */
-			if ( insubexpbuffers >= 0x3FFFFFL ) {
-				MesPrint("&More than 2^22 subexpressions inside one expression");
+			if ( insubexpbuffers >= MAXSUBEXPRESSIONS ) {
+				MesPrint("&More than %d subexpressions inside one expression",(WORD)MAXSUBEXPRESSIONS);
 				Terminate(-1);
 			}
 			if ( subexpbuffers+insubexpbuffers >= topsubexpbuffers ) {
@@ -1910,8 +1910,8 @@ int CodeFactors(SBYTE *tokens)
 			|| t[-1] == TSETCLOSE || t[-1] == TFUNCLOSE ) {
 				subexp = CodeGenerator(tokens);
 				if ( subexp < 0 ) error = -1;
-				if ( insubexpbuffers >= 0x3FFFFFL ) {
-					MesPrint("&More than 2^22 subexpressions inside one expression");
+				if ( insubexpbuffers >= MAXSUBEXPRESSIONS ) {
+					MesPrint("&More than %d subexpressions inside one expression",(WORD)MAXSUBEXPRESSIONS);
 					Terminate(-1);
 				}
 				if ( subexpbuffers+insubexpbuffers >= topsubexpbuffers ) {
@@ -2151,8 +2151,8 @@ dopowerd:
 	e->vflags |= ISFACTORIZED;
 	subexp = CodeGenerator(outtokens);
 	if ( subexp < 0 ) error = -1;
-	if ( insubexpbuffers >= 0x3FFFFFL ) {
-		MesPrint("&More than 2^22 subexpressions inside one expression");
+	if ( insubexpbuffers >= MAXSUBEXPRESSIONS ) {
+		MesPrint("&More than %d subexpressions inside one expression",(WORD)MAXSUBEXPRESSIONS);
 		Terminate(-1);
 	}
 	if ( subexpbuffers+insubexpbuffers >= topsubexpbuffers ) {
@@ -2198,8 +2198,8 @@ WORD GenerateFactors(WORD n,WORD inc)
 	subexp = CodeGenerator(tokenbuffer);
 	if ( subexp < 0 ) error = -1;
 	M_free(tokenbuffer,"GenerateFactors");
-	if ( insubexpbuffers >= 0x3FFFFFL ) {
-		MesPrint("&More than 2^22 subexpressions inside one expression");
+	if ( insubexpbuffers >= MAXSUBEXPRESSIONS ) {
+		MesPrint("&More than %d subexpressions inside one expression",(WORD)MAXSUBEXPRESSIONS);
 		Terminate(-1);
 	}
 	if ( subexpbuffers+insubexpbuffers >= topsubexpbuffers ) {

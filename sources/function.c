@@ -810,11 +810,8 @@ int ChainOut(PHEAD WORD *term, WORD funnum)
 
 		The ones with a minus sign in front have been implemented.
 
-		There are still a few considerations:
-		1:  the dummy indices should be reset in multiple ?? matches.
-		2:	currently we cannot have a match with multiple ?? if
-			first there is a match and later the assignment isn't right.
-			we cannot go back at the moment to continue searching.
+		Note: the argument wilds allows backtracking when multiple
+		?a,?b give a match that later turns out to be useless.
 */
 
 WORD MatchFunction(PHEAD WORD *pattern, WORD *interm, WORD *wilds)
@@ -1761,6 +1758,10 @@ rewild:
 		if ( *inter != SUBEXPRESSION && MatchFunction(BHEAD inpat,inter,&wilds) ) {
 			AN.terfirstcomm = Oterfirstcomm;
 			if ( wilds ) {
+/*
+				Store wildcards to continue in MatchFunction if the current
+				wildcards do not work out.
+*/
 				wildargs = AN.WildArgs;
 				wildeat = AN.WildEat;
 				for ( i = 0; i < wildargs; i++ ) wildargtaken[i] = AT.WildArgTaken[i];
@@ -1873,6 +1874,11 @@ Failure:
 	AT.WorkPointer = OldWork;
 	return(0);
 OnSuccess:
+	if ( AT.idallflag ) {
+		SubsInAll(BHEAD0);
+		AT.idallnum++;
+		if ( AT.idallmaxnum == 0 || AT.idallnum < AT.idallmaxnum ) goto NoMat;
+	}
 	AN.terfirstcomm = Oterfirstcomm;
     AN.SignCheck = oldSignCheck;
 /*
@@ -1888,8 +1894,7 @@ OnSuccess:
 			t = AN.terstart + AN.RepFunList[i];
 			if ( *m != *t ) {
 				if ( *m > *t ) continue;
-jexch:			AT.WorkPointer = OldWork;
-				return(1);
+				goto doesmatch;
 			}
 			if ( *m >= FUNCTION && functions[*m-FUNCTION].spec >=
 				TENSORFUNCTION ) {
@@ -1906,15 +1911,16 @@ jexch:			AT.WorkPointer = OldWork;
 			}
 			while ( k > 0 && kk > 0 ) {
 				if ( *m < *t ) goto NextFor;
-				else if ( *m++ > *t++ ) goto jexch;
+				else if ( *m++ > *t++ ) goto doesmatch;
 				k--; kk--;
 			}
-			if ( k > 0 ) goto jexch;
+			if ( k > 0 ) goto doesmatch;
 NextFor:;
 		}
 		SetStop = 1;
 		goto NoMat;
 	}
+doesmatch:
 	AT.WorkPointer = OldWork;
 	return(1);
 }

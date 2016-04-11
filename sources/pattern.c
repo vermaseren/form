@@ -97,10 +97,11 @@
 WORD TestMatch(PHEAD WORD *term, WORD *level)
 {
 	GETBIDENTITY
-	WORD *ll, *m, *w, *llf, *OldWork, *StartWork, *ww, *mm;
-	WORD power = 0, match = 0, /* *rep, */ i, msign = 0;
-	int numdollars = 0, protosize;
-	CBUF *C = cbuf+AM.rbufnum;
+	WORD *ll, *m, *w, *llf, *OldWork, *StartWork, *ww, *mm, *OldTermBuffer = 0;
+	WORD power = 0, match = 0, i, msign = 0;
+	int numdollars = 0, protosize, oldallnumrhs;
+	CBUF *C = cbuf+AM.rbufnum, *CC;
+	AT.idallflag = 0;
 	do {
 /*
  		#[ Preliminaries :
@@ -146,7 +147,9 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 	OldWork = AT.WorkPointer;
 	if ( AT.WorkPointer < term + *term ) AT.WorkPointer = term + *term;
 	ww = AT.WorkPointer;
+/*
 #ifdef WITHPTHREADS
+*/
 /*
 		Here we need to make a copy of the subexpression object because we
 		will be writing the values of the wildcards in it. 
@@ -188,9 +191,11 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 		CC->Pointer = ma;
 */
 	}
+/*
 #else
 	m = ll + IDHEAD;
 #endif
+*/
 	AN.FullProto = m;
 	AN.WildValue = w = m + SUBEXPSIZE;
 	protosize = IDHEAD + m[1];
@@ -268,8 +273,38 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 /*
  		#] Expand dollars : 
 
-	AT.WorkPointer = ww = term + *term;
+	In case of id,all we have to check at this point that there are only
+	functions in the pattern.
 */
+	if ( ( ll[2] & SUBMASK ) == SUBALL ) {
+		WORD *t = AN.patternbuffer+IDHEAD, *tt;
+		WORD *tstop, *ttstop, ii;
+		t += t[1]; tstop = t + *t; t++;
+		while ( t < tstop ) {
+			if ( *t < FUNCTION ) break;
+			t += t[1];
+		}
+		if ( t < tstop ) {
+			MLOCK(ErrorMessageLock);
+			MesPrint("Error: id,all can only be used with (products of) functions and/or tensors.");
+			MUNLOCK(ErrorMessageLock);
+			return(-1);
+		}
+		OldTermBuffer = AN.termbuffer;
+		AN.termbuffer = TermMalloc("id,all");
+/*
+		Now make sure that only regular functions and tensors can take part.
+*/
+		tt = term; ttstop = tt+*tt; ttstop -= ABS(ttstop[-1]); tt++;
+		t = AN.termbuffer+1; 
+		while ( tt < ttstop ) {
+			if ( *tt >= FUNCTION && *tt != AR.PolyFun && *tt != AR.PolyFunInv ) {
+				ii = tt[1]; NCOPY(t,tt,ii);
+			}
+			else tt += tt[1];
+		}
+		*t++ = 1; *t++ = 1; *t++ = 3; AN.termbuffer[0] = t-AN.termbuffer;
+	}
 	ClearWild(BHEAD0);
 	while ( w < AN.WildStop ) {
 		if ( *w == LOADDOLLAR ) numdollars++;
@@ -399,16 +434,12 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 					match = 1;
 				}
 			}
-#if IDHEAD > 3
 			if ( match ) {
 				if ( ( ll[2] & SUBAFTER ) != 0 ) *level = AC.Labels[ll[3]];
 			}
 			else {
 				if ( ( ll[2] & SUBAFTERNOT ) != 0 ) *level = AC.Labels[ll[3]];
 			}
-#endif
-/*			AT.WorkPointer = AN.RepFunList;
-			return(match); */
 			goto nextlevel;
 		case SUBONCE :
 			AN.UseFindOnly = 0;
@@ -422,7 +453,7 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 			power = FindMulti(BHEAD term,m);
 			if ( ( power & 1 ) != 0 && msign ) term[term[0]-1] = -term[term[0]-1];
 			break;
-		case SUBALL :
+		case SUBVECTOR :
 			while ( ( power = FindAll(BHEAD term,m,*level,(WORD *)0) ) != 0 ) {
 				if ( ( power & 1 ) != 0 && msign ) term[term[0]-1] = -term[term[0]-1];
 				match = 1;
@@ -470,21 +501,82 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 					numdollars = 0;
 				}
 				match = 1;
-#if IDHEAD > 3
 				if ( ( ll[2] & SUBAFTER ) != 0 ) {
 					*level = AC.Labels[ll[3]];
 				}
-#endif
 			}
 			else {
-#if IDHEAD > 3
 				if ( ( ll[2] & SUBAFTERNOT ) != 0 ) {
 					*level = AC.Labels[ll[3]];
 				}
-#endif
 				power = 0;
 			}
 			goto nextlevel;
+		case SUBALL:
+			AN.UseFindOnly = 0;
+			CC = cbuf+AT.allbufnum;
+			oldallnumrhs = CC->numrhs;
+			AddRHS(AT.allbufnum,1);
+			AT.idallflag = 1;
+			AT.idallmaxnum = ll[3];
+			AT.idallnum = 0;
+			if ( FindRest(BHEAD AN.termbuffer,m) || AT.idallflag > 1 ) {
+				WORD *t, *tstop, *tt, first = 1, ii;
+				power = 1;
+				if ( msign ) term[term[0]-1] = -term[term[0]-1];
+/*
+				If we come here the matches are all already in the
+				compiler buffer. All we need to do is take out all
+				functions and replace them by a SUBEXPRESSION that
+				points to this buffer.
+				Note: the PolyFun/PolyRatFun should be excluded from this.
+				This works because each match writes incrementally to
+				the buffer using the routine SubsInAll.
+
+				The call to WildDollars should be made in Generator.....
+*/
+				t = term; tstop = t + *t; ii = ABS(tstop[-1]); tstop -= ii;
+				tt = AT.WorkPointer+1;
+				t++;
+				while ( t < tstop ) {
+					if ( *t >= FUNCTION && *t != AR.PolyFun && *t != AR.PolyFunInv ) {
+						if ( first ) { /* SUBEXPRESSION */
+							*tt++ = SUBEXPRESSION;
+							*tt++ = SUBEXPSIZE;
+							*tt++ = CC->numrhs;
+							*tt++ = 1;
+							*tt++ = AT.allbufnum;
+							FILLSUB(tt)
+							first = 0;
+						}
+						t += t[1];
+					}
+					else {
+						i = t[1]; NCOPY(tt,t,i);
+					}
+				}
+				NCOPY(tt,t,ii);
+				ii = tt-AT.WorkPointer;
+				*(AT.WorkPointer) = ii;
+				tt = AT.WorkPointer; t = term;
+				NCOPY(t,tt,ii);
+
+				if ( ( ll[2] & SUBAFTER ) != 0 ) { /* ifmatch -> */
+					*level = AC.Labels[ll[3]];
+				}
+				TermFree(AN.termbuffer,"id,all");
+				AN.termbuffer = OldTermBuffer;
+				AT.WorkPointer = AN.RepFunList;
+				AT.idallflag = 0;
+				TransferBuffer(AT.aebufnum,AT.ebufnum,AT.allbufnum);
+				return(1);
+			}
+			AT.idallflag = 0;
+			power = 0;
+			CC->numrhs = oldallnumrhs;
+			TermFree(AN.termbuffer,"id,all");
+			AN.termbuffer = OldTermBuffer;
+			break;
 		default :
 			break;
 	}
@@ -495,19 +587,15 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 			numdollars = 0;
 		}
 		match = 1;
-#if IDHEAD > 3
-		if ( ( ll[2] & SUBAFTER ) != 0 ) {
+		if ( ( ll[2] & SUBAFTER ) != 0 ) { /* ifmatch -> */
 			*level = AC.Labels[ll[3]];
 		}
-#endif
 	}
 	else {
 		AT.WorkPointer = AN.RepFunList;
-#if IDHEAD > 3
-		if ( ( ll[2] & SUBAFTERNOT ) != 0 ) {
+		if ( ( ll[2] & SUBAFTERNOT ) != 0 ) { /* ifnomatch -> */
 			*level = AC.Labels[ll[3]];
 		}
-#endif
 	}
 nextlevel:;
 	} while ( (*level)++ < AR.Cnumlhs && C->lhs[*level][0] == TYPEIDOLD );
@@ -1263,7 +1351,7 @@ CopRest:				t = tstop;
 						&& C->lhs[level][0] == TYPEIDOLD ) {
 							m = C->lhs[level];
 							m += IDHEAD;
-							if ( m[-IDHEAD+2] == SUBALL ) {
+							if ( m[-IDHEAD+2] == SUBVECTOR ) {
 							if ( ( vv = m[m[1]+3] ) == r[1] ) {
 OnePV:							TwoProto = AN.FullProto;
 TwoPV:							m = AT.WorkPointer;
@@ -1384,7 +1472,7 @@ Hitlevel1:							level2 = level;
 										if ( !par ) m = C->lhs[level2];
 										else m = par;
 										m += IDHEAD;
-										if ( m[-IDHEAD+2] == SUBALL ) {
+										if ( m[-IDHEAD+2] == SUBVECTOR ) {
 										if ( ( vv = m[m[1]+3] ) == r[1] )
 											goto OnePV;
 										else if ( vv >= OffNum ) {
@@ -1440,7 +1528,7 @@ Hitlevel2:							level2 = level;
 										if ( !par ) m = C->lhs[level2];
 										else m = par;
 										m += IDHEAD;
-										if ( m[-IDHEAD+2] == SUBALL ) {
+										if ( m[-IDHEAD+2] == SUBVECTOR ) {
 										if ( ( vv = m[6] ) == *r )
 											goto OnePV;
 										else if ( vv >= OffNum ) {
@@ -1849,6 +1937,227 @@ dotensor:
 
 /*
  		#] TestSelect : 
+ 		#[ SubsInAll :			VOID SubsInAll()
+
+		This routine takes a match in id,all and stores it away in
+		the AT.allbufnum 'compiler' buffer, after taking out the pattern.
+		The main problem here is that id,all usually has (lots of) wildcards
+		and their assignments are on stack and the difficult ones are in
+		AT.ebufnum. Popping the stack while looking for more matches would
+		loose those. Hence we have to copy them into yet another compiler
+		buffer: AT.aebufnum. Because this may involve many matches and
+		because the original term has only a limited number of arguments,
+		it will pay to look for already existing ones in this buffer.
+		(to be done later).
+*/
+
+VOID SubsInAll(PHEAD0)
+{
+	GETBIDENTITY
+	WORD *TemTerm;
+	WORD *t, *m, *term;
+	WORD *tstop, *mstop, *xstop;
+	WORD nt, *fill, nq, mt;
+	WORD *tcoef, i = 0;
+	WORD PutExpr = 0, sign = 0;
+/*
+	We start with building the term in the WorkSpace.
+	Afterwards we will transfer it to AT.allbufnum.
+	We have to make sure there is room in the WorkSpace.
+*/
+	AT.idallflag = 2;
+	TemTerm = AT.WorkPointer;
+	if ( ( (WORD *)(((UBYTE *)(AT.WorkPointer)) + AM.MaxTer*2) ) > AT.WorkTop ) {
+		MLOCK(ErrorMessageLock);
+		MesWork();
+		MUNLOCK(ErrorMessageLock);
+		Terminate(-1);
+	}
+	m = AN.patternbuffer + IDHEAD; m += m[1];
+	mstop = m + *m;
+	m++;
+	term = AN.termbuffer;
+	tstop = term + *term; tcoef = tstop-1; tstop -= ABS(tstop[-1]);
+ 	t = term;
+	t++;
+	fill = TemTerm;
+	fill++;
+	while ( m < mstop ) {
+		while ( t < tstop ) {
+			nt = WORDDIF(t,term);
+			for ( mt = 0; mt < AN.RepFunNum; mt += 2 ) {
+                if ( nt == AN.RepFunList[mt] ) break;
+          	}
+			if ( mt >= AN.RepFunNum ) {
+				nq = t[1];
+				NCOPY(fill,t,nq);
+			}
+			else {
+				WORD *oldt = 0;
+				if ( *m == GAMMA && m[1] != FUNHEAD+1 ) {
+					oldt = t;
+					if ( ( i = AN.RepFunList[mt+1] ) > 0 ) {
+						*fill++ = GAMMA;
+						*fill++ = i + FUNHEAD+1;
+						FILLFUN(fill)
+						nq = i + 1;
+						t += FUNHEAD;
+						NCOPY(fill,t,nq);
+					}
+					t = oldt;
+				}
+				else if ( ( *t == LEVICIVITA ) || ( *t >= FUNCTION
+				&& (functions[*t-FUNCTION].symmetric & ~REVERSEORDER) == ANTISYMMETRIC )
+								 ) sign += AN.RepFunList[mt+1];
+				else if ( *m >= FUNCTION+WILDOFFSET
+				&& (functions[*m-FUNCTION-WILDOFFSET].symmetric & ~REVERSEORDER) == ANTISYMMETRIC
+								 ) sign += AN.RepFunList[mt+1];
+				if ( !PutExpr ) {
+					WORD *pstart = fill, *p, *w, *ww;
+					xstop = t + t[1];
+					t = AN.FullProto;
+					nq = t[1];
+					t[3] = 1;
+					NCOPY(fill,t,nq);
+					t = xstop;
+					PutExpr = 1;
+/*
+					Here we need provisions for keeping wildcard matches
+					that reside in AT.ebufnum. We will move them to
+					AT.aebufnum.
+					Problem: the SUBEXPRESSION assumes automatically
+					that the compiler buffer is AT.ebufnum. We have to
+					correct that in TranferBuffer.
+*/
+					p = pstart + SUBEXPSIZE;
+					while ( p < fill ) {
+						switch ( *p ) {
+							case SYMTOSUB:
+							case VECTOSUB:
+							case INDTOSUB:
+							case ARGTOARG:
+							case ARLTOARL:
+								w = cbuf[AT.ebufnum].rhs[p[3]];
+								ww = cbuf[AT.ebufnum].rhs[p[3]+1];
+/*
+								Here we could search for whether this
+								object sits in the buffer already.
+								To be done later.
+								By the way: ww-w fits inside a WORD.
+*/
+								AddRHS(AT.aebufnum,1);
+								AddNtoC(AT.aebufnum,ww-w,w);
+								p[3] = cbuf[AT.aebufnum].numrhs;
+								cbuf[AT.aebufnum].rhs[p[3]+1] = cbuf[AT.aebufnum].Pointer;
+								p += p[1];
+								break;
+							case FROMSET:
+							case SETTONUM:
+							case LOADDOLLAR:
+								p += p[1];
+								break;
+							default:
+								p += p[1];
+								break;
+						}
+						
+					}
+				}
+				else t += t[1];
+				if ( *m == GAMMA && m[1] != FUNHEAD+1 ) {
+					i = oldt[1] - m[1] - i;
+					if ( i > 0 ) {
+						*fill++ = GAMMA;
+						*fill++ = i + FUNHEAD+1;
+						FILLFUN(fill)
+						*fill++ = oldt[FUNHEAD];
+						t = t - i;
+						NCOPY(fill,t,i);
+					}
+				}
+				break;
+			}
+		}
+		m += m[1];
+	}
+	while ( t < tstop ) *fill++ = *t++;
+	if ( !PutExpr ) {
+		t = AN.FullProto;
+		nq = t[1];
+		t[3] = 1;
+		NCOPY(fill,t,nq);
+	}
+	t = tcoef;
+	nq = ABS(*t);
+	t = tstop;
+	NCOPY(fill,t,nq);
+	if ( sign ) {
+		if ( ( sign & 1 ) != 0 ) fill[-1] = -fill[-1];
+	}
+	*TemTerm = fill-TemTerm;
+/*
+	And now we copy this to AT.allbufnum
+*/
+	AddNtoC(AT.allbufnum,TemTerm[0],TemTerm);
+	AN.RepFunNum = 0;
+}
+
+/*
+ 		#] SubsInAll :
+ 		#[ TransferBuffer :
+
+		Adds the whole content of a (compiler)buffer to another buffer.
+		In spectator we have an expression in the RHS that needs the 
+		wildcard resolutions adapted by an offset.
+*/
+
+VOID TransferBuffer(int from,int to,int spectator)
+{
+	CBUF *C  = cbuf + spectator;
+	CBUF *Cf = cbuf + from;
+	CBUF *Ct = cbuf + to;
+	int offset = Ct->numrhs;
+	LONG i;
+	WORD *t, *tt, *ttt, *tstop, size;
+	for ( i = 1; i <= Cf->numrhs; i++ ) {
+		size = Cf->rhs[i+1]-Cf->rhs[i];
+		AddRHS(to,1);
+		AddNtoC(to,size,Cf->rhs[i]);
+	}
+	Ct->rhs[Ct->numrhs+1] = Ct->Pointer;
+	Cf->numrhs = 0;
+/*
+	Now we have to update the 'pointers' in the spectator.
+*/
+	t = C->rhs[C->numrhs];
+	while ( *t ) {
+		tt = t+1; t += *t;
+		tstop = t-ABS(t[-1]);
+		while ( tt < tstop ) {
+			if ( *tt == SUBEXPRESSION ) {
+				ttt = tt+SUBEXPSIZE; tt += tt[1];
+				while ( ttt < tt ) {
+					switch ( *ttt ) {
+						case SYMTOSUB:
+						case VECTOSUB:
+						case INDTOSUB:
+						case ARGTOARG:
+						case ARLTOARL:
+							ttt[3] += offset;
+							break;
+						default:
+							break;
+					}
+					ttt += 4;
+				}
+			}
+			else tt += tt[1];
+		}
+	}
+}
+
+/*
+ 		#] TransferBuffer : 
  		#[ TakeIDfunction :
 */
 
