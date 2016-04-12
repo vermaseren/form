@@ -507,6 +507,7 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 			if ( FindRest(BHEAD AN.termbuffer,m) || AT.idallflag > 1 ) {
 				WORD *t, *tstop, *tt, first = 1, ii;
 				power = 1;
+				*CC->Pointer++ = 0;
 				if ( msign ) term[term[0]-1] = -term[term[0]-1];
 /*
 				If we come here the matches are all already in the
@@ -606,7 +607,7 @@ nextlevel:;
 }
 
 /*
- 		#] TestMatch :
+ 		#] TestMatch : 
  		#[ Substitute :			VOID Substitute(term,pattern,power)
 */
 
