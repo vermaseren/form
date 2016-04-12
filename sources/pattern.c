@@ -183,7 +183,7 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 /*
  		#[ Expand dollars :
 */
-	if ( ( ll[4] & 1 ) != 0 ) {	/* We have at least one dollar in the pattern */
+	if ( ( ll[4] & DOLLARFLAG ) != 0 ) {	/* We have at least one dollar in the pattern */
 		WORD oldRepPoint = *AN.RepPoint, olddefer = AR.DeferFlag;
 		AR.Eside = LHSIDEX;
 /*
@@ -283,6 +283,11 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 		}
 		*t++ = 1; *t++ = 1; *t++ = 3; AN.termbuffer[0] = t-AN.termbuffer;
 	}
+/*
+	To be puristic, we need to check that all wildcards in the prototype
+	are actually present. If the LHS contained a replace_ this may not be
+	the case.
+*/
 	ClearWild(BHEAD0);
 	while ( w < AN.WildStop ) {
 		if ( *w == LOADDOLLAR ) numdollars++;
@@ -497,7 +502,7 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 			t = AddRHS(AT.allbufnum,1);
 			*t = 0;
 			AT.idallflag = 1;
-			AT.idallmaxnum = ll[3];
+			AT.idallmaxnum = ll[5];
 			AT.idallnum = 0;
 			if ( FindRest(BHEAD AN.termbuffer,m) || AT.idallflag > 1 ) {
 				WORD *t, *tstop, *tt, first = 1, ii;
@@ -534,7 +539,23 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 						i = t[1]; NCOPY(tt,t,i);
 					}
 				}
-				NCOPY(tt,t,ii);
+				if ( ( ll[4] & NORMALIZEFLAG ) != 0 ) {
+/*
+					In case of the normalization option, we have to divide
+					by AT.idallnum;
+*/
+					WORD na = t[ii-1];
+					na = REDLENG(na);
+					for ( i = 0; i < ii; i++ ) tt[i] = t[i];
+					Divvy(BHEAD (UWORD *)tt,&na,(UWORD *)(&(AT.idallnum)),1);
+					na = INCLENG(na);
+					ii = ABS(na);
+					tt[ii-1] = na;
+					tt += ii;
+				}
+				else {
+					NCOPY(tt,t,ii);
+				}
 				ii = tt-AT.WorkPointer;
 				*(AT.WorkPointer) = ii;
 				tt = AT.WorkPointer; t = term;
@@ -585,7 +606,7 @@ nextlevel:;
 }
 
 /*
- 		#] TestMatch : 
+ 		#] TestMatch :
  		#[ Substitute :			VOID Substitute(term,pattern,power)
 */
 
@@ -2084,7 +2105,7 @@ VOID SubsInAll(PHEAD0)
 }
 
 /*
- 		#] SubsInAll :
+ 		#] SubsInAll : 
  		#[ TransferBuffer :
 
 		Adds the whole content of a (compiler)buffer to another buffer.

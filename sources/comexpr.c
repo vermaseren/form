@@ -59,7 +59,7 @@ static struct id_options {
 };
 
 /*
-  	#] Includes :
+  	#] Includes : 
   	#[ CoLocal :
 */
 
@@ -673,11 +673,22 @@ readlabel:
 			case SUBALL:
 				x = 0;
 				if ( *pp == '(' ) {
-					while ( *inp >= '0' && *inp <= '9' ) x = 10*x+*inp++ - '0';
+					if ( FG.cTable[*inp] == 1 ) {
+						while ( *inp >= '0' && *inp <= '9' ) x = 10*x+*inp++ - '0';
+					}
+					else {
+						pp++;
+						while ( FG.cTable[*inp] == 0 ) inp++;
+						c = *inp; *inp = 0;
+						if ( StrICont(pp,(UBYTE *)"normalize") != 0 ) goto IllOpt;
+						*inp = c;
+						OldWork[4] |= NORMALIZEFLAG;
+					}
 					if ( *inp != ')' || inp+1 != p ) {
-						c = *p; *p = 0;
+						c = *inp; *inp = 0;
+IllOpt:
 						MesPrint("&Illegal ALL option in id-statement: ",pp);
-						*p++ = c;
+						*inp++ = c;
 						error = 1;
 						continue;
 					}
@@ -691,7 +702,7 @@ readlabel:
 					MesPrint("&Requested maximum number of matches %l in ALL option in id-statement is greater than %l ",x,MAXPOSITIVE);
 					error = 1;
 				}
-				OldWork[3] = x;
+				OldWork[5] = x;
 				if ( type != TYPEIDNEW ) {
 				  if ( type == TYPEIDOLD ) {
 					MesPrint("&Requested ALL option not allowed in idold/also statement.");
@@ -939,7 +950,7 @@ IllLeft:MesPrint("&Illegal LHS");
 		if ( StudyPattern(OldWork) ) error = 1;
 	}
 	AT.WorkPointer = OldWork + OldWork[1];
-	OldWork[4] = AC.lhdollarflag;
+	if ( AC.lhdollarflag ) OldWork[4] |= DOLLARFLAG;
 	AC.lhdollarflag = 0;
 /*
 	Now the right hand side.
@@ -979,7 +990,7 @@ AllDone:
 }
 
 /*
-  	#] CoIdExpression :
+  	#] CoIdExpression : 
   	#[ CoMultiply :
 */
 

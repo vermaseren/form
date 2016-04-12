@@ -777,7 +777,10 @@ typedef int (*TFUN1)();
 #define SUBAFTER 32
 #define SUBAFTERNOT 64
 
-#define IDHEAD 5
+#define IDHEAD 6
+
+#define DOLLARFLAG 1
+#define NORMALIZEFLAG 2
 
 #define GIDENT 1
 #define GFIVE 4

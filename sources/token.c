@@ -739,20 +739,20 @@ int simpwtoken(SBYTE *s)
 			switch ( *t ) {
 				case TSYMBOL:
 				case TDUBIOUS:
-					*w++ = SYMTOSYM; *w++ = 4; *w++ = num; *w++ = -1; break;
+					*w++ = SYMTOSYM; *w++ = 4; *w++ = num; *w++ = num; break;
 				case TINDEX:
 					num += AM.OffsetIndex;
-					*w++ = INDTOIND; *w++ = 4; *w++ = num; *w++ = 0;  break;
+					*w++ = INDTOIND; *w++ = 4; *w++ = num; *w++ = num;  break;
 				case TVECTOR:
 					num += AM.OffsetVector;
-					*w++ = VECTOVEC; *w++ = 4; *w++ = num; *w++ = 0;  break;
+					*w++ = VECTOVEC; *w++ = 4; *w++ = num; *w++ = num;  break;
 				case TFUNCTION:
 					num += FUNCTION;
-					*w++ = FUNTOFUN; *w++ = 4; *w++ = num; *w++ = 0;  break;
+					*w++ = FUNTOFUN; *w++ = 4; *w++ = num; *w++ = num;  break;
 				default:
 					MesPrint("&Illegal type of wildcard in LHS");
 					error = -1;
-					*w++ = SYMTOSYM; *w++ = 4; *w++ = num; *w++ = -1;  break;
+					*w++ = SYMTOSYM; *w++ = 4; *w++ = num; *w++ = num;  break;
 					break;
 			}
 /*
