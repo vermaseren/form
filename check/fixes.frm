@@ -75,6 +75,20 @@ print;
 .end
 assert compile_error?
 *--#] NegDimension :
+*--#[ Forum3t187 :
+CF f1,f2,f3;
+Set ff1: f1;
+Set ff2: f2;
+Set ff3: f3;
+L F = f1(1) + f2(2) + f3(3);
+argument ff2;
+  discard;
+endargument;
+P;
+.end
+assert succeeded?
+assert result("F") =~ expr("f1(1)+f2(0)+f3(3)")
+*--#] Forum3t187 :
 *--#[ Issue37_1 :
 S ep;
 CF rat;

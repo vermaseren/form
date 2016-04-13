@@ -168,7 +168,7 @@ RightNum:
 							if ( *m == CSET ) {
 								r1 = SetElements + Sets[m[1]].first;
 								r2 = SetElements + Sets[m[1]].last;
-								while ( r1 <= r2 ) {
+								while ( r1 < r2 ) {
 									if ( *r1++ == *t ) goto HaveTodo;
 								}
 							}
