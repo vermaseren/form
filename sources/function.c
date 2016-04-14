@@ -1255,17 +1255,30 @@ IndAll:				i = m[1] - WILDOFFSET;
 			}
 			else if ( *m == -VECTOR && *t == -MINVECTOR &&
 			( i = m[1] - WILDOFFSET ) >= AM.OffsetVector ) {
+/*
+================================
 				AN.argaddress = AT.MinVecArg;
 				AT.MinVecArg[ARGHEAD+3] = t[1];
 				if ( CheckWild(BHEAD i,VECTOSUB,1,AN.argaddress) ) goto endofloop;
 				AddWild(BHEAD i,VECTOSUB,(WORD)0);
+================================
+*/
+				if ( CheckWild(BHEAD i,VECTOMIN,t[1],&newvalue) ) goto endofloop;
+				AddWild(BHEAD i,VECTOMIN,newvalue);
+
 			}
 			else if ( *m == -MINVECTOR && *t == -VECTOR &&
 			( i = m[1] - WILDOFFSET ) >= AM.OffsetVector ) {
+/*
+================================
 				AN.argaddress = AT.MinVecArg;
 				AT.MinVecArg[ARGHEAD+3] = t[1];
 				if ( CheckWild(BHEAD i,VECTOSUB,1,AN.argaddress) ) goto endofloop;
 				AddWild(BHEAD i,VECTOSUB,(WORD)0);
+================================
+*/
+				if ( CheckWild(BHEAD i,VECTOMIN,t[1],&newvalue) ) goto endofloop;
+				AddWild(BHEAD i,VECTOMIN,newvalue);
 			}
 			else goto endofloop;
 		}
@@ -1875,6 +1888,12 @@ Failure:
 	return(0);
 OnSuccess:
 	if ( AT.idallflag ) {
+		if ( AT.idallmaxnum > 0 && AT.idallnum >= AT.idallmaxnum ) {
+			AN.terfirstcomm = Oterfirstcomm;
+    		AN.SignCheck = oldSignCheck;
+			AT.WorkPointer = OldWork;
+			return(0);
+		}
 		SubsInAll(BHEAD0);
 		AT.idallnum++;
 		if ( AT.idallmaxnum == 0 || AT.idallnum < AT.idallmaxnum ) goto NoMat;

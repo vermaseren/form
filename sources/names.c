@@ -1926,7 +1926,7 @@ void EmptyTable(TABLES T)
 }
 
 /*
-  	#] EmptyTable :
+  	#] EmptyTable : 
   	#[ AddSet :
 */
 
@@ -2057,9 +2057,12 @@ int DoElements(UBYTE *s, SETS set, UBYTE *name)
 					MesPrint("&Illegal use of - sign in set. Can use only with vector or number");
 					error = 1;
 				}
+/*
 				numset = AM.OffsetVector - numset;
 				numset |= SPECMASK;
 				numset = AM.OffsetVector - numset;
+*/
+				numset -= WILDMASK;
 			}
 			*s = c;
 			if ( name == 0 && *s == '?' ) {

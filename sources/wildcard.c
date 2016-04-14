@@ -1690,7 +1690,8 @@ DEBUG(MesPrint("Thread %w(f): w=(%d,%d,%d,%d)(%d)",mm[0],mm[1],mm[2],mm[3],C->nu
 	else {
 		do {
 			if ( w[2] == oldnumber && ( *w == type || ( type == VECTOVEC
-			&& ( *w == VECTOMIN || *w == VECTOSUB ) )
+			&& ( *w == VECTOMIN || *w == VECTOSUB ) ) || ( type == VECTOMIN
+			&& ( *w == VECTOVEC || *w == VECTOSUB ) )
 			|| ( type == INDTOIND && *w == INDTOSUB ) ) ) {
 				if ( n > 1 && w[4] == SETTONUM ) i = w[7];
 				*w = type;
@@ -1760,7 +1761,7 @@ FlipOn:
 WORD CheckWild(PHEAD WORD oldnumber, WORD type, WORD newnumber, WORD *newval)
 {
 	GETBIDENTITY
-	WORD *w, *m, *s, n, old2;
+	WORD *w, *m, *s, n, old2, inset;
 	WORD n2, oldval, dirty, i, j, notflag = 0, retblock = 0;
 	CBUF *C = cbuf+AT.ebufnum;
 	m = AT.WildMask;
@@ -2081,6 +2082,12 @@ WORD CheckWild(PHEAD WORD oldnumber, WORD type, WORD newnumber, WORD *newval)
 						old2 = *w;
 						goto TestSet;
 					}
+					else if ( type == VECTOMIN &&
+							( *w == VECTOSUB || *w == VECTOVEC ) ) {
+						if ( *m ) goto NoMatch;
+						old2 = *w;
+						goto TestSet;
+					}
 				}
 				m++; w += w[1];
 				if ( n > 1 && ( *w == FROMSET
@@ -2267,6 +2274,7 @@ NoMnot:
 			i++;
 		} while ( ++w < m ); }
 		else { do {
+			inset = *w;
 			if ( notflag ) {
 			switch ( type ) {
 				case SYMTONUM:
@@ -2306,14 +2314,19 @@ NoMnot:
 						}
 					}
 					break;
+				case VECTOMIN:
+					if ( type == VECTOMIN ) {
+						if ( inset >= AM.OffsetVector ) goto NoMatch;
+						inset += WILDMASK;
+					}
 				case VECTOVEC:
-					if ( *w == newnumber ) goto NoMatch;
+					if ( inset == newnumber ) goto NoMatch;
 				case VECTOSUB:
-					if ( *w - WILDOFFSET >= AM.OffsetVector ) {
+					if ( inset - WILDOFFSET >= AM.OffsetVector ) {
 						WORD *mm = AT.WildMask, *mmm, *part;
 						WORD *ww = AN.WildValue;
 						WORD nn = AN.NumWild;
-						k = *w - WILDOFFSET;
+						k = inset - WILDOFFSET;
 						while ( --nn >= 0 ) {
 							if ( *mm && ww[2] == k && ww[0] == type ) {
 								if ( type == VECTOVEC ) {
@@ -2391,8 +2404,13 @@ NoMnot:
 					break;
 			}
 			}
-			else if ( ( *w == newnumber && type != SYMTONUM ) ||
-			( type == SYMTONUM && *w-2*MAXPOWER == newnumber ) ) {
+			else {
+			  if ( type == VECTOMIN ) {
+				if ( inset >= AM.OffsetVector ) goto NoMatch;
+				inset += WILDMASK;
+			  }
+			  if ( ( inset == newnumber && type != SYMTONUM ) ||
+			  ( type == SYMTONUM && inset-2*MAXPOWER == newnumber ) ) {
 				if ( *s == SETTONUM ) {
 					if ( n2 == oldnumber && type
 					<= SYMTOSUB ) goto NoMatch;
@@ -2426,6 +2444,7 @@ NoMnot:
 					}
 				}
 				return(0);
+			  }
 			}
 			i++;
 		} while ( ++w < m ); }

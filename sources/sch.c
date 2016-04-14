@@ -1051,14 +1051,20 @@ VOID WriteLists()
 							}
 							break;
 						case CVECTOR:
+							Out = OutScr;
+							if ( number < AM.OffsetVector ) {
+								number += WILDMASK;
+								Out = StrCopy((UBYTE *)"-",Out);
+							}
 							if ( number >= AM.OffsetVector + WILDOFFSET ) {
 								Out = StrCopy(VARNAME(vectors,number
-								-AM.OffsetVector-WILDOFFSET),OutScr);
+								-AM.OffsetVector-WILDOFFSET),Out);
 								StrCopy((UBYTE *)"?",Out);
-								TokenToLine(OutScr);
 							}
-							else
-							TokenToLine(VARNAME(vectors,number-AM.OffsetVector));
+							else {
+								Out = StrCopy(VARNAME(vectors,number-AM.OffsetVector),Out);
+							}
+							TokenToLine(OutScr);
 							break;
 						case CFUNCTION:
 							if ( number >= FUNCTION + (WORD)WILDMASK ) {
