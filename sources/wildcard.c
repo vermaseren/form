@@ -2316,7 +2316,7 @@ NoMnot:
 					break;
 				case VECTOMIN:
 					if ( type == VECTOMIN ) {
-						if ( inset >= AM.OffsetVector ) goto NoMatch;
+						if ( inset >= AM.OffsetVector ) { i++; continue; }
 						inset += WILDMASK;
 					}
 				case VECTOVEC:
@@ -2406,7 +2406,7 @@ NoMnot:
 			}
 			else {
 			  if ( type == VECTOMIN ) {
-				if ( inset >= AM.OffsetVector ) goto NoMatch;
+				if ( inset >= AM.OffsetVector ) { i++; continue; }
 				inset += WILDMASK;
 			  }
 			  if ( ( inset == newnumber && type != SYMTONUM ) ||

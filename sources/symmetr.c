@@ -2099,19 +2099,28 @@ IndAll:			i = m[1] - WILDOFFSET;
 		}
 		else if ( *m == -VECTOR && *t == -MINVECTOR &&
 		( i = m[1] - WILDOFFSET ) >= AM.OffsetVector ) {
+			wc = 2;
+/*
 			AN.argaddress = AT.MinVecArg;
 			AT.MinVecArg[ARGHEAD+3] = t[1];
-			wc = 2;
 			if ( CheckWild(BHEAD i,VECTOSUB,1,AN.argaddress) ) return(0);
 			AddWild(BHEAD i,VECTOSUB,(WORD)0);
+*/
+			if ( CheckWild(BHEAD i,VECTOMIN,t[1],&newvalue) ) return(0);
+			AddWild(BHEAD i,VECTOMIN,newvalue);
+
 		}
 		else if ( *m == -MINVECTOR && *t == -VECTOR &&
 		( i = m[1] - WILDOFFSET ) >= AM.OffsetVector ) {
+			wc = 2;
+/*
 			AN.argaddress = AT.MinVecArg;
 			AT.MinVecArg[ARGHEAD+3] = t[1];
-			wc = 2;
 			if ( CheckWild(BHEAD i,VECTOSUB,1,AN.argaddress) ) return(0);
 			AddWild(BHEAD i,VECTOSUB,(WORD)0);
+*/
+			if ( CheckWild(BHEAD i,VECTOMIN,t[1],&newvalue) ) return(0);
+			AddWild(BHEAD i,VECTOMIN,newvalue);
 		}
 		else return(0);
 	}
