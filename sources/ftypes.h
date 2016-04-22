@@ -706,6 +706,7 @@ typedef int (*TFUN1)();
 #define INDEX_       9   /* index only */
 #define Q_          10   /* rational */
 #define DUMMYINDEX_ 11   /* dummy index only */
+#define VECTOR_     12   /* vector only */
 
 /*
 	Special indices.

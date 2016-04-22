@@ -241,6 +241,7 @@ FIXEDSET fixedsets[] = {
 	,{"index_", "all indices",   CINDEX, 0}   /* INDEX_  9  */
 	,{"number_","all rationals", CSYMBOL, 0}  /* Q_     10  */
 	,{"dummyindices_", "dummy indices", CINDEX, 0}   /* DUMMYINDEX_ 11  */
+	,{"vector_","only vectors",  CVECTOR, 0}  /* VECTOR_ 12  */
 };
 
 UBYTE BufferForOutput[MAXLINELENGTH+14];

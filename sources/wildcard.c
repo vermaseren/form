@@ -2183,6 +2183,9 @@ TestSet:
 					if ( type != INDTOIND ||
 					newnumber < AM.IndDum || newnumber >= AM.IndDum+MAXDUMMIES ) goto NoMnot;
 					break;
+				case VECTOR_:
+					if ( type != VECTOVEC ) goto NoMnot;
+					break;
 				default:
 					goto NoMnot;
 			}

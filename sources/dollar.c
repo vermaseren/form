@@ -2125,6 +2125,11 @@ int IsSetMember(WORD *buffer, WORD numset)
 				 && t[1] >= AM.IndDum && t[1] < AM.IndDum+MAXDUMMIES ) return(1);
 			return(0);
 		}
+		if ( numset == VECTOR_ ) {
+			if ( *t == 7 && t[1] == INDEX && t[6] == 3 && t[5] == 1
+			&& t[4] == 1 && t[3] < (AM.OffsetVector+WILDOFFSET) && t[3] >= AM.OffsetVector ) return(1);
+			return(0);
+		}
 		tt = t + *t - 1;
 		if ( ABS(tt[0]) != *t-1 ) return(0);
 		if ( numset == Q_ ) return(1);

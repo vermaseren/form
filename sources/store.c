@@ -302,6 +302,7 @@ int AddToScratch(FILEHANDLE *fi, POSITION *pos, UBYTE *buffer, POSITION *length,
 {
 	GETIDENTITY
 	LONG l = BASEPOSITION(*length), avail;
+	DUMMYUSE(pos)
 	fi->POfill = fi->POfull;
 	while ( fi->POfill+l/sizeof(WORD) > fi->POstop ) {
 		avail = (fi->POstop-fi->POfill)*sizeof(WORD);
