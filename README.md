@@ -14,10 +14,18 @@ subatomic physics. Other people that have made contributions can be found in the
 file "[AUTHORS](AUTHORS)".
 
 
-Installation
+Build instructions
 ------------
 
-See the file "[INSTALL](INSTALL)".
+Before building FORM, it is adviced to install the optional dependencies `gmp` and `zlib` for better performance. To quickly build FORM, install the `autoconf` pacakge. Then run:
+
+    autoreconf -i
+    ./configure
+    make
+    make install
+
+
+For more advanced build options, see the file "[INSTALL](INSTALL)".
 
 
 Additional Information
