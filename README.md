@@ -17,7 +17,7 @@ file "[AUTHORS](AUTHORS)".
 Build instructions
 ------------
 
-Before building FORM, it is adviced to install the optional dependencies `gmp` and `zlib` for better performance. To quickly build FORM, install the `autoconf` pacakge. Then run:
+Before building FORM, it is advised to install the optional dependencies `gmp` and `zlib` for better performance. To quickly build FORM, install the `autoconf` package. Then run:
 
     autoreconf -i
     ./configure
