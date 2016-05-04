@@ -2779,7 +2779,13 @@ NoPoly:
 				the solution that has been choosen here.
 */
 				if ( AC.properorderflag ) {
-					if ( ( c2 = -CompArg(s1,s2) ) != 0 ) return(PREV(c2));
+					WORD oldpolyflag;
+					oldpolyflag = S->PolyFlag;
+					S->PolyFlag = 0;
+					if ( ( c2 = -CompArg(s1,s2) ) != 0 ) {
+						S->PolyFlag = oldpolyflag; return(PREV(c2));
+					}
+					S->PolyFlag = oldpolyflag;
 					NEXTARG(s1)
 					NEXTARG(s2)
 				}
