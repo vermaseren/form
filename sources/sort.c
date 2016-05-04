@@ -2786,17 +2786,24 @@ NoPoly:
 				else {
 					if ( *s1 > 0 ) {
 						if ( *s2 > 0 ) {
+							WORD oldpolyflag;
 							stopex1 = s1 + *s1;
 							if ( s2 >= t2 ) return(PREV(-1));
 							stopex2 = s2 + *s2;
 							s1 += ARGHEAD; s2 += ARGHEAD;
+							oldpolyflag = S->PolyFlag;
+							S->PolyFlag = 0;
 							while ( s1 < stopex1 ) {
-								if ( s2 >= stopex2 ) return(PREV(-1));
-								if ( ( c2 = CompareTerms(BHEAD s1,s2,(WORD)1) ) != 0 )
-									return(PREV(c2));
+								if ( s2 >= stopex2 ) {
+									S->PolyFlag = oldpolyflag; return(PREV(-1));
+								}
+								if ( ( c2 = CompareTerms(BHEAD s1,s2,(WORD)1) ) != 0 ) {
+									S->PolyFlag = oldpolyflag; return(PREV(c2));
+								}
 								s1 += *s1;
 								s2 += *s2;
 							}
+							S->PolyFlag = oldpolyflag;
 							if ( s2 < stopex2 ) return(PREV(1));
 						}
 						else return(PREV(1));
