@@ -1954,7 +1954,8 @@ ScanCont:		while ( t < r ) {
 					if ( k == 0 ) goto NormZero;
 					if ( t[FUNHEAD] == -SYMBOL && *rr == -SNUMBER && t[1] == FUNHEAD+4 ) {
 						if ( rr[1] < MAXPOWER ) {
-							t = rr; *rr = t[FUNHEAD+1];
+							t[FUNHEAD+2] = t[FUNHEAD+1]; t += FUNHEAD+2;
+							from = m;
 							goto NextSymbol;
 						}
 					}
@@ -3329,10 +3330,15 @@ regularratfun:;
 							}
 							else goto NoRep;
 						}
-						else if ( *ma == -VECTOR && ma+4 <= mb ) {
-							if ( ma[2] == -VECTOR ) *ReplaceSub++ = VECTOVEC;
-							else if ( ma[2] == -MINVECTOR )
-								*ReplaceSub++ = VECTOMIN;
+						else if ( ( *ma == -VECTOR || *ma == -MINVECTOR ) && ma+4 <= mb ) {
+							if ( ma[2] == -VECTOR ) {
+								if ( *ma == -VECTOR ) *ReplaceSub++ = VECTOVEC;
+								else *ReplaceSub++ = VECTOMIN;
+							}
+							else if ( ma[2] == -MINVECTOR ) {
+								if ( *ma == -VECTOR ) *ReplaceSub++ = VECTOMIN;
+								else *ReplaceSub++ = VECTOVEC;
+							}
 /*
 							Next is a vector-like subexpression
 							Search for vector nature first
@@ -3340,6 +3346,16 @@ regularratfun:;
 							else if ( ma[2] > 0 ) {
 								WORD *sstop, *ttstop, *w, *mm, n, count;
 								WORD *v1, *v2 = 0;
+								if ( *ma == -MINVECTOR ) {
+									ss = ma+2;
+									sstop = ss + *ss;
+									ss += ARGHEAD;
+									while ( ss < sstop ) {
+										ss += *ss;
+										ss[-1] = -ss[-1];
+									}
+									*ma = -VECTOR;
+								}
 								ss = ma+2;
 								sstop = ss + *ss;
 								ss += ARGHEAD;
@@ -4981,4 +4997,162 @@ int TestFunFlag(PHEAD WORD *tfun)
 
 /*
   	#] TestFunFlag : 
+  	#[ BracketNormalize :
+*/
+
+#define EXCHN(t1,t2,n) { WORD a,i; for(i=0;i<n;i++){x=t1[i];t1[i]=t2[i];t2[i]=a;}
+#define EXCH(x,y) { WORD a = (x); (x) = (y); (y) = a; }
+
+WORD BracketNormalize(PHEAD WORD *term)
+{
+	WORD *stop = term+*term-3, *t, *tt, *tstart, *r;
+	WORD *oldwork = AT.WorkPointer;
+	WORD *termout;
+	WORD i, ii, j;
+	termout = AT.WorkPointer = term+*term;
+/*
+	First collect all functions and sort them
+*/
+	tt = termout+1; t = term+1;
+	while ( t < stop ) {
+		if ( *t >= FUNCTION ) { i = t[1]; NCOPY(tt,t,i); }
+		else t += t[1];
+	}
+	if ( tt > termout+1 && tt-termout-1 > termout[2] ) { /* sorting */
+		r = termout+1; ii = tt-r;
+		for ( i = 0; i < ii-FUNHEAD; ii += FUNHEAD ) {	/* Bubble sort */
+			for ( j = i+FUNHEAD; j > 0; j -= FUNHEAD ) {
+				if ( functions[r[j-FUNHEAD]-FUNCTION].commute
+				  && functions[r[j]-FUNCTION].commute == 0 ) break;
+				if ( r[j-FUNHEAD] > r[j] ) EXCH(r[j-FUNHEAD],r[j])
+				else break;
+			}
+		}
+	}
+
+	tstart = tt; t = term + 1; *tt++ = DELTA; *tt++ = 2;
+	while ( t < stop ) {
+		if ( *t == DELTA ) { i = t[1]-2; t += 2; tstart[1] += i; NCOPY(tt,t,i); }
+		else t += t[1];
+	}
+	if ( tstart[1] > 2 ) {
+		for ( r = tstart+2; r < tstart+tstart[1]; r += 2 ) {
+			if ( r[0] > r[1] ) EXCH(r[0],r[1])
+		}
+	}
+	if ( tstart[1] > 4 ) { /* sorting */
+		r = tstart+2; ii = tstart[1]-2;
+		for ( i = 0; i < ii-2; ii += 2 ) {	/* Bubble sort */
+			for ( j = i+2; j > 0; j -= 2 ) {
+				if ( r[j-2] > r[j] ) {
+					EXCH(r[j-2],r[j])
+					EXCH(r[j-1],r[j+1])
+				}
+				else if ( r[j-2] < r[j] ) break;
+				else {
+					if ( r[j-1] > r[j+1] ) EXCH(r[j-1],r[j+1])
+					else break;
+				}
+			}
+		}
+		tt = tstart+tstart[1];
+	}
+	else if ( tstart[1] == 2 ) { tt = tstart; }
+	else tt = tstart+4;
+
+	tstart = tt; t = term + 1; *tt++ = INDEX; *tt++ = 2;
+	while ( t < stop ) {
+		if ( *t == INDEX ) { i = t[1]-2; t += 2; tstart[1] += i; NCOPY(tt,t,i); }
+		else t += t[1];
+	}
+	if ( tstart[1] >= 4 ) { /* sorting */
+		r = tstart+2; ii = tstart[1]-2;
+		for ( i = 0; i < ii-1; ii += 1 ) {	/* Bubble sort */
+			for ( j = i+1; j > 0; j -= 1 ) {
+				if ( r[j-1] > r[j] ) EXCH(r[j-1],r[j])
+				else break;
+			}
+		}
+		tt = tstart+3;
+	}
+	else if ( tstart[1] == 2 ) { tt = tstart; }
+
+	tstart = tt; t = term + 1; *tt++ = DOTPRODUCT; *tt++ = 2;
+	while ( t < stop ) {
+		if ( *t == DOTPRODUCT ) { i = t[1]-2; t += 2; tstart[1] += i; NCOPY(tt,t,i); }
+		else t += t[1];
+	}
+	if ( tstart[1] > 5 ) { /* sorting */
+		r = tstart+2; ii = tstart[1]-2;
+		for ( i = 0; i < ii; ii += 3 ) {
+			if ( r[i] < r[i+1] ) EXCH(r[i],r[i+1])
+		}
+		for ( i = 0; i < ii-3; ii += 3 ) {	/* Bubble sort */
+			for ( j = i+3; j > 0; j -= 3 ) {
+				if ( r[j-3] < r[j] ) break;
+				if ( r[j-3] > r[j] ) {
+					EXCH(r[j-3],r[j])
+					EXCH(r[j-2],r[j+1])
+				}
+				else {
+					if ( r[j-2] > r[j+1] ) EXCH(r[j-2],r[j+1])
+					else break;
+				}
+			}
+		}
+		tt = tstart+tstart[1];
+	}
+	else if ( tstart[1] == 2 ) { tt = tstart; }
+	else {
+		if ( tstart[3] > tstart[4] ) EXCH(tstart[3],tstart[4])
+		tt = tstart+5;
+	}
+
+	tstart = tt; t = term + 1; *tt++ = SYMBOL; *tt++ = 2;
+	while ( t < stop ) {
+		if ( *t == SYMBOL ) { i = t[1]-2; t += 2; tstart[1] += i; NCOPY(tt,t,i); }
+		else t += t[1];
+	}
+	if ( tstart[1] > 4 ) { /* sorting */
+		r = tstart+2; ii = tstart[1]-2;
+		for ( i = 0; i < ii-2; ii += 2 ) {	/* Bubble sort */
+			for ( j = i+2; j > 0; j -= 2 ) {
+				if ( r[j-2] > r[j] ) EXCH(r[j-2],r[j])
+				else break;
+			}
+		}
+		tt = tstart+tstart[1];
+	}
+	else if ( tstart[1] == 2 ) { tt = tstart; }
+	else tt = tstart+4;
+
+	tstart = tt; t = term + 1; *tt++ = SETSET; *tt++ = 2;
+	while ( t < stop ) {
+		if ( *t == SETSET ) { i = t[1]-2; t += 2; tstart[1] += i; NCOPY(tt,t,i); }
+		else t += t[1];
+	}
+	if ( tstart[1] > 4 ) { /* sorting */
+		r = tstart+2; ii = tstart[1]-2;
+		for ( i = 0; i < ii-2; ii += 2 ) {	/* Bubble sort */
+			for ( j = i+2; j > 0; j -= 2 ) {
+				if ( r[j-2] > r[j] ) {
+					EXCH(r[j-2],r[j])
+					EXCH(r[j-1],r[j+1])
+				}
+				else break;
+			}
+		}
+		tt = tstart+tstart[1];
+	}
+	else if ( tstart[1] == 2 ) { tt = tstart; }
+	else tt = tstart+4;
+	*tt++ = 1; *tt++ = 1; *tt++ = 3;
+	t = term; i = *termout = tt - termout; tt = termout;
+	NCOPY(t,tt,i);
+	AT.WorkPointer = oldwork;
+	return(0);
+}
+
+/*
+  	#] BracketNormalize : 
 */

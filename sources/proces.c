@@ -1444,7 +1444,7 @@ DoSpec:
 								Note defs at 471,467,460,400,425,328
 */
 								if ( i > *t ) {
-redosize:							i -= *t;
+									i -= *t;
 									*t2 -= i;
 									t1[1] -= i;
 									t += *t;
@@ -1466,7 +1466,18 @@ redosize:							i -= *t;
 							}
 							else {
 								Normalize(BHEAD t);
-								if ( i > *t ) { retvalue = 1; goto redosize; }
+/*								if ( i > *t ) { retvalue = 1; goto redosize; } */
+								if ( i > *t ) {
+									retvalue = 1;
+									i -= *t;
+									*t2 -= i;
+									t1[1] -= i;
+									t += *t;
+									r = t + i;
+									m = term + *term;
+									while ( r < m ) *t++ = *r++;
+									*term -= i;
+								}
 							}
 							AN.subsubveto = 0;
 							AT.RecFlag--;

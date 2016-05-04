@@ -953,6 +953,28 @@ IllLeft:MesPrint("&Illegal LHS");
 	if ( AC.lhdollarflag ) OldWork[4] |= DOLLARFLAG;
 	AC.lhdollarflag = 0;
 /*
+	Test whether the id/idold configuration is fine.
+*/
+	if ( type == TYPEIDOLD ) {
+		WORD ci = C->numlhs;
+		while ( ci >= 1 ) {
+			if ( C->lhs[ci][0] == TYPEIDNEW ) {
+				if ( (C->lhs[ci][2] & SUBMASK) == SUBALL ) {
+					MesPrint("&Idold/also cannot follow an id,all statement.");
+					error = 1;
+				}
+				break;
+			}
+			else if ( C->lhs[ci][0] == TYPEDETCURDUM ) { ci--; continue; }
+			else if ( C->lhs[ci][0] == TYPEIDOLD ) { ci--; continue; }
+			else ci = 0;
+		}
+		if ( ci < 1 ) {
+			MesPrint("&Idold/also should follow an id/idnew statement.");
+			error = 1;
+		}
+	}
+/*
 	Now the right hand side.
 */
 	if ( type != TYPEIF ) {
@@ -970,19 +992,7 @@ IllLeft:MesPrint("&Illegal LHS");
 /*
 	Actual adding happens only now after numrhs insertion
 */
-	/* if ( !error ) */ { AddNtoL(OldWork[1],OldWork); }
-	if ( type == TYPEIDOLD ) {
-		if ( C->numlhs <= 1 || 
-			( C->lhs[C->numlhs-1][0] != TYPEIDNEW &&
-				  C->lhs[C->numlhs-1][0] != TYPEIDOLD ) ) {
-			MesPrint("&Idold/also should follow an id/idnew statement.");
-			error = 1;
-		}
-		else if ( (C->lhs[C->numlhs-1][2] & SUBMASK) == SUBALL ) {
-			MesPrint("&Idold/also cannot follow an id,all statement.");
-			error = 1;
-		}
-	}
+	if ( !error ) { AddNtoL(OldWork[1],OldWork); }
 AllDone:
 	AC.lhdollarflag = 0;
 	AT.WorkPointer = FirstWork;

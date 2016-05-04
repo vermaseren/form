@@ -504,6 +504,7 @@ extern WORD   MultDo(PHEAD WORD *,WORD *);
 extern WORD   NewSort(PHEAD0);
 extern WORD   ExtraSymbol(WORD,WORD,WORD,WORD *,WORD *);
 extern WORD   Normalize(PHEAD WORD *);
+extern WORD   BracketNormalize(PHEAD WORD *);
 extern VOID   DropCoefficient(PHEAD WORD *);
 extern VOID   DropSymbols(PHEAD WORD *);
 extern int    PutInside(PHEAD WORD *, WORD *);

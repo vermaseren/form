@@ -1004,7 +1004,7 @@ WORD PutBracket(PHEAD WORD *termin)
 	WORD *t2, *s1, *s2;
 	WORD *bStop, *bb, *bf, *tStop;
 	WORD *term1,*term2, *m1, *m2, *tStopa;
-	WORD *bbb = 0, *bind, *binst = 0, bwild = 0;
+	WORD *bbb = 0, *bind, *binst = 0, bwild = 0, *bss = 0, *bns = 0, bset = 0;
 	term1 = AT.WorkPointer+1;
 	term2 = (WORD *)(((UBYTE *)(term1)) + AM.MaxTer);
 	if ( ( (WORD *)(((UBYTE *)(term2)) + AM.MaxTer) ) > AT.WorkTop ) return(MesWork());
@@ -1017,6 +1017,7 @@ WORD PutBracket(PHEAD WORD *termin)
 	b = AT.BrackBuf; bStop = b+*b; b++;
 	while ( b < bStop ) {
 		if ( *b == INDEX ) { bwild = 1; bbb = b+2; binst = b + b[1]; break; }
+		if ( *b == SETSET ) { bset = 1; bss = b+2; bns = b + b[1]; break; }
 		b += b[1];
 	}
 
