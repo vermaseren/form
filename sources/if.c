@@ -206,6 +206,13 @@ InVe:
 		}
 		else if ( *v == VECTOR && *t == INDEX ) goto InVe;
 		else if ( *v == INDEX && *t == VECTOR ) goto InVe;
+		else if ( ( *v == VECTOR || *v == INDEX ) && *t == DOTPRODUCT ) {
+			m = t+2; mstop = t+t[1];
+			while ( m < mstop ) {
+				if ( v[1] == t[0] || v[1] == t[1] ) return(1);
+				t += 3;
+			}
+		}
 		else if ( *t >= FUNCTION ) {
 			if ( *v == FUNCTION && v[1] == *t ) return(1);
 			fstop = t + t[1]; f = t + FUNHEAD;
