@@ -3737,10 +3737,8 @@ redo:	AR.BracketOn++;
 				*to++ = c2 + AM.OffsetVector; *to++ = 1; break;
 			case CDELTA :
 				*to++ = DELTA; *to++ = 4; *to++ = EMPTYINDEX; *to++ = EMPTYINDEX; break;
-/*
 			case CSET :
 				*to++ = SETSET; *to++ = 4; *to++ = c1; *to++ = Sets[c1].type; break;
-*/
 			default :
 				MesPrint("&Illegal bracket request for %s",pp);
 				error = 1; break;
@@ -3752,7 +3750,7 @@ redo:	AR.BracketOn++;
 	*AT.WorkPointer = to - AT.WorkPointer;
 	AT.WorkPointer = to;
 	AC.BracketNormalize = 1;
-	if ( Normalize(BHEAD WorkSave) ) { error = 1; AR.BracketOn = 0; }
+	if ( BracketNormalize(BHEAD WorkSave) ) { error = 1; AR.BracketOn = 0; }
 	else {
 		w = WorkSave;
 		if ( *w == 4 || !*w ) { AR.BracketOn = 0; }

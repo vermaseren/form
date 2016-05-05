@@ -1016,8 +1016,8 @@ WORD PutBracket(PHEAD WORD *termin)
 	}
 	b = AT.BrackBuf; bStop = b+*b; b++;
 	while ( b < bStop ) {
-		if ( *b == INDEX ) { bwild = 1; bbb = b+2; binst = b + b[1]; break; }
-		if ( *b == SETSET ) { bset = 1; bss = b+2; bns = b + b[1]; break; }
+		if ( *b == INDEX ) { bwild = 1; bbb = b+2; binst = b + b[1]; }
+		if ( *b == SETSET ) { bset = 1; bss = b+2; bns = b + b[1]; }
 		b += b[1];
 	}
 
@@ -1038,6 +1038,23 @@ WORD PutBracket(PHEAD WORD *termin)
 					goto NextNcom1;
 				}
 				b += b[1];
+			}
+			if ( bset ) {
+				b = bss;
+				while ( b < bns ) {
+					if ( b[1] == CFUNCTION ) { /* Set of functions */
+						SETS set = Sets+b[0]; WORD i;
+						for ( i = set->first; i < set->last; i++ ) {
+							if ( SetElements[i] == *t ) {
+								lastfun = t;
+								while ( t < tStop && *t >= FUNCTION
+									&& functions[*t-FUNCTION].commute ) t += t[1];
+								goto NextNcom1;
+							}
+						}
+					}
+					b += 2;
+				}
 			}
 			if ( bwild && *t >= FUNCTION && functions[*t-FUNCTION].spec ) {
 				s1 = t + t[1];
@@ -1078,6 +1095,21 @@ NextNcom1:
 				if ( *b == *t ) { lastfun = t + t[1]; goto NextNcom; }
 				b += b[1];
 			}
+			if ( bset ) {
+				b = bss;
+				while ( b < bns ) {
+					if ( b[1] == CFUNCTION ) { /* Set of functions */
+						SETS set = Sets+b[0]; WORD i;
+						for ( i = set->first; i < set->last; i++ ) {
+							if ( SetElements[i] == *t ) {
+								lastfun = t + t[1];
+								goto NextNcom;
+							}
+						}
+					}
+					b += 2;
+				}
+			}
 			if ( bwild && *t >= FUNCTION && functions[*t-FUNCTION].spec ) {
 				s1 = t + t[1];
 				s2 = t + FUNHEAD;
@@ -1107,12 +1139,24 @@ NextNcom:
 	}
 	bf = b;
 
-	while ( t < tStop && ( bf < bStop || bwild ) ) {
+	while ( t < tStop && ( bf < bStop || bwild || bset ) ) {
 		b = bf;
 		while ( b < bStop && *b != *t ) { b += b[1]; }
 		i = t[1];
 		if ( *t >= FUNCTION ) { /* We are in function territory */
 			if ( b < bStop && *b == *t ) goto FunBrac;
+			if ( bset ) {
+				b = bss;
+				while ( b < bns ) {
+					if ( b[1] == CFUNCTION ) { /* Set of functions */
+						SETS set = Sets+b[0]; WORD i;
+						for ( i = set->first; i < set->last; i++ ) {
+							if ( SetElements[i] == *t ) goto FunBrac;
+						}
+					}
+					b += 2;
+				}
+			}
 			if ( bwild && *t >= FUNCTION && functions[*t-FUNCTION].spec ) {
 				s1 = t + t[1];
 				s2 = t + FUNHEAD;
@@ -1152,7 +1196,51 @@ FunBrac:	NCOPY(t1,t,i);
 					if ( *bind == *t && bind < binst ) {
 						*t1++ = *t++;
 					}
+					else if ( bset ) {
+						WORD *b3 = bss;
+						while ( b3 < bns ) {
+							if ( b3[1] == CVECTOR ) {
+								SETS set = Sets+b3[0]; WORD i;
+								for ( i = set->first; i < set->last; i++ ) {
+									if ( SetElements[i] == *t ) {
+										*t1++ = *t++;
+										goto nextind;
+									}
+								}
+							}
+							b3 += 2;
+						}
+						*t2++ = *t++;
+					}
 					else *t2++ = *t++;
+nextind:;
+				}
+				m1[1] = WORDDIF(t1,m1);
+				if ( m1[1] == 2 ) t1 = m1;
+				m2[1] = WORDDIF(t2,m2);
+				if ( m2[1] == 2 ) t2 = m2;
+			}
+			else if ( bset ) {
+				m1 = t1; m2 = t2;
+				*t1++ = *t; t1++; *t2++ = *t; t2++;
+				j = t[1] -2;
+				t += 2;
+				while ( --j >= 0 ) {
+					WORD *b3 = bss;
+					while ( b3 < bns ) {
+						if ( b3[1] == CVECTOR ) {
+							SETS set = Sets+b3[0]; WORD i;
+							for ( i = set->first; i < set->last; i++ ) {
+								if ( SetElements[i] == *t ) {
+									*t1++ = *t++;
+									goto nextind2;
+								}
+							}
+						}
+						b3 += 2;
+					}
+					*t2++ = *t++;
+nextind2:;
 				}
 				m1[1] = WORDDIF(t1,m1);
 				if ( m1[1] == 2 ) t1 = m1;
@@ -1188,8 +1276,49 @@ FunBrac:	NCOPY(t1,t,i);
 							bind++;
 						}
 					}
+					if ( bset ) {
+						WORD *b3 = bss;
+						while ( b3 < bns ) {
+							if ( b3[1] == CVECTOR ) {
+								SETS set = Sets+b3[0]; WORD i;
+								for ( i = set->first; i < set->last; i++ ) {
+									if ( SetElements[i] == *t ) {
+										*t1++ = *t++; *t1++ = *t++;
+										goto nextvec;
+									}
+								}
+							}
+							b3 += 2;
+						}
+					}
 					*t2++ = *t++; *t2++ = *t++;
 nextvec:;
+				}
+				m1[1] = WORDDIF(t1,m1);
+				if ( m1[1] == 2 ) t1 = m1;
+				m2[1] = WORDDIF(t2,m2);
+				if ( m2[1] == 2 ) t2 = m2;
+			}
+			else if ( bset ) {
+				m1 = t1; *t1++ = *t; t1++;
+				m2 = t2; *t2++ = *t; t2++;
+				s2 = t + i; t += 2;
+				while ( t < s2 ) {
+					WORD *b3 = bss;
+					while ( b3 < bns ) {
+						if ( b3[1] == CVECTOR ) {
+							SETS set = Sets+b3[0]; WORD i;
+							for ( i = set->first; i < set->last; i++ ) {
+								if ( SetElements[i] == *t ) {
+									*t1++ = *t++; *t1++ = *t++;
+									goto nextvec2;
+								}
+							}
+						}
+						b3 += 2;
+					}
+					*t2++ = *t++; *t2++ = *t++;
+nextvec2:;
 				}
 				m1[1] = WORDDIF(t1,m1);
 				if ( m1[1] == 2 ) t1 = m1;
@@ -1209,7 +1338,7 @@ nextvec:;
 					s1 = b + b[1]; bb = b + 2;
 				}
 				s2 = t + i; t += 2;
-				while ( t < s2 && ( bb < s1 || bwild ) ) {
+				while ( t < s2 && ( bb < s1 || bwild || bset ) ) {
 					while ( bb < s1 && ( *bb < *t ||
 					( *bb == *t && bb[1] < t[1] ) ) ) bb += 3;
 					if ( bb < s1 && *bb == *t && bb[1] == t[1] ) {
@@ -1226,10 +1355,51 @@ nextvec:;
 							bind++;
 						}
 					}
+					if ( bset ) {
+						WORD *b3 = bss;
+						while ( b3 < bns ) {
+							if ( b3[1] == CVECTOR ) {
+								SETS set = Sets+b3[0]; WORD i;
+								for ( i = set->first; i < set->last; i++ ) {
+									if ( SetElements[i] == *t || SetElements[i] == t[1] ) {
+										*t1++ = *t++; *t1++ = *t++; *t1++ = *t++;
+										goto nextdot;
+									}
+								}
+							}
+							b3 += 2;
+						}
+					}
 					*t2++ = *t++; *t2++ = *t++; *t2++ = *t++;
 nextdot:;
 				}
 				while ( t < s2 ) *t2++ = *t++;
+				m1[1] = WORDDIF(t1,m1);
+				if ( m1[1] == 2 ) t1 = m1;
+				m2[1] = WORDDIF(t2,m2);
+				if ( m2[1] == 2 ) t2 = m2;
+			}
+			else if ( bset ) {
+				m1 = t1; *t1++ = *t; t1++;
+				m2 = t2; *t2++ = *t; t2++;
+				s2 = t + i; t += 2;
+				while ( t < s2 ) {
+					WORD *b3 = bss;
+					while ( b3 < bns ) {
+						if ( b3[1] == CVECTOR ) {
+							SETS set = Sets+b3[0]; WORD i;
+							for ( i = set->first; i < set->last; i++ ) {
+								if ( SetElements[i] == *t || SetElements[i] == t[1] ) {
+									*t1++ = *t++; *t1++ = *t++; *t1++ = *t++;
+									goto nextdot2;
+								}
+							}
+						}
+						b3 += 2;
+					}
+					*t2++ = *t++; *t2++ = *t++; *t2++ = *t++;
+nextdot2:;
+				}
 				m1[1] = WORDDIF(t1,m1);
 				if ( m1[1] == 2 ) t1 = m1;
 				m2[1] = WORDDIF(t2,m2);
@@ -1245,11 +1415,60 @@ nextdot:;
 				s2 = t + i; t += 2;
 				while ( bb < s1 && t < s2 ) {
 					while ( bb < s1 && *bb < *t ) bb += 2;
-					if ( bb >= s1 ) break;
+					if ( bb >= s1 ) {
+						if ( bset ) goto TrySymbolSet;
+						break;
+					}
 					if ( *bb == *t ) { *t1++ = *t++; *t1++ = *t++; }
+					else if ( bset ) {
+						WORD *bbb;
+TrySymbolSet:
+						bbb = bss;
+						while ( bbb < bns ) {
+							if ( bbb[1] == CSYMBOL ) { /* Set of symbols */
+								SETS set = Sets+bbb[0]; WORD i;
+								for ( i = set->first; i < set->last; i++ ) {
+									if ( SetElements[i] == *t ) {
+										*t1++ = *t++; *t1++ = *t++;
+										goto NextSymbol;
+									}
+								}
+							}
+							bbb += 2;
+						}
+						*t2++ = *t++; *t2++ = *t++;
+					}
 					else { *t2++ = *t++; *t2++ = *t++; } 
+NextSymbol:;
 				}
 				while ( t < s2 ) *t2++ = *t++;
+				m1[1] = WORDDIF(t1,m1);
+				if ( m1[1] == 2 ) t1 = m1;
+				m2[1] = WORDDIF(t2,m2);
+				if ( m2[1] == 2 ) t2 = m2;
+			}
+			else if ( bset ) {
+				WORD *bbb;
+				m1 = t1; *t1++ = *t; t1++;
+				m2 = t2; *t2++ = *t; t2++;
+				s2 = t + i; t += 2;
+				while ( t < s2 ) {
+					bbb = bss;
+					while ( bbb < bns ) {
+						if ( bbb[1] == CSYMBOL ) { /* Set of symbols */
+							SETS set = Sets+bbb[0]; WORD i;
+							for ( i = set->first; i < set->last; i++ ) {
+								if ( SetElements[i] == *t ) {
+									*t1++ = *t++; *t1++ = *t++;
+									goto NextSymbol2;
+								}
+							}
+						}
+						bbb += 2;
+					}
+					*t2++ = *t++; *t2++ = *t++;
+NextSymbol2:;
+				}
 				m1[1] = WORDDIF(t1,m1);
 				if ( m1[1] == 2 ) t1 = m1;
 				m2[1] = WORDDIF(t2,m2);

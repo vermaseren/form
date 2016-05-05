@@ -244,6 +244,7 @@ int DoExpr(UBYTE *inp, int type, int par)
 		inp = p+1;
 		ClearWildcardNames();
 		osize = AC.ProtoType[1]; AC.ProtoType[1] = SUBEXPSIZE;
+		PutInVflags(jold);
 		if ( ( i = CompileAlgebra(inp,RHSIDE,AC.ProtoType) ) < 0 ) {
 			AC.ProtoType[1] = osize;
 			error = 1;
@@ -275,7 +276,6 @@ int DoExpr(UBYTE *inp, int type, int par)
 			AT.WorkPointer = OldWork;
 			if ( AC.dumnumflag ) Add2Com(TYPEDETCURDUM)
 		}
-		PutInVflags(jold);
 		AC.ToBeInFactors = 0;
 	}
 	else {	/* Variety in which expressions change property */
