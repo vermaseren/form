@@ -74,6 +74,9 @@
 		Others that can be added:
 			symmetrize?
 
+		6-may-2016: Changed MAXPOSITIVE2 into MAXPOSITIVE4. This makes room
+		            for the use of dollar variables as arguments.
+
  		#] Intro : 
  		#[ CoTransform :
 */
@@ -288,7 +291,7 @@ doencode:	*ss = c;
 					x = 0;
 					while ( FG.cTable[*in] == 1 ) {
 						x = 10*x + *in++ - '0';
-						if ( x > MAXPOSITIVE2 ) {
+						if ( x > MAXPOSITIVE4 ) {
 illsize:					MesPrint("&Illegal value for base in encode/decode transformation");
 							if ( error == 0 ) error = 1;
 							return(error);
@@ -378,7 +381,7 @@ illsize:					MesPrint("&Illegal value for base in encode/decode transformation")
 			*ss = c;
 			*wp++ = ARGRANGE;
 			*wp++ = 1;
-			*wp++ = MAXPOSITIVE2;
+			*wp++ = MAXPOSITIVE4;
 			*wp++ = type;
 /*
 			Now a sequence of cycles
@@ -389,7 +392,7 @@ illsize:					MesPrint("&Illegal value for base in encode/decode transformation")
 				x = 0; in++;
 				while ( FG.cTable[*in] == 1 ) {
 					x = 10*x + *in++ - '0';
-					if ( x > MAXPOSITIVE2 ) {
+					if ( x > MAXPOSITIVE4 ) {
 						MesPrint("&value in permute transformation too large");
 						if ( error == 0 ) error = 1;
 						return(error);
@@ -471,7 +474,7 @@ illsize:					MesPrint("&Illegal value for base in encode/decode transformation")
 			in++; x = 0;
 			while ( FG.cTable[*in] == 1 ) {
 				x = 10*x + *in++ - '0';
-				if ( x > MAXPOSITIVE2 ) {
+				if ( x > MAXPOSITIVE4 ) {
 					MesPrint("&Number in cycle in a Transform statement too big");
 					if ( error == 0 ) error = 1;
 					return(error);
@@ -832,9 +835,9 @@ WORD RunEncode(PHEAD WORD *fun, WORD *args, WORD *info)
 	tt = fun+FUNHEAD; tstop = fun+fun[1]; totarg = 0;
 	while ( tt < tstop ) { totarg++; NEXTARG(tt); }
 	arg1 = args[1];
-	if ( arg1 >= MAXPOSITIVE2 ) { arg1 = totarg-(arg1-MAXPOSITIVE2); }
+	if ( arg1 >= MAXPOSITIVE4 ) { arg1 = totarg-(arg1-MAXPOSITIVE4); }
 	arg2 = args[2];
-	if ( arg2 >= MAXPOSITIVE2 ) { arg2 = totarg-(arg2-MAXPOSITIVE2); }
+	if ( arg2 >= MAXPOSITIVE4 ) { arg2 = totarg-(arg2-MAXPOSITIVE4); }
 	if ( arg1 > totarg || arg2 > totarg ) return(0);
 
 	if ( info[2] == BASECODE ) {
@@ -1022,9 +1025,9 @@ WORD RunDecode(PHEAD WORD *fun, WORD *args, WORD *info)
 	tt = fun+FUNHEAD; tstop = fun+fun[1]; totarg = 0;
 	while ( tt < tstop ) { totarg++; NEXTARG(tt); }
 	arg1 = args[1];
-	if ( arg1 >= MAXPOSITIVE2 ) { arg1 = totarg-(arg1-MAXPOSITIVE2); }
+	if ( arg1 >= MAXPOSITIVE4 ) { arg1 = totarg-(arg1-MAXPOSITIVE4); }
 	arg2 = args[2];
-	if ( arg2 >= MAXPOSITIVE2 ) { arg2 = totarg-(arg2-MAXPOSITIVE2); }
+	if ( arg2 >= MAXPOSITIVE4 ) { arg2 = totarg-(arg2-MAXPOSITIVE4); }
 	if ( arg1 > totarg && arg2 > totarg ) return(0);
 	if ( info[2] == BASECODE ) {
 		base = info[3];
@@ -1669,9 +1672,9 @@ WORD RunImplode(WORD *fun, WORD *args)
 	tt = fun+FUNHEAD; tstop = fun+fun[1]; totarg = 0;
 	while ( tt < tstop ) { totarg++; NEXTARG(tt); }
 	arg1 = args[1];
-	if ( arg1 >= MAXPOSITIVE2 ) { arg1 = totarg-(arg1-MAXPOSITIVE2); }
+	if ( arg1 >= MAXPOSITIVE4 ) { arg1 = totarg-(arg1-MAXPOSITIVE4); }
 	arg2 = args[2];
-	if ( arg2 >= MAXPOSITIVE2 ) { arg2 = totarg-(arg2-MAXPOSITIVE2); }
+	if ( arg2 >= MAXPOSITIVE4 ) { arg2 = totarg-(arg2-MAXPOSITIVE4); }
 /*
 	Get the proper range in forward direction and the number of arguments
 */
@@ -1715,7 +1718,7 @@ WORD RunImplode(WORD *fun, WORD *args)
 			t = f + *f - 1;
 			i1 = ABS(*t);
 			if ( ( i1 > 3 ) || ( t[-1] != 1 ) ) return(0); /* Not an integer or too big */
-			if ( (UWORD)(t[-2]) > MAXPOSITIVE2 ) return(0); /* number too big */
+			if ( (UWORD)(t[-2]) > MAXPOSITIVE4 ) return(0); /* number too big */
 			if ( f[ARGHEAD] == i1+1 ) { /* numerical which is fine */
 				*tt++ = -1; *tt++ = 0; *tt++ = t[-2];
 				if ( *t < 0 ) { *tt++ = -1; }
@@ -1794,7 +1797,7 @@ WORD RunImplode(WORD *fun, WORD *args)
 	t = tstop; outspace = 0;
 	while ( t < tt ) {
 		if ( t[0] == -1 ) {
-			if ( t[2] > MAXPOSITIVE2 ) { return(0); /* Number too big */ }
+			if ( t[2] > MAXPOSITIVE4 ) { return(0); /* Number too big */ }
 			outspace += 2;
 		}
 		else if ( t[1] == 1 && t[2] == 1 && t[3] == 1 ) { outspace += 2; }
@@ -1872,9 +1875,9 @@ WORD RunExplode(PHEAD WORD *fun, WORD *args)
 	tt = fun+FUNHEAD; tstop = fun+fun[1]; totarg = 0;
 	while ( tt < tstop ) { totarg++; NEXTARG(tt); }
 	arg1 = args[1];
-	if ( arg1 >= MAXPOSITIVE2 ) { arg1 = totarg-(arg1-MAXPOSITIVE2); }
+	if ( arg1 >= MAXPOSITIVE4 ) { arg1 = totarg-(arg1-MAXPOSITIVE4); }
 	arg2 = args[2];
-	if ( arg2 >= MAXPOSITIVE2 ) { arg2 = totarg-(arg2-MAXPOSITIVE2); }
+	if ( arg2 >= MAXPOSITIVE4 ) { arg2 = totarg-(arg2-MAXPOSITIVE4); }
 /*
 	Get the proper range in forward direction and the number of arguments
 */
@@ -1925,7 +1928,7 @@ WORD RunExplode(PHEAD WORD *fun, WORD *args)
 				 || ff[ARGHEAD+1] != SYMBOL || ABS(ff[ARGHEAD+7]) != 3
 				 || ff[ARGHEAD+6] != 1 ) return(0);
 			numzero = ff[ARGHEAD+5];
-			if ( numzero >= MAXPOSITIVE2 ) return(0);
+			if ( numzero >= MAXPOSITIVE4 ) return(0);
 			numzero--;
 			if ( reverse ) {
 				if ( ff[ARGHEAD+7] > 0 ) { *tonew++ = -SNUMBER; *tonew++ = 1; }
@@ -2087,9 +2090,9 @@ WORD RunReverse(PHEAD WORD *fun, WORD *args)
 	  tt = fun+FUNHEAD; tstop = fun+fun[1]; totarg = 0;
 	  while ( tt < tstop ) { totarg++; NEXTARG(tt); }
 	  arg1 = args[1];
-	  if ( arg1 >= MAXPOSITIVE2 ) { arg1 = totarg-(arg1-MAXPOSITIVE2); }
+	  if ( arg1 >= MAXPOSITIVE4 ) { arg1 = totarg-(arg1-MAXPOSITIVE4); }
 	  arg2 = args[2];
-	  if ( arg2 >= MAXPOSITIVE2 ) { arg2 = totarg-(arg2-MAXPOSITIVE2); }
+	  if ( arg2 >= MAXPOSITIVE4 ) { arg2 = totarg-(arg2-MAXPOSITIVE4); }
 /*
 	  We need to:
 		1: get pointers to the arguments
@@ -2122,9 +2125,9 @@ WORD RunReverse(PHEAD WORD *fun, WORD *args)
 	else {	/* Tensors */
 	  tt = fun+FUNHEAD; tstop = fun+fun[1]; totarg = tstop - tt;
 	  arg1 = args[1];
-	  if ( arg1 >= MAXPOSITIVE2 ) { arg1 = totarg-(arg1-MAXPOSITIVE2); }
+	  if ( arg1 >= MAXPOSITIVE4 ) { arg1 = totarg-(arg1-MAXPOSITIVE4); }
 	  arg2 = args[2];
-	  if ( arg2 >= MAXPOSITIVE2 ) { arg2 = totarg-(arg2-MAXPOSITIVE2); }
+	  if ( arg2 >= MAXPOSITIVE4 ) { arg2 = totarg-(arg2-MAXPOSITIVE4); }
 /*
 	  We need to:
 		1: get pointers to the arguments
@@ -2180,8 +2183,8 @@ WORD RunCycle(PHEAD WORD *fun, WORD *args, WORD *info)
 	  tt = fun+FUNHEAD; tstop = fun+fun[1]; totarg = 0;
 	  while ( tt < tstop ) { totarg++; NEXTARG(tt); }
 	  arg1 = args[1]; arg2 = args[2];
-	  if ( arg1 >= MAXPOSITIVE2 ) { arg1 = totarg-(arg1-MAXPOSITIVE2); }
-	  if ( arg2 >= MAXPOSITIVE2 ) { arg2 = totarg-(arg2-MAXPOSITIVE2); }
+	  if ( arg1 >= MAXPOSITIVE4 ) { arg1 = totarg-(arg1-MAXPOSITIVE4); }
+	  if ( arg2 >= MAXPOSITIVE4 ) { arg2 = totarg-(arg2-MAXPOSITIVE4); }
 	  if ( arg1 > arg2 ) { n = arg1; arg1 = arg2; arg2 = n; }
 	  if ( arg2 > totarg ) return(0);
 /*
@@ -2238,8 +2241,8 @@ WORD RunCycle(PHEAD WORD *fun, WORD *args, WORD *info)
 	else {	/* Tensors */
 	  tt = fun+FUNHEAD; tstop = fun+fun[1]; totarg = tstop - tt;
 	  arg1 = args[1]; arg2 = args[2];
-	  if ( arg1 >= MAXPOSITIVE2 ) { arg1 = totarg-(arg1-MAXPOSITIVE2); }
-	  if ( arg2 >= MAXPOSITIVE2 ) { arg2 = totarg-(arg2-MAXPOSITIVE2); }
+	  if ( arg1 >= MAXPOSITIVE4 ) { arg1 = totarg-(arg1-MAXPOSITIVE4); }
+	  if ( arg2 >= MAXPOSITIVE4 ) { arg2 = totarg-(arg2-MAXPOSITIVE4); }
 	  if ( arg1 > arg2 ) { n = arg1; arg1 = arg2; arg2 = n; }
 	  if ( arg2 > totarg ) return(0);
 /*
@@ -2326,9 +2329,9 @@ WORD RunAddArg(PHEAD WORD *fun, WORD *args)
 	tt = fun+FUNHEAD; tstop = fun+fun[1]; totarg = 0;
 	while ( tt < tstop ) { totarg++; NEXTARG(tt); }
 	arg1 = args[1];
-	if ( arg1 >= MAXPOSITIVE2 ) { arg1 = totarg-(arg1-MAXPOSITIVE2); }
+	if ( arg1 >= MAXPOSITIVE4 ) { arg1 = totarg-(arg1-MAXPOSITIVE4); }
 	arg2 = args[2];
-	if ( arg2 >= MAXPOSITIVE2 ) { arg2 = totarg-(arg2-MAXPOSITIVE2); }
+	if ( arg2 >= MAXPOSITIVE4 ) { arg2 = totarg-(arg2-MAXPOSITIVE4); }
 /*
 	We need to:
 		1: establish that we actually need to add something
@@ -2411,9 +2414,9 @@ WORD RunIsLyndon(PHEAD WORD *fun, WORD *args, int par)
 	tt = fun+FUNHEAD; tstop = fun+fun[1]; totarg = 0;
 	while ( tt < tstop ) { totarg++; NEXTARG(tt); }
 	arg1 = args[1];
-	if ( arg1 >= MAXPOSITIVE2 ) { arg1 = totarg-(arg1-MAXPOSITIVE2); }
+	if ( arg1 >= MAXPOSITIVE4 ) { arg1 = totarg-(arg1-MAXPOSITIVE4); }
 	arg2 = args[2];
-	if ( arg2 >= MAXPOSITIVE2 ) { arg2 = totarg-(arg2-MAXPOSITIVE2); }
+	if ( arg2 >= MAXPOSITIVE4 ) { arg2 = totarg-(arg2-MAXPOSITIVE4); }
 	if ( arg1 > totarg || arg2 > totarg ) return(-1);
 /*
 	Now make a list of the relevant arguments.
@@ -2491,9 +2494,9 @@ WORD RunToLyndon(PHEAD WORD *fun, WORD *args, int par)
 	tt = fun+FUNHEAD; tstop = fun+fun[1]; totarg = 0;
 	while ( tt < tstop ) { totarg++; NEXTARG(tt); }
 	arg1 = args[1];
-	if ( arg1 >= MAXPOSITIVE2 ) { arg1 = totarg-(arg1-MAXPOSITIVE2); }
+	if ( arg1 >= MAXPOSITIVE4 ) { arg1 = totarg-(arg1-MAXPOSITIVE4); }
 	arg2 = args[2];
-	if ( arg2 >= MAXPOSITIVE2 ) { arg2 = totarg-(arg2-MAXPOSITIVE2); }
+	if ( arg2 >= MAXPOSITIVE4 ) { arg2 = totarg-(arg2-MAXPOSITIVE4); }
 	if ( arg1 > totarg || arg2 > totarg ) return(-1);
 /*
 	Now make a list of the relevant arguments.
@@ -2609,19 +2612,19 @@ int TestArgNum(int n, int totarg, WORD *args)
 				return(1);
 			case NUMARG:
 				if ( n == args[1] ) return(1);
-				if ( args[1] >= MAXPOSITIVE2 ) {
-					x1 = args[1]-MAXPOSITIVE2;
+				if ( args[1] >= MAXPOSITIVE4 ) {
+					x1 = args[1]-MAXPOSITIVE4;
 					if ( totarg-x1 == n ) return(1);
 				}
 				args += 2;
 				break;
 			case ARGRANGE:
-				if ( args[1] >= MAXPOSITIVE2 ) {
-					x1 = totarg-(args[1]-MAXPOSITIVE2);
+				if ( args[1] >= MAXPOSITIVE4 ) {
+					x1 = totarg-(args[1]-MAXPOSITIVE4);
 				}
 				else x1 = args[1];
-				if ( args[2] >= MAXPOSITIVE2 ) {
-					x2 = totarg-(args[2]-MAXPOSITIVE2);
+				if ( args[2] >= MAXPOSITIVE4 ) {
+					x2 = totarg-(args[2]-MAXPOSITIVE4);
 				}
 				else x2 = args[2];
 				if ( x1 >= x2 ) {
@@ -2675,7 +2678,7 @@ WORD PutArgInScratch(WORD *arg,UWORD *scrat)
 			first,#2 or #2,first
 			#1,last  or last,#1
 			first,last or last,first
-		First is represented by 1. Last is represented by MAXPOSITIVE2.
+		First is represented by 1. Last is represented by MAXPOSITIVE4.
 
 		par = 0: we need the = after.
 		par = 1: we need a , or '\0' after.
@@ -2714,14 +2717,14 @@ UBYTE *ReadRange(UBYTE *s, WORD *out, int par)
 				s++; x1 = 0;
 				while ( *s >= '0' && *s <= '9' ) {
 					x1 = 10*x1 + *s++ - '0';
-					if ( x1 >= MAXPOSITIVE2 ) {
-						MesPrint("&Fixed range indicator bigger than %l",(LONG)MAXPOSITIVE2);
+					if ( x1 >= MAXPOSITIVE4 ) {
+						MesPrint("&Fixed range indicator bigger than %l",(LONG)MAXPOSITIVE4);
 						return(0);
 					}
 				}
-				x1 += MAXPOSITIVE2;
+				x1 += MAXPOSITIVE4;
 			}
-			else x1 = MAXPOSITIVE2;
+			else x1 = MAXPOSITIVE4;
 		}
 		else {
 			MesPrint("&Illegal keyword inside range specification");
@@ -2732,8 +2735,8 @@ UBYTE *ReadRange(UBYTE *s, WORD *out, int par)
 		x1 = 0;
 		while ( *s >= '0' && *s <= '9' ) {
 			x1 = x1*10 + *s++ - '0';
-			if ( x1 >= MAXPOSITIVE2 ) {
-				MesPrint("&Fixed range indicator bigger than %l",(LONG)MAXPOSITIVE2);
+			if ( x1 >= MAXPOSITIVE4 ) {
+				MesPrint("&Fixed range indicator bigger than %l",(LONG)MAXPOSITIVE4);
 				return(0);
 			}
 		}
@@ -2760,14 +2763,14 @@ UBYTE *ReadRange(UBYTE *s, WORD *out, int par)
 				s++; x2 = 0;
 				while ( *s >= '0' && *s <= '9' ) {
 					x2 = 10*x2 + *s++ - '0';
-					if ( x2 >= MAXPOSITIVE2 ) {
-						MesPrint("&Fixed range indicator bigger than %l",(LONG)MAXPOSITIVE2);
+					if ( x2 >= MAXPOSITIVE4 ) {
+						MesPrint("&Fixed range indicator bigger than %l",(LONG)MAXPOSITIVE4);
 						return(0);
 					}
 				}
-				x2 += MAXPOSITIVE2;
+				x2 += MAXPOSITIVE4;
 			}
-			else x2 = MAXPOSITIVE2;
+			else x2 = MAXPOSITIVE4;
 		}
 		else {
 			MesPrint("&Illegal keyword inside range specification");
@@ -2778,8 +2781,8 @@ UBYTE *ReadRange(UBYTE *s, WORD *out, int par)
 		x2 = 0;
 		while ( *s >= '0' && *s <= '9' ) {
 			x2 = x2*10 + *s++ - '0';
-			if ( x2 >= MAXPOSITIVE2 ) {
-				MesPrint("&Fixed range indicator bigger than %l",(LONG)MAXPOSITIVE2);
+			if ( x2 >= MAXPOSITIVE4 ) {
+				MesPrint("&Fixed range indicator bigger than %l",(LONG)MAXPOSITIVE4);
 				return(0);
 			}
 		}

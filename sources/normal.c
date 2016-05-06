@@ -2197,6 +2197,40 @@ redoshort:
 				}
 				pnco[nnco++] = t;
 				break;
+			case PUTFIRST : /* First argument should be a function, second a number */
+				if ( ( t[2] & DIRTYFLAG ) != 0 && t[FUNHEAD] <= -FUNCTION
+				&& t[FUNHEAD+1] == -SNUMBER && t[FUNHEAD+2] > 0 ) {
+					WORD *rr = t+t[1], *mm = t+FUNHEAD+3, *tt, *tt1, *tt2, num = 0;
+/*
+					now count the arguments. If not enough: no action.
+*/
+					while ( mm < rr ) { num++; NEXTARG(mm); }
+					if ( num < t[FUNHEAD+2] ) { pnco[nnco++] = t; break; }
+					*t = -t[FUNHEAD]; mm = t+FUNHEAD+3;
+					i = t[FUNHEAD+2];
+					while ( --i > 0 ) { NEXTARG(mm); }
+					tt = TermMalloc("Select_"); /* Move selected out of the way */
+                    tt1 = tt;
+					if ( *mm > 0 ) {
+						for ( i = 0; i < *mm; i++ ) *tt1++ = mm[i];
+					}
+					else if ( *mm <= -FUNCTION ) { *tt1++ = *mm; }
+					else { *tt1++ = mm[0]; *tt1++ = mm[1]; }
+					tt2 = t+FUNHEAD+3;
+					while ( tt2 < mm ) *tt1++ = *tt2++;
+					i = tt1-tt; tt1 = tt; tt2 = t+FUNHEAD;
+					NCOPY(tt2,tt1,i);
+					TermFree(tt,"Select_");
+					NEXTARG(mm);
+					while ( mm < rr ) *tt2++ = *mm++;
+					t[1] = tt2 - t;
+					rr = term + *term;
+					while ( mm < rr ) *tt2++ = *mm++;
+					*term = tt2-term;
+					goto Restart;
+				}
+				else pnco[nnco++] = t;
+				break;
 			case INTFUNCTION :
 /*
 				Can be resolved if the first argument is a number

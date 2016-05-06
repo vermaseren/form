@@ -261,6 +261,7 @@ typedef INT64 MLONG;  /* See commentary in minos.h. */
 #define MAXPOSITIVE    ((LONG)(TOPBITONLY - 1))        /* 0x00007FFFL  */
 #define MAXLONG        ((LONG)(TOPLONGBITONLY - 1))    /* 0x7FFFFFFFL  */
 #define MAXPOSITIVE2   (MAXPOSITIVE / 2)               /* 0x00003FFFL  */
+#define MAXPOSITIVE4   (MAXPOSITIVE / 4)               /* 0x00001FFFL  */
 
 /*
  * alignof(type) returns the number of bytes used in the alignment of
