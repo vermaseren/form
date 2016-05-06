@@ -812,6 +812,33 @@ to be reconstructed. An example of this kind of use is given in the simple
 Groebner basis procedure that is in the packages library in the FORM site.
 
 %--#] prime_ : 
+%--#[ putfirst_ :
+
+\section{putfirst\_}\index{putfirst\_}\index{function!putfirst\_}
+\label{funputfirst}
+
+\noindent 
+This function allows one to select a given argument by its number. The 
+syntax is:
+\begin{verbatim}
+      putfirst_(functionname,numberofargument,arguments.....);
+\end{verbatim}
+It will select the indicated argument in the argument field indicated by 
+arguments and output this as the first argument in the indicated function. 
+This argument will then be followed by the remaining arguments.
+Example:
+\begin{verbatim}
+    S   a,a1,...,a10;
+    CF  f,g;
+    L   F = g(a,a1,...,a10);
+    id  g(?a) = putfirst_(f,4,?a);
+    Print;
+    .end
+   F =
+      f(a3,a,a1,a2,a4,a5,a6,a7,a8,a9,a10);
+\end{verbatim}
+
+%--#] putfirst_ : 
 %--#[ random_ :
 
 \section{random\_}\index{random\_}\index{function!random\_}
