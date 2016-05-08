@@ -3745,7 +3745,13 @@ redo:	AR.BracketOn++;
 		}
 		*p = c;
 	}
-	if ( *p ) MesCerr("separator",p);
+	if ( *p ) {
+		MesCerr("separator",p);
+		AC.BracketNormalize = 0;
+		AT.WorkPointer = WorkSave;
+		error = 1;
+		return(error);
+	}
 	*to++ = 1; *to++ = 1; *to++ = 3;
 	*AT.WorkPointer = to - AT.WorkPointer;
 	AT.WorkPointer = to;

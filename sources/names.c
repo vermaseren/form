@@ -1561,11 +1561,14 @@ int DoTable(UBYTE *s, int par)
 {
 	GETIDENTITY
 	UBYTE *name, *p, *inp, c;
-	int i, j, sparseflag = 0, rflag = 0, checkflag = 0, error = 0, ret, oldcbufnum;
-	WORD funnum, type, *OldWork, *w, *newp, *flags1;
+	int i, j, k, sparseflag = 0, rflag = 0, checkflag = 0;
+	int error = 0, ret, oldcbufnum, oldEside;
+	WORD funnum, type, *OldWork, *w, *ww, *t, *tt, *flags1, oldnumrhs,oldnumlhs;
+	LONG oldcpointer;
 	MINMAX *mm, *mm1;
 	LONG x, y;
 	TABLES T;
+	CBUF *C;
 	
 	while ( *s == ',' ) s++;
 	do {
@@ -1748,11 +1751,18 @@ IllForm:	MesPrint("&Illegal name or option in table declaration");
 	Now we redo the 'function part' and send it to the compiler.
 	The prototype has to be picked up properly.
 */
+	AT.WorkPointer++; /* We needs one extra word later */
 	OldWork = AT.WorkPointer;
 	oldcbufnum = AC.cbufnum;
 	AC.cbufnum = T->bufnum;
+	C = cbuf+AC.cbufnum;
+	oldcpointer = C->Pointer - C->Buffer;
+	oldnumlhs = C->numlhs;
+	oldnumrhs = C->numrhs;
+	AddLHS(AC.cbufnum);
 	while ( s >= name ) *--inp = *s--;
-	AC.ProtoType = w = AT.WorkPointer;
+	w = AT.WorkPointer;
+	AC.ProtoType = w;
 	*w++ = SUBEXPRESSION;
 	*w++ = SUBEXPSIZE;
 	*w++ = 0;
@@ -1762,87 +1772,140 @@ IllForm:	MesPrint("&Illegal name or option in table declaration");
 	AC.WildC = w;
 	AC.NwildC = 0;
 	AT.WorkPointer = w + 4*AM.MaxWildcards;
-	AddLHS(AC.cbufnum);
-	if ( ( ret = CompileAlgebra(inp,LHSIDE,AC.ProtoType) ) < 0 ) error = 1;
-	else {
-		if ( AC.NwildC && SortWild(w,AC.NwildC) ) error = 1;
-		w += AC.NwildC;
-		i = w-OldWork;
-		OldWork[1] = i;
-		j = cbuf[AC.cbufnum].Pointer-cbuf[AC.cbufnum].lhs[ret] + T->numind*2-3;
-#ifdef WITHPTHREADS
-		T->prototypeSize = ((i+j)*sizeof(WORD)+2*sizeof(WORD *)) * AM.totalnumberofthreads;
-		T->prototype = (WORD **)Malloc1(T->prototypeSize,"table prototype");
-		T->pattern = T->prototype + AM.totalnumberofthreads;
-		{
-			WORD *t; int k, n;
-			t = (WORD *)(T->pattern + AM.totalnumberofthreads);
-			for ( n = 0; n < AM.totalnumberofthreads; n++ ) {
-				T->prototype[n] = t;
-				for ( k = 0; k < i; k++ ) *t++ = OldWork[k];
-			}
-			T->pattern[0] = t;
-		}
-#else
-		T->prototypeSize = (i+j)*sizeof(WORD);
-		T->prototype = (WORD *)Malloc1(T->prototypeSize, "table prototype");
-		T->pattern = T->prototype + i;
-		while ( --i >= 0 ) T->prototype[i] = OldWork[i];
-#endif
-/*
-		Now check whether wildcards get converted to dollars (for PARALLEL)
-		We give a warning!
-*/
-	{
-		WORD *tw, *twstop;
-#ifdef WITHPTHREADS
-		tw = T->prototype[0];
-#else
-		tw = T->prototype;
-#endif
-		twstop = tw + tw[1]; tw += SUBEXPSIZE;
-		while ( tw < twstop ) {
-			if ( *tw == LOADDOLLAR ) {
-				Warning("The use of $-variable assignments in tables disables parallel\
- execution for the whole program.");
-				AM.hparallelflag |= NOPARALLEL_TBLDOLLAR;
-				AC.mparallelflag |= NOPARALLEL_TBLDOLLAR;
-				AddPotModdollar(tw[2]);
-			}
-			tw += tw[1];
-		}
+	if ( ( ret = CompileAlgebra(inp,LHSIDE,AC.ProtoType) ) < 0 ) {
+		error = 1; goto FinishUp;
 	}
+	if ( AC.NwildC && SortWild(w,AC.NwildC) ) error = 1;
+	w += AC.NwildC;
+	i = w-OldWork;
+	OldWork[1] = i;
+/*
+	Basically we have to pull this pattern through Generator in case
+	there are functions inside functions, or parentheses.
+	We have to temporarily disable the .tabl to avoid problems with
+	TestSub.
+	Essential: we need to start NewSort twice to avoid the PutOut routines.
+	The ground pattern is sitting in C->numrhs, but it could be that it
+	has subexpressions in it. Hence it has to be worked out as the lhs in
+	id statements (in comexpr.c).
+*/
+	OldWork[2] = C->numrhs;
+	*w++ = 1; *w++ = 1; *w++ = 3;
+	OldWork[-1] = w-OldWork+1;
+	AT.WorkPointer = w;
+	ww = C->rhs[C->numrhs];
+	for ( j = 0; j < *ww; j++ ) w[j] = ww[j];
+	AT.WorkPointer = w+*w;
+	if ( *ww == 0 || ww[*ww] != 0 ) {
+		MesPrint("&Illegal table pattern definition");
+		AC.lhdollarflag = 0;
+		error = 1;
+	}
+	if ( error ) goto FinishUp;
 
-		w = cbuf[AC.cbufnum].lhs[ret] + 1;
-#ifdef WITHPTHREADS
-		newp = T->pattern[0];
-#else
-		newp = T->pattern;
-#endif
-		*newp++ = *w++; *newp++ = *w++ + T->numind*2;
-		for ( i = 2; i < FUNHEAD; i++ ) *newp++ = *w++;
-		for ( i = 0; i < T->numind; i++ ) { *newp++ = -SNUMBER; *newp++ = 0; j -= 2; }
-		if ( sparseflag ) { w += 2; j -= 4; }
-		for ( i = FUNHEAD; i < j; i++ ) *newp++ = *w++;
-#ifdef WITHPTHREADS
-		if ( sparseflag ) T->pattern[0][1] = newp - T->pattern[0];
-/*
-		Now we have to copy the pattern for each worker thread
-*/
-		{
-			WORD *t;
-			int k,n;
-			k = newp - T->pattern[0];
-			for ( n = 1; n < AM.totalnumberofthreads; n++ ) {
-				T->pattern[n] = newp; t = T->pattern[0];
-				for ( i = 0; i < k; i++ ) *newp++ = *t++;
-			}
-		}
-#else
-		if ( sparseflag ) T->pattern[1] = newp - T->pattern;
-#endif
+	if ( NewSort(BHEAD0) || NewSort(BHEAD0) ) { error = 1; goto FinishUp; }
+	AN.RepPoint = AT.RepCount + 1;
+	AC.lhdollarflag = 0; oldEside = AR.Eside; AR.Eside = LHSIDE;
+	AR.Cnumlhs = C->numlhs;
+	functions[funnum].tabl = 0;
+	if ( Generator(BHEAD w,C->numlhs) ) {
+		functions[funnum].tabl = T;
+		AR.Eside = oldEside;
+		LowerSortLevel(); LowerSortLevel(); goto FinishUp;
 	}
-	AT.WorkPointer = OldWork;
+	functions[funnum].tabl = T;
+	AR.Eside = oldEside;
+	AT.WorkPointer = w;
+	if ( EndSort(BHEAD w,0) < 0 ) { LowerSortLevel(); goto FinishUp; }
+	if ( *w == 0 || *(w+*w) != 0 ) {
+		MesPrint("&Irregular pattern in table definition");
+		error = 1;
+		goto FinishUp;
+	}
+	LowerSortLevel();
+	if ( AC.lhdollarflag ) {
+		MesPrint("&Unexpanded dollar variables are not allowed in table definition");
+		error = 1;
+		goto FinishUp;
+	}
+	AT.WorkPointer = ww = w + *w;
+	if ( ww[-1] != 3 || ww[-2] != 1 || ww[-3] != 1 ) {
+		MesPrint("&Coefficient of pattern in table definition should be 1.");
+		error = 1;
+		goto FinishUp;
+	}
+	AC.DumNum = 0;
+/*
+	Now we have to allocate space for prototype+pattern
+	In the case of TFORM we need extra pointers, because each worker has its own
+*/
+	j = *w + T->numind*2-3;
+#ifdef WITHPTHREADS
+	{ int n;
+	T->prototypeSize = ((i+j)*sizeof(WORD)+2*sizeof(WORD *)) * AM.totalnumberofthreads;
+	T->prototype = (WORD **)Malloc1(T->prototypeSize,"table prototype");
+	T->pattern = T->prototype + AM.totalnumberofthreads;
+	t = (WORD *)(T->pattern + AM.totalnumberofthreads);
+	for ( n = 0; n < AM.totalnumberofthreads; n++ ) {
+		T->prototype[n] = t;
+		for ( k = 0; k < i; k++ ) *t++ = OldWork[k];
+	}
+	T->pattern[0] = t;
+	j--; w++;
+	w[1] += T->numind*2;
+	for ( k = 0; k < FUNHEAD; k++ ) *t++ = *w++;
+	j -= FUNHEAD;
+	for ( k = 0; k < T->numind; k++ ) { *t++ = -SNUMBER; *t++ = 0; j -= 2; }
+	for ( k = 0; k < j; k++ ) *t++ = *w++;
+	if ( sparseflag ) T->pattern[0][1] = t - T->pattern[0];
+	k = t - T->pattern[0];
+	for ( n = 1; n < AM.totalnumberofthreads; n++ ) {
+		T->pattern[n] = t; tt = T->pattern[0];
+		for ( i = 0; i < k; i++ ) *t++ = *tt++;
+	}
+	}
+#else
+	T->prototypeSize = (i+j)*sizeof(WORD);
+	T->prototype = (WORD *)Malloc1(T->prototypeSize, "table prototype");
+	T->pattern = T->prototype + i;
+	for ( k = 0; k < i; k++ ) T->prototype[k] = OldWork[k];
+	t = T->pattern;
+	j--; w++;
+	w[1] += T->numind*2;
+	for ( k = 0; k < FUNHEAD; k++ ) *t++ = *w++;
+	j -= FUNHEAD;
+	for ( k = 0; k < T->numind; k++ ) { *t++ = -SNUMBER; *t++ = 0; j -= 2; }
+	for ( k = 0; k < j; k++ ) *t++ = *w++;
+	if ( sparseflag ) T->pattern[1] = t - T->pattern;
+#endif
+/*
+	At this point we can pop the compilerbuffer.
+*/
+	C->Pointer = C->Buffer + oldcpointer;
+	C->numrhs = oldnumrhs;
+	C->numlhs = oldnumlhs;
+/*
+	Now check whether wildcards get converted to dollars (for PARALLEL)
+	We give a warning!
+*/
+#ifdef WITHPTHREADS
+	t = T->prototype[0];
+#else
+	t = T->prototype;
+#endif
+	tt = t + t[1]; t += SUBEXPSIZE;
+	while ( t < tt ) {
+		if ( *t == LOADDOLLAR ) {
+			Warning("The use of $-variable assignments in tables disables parallel\
+ execution for the whole program.");
+			AM.hparallelflag |= NOPARALLEL_TBLDOLLAR;
+			AC.mparallelflag |= NOPARALLEL_TBLDOLLAR;
+			AddPotModdollar(t[2]);
+		}
+		t += t[1];
+	}
+FinishUp:;
+	AT.WorkPointer = OldWork - 1;
 	AC.cbufnum = oldcbufnum;
 	if ( T->sparse ) ClearTableTree(T);
 	if ( ( sparseflag & 2 ) != 0 ) {

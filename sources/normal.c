@@ -5119,7 +5119,7 @@ WORD BracketNormalize(PHEAD WORD *term)
 	}
 	if ( tstart[1] > 5 ) { /* sorting */
 		r = tstart+2; ii = tstart[1]-2;
-		for ( i = 0; i < ii; ii += 3 ) {
+		for ( i = 0; i < ii; i += 3 ) {
 			if ( r[i] < r[i+1] ) EXCH(r[i],r[i+1])
 		}
 		for ( i = 0; i < ii-3; i += 3 ) {	/* Bubble sort */
@@ -5139,7 +5139,7 @@ WORD BracketNormalize(PHEAD WORD *term)
 	}
 	else if ( tstart[1] == 2 ) { tt = tstart; }
 	else {
-		if ( tstart[3] > tstart[4] ) EXCH(tstart[3],tstart[4])
+		if ( tstart[2] > tstart[3] ) EXCH(tstart[2],tstart[3])
 		tt = tstart+5;
 	}
 
