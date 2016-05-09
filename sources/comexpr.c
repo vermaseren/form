@@ -1065,12 +1065,25 @@ int CoFill(UBYTE *inp)
 	p2 = p;
 	c = *p; *p = 0;
 	if ( ( GetVar(inp,&type,&funnum,CFUNCTION,WITHAUTO) == NAMENOTFOUND )
-	|| ( T = functions[funnum].tabl ) == 0 || c != '(' ) {
+	|| ( T = functions[funnum].tabl ) == 0 || ( T->numind > 0 && c != '(' ) ) {
 		MesPrint("&%s should be a table with argument(s)",inp);
 		*p = c; return(1);
 	}
 	oldT = T;
 	*p++ = c;
+	if ( T->numind == 0 ) {
+		if ( c == '(' ) {
+			if ( *p != ')' ) {
+				c = *p; *p = 0;
+				MesPrint("&%s should be a table without arguments",inp);
+				*p = c; return(1);
+			}
+			else { p++; }
+		}
+		else { p--; }
+		sum = 0;
+		goto andagain;
+	}
 	for ( sum = 0, i = 0, w = oldwp; i < T->numind; i++ ) {
 		ParseSignedNumber(x,p);
 		if ( FG.cTable[p[-1]] != 1 || ( *p != ',' && *p != ')' ) ) {
@@ -1170,7 +1183,8 @@ redef:;
 		T->tablepointers[sum+5] = 0;
 #endif
 	}
-	p++; if ( *p != '=' ) {
+	if ( T->numind ) { p++; }
+	if ( *p != '=' ) {
 		MesPrint("&Fill statement misses = sign after the table element");
 		AC.cbufnum = oldcbufnum;
 		AT.WorkPointer = oldwp;

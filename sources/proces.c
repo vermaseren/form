@@ -1670,12 +1670,15 @@ DoSpec:
 					mm = T->mm;
 					if ( T->sparse ) {
 						t = t1+FUNHEAD;
-						for ( i = 0; i < T->numind; i++, t += 2 ) {
+						if ( T->numind ) { isp = 0; }
+						else {
+						  for ( i = 0; i < T->numind; i++, t += 2 ) {
 							if ( *t != -SNUMBER ) break;
-						}
-						if ( i < T->numind ) goto teststrict;
+						  }
+						  if ( i < T->numind ) goto teststrict;
 
-						isp = FindTableTree(T,t1+FUNHEAD,2);
+						  isp = FindTableTree(T,t1+FUNHEAD,2);
+						}
 						if ( isp < 0 ) {
 teststrict:					if ( T->strict == -2 ) {
 								rhsnumber = AM.zerorhs;
