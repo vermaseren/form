@@ -1707,6 +1707,7 @@ IllForm:	MesPrint("&Illegal name or option in table declaration");
 		T->flags = (WORD *)Malloc1(x*sizeof(WORD),"table flags");
 		mm = T->mm;
 		inp = p;
+		if ( *inp != ')' ) inp++;
 		T->totind = 0;			/* At the moment there are this many */
 		T->tablepointers = 0;
 		T->reserved = 0;
@@ -1915,7 +1916,7 @@ FinishUp:;
 }
 
 /*
-  	#] DoTable : 
+  	#] DoTable :
   	#[ CoTable :
 */
 
