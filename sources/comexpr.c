@@ -1082,6 +1082,7 @@ int CoFill(UBYTE *inp)
 		}
 		else { p--; }
 		sum = 0;
+		p3 = p;
 		goto andagain;
 	}
 	for ( sum = 0, i = 0, w = oldwp; i < T->numind; i++ ) {

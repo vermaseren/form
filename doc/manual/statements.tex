@@ -347,10 +347,12 @@ when the contents of individual brackets of an expression can be picked up
 (see \ref{brackets}). \vspace{4mm}
 
 \noindent The list of names can contain names of symbols, vectors, 
-functions and tensors. In addition it can contain dotproducts. There should 
-be only one bracket or antibracket (see \ref{substaabrackets}) statement 
-in each module. If there is more than one, only the last one has an effect. 
-\vspace{4mm}
+functions, tensors and sets. In addition it can contain dotproducts. There 
+should be only one bracket or antibracket (see \ref{substaabrackets}) 
+statement in each module. If there is more than one, only the last one has 
+an effect. The presence of a set has the same effect as having all the 
+symbolic elements of the set declared in the (anti)bracket 
+statement.\vspace{4mm}
 
 \noindent The presence of a $+$ or $-$ after the bracket (or anti bracket) 
 refers to potential indexing of the brackets\index{brackets!indexing}. 
@@ -2234,7 +2236,7 @@ matches allowed. This means that once this number is reached, no further
 matches are produced.}
 \vspace{10mm}
 
-%--#] identify :
+%--#] identify : 
 %--#[ idnew :
 
 \section{idnew}
@@ -5285,18 +5287,20 @@ See also & functions (\ref{substafunctions}), ctable (\ref{substactable}),
 very special instance of a function. Hence it can be either 
 commuting\index{commuting} or noncommuting\index{noncommuting}. The table 
 statement declares its function to be commuting. A noncommuting table is 
-declared with the ntable\index{ntable} statement (see \ref{substantable}). A 
-table has a number of table\index{table indices} indices (at least one!) 
-and after that it can have a number of regular function arguments with or 
-without wildcarding. The table indices can come in two varieties: 
-matrix\index{matrix like} like or sparse\index{sparse}. In the case of a 
-matrix like table\index{table!matrix like}, for each of the indices a range 
-has to be specified. \FORM\ then reserves a location for each of the 
-potential elements. For a sparse table\index{table!sparse} one only 
-specifies the number of indices. Sparse tables take less space, but they 
-require more time searching whether an element has been defined. For a 
-matrix like table \FORM\ can look directly whether an element has been 
-defined. Hence one has a tradeoff between space and speed.\vspace{4mm}
+declared with the ntable\index{ntable} statement (see \ref{substantable}). 
+A table has a number of table\index{table indices} indices (in the case of 
+zero indices the table has to be sparse) and after that it can have a 
+number of regular function arguments with or without wildcarding. The table 
+indices can come in two varieties: matrix\index{matrix like} like or 
+sparse\index{sparse}. In the case of a matrix like table\index{table!matrix 
+like}, for each of the indices a range has to be specified. \FORM\ then 
+reserves a location for each of the potential elements. For a sparse 
+table\index{table!sparse} one only specifies the number of indices. Sparse 
+tables take less space, but they require more time searching whether an 
+element has been defined. For a matrix like table \FORM\ can look directly 
+whether an element has been defined. Hence one has a tradeoff between space 
+and speed. A zero-dimensional (sparse) table has of course only a single 
+element.\vspace{4mm}
 
 \noindent Table elements are defined with the fill\index{fill} statement (see 
 \ref{substafill}). Fill statements for table elements cannot be used before 

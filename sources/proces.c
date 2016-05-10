@@ -1180,15 +1180,13 @@ Important: we may not have enough spots here
 			if ( functions[funnum-FUNCTION].spec == 0
 				|| ( t[2] & (DIRTYFLAG|CLEANPRF) ) != 0 ) { funflag = 1; }
 			if ( *t <= MAXBUILTINFUNCTION ) {
+			  if ( *t <= DELTAP && *t >= THETA ) { /* Speeds up by 2 or 3 compares */
 			  if ( *t == THETA || *t == THETA2 ) {
 				WORD *tstop, *tt2, kk;
 				tstop = t + t[1];
 				tt2 = t + FUNHEAD;
 				while ( tt2 < tstop ) {
-					if ( *tt2 > 0 && tt2[1] != 0 ) {
-/*						funflag = 2; */
-						goto DoSpec;
-					}
+					if ( *tt2 > 0 && tt2[1] != 0 ) goto DoSpec;
 					NEXTARG(tt2)
 				}
 				if ( !AT.RecFlag ) {
@@ -1210,10 +1208,7 @@ Important: we may not have enough spots here
 				tstop = t + t[1];
 				tt2 = t + FUNHEAD;
 				while ( tt2 < tstop ) {
-					if ( *tt2 > 0 && tt2[1] != 0 ) {
-/*						funflag = 2; */
-						goto DoSpec;
-					}
+					if ( *tt2 > 0 && tt2[1] != 0 ) goto DoSpec;
 					NEXTARG(tt2)
 				}
 				if ( !AT.RecFlag ) {
@@ -1229,7 +1224,7 @@ Important: we may not have enough spots here
 						goto ReStart;
 					}
 				}
-			  }
+			  } }
 			  else if ( *t == DISTRIBUTION && t[FUNHEAD] == -SNUMBER
 			  && t[FUNHEAD+1] >= -2 && t[FUNHEAD+1] <= 2
 			  && t[FUNHEAD+2] == -SNUMBER
@@ -1670,7 +1665,7 @@ DoSpec:
 					mm = T->mm;
 					if ( T->sparse ) {
 						t = t1+FUNHEAD;
-						if ( T->numind ) { isp = 0; }
+						if ( T->numind == 0 ) { isp = 0; }
 						else {
 						  for ( i = 0; i < T->numind; i++, t += 2 ) {
 							if ( *t != -SNUMBER ) break;
