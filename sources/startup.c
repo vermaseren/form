@@ -515,7 +515,7 @@ VOID ReserveTempFiles(int par)
 	FG.fname2 = (char *)Malloc1(sizeof(UBYTE)*(i+14),"name for sort files");
 	s = AM.TempSortDir; t = (UBYTE *)FG.fname2;
 	while ( *s && *s != ':' ) { if ( *s == '\\' ) s++; *t++ = *s++; }
-	if ( (char *)t > FG.fname && t[-1] != SEPARATOR && t[-1] != ALTSEPARATOR )
+	if ( (char *)t > FG.fname2 && t[-1] != SEPARATOR && t[-1] != ALTSEPARATOR )
 		*t++ = SEPARATOR;
 	*t = 0;
 	tenddir2 = t;
@@ -541,7 +541,7 @@ VOID ReserveTempFiles(int par)
 	  }
 	  else{
 		/*[04nov2003 mt]:*/
-^		/*FG.fname = "/formswapx/xxxxxxxxxxxxxxxxxxxxx";*/
+		/*FG.fname = "/formswapx/xxxxxxxxxxxxxxxxxxxxx";*/
 		FG.fname = calloc(128,1);
 		strcpy(FG.fname,"/formswapx/xxxxxxxxxxxxxxxxxxxxx");
 		/*:[04nov2003 mt]*/
@@ -630,7 +630,7 @@ classic:;
 /*
 	Now we should asign a name to the main sort file and the two stage 4 files.
 */
-	AM.S0->file.name = (char *)Malloc1(sizeof(char)*i,"name for temporary files");
+	AM.S0->file.name = (char *)Malloc1(sizeof(char)*(i+14),"name for temporary files");
 	s = (UBYTE *)AM.S0->file.name;
 	t = (UBYTE *)FG.fname2;
 	i = 1;
@@ -645,20 +645,20 @@ classic:;
 	if ( par == 0 ) {
 		s = (UBYTE *)((void *)(FG.fname2)); i = 0;
 		while ( *s ) { s++; i++; }
-		s = (UBYTE *)Malloc1(sizeof(char)*i,"name for stage4 file a");
+		s = (UBYTE *)Malloc1(sizeof(char)*(i+1),"name for stage4 file a");
 		AR.FoStage4[1].name = (char *)s;
 		t = (UBYTE *)FG.fname2;
 		while ( *t ) *s++ = *t++;
 		s[-2] = '4'; s[-1] = 'a'; *s = 0;
 		s = (UBYTE *)((void *)(FG.fname)); i = 0;
 		while ( *s ) { s++; i++; }
-		s = (UBYTE *)Malloc1(sizeof(char)*i,"name for stage4 file b");
+		s = (UBYTE *)Malloc1(sizeof(char)*(i+1),"name for stage4 file b");
 		AR.FoStage4[0].name = (char *)s;
 		t = (UBYTE *)FG.fname;
 		while ( *t ) *s++ = *t++;
 		s[-2] = '4'; s[-1] = 'b'; *s = 0;
 		for ( j = 0; j < 3; j++ ) {
-			s = (UBYTE *)Malloc1(sizeof(char)*i,"name for scratch file");
+			s = (UBYTE *)Malloc1(sizeof(char)*(i+1),"name for scratch file");
 			AR.Fscr[j].name = (char *)s;
 			t = (UBYTE *)FG.fname;
 			while ( *t ) *s++ = *t++;
