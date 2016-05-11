@@ -967,6 +967,8 @@ typedef int (*TFUN1)();
 #define TOLYNDONR   16
 #define ADDARG      17
 #define MULTIPLYARG 18
+#define DROPARG     19
+#define SELECTARG   20
 
 #define BASECODE 1
 #define YESLYNDON 1

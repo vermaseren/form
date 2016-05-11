@@ -2226,7 +2226,7 @@ that produce the same topology. The interesting thing here is that one does
 not have to know the topology to produce all topologically equivalent 
 terms.
 
-There are two options in the id,all statement:
+There are two options in the id,all statement: \hfill \\
 \lefttabitem{all(n[ormalize])}
 \tabitem{Here the final answer is divided by the number of matches. In the 
 example above that would be 4.}
@@ -5713,7 +5713,15 @@ in
 hence two indicators, separated by a comma. If the first number is bigger 
 than the second the arguments will be processed in reverse order whenever 
 this is relevant. In the descriptions below we will indicate the range by 
-(r1,r2).
+(r1,r2). The numbers in the above examples may be also dollar variables, 
+provided they evaluate into numbers at the time of execution. Hence
+\begin{verbatim}
+	($x,$y)
+	($x,last)
+	(last-$x,last-2)
+\end{verbatim}
+are potentially legal ranges. One may not use \verb:$x+2: or other 
+expressions that still need evaluation.
 
 The transformations that are allowed currently are:
  
@@ -5767,7 +5775,8 @@ Instead of ``tointegralnotation'' one may also use the word
 \leftvitem{3.2cm}{permute\index{transform!permute}\index{permute}}
 \rightvitem{13cm}{permute(1,3,5)(2,6) will permute the arguments 
 according to the cycles indicated. The cycles are executed in order and may 
-overlap. Their number is not restricted.}
+overlap. Their number is not restricted. In the above example
+f(a1,a2,a3,a4,a5,a6,a7) $\rightarrow$ f(a3,a6,a5,a4,a1,a2,a7)}
 
 \leftvitem{3.2cm}{reverse\index{transform!reverse}\index{reverse}}
 \rightvitem{13cm}{reverse(r1,r2) reverses the order of the arguments in 
@@ -5777,7 +5786,9 @@ specified range.}
 \rightvitem{13cm}{cycle(r1,r2)=+/-number will perform a cyclic permutation 
 of the indicated range of arguments. If the number is preceeded by a - the 
 cycling is to the left. If there is a plus sign the cycling is to the 
-right. Note that either the plus or the minus sign is mandatory.}
+right. Note that either the plus or the minus sign is mandatory. The number 
+following the +/- sign is also allowed to be a dollar variable provided it 
+evaluates to a legal number during execution.}
 
 \leftvitem{3.2cm}{islyndon\index{transform!islyndon}\index{islyndon}}
 \rightvitem{13cm}{islyndon(r1,r2)=(yes,no) will test whether the indicated 
@@ -5804,6 +5815,21 @@ tolyndon-(r1,r2)=(yes,no), while for the maximum one may use
 tolyndon$>$(r1,r2)=(yes,no) or tolyndon+(r1,r2)=(yes,no). If the output is 
 not a Lyndon word, this will be due to that it is a minimum or maximum that 
 is not unique.}
+
+\leftvitem{3.2cm}{addargs\index{transform!addargs}\index{addargs}}
+\rightvitem{13cm}{addargs(r1,r2) replaces the indicated range of arguments 
+by their sum. This is effectively the inverse of the SplitArg statement.}
+
+\leftvitem{3.2cm}{mulargs\index{transform!mulargs}\index{mulargs}}
+\rightvitem{13cm}{mulargs(r1,r2) replaces the indicated range of arguments 
+by their product. This is effectively the inverse of the FactArg statement.}
+
+\leftvitem{3.2cm}{droparg\index{transform!droparg}\index{droparg}}
+\rightvitem{13cm}{droparg(r1,r2) removes the indicated range of arguments.}
+
+\leftvitem{3.2cm}{selectarg\index{transform!selectarg}\index{selectarg}}
+\rightvitem{13cm}{selectarg(r1,r2) removes all arguments with the exception 
+of the indicated range of arguments.}
 
 Some Examples. Assume that we have some Multiple Zeta Values\index{Multiple 
 Zeta Value}\index{MZV} (see the papers on harmonic sums\index{harmonic 

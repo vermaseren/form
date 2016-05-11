@@ -467,20 +467,36 @@ illsize:					MesPrint("&Illegal value for base in encode/decode transformation")
 				one = -1;
 			}
 			else {
-				MesPrint("&Cycle in a Transform statement should be followed by =+/-number");
+				MesPrint("&Cycle in a Transform statement should be followed by =+/-number/$");
 				if ( error == 0 ) error = 1;
 				return(error);
 			}
 			in++; x = 0;
-			while ( FG.cTable[*in] == 1 ) {
+			if ( *in == '$' ) {
+				UBYTE *si = in;
+				in++; si = in;
+				while ( FG.cTable[*in] == 0 || FG.cTable[*in] == 1 ) in++;
+				c = *in; *in = 0;
+				if ( ( x = GetDollar(si) ) < 0 ) {
+					MesPrint("&Undefined $-variable in transform,cycle statement.");
+					error = 1;
+				}
+				*in = c;
+				if ( one < 0 ) x += MAXPOSITIVE4;
+				x += MAXPOSITIVE2;
+				*wp++ = x;
+			}
+			else {
+			  while ( FG.cTable[*in] == 1 ) {
 				x = 10*x + *in++ - '0';
 				if ( x > MAXPOSITIVE4 ) {
 					MesPrint("&Number in cycle in a Transform statement too big");
 					if ( error == 0 ) error = 1;
 					return(error);
 				}
+			  }
+			  *wp++ = x*one;
 			}
-			*wp++ = x*one;
 			*work = wp-work;
 			work = wp; *wp++ = 0;
 			s = in;
@@ -551,7 +567,7 @@ illsize:					MesPrint("&Illegal value for base in encode/decode transformation")
 /*
  		#] addarg : 
  		#[ mularg :
-
+*/
 		else if ( ( StrICmp(s,(UBYTE *)"mulargs" ) == 0 )
 			   || ( StrICmp(s,(UBYTE *)"multiplyargs" ) == 0 ) ) {
 			type = MULTIPLYARG;
@@ -568,8 +584,46 @@ illsize:					MesPrint("&Illegal value for base in encode/decode transformation")
 			work = wp; *wp++ = 0;
 			s = in;
 		}
-
+/*
  		#] mularg : 
+ 		#[ droparg :
+*/
+		else if ( StrICmp(s,(UBYTE *)"dropargs" ) == 0 ) {
+			type = DROPARG;
+			*ss = c;
+			if ( ( in = ReadRange(in,range,1) ) == 0 ) {
+				if ( error == 0 ) error = 1;
+				return(error);
+			}
+			*wp++ = ARGRANGE;
+			*wp++ = range[0];
+			*wp++ = range[1];
+			*wp++ = type;
+			*work = wp-work;
+			work = wp; *wp++ = 0;
+			s = in;
+		}
+/*
+ 		#] droparg : 
+ 		#[ selectarg :
+*/
+		else if ( StrICmp(s,(UBYTE *)"selectargs" ) == 0 ) {
+			type = SELECTARG;
+			*ss = c;
+			if ( ( in = ReadRange(in,range,1) ) == 0 ) {
+				if ( error == 0 ) error = 1;
+				return(error);
+			}
+			*wp++ = ARGRANGE;
+			*wp++ = range[0];
+			*wp++ = range[1];
+			*wp++ = type;
+			*work = wp-work;
+			work = wp; *wp++ = 0;
+			s = in;
+		}
+/*
+ 		#] selectarg : 
 */
 		else {
 			MesPrint("&Unknown transformation inside a Transform statement: %s",s);
@@ -660,12 +714,10 @@ hit:;
 						if ( RunAddArg(BHEAD fun,args) ) goto abo;
 						out = fun + fun[1];
 						break;
-/*
 					case MULTIPLYARG:
 						if ( RunMulArg(BHEAD fun,args) ) goto abo;
 						out = fun + fun[1];
 						break;
-*/
 					case ISLYNDON:
 						if ( ( retval = RunIsLyndon(BHEAD fun,args,1) ) < -1 ) goto abo;
 						goto returnvalues;
@@ -766,6 +818,14 @@ abortlyndon:;
 							fun[1] = out-fun;
 						}
 						break;
+					case DROPARG:
+						if ( RunDropArg(BHEAD fun,args) ) goto abo;
+						out = fun + fun[1];
+						break;
+					case SELECTARG:
+						if ( RunSelectArg(BHEAD fun,args) ) goto abo;
+						out = fun + fun[1];
+						break;
 					default:
 						MLOCK(ErrorMessageLock);
 						MesPrint("Irregular code in execution of transform statement");
@@ -834,10 +894,7 @@ WORD RunEncode(PHEAD WORD *fun, WORD *args, WORD *info)
 	}
 	tt = fun+FUNHEAD; tstop = fun+fun[1]; totarg = 0;
 	while ( tt < tstop ) { totarg++; NEXTARG(tt); }
-	arg1 = args[1];
-	if ( arg1 >= MAXPOSITIVE4 ) { arg1 = totarg-(arg1-MAXPOSITIVE4); }
-	arg2 = args[2];
-	if ( arg2 >= MAXPOSITIVE4 ) { arg2 = totarg-(arg2-MAXPOSITIVE4); }
+	if ( FindRange(BHEAD args,&arg1,&arg2,totarg) ) return(-1);
 	if ( arg1 > totarg || arg2 > totarg ) return(0);
 
 	if ( info[2] == BASECODE ) {
@@ -1024,10 +1081,7 @@ WORD RunDecode(PHEAD WORD *fun, WORD *args, WORD *info)
 	}
 	tt = fun+FUNHEAD; tstop = fun+fun[1]; totarg = 0;
 	while ( tt < tstop ) { totarg++; NEXTARG(tt); }
-	arg1 = args[1];
-	if ( arg1 >= MAXPOSITIVE4 ) { arg1 = totarg-(arg1-MAXPOSITIVE4); }
-	arg2 = args[2];
-	if ( arg2 >= MAXPOSITIVE4 ) { arg2 = totarg-(arg2-MAXPOSITIVE4); }
+	if ( FindRange(BHEAD args,&arg1,&arg2,totarg) ) return(-1);
 	if ( arg1 > totarg && arg2 > totarg ) return(0);
 	if ( info[2] == BASECODE ) {
 		base = info[3];
@@ -1659,6 +1713,7 @@ nextt:;
 
 WORD RunImplode(WORD *fun, WORD *args)
 {
+	GETIDENTITY
 	WORD *tt, *tstop, totarg, arg1, arg2, num1, num2, i, i1, n;
 	WORD *f, *t, *ttt, *t4, *ff, *fff;
 	WORD moveup, numzero, outspace;
@@ -1671,10 +1726,7 @@ WORD RunImplode(WORD *fun, WORD *args)
 	}
 	tt = fun+FUNHEAD; tstop = fun+fun[1]; totarg = 0;
 	while ( tt < tstop ) { totarg++; NEXTARG(tt); }
-	arg1 = args[1];
-	if ( arg1 >= MAXPOSITIVE4 ) { arg1 = totarg-(arg1-MAXPOSITIVE4); }
-	arg2 = args[2];
-	if ( arg2 >= MAXPOSITIVE4 ) { arg2 = totarg-(arg2-MAXPOSITIVE4); }
+	if ( FindRange(BHEAD args,&arg1,&arg2,totarg) ) return(-1);
 /*
 	Get the proper range in forward direction and the number of arguments
 */
@@ -1874,10 +1926,7 @@ WORD RunExplode(PHEAD WORD *fun, WORD *args)
 	}
 	tt = fun+FUNHEAD; tstop = fun+fun[1]; totarg = 0;
 	while ( tt < tstop ) { totarg++; NEXTARG(tt); }
-	arg1 = args[1];
-	if ( arg1 >= MAXPOSITIVE4 ) { arg1 = totarg-(arg1-MAXPOSITIVE4); }
-	arg2 = args[2];
-	if ( arg2 >= MAXPOSITIVE4 ) { arg2 = totarg-(arg2-MAXPOSITIVE4); }
+	if ( FindRange(BHEAD args,&arg1,&arg2,totarg) ) return(-1);
 /*
 	Get the proper range in forward direction and the number of arguments
 */
@@ -2089,10 +2138,7 @@ WORD RunReverse(PHEAD WORD *fun, WORD *args)
 	if ( functions[fun[0]-FUNCTION].spec != TENSORFUNCTION ) {
 	  tt = fun+FUNHEAD; tstop = fun+fun[1]; totarg = 0;
 	  while ( tt < tstop ) { totarg++; NEXTARG(tt); }
-	  arg1 = args[1];
-	  if ( arg1 >= MAXPOSITIVE4 ) { arg1 = totarg-(arg1-MAXPOSITIVE4); }
-	  arg2 = args[2];
-	  if ( arg2 >= MAXPOSITIVE4 ) { arg2 = totarg-(arg2-MAXPOSITIVE4); }
+	  if ( FindRange(BHEAD args,&arg1,&arg2,totarg) ) return(-1);
 /*
 	  We need to:
 		1: get pointers to the arguments
@@ -2124,10 +2170,7 @@ WORD RunReverse(PHEAD WORD *fun, WORD *args)
 	}
 	else {	/* Tensors */
 	  tt = fun+FUNHEAD; tstop = fun+fun[1]; totarg = tstop - tt;
-	  arg1 = args[1];
-	  if ( arg1 >= MAXPOSITIVE4 ) { arg1 = totarg-(arg1-MAXPOSITIVE4); }
-	  arg2 = args[2];
-	  if ( arg2 >= MAXPOSITIVE4 ) { arg2 = totarg-(arg2-MAXPOSITIVE4); }
+	  if ( FindRange(BHEAD args,&arg1,&arg2,totarg) ) return(-1);
 /*
 	  We need to:
 		1: get pointers to the arguments
@@ -2172,19 +2215,36 @@ OverWork:;
 
 WORD RunCycle(PHEAD WORD *fun, WORD *args, WORD *info)
 {
-	WORD *tt, totarg, *tstop, arg1, arg2, n, num, i, j, *f, *f1, *f2, x;
+	WORD *tt, totarg, *tstop, arg1, arg2, n, num, i, j, *f, *f1, *f2, x, ncyc, cc;
 	if ( *args != ARGRANGE ) {
 		MLOCK(ErrorMessageLock);
 		MesPrint("Illegal range encountered in RunCycle");
 		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
+	ncyc = info[1];
+	if ( ncyc >= MAXPOSITIVE2 ) { /* $ variable */
+		ncyc -= MAXPOSITIVE2;
+		if ( ncyc >= MAXPOSITIVE4 ) {
+			ncyc -= MAXPOSITIVE4; /* -$ */
+			cc = -1;
+		}
+		else cc = 1;
+		ncyc = DolToNumber(BHEAD ncyc);
+		if ( AN.ErrorInDollar ) {
+			MesPrint(" Error in Dollar variable in transform,cycle()=$");
+			return(-1);
+		}
+		if ( ncyc >= MAXPOSITIVE4 || ncyc <= -MAXPOSITIVE4 ) {
+			MesPrint(" Illegal value from Dollar variable in transform,cycle()=$");
+			return(-1);
+		}
+		ncyc *= cc;
+	}
 	if ( functions[fun[0]-FUNCTION].spec != TENSORFUNCTION ) {
 	  tt = fun+FUNHEAD; tstop = fun+fun[1]; totarg = 0;
 	  while ( tt < tstop ) { totarg++; NEXTARG(tt); }
-	  arg1 = args[1]; arg2 = args[2];
-	  if ( arg1 >= MAXPOSITIVE4 ) { arg1 = totarg-(arg1-MAXPOSITIVE4); }
-	  if ( arg2 >= MAXPOSITIVE4 ) { arg2 = totarg-(arg2-MAXPOSITIVE4); }
+	  if ( FindRange(BHEAD args,&arg1,&arg2,totarg) ) return(-1);
 	  if ( arg1 > arg2 ) { n = arg1; arg1 = arg2; arg2 = n; }
 	  if ( arg2 > totarg ) return(0);
 /*
@@ -2203,8 +2263,7 @@ WORD RunCycle(PHEAD WORD *fun, WORD *args, WORD *info)
 /*
 	  Now the cycle(s). First minimize the number of cycles.
 */
-	  info++;
-	  x = *info;
+	  x = ncyc;
 	  if ( x >= i ) {
 		x %= i;
 		if ( x > i/2 ) x -= i;
@@ -2240,9 +2299,7 @@ WORD RunCycle(PHEAD WORD *fun, WORD *args, WORD *info)
 	}
 	else {	/* Tensors */
 	  tt = fun+FUNHEAD; tstop = fun+fun[1]; totarg = tstop - tt;
-	  arg1 = args[1]; arg2 = args[2];
-	  if ( arg1 >= MAXPOSITIVE4 ) { arg1 = totarg-(arg1-MAXPOSITIVE4); }
-	  if ( arg2 >= MAXPOSITIVE4 ) { arg2 = totarg-(arg2-MAXPOSITIVE4); }
+	  if ( FindRange(BHEAD args,&arg1,&arg2,totarg) ) return(-1);
 	  if ( arg1 > arg2 ) { n = arg1; arg1 = arg2; arg2 = n; }
 	  if ( arg2 > totarg ) return(0);
 /*
@@ -2261,8 +2318,7 @@ WORD RunCycle(PHEAD WORD *fun, WORD *args, WORD *info)
 /*
 	  Now the cycle(s). First minimize the number of cycles.
 */
-	  info++;
-	  x = *info;
+	  x = ncyc;
 	  if ( x >= i ) {
 		x %= i;
 		if ( x > i/2 ) x -= i;
@@ -2328,10 +2384,7 @@ WORD RunAddArg(PHEAD WORD *fun, WORD *args)
 	}
 	tt = fun+FUNHEAD; tstop = fun+fun[1]; totarg = 0;
 	while ( tt < tstop ) { totarg++; NEXTARG(tt); }
-	arg1 = args[1];
-	if ( arg1 >= MAXPOSITIVE4 ) { arg1 = totarg-(arg1-MAXPOSITIVE4); }
-	arg2 = args[2];
-	if ( arg2 >= MAXPOSITIVE4 ) { arg2 = totarg-(arg2-MAXPOSITIVE4); }
+	if ( FindRange(BHEAD args,&arg1,&arg2,totarg) ) return(-1);
 /*
 	We need to:
 		1: establish that we actually need to add something
@@ -2392,6 +2445,135 @@ WORD RunAddArg(PHEAD WORD *fun, WORD *args)
 
 /*
  		#] RunAddArg : 
+ 		#[ RunMulArg :
+*/
+
+WORD RunMulArg(PHEAD WORD *fun, WORD *args)
+{
+	WORD *t, totarg, *tstop, arg1, arg2, n, *f, nb, *m, i, *w;
+	WORD *scratch, argbuf[20], argsize, *where, *oldcpointer, *newterm;
+	CBUF *C = cbuf + AT.ebufnum;
+	if ( *args != ARGRANGE ) {
+		MLOCK(ErrorMessageLock);
+		MesPrint("Illegal range encountered in RunMulArg");
+		MUNLOCK(ErrorMessageLock);
+		Terminate(-1);
+	}
+	if ( functions[fun[0]-FUNCTION].spec == TENSORFUNCTION ) {
+		MLOCK(ErrorMessageLock);
+		MesPrint("Illegal attempt to multiply arguments of a tensor in MulArg");
+		MUNLOCK(ErrorMessageLock);
+		Terminate(-1);
+	}
+	t = fun+FUNHEAD; tstop = fun+fun[1]; totarg = 0;
+	while ( t < tstop ) { totarg++; NEXTARG(t); }
+	if ( FindRange(BHEAD args,&arg1,&arg2,totarg) ) return(-1);
+	if ( arg2 < arg1 ) { n = arg1; arg1 = arg2; arg2 = n; }
+	if ( arg1 > totarg ) return(0);
+	if ( arg2 < 1 ) return(0);
+	if ( arg1 < 1 ) arg1 = 1;
+	if ( arg2 > totarg ) arg2 = totarg;
+	if ( arg1 == arg2 ) return(0);
+/*
+	Now we move the arguments to a compiler buffer
+	Then we create a term in the workspace that is the product of
+	subexpression pointers to the objects in the compiler buffer.
+	Next we let Generator work out that term.
+	Finally we pick up the results from EndSort and put it in the function.
+*/
+	f = fun+FUNHEAD; n = 1;
+	while ( n < arg1 ) { n++; NEXTARG(f) }
+	t = f;
+	if ( fun >= AT.WorkSpace && fun < AT.WorkTop ) {
+		if ( AT.WorkPointer < fun+fun[1] ) AT.WorkPointer = fun+fun[1];
+	}
+	scratch = AT.WorkPointer;
+	w = scratch+1;
+	nb = C->numrhs; oldcpointer = C->Pointer;
+	while ( n <= arg2 ) {
+		if ( *t > 0 ) {
+			argsize = *t - ARGHEAD; where = t + ARGHEAD; t += *t;
+		}
+		else if ( *t <= -FUNCTION ) {
+			argbuf[0] = FUNHEAD+4; argbuf[1] = -*t++; argbuf[2] = FUNHEAD;
+			for ( i = 2; i < FUNHEAD; i++ ) argbuf[i+1] = 0;
+			argbuf[FUNHEAD+1] = 1;
+			argbuf[FUNHEAD+2] = 1;
+			argbuf[FUNHEAD+3] = 3;
+			argsize = argbuf[0];
+			where = argbuf;
+		}
+		else if ( *t == -SYMBOL ) {
+			argbuf[0] = 8; argbuf[1] = SYMBOL; argbuf[2] = 4;
+			argbuf[3] = t[1]; argbuf[4] = 1;
+			argbuf[5] = 1; argbuf[6] = 1; argbuf[7] = 3;
+			argsize = 8; t += 2;
+			where = argbuf;
+		}
+		else if ( *t == -VECTOR || *t == -MINVECTOR ) {
+			argbuf[0] = 7; argbuf[1] = INDEX; argbuf[2] = 3;
+			argbuf[3] = t[1];
+			argbuf[4] = 1; argbuf[5] = 1;
+			if ( *t == -MINVECTOR ) argbuf[6] = -3;
+			else argbuf[6] = 3;
+			argsize = 7; t += 2;
+			where = argbuf;
+		}
+		else if ( *t == -INDEX ) {
+			argbuf[0] = 7; argbuf[1] = INDEX; argbuf[2] = 3;
+			argbuf[3] = t[1];
+			argbuf[4] = 1; argbuf[5] = 1; argbuf[6] = 3;
+			argsize = 7; t += 2;
+			where = argbuf;
+		}
+		else if ( *t == -SNUMBER ) {
+			if ( t[1] < 0 ) {
+				argbuf[0] = 4; argbuf[1] = -t[1]; argbuf[2] = 1; argbuf[3] = -3;
+			}
+			else {
+				argbuf[0] = 4; argbuf[1] = t[1]; argbuf[2] = 1; argbuf[3] = 3;
+			}
+			argsize = 4; t += 2;
+			where = argbuf;
+		}
+/*
+		Now add the argbuf to AT.ebufnum
+*/
+		m = AddRHS(AT.ebufnum,1);
+		while ( (m + argsize + 10) > C->Top ) m = DoubleCbuffer(AT.ebufnum,m);
+		for ( i = 0; i < argsize; i++ ) m[i] = where[i];
+		m[i] = 0;
+		C->Pointer = m + i + 1;
+		n++;
+		*w++ = SUBEXPRESSION; *w++ = SUBEXPSIZE; *w++ = C->numrhs; *w++ = 1;
+		*w++ = AT.ebufnum; FILLSUB(w);
+	}
+	*w++ = 1; *w++ = 1; *w++ = 3;
+	*scratch = w-scratch;
+	AT.WorkPointer = w;
+	NewSort(BHEAD0);
+	Generator(BHEAD scratch,AR.Cnumlhs);
+	newterm = AT.WorkPointer;
+	EndSort(BHEAD newterm+ARGHEAD,0);
+	C->Pointer = oldcpointer;
+	C->numrhs = nb;
+	w = newterm+ARGHEAD; while ( *w ) w += *w;
+	*newterm = w-newterm; newterm[1] = 0;
+	if ( ToFast(newterm,newterm) ) {
+		if ( *newterm <= -FUNCTION ) w = newterm+1;
+		else w = newterm+2;
+	}
+	while ( t < tstop ) *w++ = *t++;
+	i = w - newterm;
+	t = newterm; NCOPY(f,t,i);
+	fun[1] = f-fun;
+	AT.WorkPointer = scratch;
+	if ( AT.WorkPointer > AT.WorkSpace && AT.WorkPointer < f ) AT.WorkPointer = f;
+	return(0);
+}
+
+/*
+ 		#] RunMulArg : 
  		#[ RunIsLyndon :
 
 		Determines whether the range constitutes a Lyndon word.
@@ -2413,10 +2595,7 @@ WORD RunIsLyndon(PHEAD WORD *fun, WORD *args, int par)
 	}
 	tt = fun+FUNHEAD; tstop = fun+fun[1]; totarg = 0;
 	while ( tt < tstop ) { totarg++; NEXTARG(tt); }
-	arg1 = args[1];
-	if ( arg1 >= MAXPOSITIVE4 ) { arg1 = totarg-(arg1-MAXPOSITIVE4); }
-	arg2 = args[2];
-	if ( arg2 >= MAXPOSITIVE4 ) { arg2 = totarg-(arg2-MAXPOSITIVE4); }
+	if ( FindRange(BHEAD args,&arg1,&arg2,totarg) ) return(-1);
 	if ( arg1 > totarg || arg2 > totarg ) return(-1);
 /*
 	Now make a list of the relevant arguments.
@@ -2493,10 +2672,7 @@ WORD RunToLyndon(PHEAD WORD *fun, WORD *args, int par)
 	}
 	tt = fun+FUNHEAD; tstop = fun+fun[1]; totarg = 0;
 	while ( tt < tstop ) { totarg++; NEXTARG(tt); }
-	arg1 = args[1];
-	if ( arg1 >= MAXPOSITIVE4 ) { arg1 = totarg-(arg1-MAXPOSITIVE4); }
-	arg2 = args[2];
-	if ( arg2 >= MAXPOSITIVE4 ) { arg2 = totarg-(arg2-MAXPOSITIVE4); }
+	if ( FindRange(BHEAD args,&arg1,&arg2,totarg) ) return(-1);
 	if ( arg1 > totarg || arg2 > totarg ) return(-1);
 /*
 	Now make a list of the relevant arguments.
@@ -2592,6 +2768,60 @@ OverWork:;
 
 /*
  		#] RunToLyndon : 
+ 		#[ RunDropArg :
+*/
+
+WORD RunDropArg(PHEAD WORD *fun, WORD *args)
+{
+	WORD *t, *tstop, *f, totarg, arg1, arg2, n;
+
+	t = fun+FUNHEAD; tstop = fun+fun[1]; totarg = 0;
+	while ( t < tstop ) { totarg++; NEXTARG(t); }
+	if ( FindRange(BHEAD args,&arg1,&arg2,totarg) ) return(-1);
+	if ( arg2 < arg1 ) { n = arg1; arg1 = arg2; arg2 = n; }
+	if ( arg1 > totarg ) return(0);
+	if ( arg2 < 1 ) return(0);
+	if ( arg1 < 1 ) arg1 = 1;
+	if ( arg2 > totarg ) arg2 = totarg;
+	f = fun+FUNHEAD; n = 1;
+	while ( n < arg1 ) { n++; NEXTARG(f) }
+	t = f;
+	while ( n <= arg2 ) { n++; NEXTARG(t) }
+	while ( t < tstop ) *f++ = *t++;
+	fun[1] = f-fun;
+	return(0);
+}
+
+/*
+ 		#] RunDropArg : 
+ 		#[ RunSelectArg :
+*/
+
+WORD RunSelectArg(PHEAD WORD *fun, WORD *args)
+{
+	WORD *t, *tstop, *f, *tt, totarg, arg1, arg2, n;
+
+	t = fun+FUNHEAD; tstop = fun+fun[1]; totarg = 0;
+	while ( t < tstop ) { totarg++; NEXTARG(t); }
+	if ( FindRange(BHEAD args,&arg1,&arg2,totarg) ) return(-1);
+	if ( arg2 < arg1 ) { n = arg1; arg1 = arg2; arg2 = n; }
+	if ( arg1 > totarg ) return(0);
+	if ( arg2 < 1 ) return(0);
+	if ( arg1 < 1 ) arg1 = 1;
+	if ( arg2 > totarg ) arg2 = totarg;
+	f = fun+FUNHEAD; n = 1; t = f;
+	while ( n < arg1 ) { n++; NEXTARG(t) }
+	while ( n <= arg2 ) {
+		tt = t; NEXTARG(tt)
+		while ( t < tt ) *f++ = *t++;
+		n++;
+	}
+	fun[1] = f-fun;
+	return(0);
+}
+
+/*
+ 		#] RunSelectArg : 
  		#[ TestArgNum :
 
 		Looks whether argument n is contained in any of the ranges
@@ -2601,10 +2831,13 @@ OverWork:;
 			ARGRANGE,num1,num2
 		The object MAKEARGS,num1,num2 is skipped
 		Any other object terminates the range specifications.
+
+		Currently only ARGRANGE is used (10-may-2016)
 */
 
 int TestArgNum(int n, int totarg, WORD *args)
 {
+	GETIDENTITY
 	WORD x1, x2;
 	for(;;) {
 		switch ( *args ) {
@@ -2619,11 +2852,33 @@ int TestArgNum(int n, int totarg, WORD *args)
 				args += 2;
 				break;
 			case ARGRANGE:
-				if ( args[1] >= MAXPOSITIVE4 ) {
+				if ( args[1] >= MAXPOSITIVE2 ) {
+					x1 = args[1] - MAXPOSITIVE2;
+					if ( x1 > MAXPOSITIVE4 ) {
+						x1 = x1 - MAXPOSITIVE4;
+						x1 = DolToNumber(BHEAD x1);
+						x1 = totarg - x1;
+					}
+					else {
+						x1 = DolToNumber(BHEAD x1);
+					}
+				}
+				else if ( args[1] >= MAXPOSITIVE4 ) {
 					x1 = totarg-(args[1]-MAXPOSITIVE4);
 				}
 				else x1 = args[1];
-				if ( args[2] >= MAXPOSITIVE4 ) {
+				if ( args[2] >= MAXPOSITIVE2 ) {
+					x2 = args[2] - MAXPOSITIVE2;
+					if ( x2 > MAXPOSITIVE4 ) {
+						x2 = x2 - MAXPOSITIVE4;
+						x2 = DolToNumber(BHEAD x2);
+						x2 = totarg - x2;
+					}
+					else {
+						x2 = DolToNumber(BHEAD x2);
+					}
+				}
+				else if ( args[2] >= MAXPOSITIVE4 ) {
 					x2 = totarg-(args[2]-MAXPOSITIVE4);
 				}
 				else x2 = args[2];
@@ -2692,7 +2947,7 @@ UBYTE *ReadRange(UBYTE *s, WORD *out, int par)
 
 	SKIPBRA3(in)
 	if ( par == 0 && in[1] != '=' ) {
-		MesPrint("&A range in this type of transform statement should be followed by a = sign");
+		MesPrint("&A range in this type of transform statement should be followed by an = sign");
 		return(0);
 	}
 	else if ( par == 1 && in[1] != ',' && in[1] != '\0' ) {
@@ -2714,12 +2969,23 @@ UBYTE *ReadRange(UBYTE *s, WORD *out, int par)
 		else if ( StrICmp(ss,(UBYTE *)"last") == 0 ) {
 			*s = c;
 			if ( c == '-' ) {
-				s++; x1 = 0;
-				while ( *s >= '0' && *s <= '9' ) {
-					x1 = 10*x1 + *s++ - '0';
-					if ( x1 >= MAXPOSITIVE4 ) {
-						MesPrint("&Fixed range indicator bigger than %l",(LONG)MAXPOSITIVE4);
-						return(0);
+				s++;
+				if ( *s == '$' ) {
+					s++; ss = s;
+					while ( FG.cTable[*s] == 0 || FG.cTable[*s] == 1 ) s++;
+					c = *s; *s = 0;
+					if ( ( x1 = GetDollar(ss) ) < 0 ) goto Error;
+					*s = c;
+					x1 += MAXPOSITIVE2;
+				}
+				else {
+					x1 = 0;
+					while ( *s >= '0' && *s <= '9' ) {
+						x1 = 10*x1 + *s++ - '0';
+						if ( x1 >= MAXPOSITIVE4 ) {
+							MesPrint("&Fixed range indicator bigger than %l",(LONG)MAXPOSITIVE4);
+							return(0);
+						}
 					}
 				}
 				x1 += MAXPOSITIVE4;
@@ -2741,6 +3007,14 @@ UBYTE *ReadRange(UBYTE *s, WORD *out, int par)
 			}
 		}
 	}
+	else if ( *s == '$' ) {
+		s++; ss = s;
+		while ( FG.cTable[*s] == 0 || FG.cTable[*s] == 1 ) s++;
+		c = *s; *s = 0;
+		if ( ( x1 = GetDollar(ss) ) < 0 ) goto Error;
+		*s = c;
+		x1 += MAXPOSITIVE2;
+	}
 	else {
 		MesPrint("&Illegal character in range specification");
 		return(0);
@@ -2760,12 +3034,23 @@ UBYTE *ReadRange(UBYTE *s, WORD *out, int par)
 		else if ( StrICmp(ss,(UBYTE *)"last") == 0 ) {
 			*s = c;
 			if ( c == '-' ) {
-				s++; x2 = 0;
-				while ( *s >= '0' && *s <= '9' ) {
-					x2 = 10*x2 + *s++ - '0';
-					if ( x2 >= MAXPOSITIVE4 ) {
-						MesPrint("&Fixed range indicator bigger than %l",(LONG)MAXPOSITIVE4);
-						return(0);
+				s++;
+				if ( *s == '$' ) {
+					s++; ss = s;
+					while ( FG.cTable[*s] == 0 || FG.cTable[*s] == 1 ) s++;
+					c = *s; *s = 0;
+					if ( ( x2 = GetDollar(ss) ) < 0 ) goto Error;
+					*s = c;
+					x2 += MAXPOSITIVE2;
+				}
+				else {
+					x2 = 0;
+					while ( *s >= '0' && *s <= '9' ) {
+						x2 = 10*x2 + *s++ - '0';
+						if ( x2 >= MAXPOSITIVE4 ) {
+							MesPrint("&Fixed range indicator bigger than %l",(LONG)MAXPOSITIVE4);
+							return(0);
+						}
 					}
 				}
 				x2 += MAXPOSITIVE4;
@@ -2787,6 +3072,14 @@ UBYTE *ReadRange(UBYTE *s, WORD *out, int par)
 			}
 		}
 	}
+	else if ( *s == '$' ) {
+		s++; ss = s;
+		while ( FG.cTable[*s] == 0 || FG.cTable[*s] == 1 ) s++;
+		c = *s; *s = 0;
+		if ( ( x2 = GetDollar(ss) ) < 0 ) goto Error;
+		*s = c;
+		x2 += MAXPOSITIVE2;
+	}
 	else {
 		MesPrint("&Illegal character in range specification");
 		return(0);
@@ -2797,10 +3090,47 @@ UBYTE *ReadRange(UBYTE *s, WORD *out, int par)
 	}
 	out[0] = x1; out[1] = x2;
 	return(in+1);
+Error:
+	MesPrint("&Undefined variable $%s in range",ss);
+	return(0);
 }
 
 /*
  		#] ReadRange : 
+ 		#[ FindRange :
+*/
+
+int FindRange(PHEAD WORD *args, WORD *arg1, WORD *arg2, WORD totarg)
+{
+	WORD n[2], fromlast, i;
+	for ( i = 0; i < 2; i++ ) {
+		n[i] = args[i+1];
+		fromlast = 0;
+		if ( n[i] >= MAXPOSITIVE2 ) { /* This is a dollar variable */
+			n[i] -= MAXPOSITIVE2;
+			if ( n[i] >= MAXPOSITIVE4 ) {
+				fromlast = 1;
+				n[i] -= MAXPOSITIVE4; /* Now we have the number of the dollar variable   */
+			}
+			n[i] = DolToNumber(BHEAD n[i]);
+			if ( AN.ErrorInDollar ) goto Error;
+			if ( fromlast ) n[i] = totarg-n[i];
+		}
+		else if ( n[i] >= MAXPOSITIVE4 ) { n[i] = totarg-(n[i]-MAXPOSITIVE4); }
+		if ( n[i] <= 0 ) goto Error;
+	}
+	*arg1 = n[0];
+	*arg2 = n[1];
+	return(0);
+Error:
+	MLOCK(ErrorMessageLock);
+	MesPrint("Illegal $ value in range while executing transform statement.");
+	MUNLOCK(ErrorMessageLock);
+	return(-1);
+}
+
+/*
+ 		#] FindRange : 
  	#] Transform :
 */
 
