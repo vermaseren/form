@@ -3555,6 +3555,3 @@ calcerror:
 /*
   	#] InvPoly : 
 */
-
-
-

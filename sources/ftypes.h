@@ -1034,4 +1034,3 @@ typedef int (*TFUN1)();
 
 #define READSPECTATORFLAG 3
 #define GLOBALSPECTATORFLAG 1
-

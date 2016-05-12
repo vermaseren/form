@@ -1771,4 +1771,3 @@ LONG GetRunningTime()
 /*
  		#] GetRunningTime : 
 */
-

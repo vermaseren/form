@@ -3831,4 +3831,3 @@ void AddPotModdollar(WORD numdollar)
 /*
   	#] AddPotModdollar : 
 */
-

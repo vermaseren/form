@@ -484,7 +484,7 @@ typedef struct SeTs {
 	LONG	name;				/* Location in names buffer */
 	WORD	type;				/* Symbol, vector, index or function */
 	WORD	first;				/* First element in setstore */
-	WORD	last;				/* Last element in setstore */
+	WORD	last;				/* Last element in setstore (excluding) */
 	WORD	node;
 	WORD	namesize;
 	WORD	dimension;			/* For dimensionality checks */

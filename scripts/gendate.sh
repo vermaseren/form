@@ -54,7 +54,7 @@ ifile=
 ofile=
 date=
 
-# Prase arguments.
+# Parse arguments.
 opt_next=
 for opt_arg do
   if [ "x$opt_next" != x ]; then

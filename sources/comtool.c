@@ -623,4 +623,3 @@ LONG numcommute(WORD *terms, LONG *numterms)
 /*
   	#] numcommute : 
 */
-

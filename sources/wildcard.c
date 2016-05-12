@@ -2505,4 +2505,3 @@ int DenToFunction(WORD *term, WORD numfun)
 /*
   	#] DenToFunction : 
 */
-

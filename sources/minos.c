@@ -1459,4 +1459,3 @@ int DeleteObject(DBASE *d,MLONG tablenumber,char *arguments)
 /*
   	#] DeleteObject : 
 */
-

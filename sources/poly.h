@@ -210,4 +210,3 @@ inline const WORD& poly::operator[] (int i) const {
 inline void poly::termscopy (const WORD *source, int dest, int num) {
 	memcpy (terms+dest, source, num*sizeof(WORD));
 }
-

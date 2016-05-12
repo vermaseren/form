@@ -5507,7 +5507,7 @@ Syntax & topolynomial[,OnlyFunctions[,{\tt<}list of functions{\tt>}]];
 
 \noindent Starting with version 4.0 of \FORM{} some built in operations or
 statements can only deal with symbols and numbers. Examples of this are 
-factorization(\ref{substafactarg}) and output simplification (still to be 
+factorization~(\ref{substafactarg}) and output simplification (still to be 
 implemented). The ToPolynomial statement takes each term, looks for objects 
 that are not symbols to positive powers and replaces them by symbols. If 
 the object has been encountered before, the same symbol will be used, 
@@ -5824,18 +5824,18 @@ by their sum. This is effectively the inverse of the SplitArg statement.}
 \rightvitem{13cm}{mulargs(r1,r2) replaces the indicated range of arguments 
 by their product. This is effectively the inverse of the FactArg statement.}
 
-\leftvitem{3.2cm}{droparg\index{transform!droparg}\index{droparg}}
-\rightvitem{13cm}{droparg(r1,r2) removes the indicated range of arguments.}
+\leftvitem{3.2cm}{dropargs\index{transform!dropargs}\index{dropargs}}
+\rightvitem{13cm}{dropargs(r1,r2) removes the indicated range of arguments.}
 
-\leftvitem{3.2cm}{selectarg\index{transform!selectarg}\index{selectarg}}
-\rightvitem{13cm}{selectarg(r1,r2) removes all arguments with the exception 
+\leftvitem{3.2cm}{selectargs\index{transform!selectargs}\index{selectargs}}
+\rightvitem{13cm}{selectargs(r1,r2) removes all arguments with the exception 
 of the indicated range of arguments.}
 
 Some Examples. Assume that we have some Multiple Zeta Values\index{Multiple 
 Zeta Value}\index{MZV} (see the papers on harmonic sums\index{harmonic 
 sums}, harmonic polylogarithms\index{harmonic polylogarithm} and the MZV 
 data mine\index{MZV data mine}) in the sum notation, but for calculational 
-reasone we want to use a binary encoding (as used in the MZV programs). We 
+reason we want to use a binary encoding (as used in the MZV programs). We 
 could have
 
 \begin{verbatim}

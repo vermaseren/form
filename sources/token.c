@@ -2026,4 +2026,3 @@ int simp6token(SBYTE *tokens, int mode)
  		#] simp6token : 
 	#] Compiler :
 */
-/* temporary commentary for forcing cvs merge */

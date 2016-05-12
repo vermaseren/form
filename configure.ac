@@ -760,7 +760,7 @@ fi
 if test ! \( -z "$LATEX" -o -z "$PDFLATEX" \); then
 	atleastone=yes
 	echo -n "    manual     ( "
-	if test ! -z "$LATEX2HTML"; then
+	if test ! -z "$HTLATEX"; then
 		echo -n "html "
 	fi
 	if test ! -z "$LATEX"; then
@@ -777,6 +777,7 @@ fi
 if test $atleastone = no; then
 	echo "    <NONE>"
 fi
+echo
 echo "Type 'make <format>' in the directories doc/manual or"
 echo "doc/doxygen to generate the respective documentation with"
 echo "the specified format."

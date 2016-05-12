@@ -1948,5 +1948,3 @@ doesmatch:
  		#] ScanFunctions : 
 	#] Patterns :
 */
-
-/* temporary commentary for forcing cvs merge */

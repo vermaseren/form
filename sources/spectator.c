@@ -700,4 +700,3 @@ void ClearSpectators(WORD par)
 /*
   	#] ClearSpectators : 
 */
-
