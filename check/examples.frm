@@ -717,6 +717,30 @@ assert result("G") =~ expr("
       assert result("F") =~ expr("5")
     end
 *--#] Sta_Fill_4 :
+*--#[ Sta_Identify_1 :
+    Vector Q,p1,...,p5,q1,...,q5;
+    Cfunction V(s),replace;
+    Format 60;
+*   This is a t1 topology:
+    L   F = V(Q,p1,p4)*V(p1,p2,p5)*
+            V(p2,p3,Q)*V(p3,p4,p5);
+    $t = term_;
+    id,all,$t*replace_(<p1,p1?>,...,<p5,p5?>) =
+         $t*replace(<p1,q1>,...,<p5,q5>);
+    Print +s;
+    .end
+    assert succeeded?
+    assert result("F") =~ expr("
+       + V(Q,p1,p4)*V(Q,p2,p3)*V(p1,p2,p5)*V(p3,p4,p5)*
+      replace(p1,q1,p2,q2,p3,q3,p4,q4,p5,q5)
+       + V(Q,p1,p4)*V(Q,p2,p3)*V(p1,p2,p5)*V(p3,p4,p5)*
+      replace(p2,q1,p1,q2,p4,q3,p3,q4,p5,q5)
+       + V(Q,p1,p4)*V(Q,p2,p3)*V(p1,p2,p5)*V(p3,p4,p5)*
+      replace(p3,q1,p4,q2,p1,q3,p2,q4,p5,q5)
+       + V(Q,p1,p4)*V(Q,p2,p3)*V(p1,p2,p5)*V(p3,p4,p5)*
+      replace(p4,q1,p3,q2,p2,q3,p1,q4,p5,q5)
+    ")
+*--#] Sta_Identify_1 :
 *--#[ Sta_Keep_1 :
 	CF f,g;
 	I i1;
@@ -966,6 +990,18 @@ assert result("F") =~ expr("
       assert result("F") =~ expr("2147483587*x1 + 2147483579*x2 + 2147483563*x3 + 2147483549*x4")
     end
 *--#] Fun_prime_1 :
+*--#[ Fun_putfirst_1 :
+    S   a,a1,...,a10;
+    CF  f,g;
+    L   F = g(a,a1,...,a10);
+    id  g(?a) = putfirst_(f,4,?a);
+    Print;
+    .end
+    assert succeeded?
+    assert result("F") =~ expr("
+      f(a3,a,a1,a2,a4,a5,a6,a7,a8,a9,a10)
+    ")
+*--#] Fun_putfirst_1 :
 *--#[ Fun_ranperm_1 :
     Function f;
     Symbols x1,...,x5;
