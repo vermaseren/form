@@ -1,6 +1,9 @@
 sudo: false
 language: cpp
 
+git:
+  depth: 10000
+
 addons:
   apt:
     packages:
