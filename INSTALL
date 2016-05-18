@@ -155,13 +155,6 @@ To cleanup the distribution directory, the command
 
 can be used.
 
-The production date printed by the executable will be set to the time of the
-release of the tar-file distribution, or the time of the compilation if you
-use the sources acquired from CVS or GIT. If one wants to have another date
-printed one can give the DATE option to the make command like
-
-    make vorm DATE="11 Nov 2011"
-
 
 Testing
 =======
@@ -185,8 +178,7 @@ you can choose to run one of the commands
 
 to build all documentation in the specified format. If you want to build only
 the manual or the source code documentation, you need to change directory into
-"doc/manual" or "doc/doxygen" before you issue the make commands. The DATE
-option can be used if necessary.
+"doc/manual" or "doc/doxygen" before you issue the make commands.
 
 
 Installation

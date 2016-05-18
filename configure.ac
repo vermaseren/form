@@ -1,42 +1,39 @@
-m4_define([FORM_MAJORVERSION], [4])
-m4_define([FORM_MINORVERSION], [1])
-m4_define([FORM_VERSION], [FORM_MAJORVERSION.FORM_MINORVERSION])
-# set to 'yes' for beta verstions
-m4_define([VERSION_IS_BETA], [no])
+# m4_esyscmd_s implementation for autoconf < 2.64.
+# (Taken from m4sugar.m4 in autoconf 2.69.)
+m4_ifndef([m4_esyscmd_s], [m4_define([m4_esyscmd_s],
+[m4_chomp_all(m4_esyscmd([$1]))])])
+m4_ifndef([m4_chomp_all], [m4_define([m4_chomp_all],
+[m4_format([[%.*s]], m4_bregexp(m4_translit([[$1]], [
+/], [/ ]), [/*$]), [$1])])])
 
-########################################
+# Get the version from
+# (1) .version file available in a tarball, or
+# (2) the latest tag in the repository.
+m4_define([FORM_VERSION], m4_esyscmd_s([
+	if test -f .version; then
+		cat .version
+	else
+		scripts/git-version-gen.sh -C . -v
+	fi
+]))
+
+# Use the serial-tests option of AM_INIT_AUTOMAKE if automake >= 1.13.
+# Assume the automake command is ${AUTOMAKE:-automake} as autoreconf does.
+# It may not work if "make" re-runs a different version of automake.
+m4_define([serial_tests], [m4_esyscmd_s([
+	${AUTOMAKE:-automake} --version | head -1 |
+	awk '{split ($NF,a,"."); if (a[1] >= 2 || (a[1] == 1 && a[2] >= 13)) { print "serial-tests" }}'
+])])
 
 AC_PREREQ(2.59)
 AC_INIT([FORM], FORM_VERSION, [form@nikhef.nl])
 AC_CONFIG_SRCDIR([sources/form3.h])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_AUX_DIR([build-aux])
-
-dnl Use the serial-tests option if automake >= 1.13.
-dnl Assume the automake command is ${AUTOMAKE:-automake} as autoreconf does.
-dnl It may not work if "make" re-runs a different version of automake.
-m4_define([serial_tests], [m4_esyscmd([
-	${AUTOMAKE:-automake} --version | head -1 |
-	awk '{split ($NF,a,"."); if (a[1] >= 2 || (a[1] == 1 && a[2] >= 13)) { print "serial-tests" }}'
-])])
 AM_INIT_AUTOMAKE([1.7 foreign -Wall dist-bzip2] serial_tests)
 
-AC_DEFINE(MAJORVERSION, FORM_MAJORVERSION, [Major version of FORM.])
-AC_DEFINE(MINORVERSION, FORM_MINORVERSION, [Minor version of FORM.])
-AS_IF([test "x[]VERSION_IS_BETA" = xyes],
-	[AC_DEFINE(BETAVERSION, 1, [Define to 1 in the beta version.])])
-
-AH_VERBATIM([PRODUCTIONDATE],
-[/* Set production date. */
-#ifndef PRODUCTIONDATE
-#ifdef HAVE_PRODUCTIONDATE_H
-#include "production-date.h"
-#else
-#define PRODUCTIONDATE __DATE__
-#endif
-#endif])
-AS_IF([test -f $srcdir/sources/production-date.h],
-	[AC_DEFINE(HAVE_PRODUCTIONDATE_H, , [Define to include production-date.h.])])
+# Check for .version file
+AM_CONDITIONAL([FIXED_VERSION], [test -f $srcdir/.version])
 
 # Check for automake >= 1.10
 flag=false
@@ -57,6 +54,7 @@ AM_PROG_CC_C_O
 AC_PROG_CXX([g++ c++ icpc])
 CFLAGS=$cflagsbackup
 CXXFLAGS=$cxxflagsbackup
+AC_PROG_LN_S
 
 # Checks for header files
 AC_HEADER_STDC
@@ -628,11 +626,13 @@ AC_PATH_PROG(PDFLATEX, pdflatex, "")
 AC_PATH_PROG(DVIPS, dvips, "")
 AC_PATH_PROG(MAKEINDEX, makeindex, "")
 AC_PATH_PROG(HTLATEX, htlatex, "")
+AC_PATH_PROG(LATEX2HTML, latex2html, "")
 AM_CONDITIONAL(CONFIG_TEX, [test ! -z "$LATEX"])
 AM_CONDITIONAL(CONFIG_PS, [test ! \( -z "$LATEX" -o -z "$DVIPS" \)])
 AM_CONDITIONAL(CONFIG_PDF, [test ! -z "$PDFLATEX"])
 AM_CONDITIONAL(CONFIG_MAKEINDEX, [test ! -z "$MAKEINDEX"])
 AM_CONDITIONAL(CONFIG_HTLATEX, [test ! -z "$HTLATEX"])
+AM_CONDITIONAL(CONFIG_LATEX2HTML, [test ! -z "$LATEX2HTML"])
 
 # Check for Ruby >= 1.8 and test/unit.
 AC_PATH_PROG(RUBY, ruby, "")
@@ -677,6 +677,8 @@ echo "##################### CONFIGURATION #####################"
 echo
 outputdir=$(eval "echo $bindir")
 outputdir=$(eval "echo $outputdir")
+echo "FORM $VERSION"
+echo
 echo "Compiling for: $print_cpu $print_os ($print_data_model $print_api)"
 echo
 echo "Optionally linked libraries:"

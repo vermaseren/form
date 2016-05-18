@@ -15,6 +15,7 @@ config.status
 configure
 stamp-h1
 
+sources/version.h
 sources/form
 sources/tform
 sources/parform
@@ -53,13 +54,13 @@ doc/*/*.tmp
 doc/*/*.toc
 doc/*/*.xref
 
-doc/devref/devrefdate.tex
+doc/devref/version.tex
 doc/devref/html/
 doc/doxygen/html/
 doc/doxygen/latex/
 doc/doxygen/pdflatex/
 doc/manual/html/
-doc/manual/manualdate.tex
+doc/manual/version.tex
 
 doc/devref/devref/
 doc/manual/manual/

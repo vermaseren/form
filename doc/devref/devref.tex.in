@@ -1,3 +1,7 @@
+\input{version.tex}
+\def\formdate{\repodate}
+
+
 \documentclass[11pt,titlepage]{article}
 \usepackage{makeidx}
 
@@ -38,7 +42,7 @@
 
 \thispagestyle{empty}
 \title{\Huge FORM \\ \Large version @VERSION@ \\ \huge Developer's reference manual}
-\date{\input{devrefdate}}
+\date{\formdate}
 \author{J.A.M.Vermaseren et al.}
 \maketitle
 

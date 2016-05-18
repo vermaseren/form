@@ -41,7 +41,6 @@
 
 #else  /* HAVE_CONFIG_H */
 
-#define VERSION "4.1"
 #define MAJORVERSION 4
 #define MINORVERSION 1
 
@@ -364,6 +363,7 @@ template<typename T> struct calc {
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <ctype.h>
 #ifdef ANSI
 #include <stdarg.h>

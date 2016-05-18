@@ -45,6 +45,12 @@
 #endif
 
 /*
+ * A macro for translating the contents of `x' into a string after expanding.
+ */
+#define STRINGIFY(x)  STRINGIFY__(x)
+#define STRINGIFY__(x) #x
+
+/*
  * FORMNAME = "FORM" or "TFORM" or "ParFORM".
  */
 #if defined(WITHPTHREADS)
@@ -56,22 +62,125 @@
 #endif
 
 /*
- * VERSIONSTR = VERSION or VERSION"Beta".
+ * VERSIONSTR is the version information printed in the header line.
  */
-#ifdef BETAVERSION
-	#define VERSIONSTR VERSION"Beta"
+#ifdef HAVE_CONFIG_H
+	/* We have also version.h. */
+	#include "version.h"
+	#define VERSIONSTR FORMNAME " " REPO_VERSION " (" REPO_DATE ", " REPO_REVISION ")"
+	#define MAJORVERSION REPO_MAJOR_VERSION
+	#define MINORVERSION REPO_MINOR_VERSION
 #else
-	#define VERSIONSTR VERSION
+	/*
+	 * Otherwise, form3.h defines MAJORVERSION, MINORVERSION and PRODUCTIONDATE,
+	 * possibly BETAVERSION.
+	 */
+	#ifdef BETAVERSION
+		#define VERSIONSTR__ STRINGIFY(MAJORVERSION) "." STRINGIFY(MINORVERSION) "Beta"
+	#else
+		#define VERSIONSTR__ STRINGIFY(MAJORVERSION) "." STRINGIFY(MINORVERSION)
+	#endif
+	#define VERSIONSTR FORMNAME " " VERSIONSTR__ " (" PRODUCTIONDATE ")"
 #endif
 
 /*
- * A macro for translating the contents of `x' into a string after expanding.
+ 		#] includes : 
+ 		#[ PrintHeader :
+*/
+
+/**
+ * Prints the header line of the output.
+ *
+ * @param  with_full_info  True for printing also runtime information.
  */
-#define STRINGIFY(x)  STRINGIFY__(x)
-#define STRINGIFY__(x) #x
+static void PrintHeader(int with_full_info)
+{
+#ifdef WITHMPI
+	if ( PF.me == MASTER && !AM.silent ) {
+#else
+	if ( !AM.silent ) {
+#endif
+		char buffer1[250], buffer2[80], *s = buffer1, *t = buffer2;
+		WORD length;
+
+		/*
+		 * NOTE: we expect that the compiler optimizes strlen("string literal")
+		 * to just a number.
+		 */
+		if ( strlen(VERSIONSTR) <= 100 ) {
+			strcpy(s,VERSIONSTR);
+			s += strlen(VERSIONSTR);
+		}
+		else {
+			/*
+			 * Truncate when it is too long.
+			 */
+			strncpy(s,VERSIONSTR,97);
+			s[97] = '.';
+			s[98] = '.';
+			s[99] = ')';
+			s[100] = '\0';
+			s += 100;
+		}
+
+		sprintf(s," %d-bits",(WORD)(sizeof(WORD)*16));
+		while ( *s ) s++;
+
+		if ( with_full_info ) {
+#if defined(WITHPTHREADS) || defined(WITHMPI)
+#if defined(WITHPTHREADS)
+			int nworkers = AM.totalnumberofthreads-1;
+#elif defined(WITHMPI)
+			int nworkers = PF.numtasks-1;
+#endif
+			sprintf(s," %d worker",nworkers);
+			while ( *s ) s++;
+			if ( nworkers != 1 ) {
+				*s++ = 's';
+				*s = '\0';
+			}
+#endif
+
+			sprintf(t,"Run: %s",MakeDate());
+			while ( *t ) t++;
+
+			/*
+			 * Align the date to the right, if it fits in a line.
+			 */
+			length = (s-buffer1) + (t-buffer2);
+			if ( length+2 <= AC.LineLength ) {
+				WORD n;
+				for ( n = AC.LineLength-length; n > 0; n-- ) *s++ = ' ';
+				strcat(s,buffer2);
+				while ( *s ) s++;
+			}
+			else {
+				strcat(s,"  ");
+				while ( *s ) s++;
+				strcat(s,buffer2);
+				while ( *s ) s++;
+			}
+		}
+
+		/*
+		 * If the header information doesn't fit in a line, we need to extend
+		 * the line length temporarily.
+		 */
+		length = s-buffer1;
+		if ( length <= AC.LineLength ) {
+			MesPrint("%s",buffer1);
+		}
+		else {
+			WORD oldLineLength = AC.LineLength;
+			AC.LineLength = length;
+			MesPrint("%s",buffer1);
+			AC.LineLength = oldLineLength;
+		}
+	}
+}
 
 /*
- 		#] includes : 
+ 		#] PrintHeader : 
  		#[ DoTail :
 
 		Routine reads the command tail and handles the commandline options.
@@ -259,14 +368,7 @@ printversion:;
 #ifdef WITHMPI
 							if ( PF.me == MASTER )
 #endif
-							{
-								char buffer[100], *s = buffer;
-								sprintf(s,"%s %s (%s)",FORMNAME,VERSIONSTR,PRODUCTIONDATE);
-								while ( *s ) s++;
-								sprintf(s," %d-bits",(WORD)(sizeof(WORD)*16));
-								while ( *s ) s++;
-								printf("%s\n",buffer);
-							}
+								PrintHeader(0);
 							if ( onlyversion ) return(1);
 							goto NoFile;
 				case 'y': /* Preprocessor dumps output. No compilation. */
@@ -1103,60 +1205,6 @@ VOID StartMore()
 
 /*
  		#] StartMore : 
- 		#[ PrintHeader :
-*/
-
-VOID PrintHeader()
-{
-#ifndef BETAVERSION
-/*
-	The header starting with the release of version 4.0
-*/
-#ifdef WITHMPI
-	if ( PF.me == MASTER && !AM.silent ) {
-#else
-	if ( !AM.silent ) {
-#endif
-		char buffer[100], *s = buffer;
-		sprintf(s,"%s %s (%s)",FORMNAME,VERSIONSTR,PRODUCTIONDATE);
-		while ( *s ) s++;
-		sprintf(s," %d-bits",(WORD)(sizeof(WORD)*16));
-		while ( *s ) s++;
-#if defined(WITHPTHREADS)
-		sprintf(s," %d worker",AM.totalnumberofthreads-1);
-		while ( *s ) s++;
-		if ( AM.totalnumberofthreads != 2 ) *s++ = 's';
-		else *s++ = ' ';
-#elif defined(WITHMPI)
-		sprintf(s," %d worker",PF.numtasks-1);
-		while ( *s ) s++;
-		if ( PF.numtasks != 2 ) *s++ = 's';
-		else *s++ = ' ';
-#else
-		sprintf(s,"           ");
-		while ( *s ) s++;
-#endif
-		while ( s-buffer < 48 ) *s++ = ' ';
-		sprintf(s," Run: %s",MakeDate());
-		MesPrint("%s",buffer);
-	}
-#else
-/*
-	The header till version 4.0 beta
-*/
-#ifdef WITHMPI
-	if ( PF.me == MASTER && !AM.silent ) {
-#else
-	if ( !AM.silent ) {
-#endif
-		MesPrint(FORMNAME" by J.Vermaseren %s(%s) Run at: %s",
-		         VERSIONSTR,PRODUCTIONDATE,MakeDate());
-	}
-#endif
-}
-
-/*
- 		#] PrintHeader : 
  		#[ IniVars :
 
 		This routine initializes the parameters that may change during the run.
@@ -1519,7 +1567,7 @@ int main(int argc, char **argv)
 	ReserveTempFiles(0);
 	IniFbuffer(AT.fbufnum);
 #endif
-	PrintHeader();
+	PrintHeader(1);
 	IniVars();
 	Globalize(1);
 	TimeCPU(0);

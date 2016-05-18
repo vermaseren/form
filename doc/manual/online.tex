@@ -1,3 +1,8 @@
+\def\formmajorversion{4}
+\def\formminorversion{1}
+\def\formdate{25-oct-2013}
+
+
 \documentclass{report}
 
 \usepackage{html}
@@ -5,9 +10,7 @@
 
 \usepackage{makeidx}
 
-\begin{htmlonly}
-\def\texorpdfstring#1#2{#1}
-\end{htmlonly}
+\providecommand{\texorpdfstring}[2]{#1}
 
 %\makeatletter
 %\renewcommand*\l@section{\@dottedtocline{1}{1.5em}{3.0em}}
@@ -44,9 +47,10 @@
 \begin{document}
 
 \begin{center}
-{\Huge FORM \\ \Large version 4.1 \\ \huge Reference manual} \\
+{\Huge FORM \\ \Large version \formmajorversion.\formminorversion
+  \\ \huge Reference manual} \\
 
-{25-oct-2013} \\
+{\formdate} \\
 
 {J.A.M.~Vermaseren, J.~Kuipers, M.~Tentyukov, T.~Ueda and J.~Vollinga}
 \end{center}

@@ -84,18 +84,42 @@ SRCPARALLEL = \
 	parallel.h \
 	mpidbg.h
 
-DATE =
-# The aim of the next variable is to pass an argument -DPRODUCTIONDATE='"..."'
-# to the compiler when DATE is defined. The back quotes need to be surrounded by
-# double quotes, otherwise word splittings happen after the back quote
-# expansion and, for example, -DPRODUCTIONDATE="Mar 29 2012" is passed to the
-# compiler as three arguments '-DPRODUCTIONDATE="Mar', '29' and '2012"'. Then
-# the compiler complains the files '29' and '2012"' don't exist.
-# On the other hand, if the back quotes expansion prints nothing, the compiler
-# gets an argument '""', and complains the file doesn't exist. We avoid it by
-# printing -DPRODUCTIONDATEDUMMY='""' when DATE is empty, which is a legal
-# argument for the compiler and doesn't define PRODUCTIONDATE unnecessarily.
-DATEFLAG = "`suffix=; [ "x$(DATE)" = x ] && suffix=DUMMY; echo -DPRODUCTIONDATE$$suffix='"$(DATE)"'`"
+# Automatic versioning.
+
+CLEANFILES = version.h
+
+form-startup.$(OBJEXT): version.h
+tform-startup.$(OBJEXT): version.h
+parform-startup.$(OBJEXT): version.h
+vorm-startup.$(OBJEXT): version.h
+tvorm-startup.$(OBJEXT): version.h
+pavform-startup.$(OBJEXT): version.h
+
+.PHONY: update_version_h
+
+version.h: update_version_h
+	$(UPDATE_VERSION_H)
+
+dist-hook:
+	$(DISTHOOK_VERSION_H)
+
+if FIXED_VERSION
+
+UPDATE_VERSION_H = \
+	[ -f version.h ] || $(LN_S) "$(srcdir)/version.h.in" version.h
+
+DISTHOOK_VERSION_H = \
+	cp "$(srcdir)/version.h.in" "$(distdir)/version.h.in"
+
+else
+
+UPDATE_VERSION_H = \
+	$(SHELL) "$(top_srcdir)/scripts/git-version-gen.sh" -C "$(srcdir)" -c -o version.h
+
+DISTHOOK_VERSION_H = \
+	$(SHELL) "$(top_srcdir)/scripts/git-version-gen.sh" -C "$(srcdir)" -c -o "$(distdir)/version.h.in"
+
+endif
 
 # for release versions
 COMPILEFLAGS =
@@ -156,7 +180,7 @@ bin_PROGRAMS =
 if BUILD_FORM
 bin_PROGRAMS += form
 form_SOURCES = $(SRCBASE)
-form_CPPFLAGS = $(DATEFLAG)
+form_CPPFLAGS =
 form_CFLAGS = $(COMPILEFLAGS)
 form_CXXFLAGS = $(COMPILEFLAGS)
 form_LDFLAGS = $(LINKFLAGS) $(STATIC_LDFLAGS)
@@ -171,7 +195,7 @@ endif
 if BUILD_VORM
 bin_PROGRAMS += vorm
 vorm_SOURCES = $(SRCBASE)
-vorm_CPPFLAGS = $(DATEFLAG) -DDEBUGGING
+vorm_CPPFLAGS = -DDEBUGGING
 vorm_CFLAGS = $(DEBUGCOMPILEFLAGS)
 vorm_CXXFLAGS = $(DEBUGCOMPILEFLAGS)
 vorm_LDFLAGS = $(DEBUGLINKFLAGS)
@@ -186,7 +210,7 @@ endif
 if BUILD_TFORM
 bin_PROGRAMS += tform
 tform_SOURCES = $(SRCBASE) $(SRCPTHREAD)
-tform_CPPFLAGS = $(DATEFLAG) -DWITHPTHREADS $(PTHREAD_CPPFLAGS)
+tform_CPPFLAGS = -DWITHPTHREADS $(PTHREAD_CPPFLAGS)
 tform_CFLAGS = $(COMPILEFLAGS) $(PTHREAD_CFLAGS)
 tform_CXXFLAGS = $(COMPILEFLAGS) $(PTHREAD_CFLAGS)
 tform_LDFLAGS = $(LINKFLAGS) $(STATIC_LDFLAGS)
@@ -201,7 +225,7 @@ endif
 if BUILD_TVORM
 bin_PROGRAMS += tvorm
 tvorm_SOURCES = $(SRCBASE) $(SRCPTHREAD)
-tvorm_CPPFLAGS = $(DATEFLAG) -DWITHPTHREADS -DDEBUGGING $(PTHREAD_CPPFLAGS)
+tvorm_CPPFLAGS = -DWITHPTHREADS -DDEBUGGING $(PTHREAD_CPPFLAGS)
 tvorm_CFLAGS = $(DEBUGCOMPILEFLAGS) $(PTHREAD_CFLAGS)
 tvorm_CXXFLAGS = $(DEBUGCOMPILEFLAGS) $(PTHREAD_CFLAGS)
 tvorm_LDFLAGS = $(DEBUGLINKFLAGS)
@@ -216,7 +240,7 @@ endif
 if BUILD_PARFORM
 bin_PROGRAMS += parform
 parform_SOURCES = $(SRCBASE) $(SRCPARALLEL)
-parform_CPPFLAGS = $(DATEFLAG) -DWITHMPI -DPF_WITHGETENV -DPF_WITHLOG $(MPI_CPPFLAGS)
+parform_CPPFLAGS = -DWITHMPI -DPF_WITHGETENV -DPF_WITHLOG $(MPI_CPPFLAGS)
 parform_CFLAGS = $(COMPILEFLAGS) $(MPI_CFLAGS)
 parform_CXXFLAGS = $(COMPILEFLAGS) $(MPI_CXXFLAGS)
 parform_LDFLAGS = $(LINKFLAGS) $(MPI_STATIC_LDFLAGS)
@@ -231,7 +255,7 @@ endif
 if BUILD_PARVORM
 bin_PROGRAMS += parvorm
 parvorm_SOURCES = $(SRCBASE) $(SRCPARALLEL)
-parvorm_CPPFLAGS = $(DATEFLAG) -DWITHMPI -DPF_WITHGETENV -DPF_WITHLOG -DDEBUGGING $(MPI_CPPFLAGS)
+parvorm_CPPFLAGS = -DWITHMPI -DPF_WITHGETENV -DPF_WITHLOG -DDEBUGGING $(MPI_CPPFLAGS)
 parvorm_CFLAGS = $(DEBUGCOMPILEFLAGS) $(MPI_CFLAGS)
 parvorm_CXXFLAGS = $(DEBUGCOMPILEFLAGS) $(MPI_CXXFLAGS)
 parvorm_LDFLAGS = $(DEBUGLINKFLAGS)
@@ -242,6 +266,3 @@ else
 parvorm_LINK = $(MPICXX) $(parvorm_CXXFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@
 endif
 endif
-
-dist-hook:
-	$(SHELL) $(top_srcdir)/scripts/gendate.sh -c -r $(srcdir) -i $(srcdir)/production-date.h -o $(distdir)/production-date.h "$(DATE)"
