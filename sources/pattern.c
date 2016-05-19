@@ -2187,7 +2187,7 @@ VOID TransferBuffer(int from,int to,int spectator)
 int TakeIDfunction(PHEAD WORD *term)
 {
 	WORD *tstop, *t, *r, *m, *f, *nextf, *funstop, *left, *l, *newterm;
-	WORD *oldworkpointer, *out, oldinr, pow;
+	WORD *out, oldinr, pow;
 	WORD buffer[20];
 	int i, ii, j, numsub, numfound = 0, first;
 	LONG lhs,rhs;
@@ -2228,7 +2228,6 @@ int TakeIDfunction(PHEAD WORD *term)
 		NEXTARG(f)
 	}
 	C = cbuf+AT.ebufnum;
-	oldworkpointer = AT.WorkPointer;
 	AT.WorkPointer = l;
 	*left = l-left;
 /*

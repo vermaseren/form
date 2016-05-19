@@ -763,11 +763,9 @@ TestDouble:;
 
 int UseDictionary(UBYTE *name,UBYTE *options)
 {
-	DICTIONARY *dict;
 	int i;
 	for ( i = 0; i < AO.NumDictionaries; i++ ) {
 		if ( StrCmp(AO.Dictionaries[i]->name,name) == 0 ) {
-			dict = AO.Dictionaries[i];
 			AO.CurrentDictionary = i+1;
 			if ( SetDictionaryOptions(options) < 0 ) {
 				AO.CurrentDictionary = 0;
@@ -901,11 +899,10 @@ void UnSetDictionary(VOID)
 
 void RemoveDictionary(DICTIONARY *dict)
 {
-	int i, ifound;
+	int i;
 	if ( dict == 0 ) return;
 	for ( i = 0; i < AO.NumDictionaries; i++ ) {
 		if ( AO.Dictionaries[i] == dict ) {
-			ifound = i;
 			for (i++; i < AO.NumDictionaries; i++ ) {
 				AO.Dictionaries[i-1] = AO.Dictionaries[i];
 			}
@@ -1022,7 +1019,7 @@ int DoPreCloseDictionary(UBYTE *s)
 
 int DoPreUseDictionary(UBYTE *s)
 {
-	UBYTE *options, c, *ss, *sss, cc, *name;
+	UBYTE *options, c, *ss, *sss, *name;
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
 	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
 	while ( *s == ' ' ) s++;
@@ -1045,7 +1042,7 @@ int DoPreUseDictionary(UBYTE *s)
 			return(-1);
 		}
 		sss = s;
-		cc = *s++; while ( *s == ' ' || *s == '\t' || *s == ';' ) s++;
+		s++; while ( *s == ' ' || *s == '\t' || *s == ';' ) s++;
 		*sss = 0;
 		if ( *s ) {
 			MesPrint("@Irregular end of %#UseDictionary instruction");

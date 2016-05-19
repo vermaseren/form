@@ -2536,6 +2536,10 @@ WORD RunMulArg(PHEAD WORD *fun, WORD *args)
 			argsize = 4; t += 2;
 			where = argbuf;
 		}
+		else {
+			/* unreachable */
+			return(1);
+		}
 /*
 		Now add the argbuf to AT.ebufnum
 */
