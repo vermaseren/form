@@ -634,9 +634,24 @@ AM_CONDITIONAL(CONFIG_PDF, [test ! -z "$PDFLATEX"])
 AM_CONDITIONAL(CONFIG_MAKEINDEX, [test ! -z "$MAKEINDEX"])
 AM_CONDITIONAL(CONFIG_HTLATEX, [test ! -z "$HTLATEX"])
 
-# Check for Ruby
+# Check for Ruby >= 1.8 and test/unit.
 AC_PATH_PROG(RUBY, ruby, "")
-AM_CONDITIONAL(CONFIG_RUBY, [test ! -z "$RUBY"])
+ok=yes
+test "x$RUBY" = x && ok=no
+if test "x$ok" = xyes; then
+	AC_MSG_CHECKING([whether ruby >= 1.8])
+	$RUBY -e 'exit(1) if RUBY_VERSION < "1.8.0"' >/dev/null 2>&1 || ok=no
+	AC_MSG_RESULT([$ok])
+fi
+if test "x$ok" = xyes; then
+	AC_MSG_CHECKING([for ruby test/unit])
+	{ cat >conftest.rb <<EOF && $RUBY conftest.rb; } >/dev/null 2>&1 || ok=no
+require 'test/unit'
+EOF
+	AC_MSG_RESULT([$ok])
+fi
+with_ruby_test=$ok
+AM_CONDITIONAL(CONFIG_RUBY, [test "x$with_ruby_test" = xyes])
 
 AC_CONFIG_FILES([
 	Makefile
@@ -733,10 +748,10 @@ echo "Type 'make <executable name>' in the source directory to"
 echo "build a specific version. Type 'make' to build all."
 echo "Type 'make install' to install the executables in"
 echo "$outputdir."
-if test ! -z "$RUBY"; then
+if test "x$with_ruby_test" = xyes; then
 	echo "Type 'make check' to run automatic tests."
 else
-	echo "Ruby was not found. Automatic tests will not work."
+	echo "Automatic tests is not available."
 fi
 echo
 echo "Available documentation:"
