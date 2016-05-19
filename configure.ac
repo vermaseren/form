@@ -618,7 +618,7 @@ AC_SUBST([MPI_STATIC_LDFLAGS])
 
 # Check for doxygen
 AC_PATH_PROG(DOXYGEN, doxygen, "")
-AM_CONDITIONAL(CONFIG_DOXYGEN, [test ! -z "$DOXYGEN"])
+AM_CONDITIONAL(CONFIG_DOXYGEN, [test "x$DOXYGEN" != x])
 
 # Check for LaTeX programs
 AC_PATH_PROG(LATEX, latex, "")
@@ -627,12 +627,12 @@ AC_PATH_PROG(DVIPS, dvips, "")
 AC_PATH_PROG(MAKEINDEX, makeindex, "")
 AC_PATH_PROG(HTLATEX, htlatex, "")
 AC_PATH_PROG(LATEX2HTML, latex2html, "")
-AM_CONDITIONAL(CONFIG_TEX, [test ! -z "$LATEX"])
-AM_CONDITIONAL(CONFIG_PS, [test ! \( -z "$LATEX" -o -z "$DVIPS" \)])
-AM_CONDITIONAL(CONFIG_PDF, [test ! -z "$PDFLATEX"])
-AM_CONDITIONAL(CONFIG_MAKEINDEX, [test ! -z "$MAKEINDEX"])
-AM_CONDITIONAL(CONFIG_HTLATEX, [test ! -z "$HTLATEX"])
-AM_CONDITIONAL(CONFIG_LATEX2HTML, [test ! -z "$LATEX2HTML"])
+AM_CONDITIONAL(CONFIG_TEX, [test "x$LATEX" != x])
+AM_CONDITIONAL(CONFIG_PS, [test "x$LATEX" != x && test "x$DVIPS" != x])
+AM_CONDITIONAL(CONFIG_PDF, [test "x$PDFLATEX" != x])
+AM_CONDITIONAL(CONFIG_MAKEINDEX, [test "x$MAKEINDEX" != x])
+AM_CONDITIONAL(CONFIG_HTLATEX, [test "x$HTLATEX" != x])
+AM_CONDITIONAL(CONFIG_LATEX2HTML, [test "x$LATEX2HTML" != x])
 
 # Check for Ruby >= 1.8 and test/unit.
 AC_PATH_PROG(RUBY, ruby, "")
@@ -758,38 +758,40 @@ fi
 echo
 echo "Available documentation:"
 atleastone=no
-if test ! -z "$DOXYGEN"; then
+if test "x$DOXYGEN" != x; then
 	atleastone=yes
-	echo -n "    doxygen    ( html "
-	if test ! -z "$MAKEINDEX"; then
-		if test ! -z "$LATEX"; then
-			echo -n "dvi "
-			if test ! -z "$DVIPS"; then
-				echo -n "ps "
+	str='    doxygen    ( html '
+	if test "x$MAKEINDEX" != x; then
+		if test "x$LATEX" != x; then
+			str=$str'dvi '
+			if test "x$DVIPS" != x; then
+				str=$str'ps '
 			fi
 		fi
-		if test ! -z "$PDFLATEX"; then
-			echo -n "pdf "
+		if test "x$PDFLATEX" != x; then
+			str=$str'pdf '
 		fi
 	fi
-	echo ")"
+	str=$str')'
+	echo "$str"
 fi
-if test ! \( -z "$LATEX" -o -z "$PDFLATEX" \); then
+if test "x$LATEX" != x || test "x$PDFLATEX" != x; then
 	atleastone=yes
-	echo -n "    manual     ( "
-	if test ! -z "$HTLATEX"; then
-		echo -n "html "
+	str='    manual     ( '
+	if test "x$HTLATEX" != x; then
+		str=$str'html '
 	fi
-	if test ! -z "$LATEX"; then
-		echo -n "dvi "
-		if test ! -z "$DVIPS"; then
-			echo -n "ps "
+	if test "x$LATEX" != x; then
+		str=$str'dvi '
+		if test "x$DVIPS" != x; then
+			str=$str'ps '
 		fi
 	fi
-	if test ! -z "$PDFLATEX"; then
-		echo -n "pdf "
+	if test "x$PDFLATEX" != x; then
+			str=$str'pdf '
 	fi
-	echo ")"
+	str=$str')'
+	echo "$str"
 fi
 if test $atleastone = no; then
 	echo "    <NONE>"
