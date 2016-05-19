@@ -751,7 +751,7 @@ echo "$outputdir."
 if test "x$with_ruby_test" = xyes; then
 	echo "Type 'make check' to run automatic tests."
 else
-	echo "Automatic tests is not available."
+	echo "Automatic tests are not available."
 fi
 echo
 echo "Available documentation:"

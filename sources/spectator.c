@@ -76,8 +76,8 @@
 
 	Currently, ParFORM allows use of spectators only in the sequential
 	mode. The parallelization is switched off in modules containing
-	ToSpectator or CopySpectator. Workers never creates or accesses to
-	spectator files and their handles are always -1. We leave the
+	ToSpectator or CopySpectator. Workers never create or access to
+	spectator files. Their file handles are always -1. We leave the
 	parallelization of modules with spectators for future work.
 
   	#] Commentary : 
