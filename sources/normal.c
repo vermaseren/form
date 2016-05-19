@@ -1909,6 +1909,12 @@ nospec:				pcom[ncom++] = t;
 			case GAMMAFIVE :
 			case GAMMASIX :
 			case GAMMASEVEN :
+				if ( t[1] == FUNHEAD ) {
+					MLOCK(ErrorMessageLock);
+					MesPrint("Gamma matrix without spin line encountered.");
+					MUNLOCK(ErrorMessageLock);
+					goto NormMin;
+				}
 				pnco[nnco++] = t;
 				t += FUNHEAD+1;
 				goto ScanCont;
