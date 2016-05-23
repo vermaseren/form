@@ -47,13 +47,11 @@ esac
 AM_CONDITIONAL([AUTOMAKE_GE_110], [$flag])
 
 # Check for programs
-cflagsbackup=$CFLAGS
-cxxflagsbackup=$CXXFLAGS
+: ${CFLAGS=''}  # avoid autoconf's default CFLAGS/CXXFLAGS
+: ${CXXFLAGS=''}
 AC_PROG_CC([gcc cc icc])
 AM_PROG_CC_C_O
 AC_PROG_CXX([g++ c++ icpc])
-CFLAGS=$cflagsbackup
-CXXFLAGS=$cxxflagsbackup
 AC_PROG_LN_S
 
 # Checks for header files
@@ -94,7 +92,6 @@ case $host_os in
 		print_os="UNKNOWN OS"
 		;;
 esac
-AM_CONDITIONAL([ONAPPLE], [test "x$print_os" = xOSX])
 case $host_cpu in
 	i?86 )
 		print_cpu="Pentium"
@@ -109,10 +106,9 @@ case $host_cpu in
 		print_cpu="UNKNOWN CPU"
 		;;
 esac
-AM_CONDITIONAL([OPTPENTIUM], [test "x$print_cpu" = xPentium])
-AM_CONDITIONAL([OPTOPTERON], [test "x$print_cpu" = xOpteron])
 
-# Check for C compiler vendor
+# Check for C compiler vendor. we assume that all compilers (CC, CXX, MPICC and
+# MPICXX) have the same vender and the same version.
 vendors="
 intel:     __ICC,__ECC,__INTEL_COMPILER
 gnu:       __GNUC__
@@ -136,8 +132,6 @@ choke me
 ])], [break])
 done
 vendor=`echo $vendor | cut -d: -f1`
-AM_CONDITIONAL([USINGGCC], [test "x$vendor" = xgnu])
-AM_CONDITIONAL([USINGICC], [test "x$vendor" = xintel])
 
 # POSIX or Windows API
 AC_ARG_WITH([api],
@@ -209,7 +203,6 @@ AS_IF([$flag], [], [AC_MSG_FAILURE([Basic assumption sizeof(off_t) >= sizeof(LON
 # sizeof(off_t) <= 4 means files must <= 2 GB.
 AS_IF([test $ac_cv_sizeof_off_t -le 4], [AC_MSG_WARN([Large files more than 2 GB are not supported])])
 AC_MSG_NOTICE([The data model is $print_data_model])
-AM_CONDITIONAL([ONILP32], [test "x$print_data_model" = xILP32])
 
 # Check for gmp
 AC_ARG_WITH([gmp],
@@ -615,6 +608,103 @@ AS_IF([test "x$enable_static_link" != xno],
 		enable_static_link=no])])
 AC_SUBST([STATIC_LDFLAGS])
 AC_SUBST([MPI_STATIC_LDFLAGS])
+
+# Check for native/universal build
+AC_ARG_ENABLE([native],
+	[AS_HELP_STRING([--enable-native],
+		[tune for the compiling machine @<:@default=check@:>@])],
+	[AS_IF([test "x$enableval" = xno || test "x$cross_compiling" = xyes],
+		[enable_native=no], [enable_native=yes])],
+	[enable_native=yes])
+
+# Optimization/debugging flags
+AC_ARG_VAR([COMPILEFLAGS], [Compiler flags for release versions])
+AC_ARG_VAR([LINKFLAGS], [Linker flags for release versions])
+AC_ARG_VAR([DEBUGCOMPILEFLAGS], [Compiler flags for debugging versions])
+AC_ARG_VAR([DEBUGLINKFLAGS], [Linker flags for debugging versions])
+
+my_test_COMPILEFLAGS=${COMPILEFLAGS+set}
+if test "$my_test_COMPILEFLAGS" != set; then
+	if test "x$vendor" = xgnu; then
+		# We don't use -pedantic option because of horrible warnings.
+		COMPILEFLAGS="-Wall -Wextra -Wpadded -O3 -fomit-frame-pointer"
+		if test "x$enable_native" = xyes; then
+			# Check for -march=native.
+			AC_MSG_CHECKING([whether compiler accepts -march=native])
+			ok=no
+			save_CFLAGS=$CFLAGS
+			CFLAGS="$CFLAGS -march=native"
+			AC_COMPILE_IFELSE([AC_LANG_PROGRAM()], [ok=yes])
+			CFLAGS=$save_CFLAGS
+			AC_MSG_RESULT($ok)
+			if test "x$ok" = xyes; then
+				COMPILEFLAGS="$COMPILEFLAGS -march=native"
+			else
+				if test "x$print_data_model" = xILP32; then
+					if test "x$print_cpu" = xPentium; then
+						# NOTE: In a strict sense, i686 must be used for Pentium Pro or later.
+						COMPILEFLAGS="$COMPILEFLAGS -march=i686"
+					elif test "x$print_cpu" = xOpteron; then
+						COMPILEFLAGS="$COMPILEFLAGS -march=opteron"
+					fi
+				fi
+			fi
+		fi
+		# NOTE: Recent versions of clang seem not to work without
+		# -mmacosx-version-min=10.4 because it fails to find the tr1 library.
+		# So, we always add this option as a workaround, but in future it should
+		# be fixed by detecting whether tr1 exists at the configure.
+		if test "x$print_os" = xOSX; then
+			COMPILEFLAGS="$COMPILEFLAGS -mmacosx-version-min=10.4"
+		fi
+#		if test "x$print_os" = xOSX && test "x$enable_native" = xno; then
+#			COMPILEFLAGS="$COMPILEFLAGS -mmacosx-version-min=10.4"
+#		fi
+	elif test "x$vendor" = xintel; then
+		# NOTE: -fast option includes -static and may cause an error in linking.
+		COMPILEFLAGS="-Wall -ipo -O3 -no-prec-div"
+		if test "x$enable_native" = xyes; then
+			COMPILEFLAGS="$COMPILEFLAGS -xHost"
+		fi
+	else
+		COMPILEFLAGS=-O2
+	fi
+fi
+my_test_LINKFLAGS=${LINKFLAGS+set}
+if test "$my_test_LINKFLAGS" != set; then
+	LINKFLAGS=-s
+fi
+my_test_DEBUGCOMPILEFLAGS=${DEUBUGCOMPILEFLAGS+set}
+if test "$my_test_DEBUGCOMPILEFLAGS" != set; then
+	DEBUGCOMPILEFLAGS=-g
+	if test "x$vendor" = xgnu; then
+		DEBUGCOMPILEFLAGS="$DEBUGCOMPILEFLAGS -Wall -Wextra -Wpadded"
+
+		# Check for -Og.
+		AC_MSG_CHECKING([whether compiler accepts -Og])
+		ok=no
+		save_CFLAGS=$CFLAGS
+		CFLAGS="$CFLAGS -Og"
+		AC_COMPILE_IFELSE([AC_LANG_PROGRAM()], [ok=yes])
+		CFLAGS=$save_CFLAGS
+		AC_MSG_RESULT($ok)
+		if test "x$ok" = xyes; then
+			DEBUGCOMPILEFLAGS="$DEBUGCOMPILEFLAGS -Og"
+		else
+			DEBUGCOMPILEFLAGS="$DEBUGCOMPILEFLAGS -O0"
+		fi
+
+		if test "x$print_os" = xOSX && test "x$enable_native" = xno; then
+			DEBUGCOMPILEFLAGS="$DEBUGCOMPILEFLAGS -mmacosx-version-min=10.4"
+		fi
+	elif test "x$vendor" = xintel; then
+		DEBUGCOMPILEFLAGS="$DEBUGCOMPILEFLAGS -Wall -O0"
+	fi
+fi
+my_test_DEBUGLINKFLAGS=${DEBUGLINKFLAGS+set}
+if test "$my_test_DEBUGLINKFLAGS" != set; then
+	DEBUGLINKFLAGS=
+fi
 
 # Check for doxygen
 AC_PATH_PROG(DOXYGEN, doxygen, "")

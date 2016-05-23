@@ -121,56 +121,6 @@ DISTHOOK_VERSION_H = \
 
 endif
 
-# for release versions
-COMPILEFLAGS =
-LINKFLAGS = -s
-
-# for debugging versions
-DEBUGCOMPILEFLAGS = -g
-DEBUGLINKFLAGS =
-
-# compiler specific parameters
-if USINGGCC
-# For now -pedantic option is removed because g++ 4.1.2 complains
-# as "ISO C++ forbids variable-size array".
-COMPILEFLAGS += -Wall -Wextra -Wpadded -O3 -fomit-frame-pointer
-DEBUGCOMPILEFLAGS += -Wall -Wextra -Wpadded -O0
-if ONILP32
-if OPTPENTIUM
-# NOTE: In a strict sense, i686 must be used for Pentium Pro or later.
-COMPILEFLAGS += -march=i686
-endif
-if OPTOPTERON
-COMPILEFLAGS += -march=opteron
-endif
-endif
-endif
-
-if USINGICC
-# NOTE: -fast option may include -static. This may cause an error in linking.
-if ONAPPLE
-COMPILEFLAGS += -Wall -ipo -O3 -no-prec-div
-else
-if OPTPENTIUM
-COMPILEFLAGS += -Wall -ipo -O3 -no-prec-div -xHost
-else
-if OPTOPTERON
-COMPILEFLAGS += -Wall -ipo -O3 -no-prec-div -xHost
-else
-COMPILEFLAGS += -Wall -ipo -O3
-endif
-endif
-endif
-DEBUGCOMPILEFLAGS += -Wall -O0
-endif
-
-# platform specific issues
-if ONAPPLE
-if USINGGCC
-COMPILEFLAGS += -mmacosx-version-min=10.4
-endif
-endif
-
 # NOTE: maude_CXXFLAGS is not used while linking maude by default
 #       in automake < 1.10. A workaround is to define maude_LINK
 #       explicitly in all cases. (TU 22 Sep 2011)
