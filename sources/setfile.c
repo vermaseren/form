@@ -243,6 +243,7 @@ restart:;
 				if ( *s2 == 'K' ) { x = x * 1000; s2++; }
 				else if ( *s2 == 'M' ) { x = x * 1000000; s2++; }
 				else if ( *s2 == 'G' ) { x = x * 1000000000; s2++; }
+				else if ( *s2 == 'T' ) { x = x * 1000000000000; s2++; }
 				if ( *s2 && *s2 != ' ' && *s2 != '\t' ) {
 					MesPrint("%s: Numerical value expected for parameter %s"
 					,proop1[filetype],s1);
