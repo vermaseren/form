@@ -20,6 +20,7 @@ Prerequisites
 In case you need to (re-)generate the script "configure" (see next section), you
 have to have the GNU autoconf/automake programs installed on your system. You
 should have at least autoconf version >= 2.59 and automake version >= 1.7.
+For generating the configure script from a GIT repository, you also need Git.
 
 To compile the sources you need reasonably modern C and C++ compilers, like for
 example the GNU compiler collection (GCC) or the Intel C compiler. The
@@ -46,9 +47,9 @@ version 4.2. The zlib library should be a recent version, >= 1.2.
 Preparations
 ============
 
-If you have acquired the FORM sources via CVS or GIT, several files will be
-missing, especially the script "configure". To generate these files you have to
-issue the command
+If you have acquired the FORM sources via GIT, several files will be missing,
+especially the script "configure". To generate these files you have to issue
+the command
 
     autoreconf -i
 
@@ -114,6 +115,20 @@ line:
     ./configure CC=icc CXX=icpc CFLAGS=-Werror CXXFLAGS=-Werror
 
 The above example shows also how to set additional compiler flags.
+
+The detailed compiler/linker options for the release versions and the
+debugging versions can be specified by the environment variables
+  COMPILEFLAGS
+  LINKFLAGS
+  DEBUGCOMPILEFLAGS
+  DEBUGLINKFLAGS
+If they are not set, they will be chosen for the local machine where you are
+compiling executables, which may contain optimization flags that makes
+executables incompatible with other machines. If you plan to move the
+executables to other machines and want to avoid such incompatibility, use the
+following option:
+
+    ./configure --disable-native
 
 The configure script creates a file "config.h" in which several options and
 settings are passed on to the source code files via preprocessor definitions.
