@@ -101,8 +101,8 @@ static void PrintHeader(int with_full_info)
 	if ( !AM.silent ) {
 #endif
 		char buffer1[250], buffer2[80], *s = buffer1, *t = buffer2;
-		WORD length;
-
+		WORD length, n;
+		for ( n = 0; n < 250; n++ ) buffer1[n] = ' ';
 		/*
 		 * NOTE: we expect that the compiler optimizes strlen("string literal")
 		 * to just a number.
@@ -110,6 +110,7 @@ static void PrintHeader(int with_full_info)
 		if ( strlen(VERSIONSTR) <= 100 ) {
 			strcpy(s,VERSIONSTR);
 			s += strlen(VERSIONSTR);
+			*s = 0;
 		}
 		else {
 			/*
@@ -123,8 +124,9 @@ static void PrintHeader(int with_full_info)
 			s += 100;
 		}
 
-		sprintf(s," %d-bits",(WORD)(sizeof(WORD)*16));
-		while ( *s ) s++;
+		s += sprintf(s," %d-bits",(WORD)(sizeof(WORD)*16));
+/*		while ( *s ) s++; */
+		*s = 0;
 
 		if ( with_full_info ) {
 #if defined(WITHPTHREADS) || defined(WITHMPI)
@@ -133,8 +135,9 @@ static void PrintHeader(int with_full_info)
 #elif defined(WITHMPI)
 			int nworkers = PF.numtasks-1;
 #endif
-			sprintf(s," %d worker",nworkers);
-			while ( *s ) s++;
+			s += sprintf(s," %d worker",nworkers);
+			*s = 0;
+/*			while ( *s ) s++; */
 			if ( nworkers != 1 ) {
 				*s++ = 's';
 				*s = '\0';
@@ -149,14 +152,16 @@ static void PrintHeader(int with_full_info)
 			 */
 			length = (s-buffer1) + (t-buffer2);
 			if ( length+2 <= AC.LineLength ) {
-				WORD n;
 				for ( n = AC.LineLength-length; n > 0; n-- ) *s++ = ' ';
+				*s = 0;
 				strcat(s,buffer2);
 				while ( *s ) s++;
 			}
 			else {
+				*s = 0;
 				strcat(s,"  ");
 				while ( *s ) s++;
+				*s = 0;
 				strcat(s,buffer2);
 				while ( *s ) s++;
 			}
@@ -180,7 +185,7 @@ static void PrintHeader(int with_full_info)
 }
 
 /*
- 		#] PrintHeader : 
+ 		#] PrintHeader :
  		#[ DoTail :
 
 		Routine reads the command tail and handles the commandline options.

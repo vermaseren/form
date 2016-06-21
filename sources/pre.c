@@ -3544,6 +3544,7 @@ int DoPreAppend(UBYTE *s)
 
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
 	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
+	if ( AP.preError ) return(0);
 	while ( *s == ' ' || *s == '\t' ) s++;
 /*
 	Determine where to write
@@ -3586,6 +3587,7 @@ int DoPreCreate(UBYTE *s)
 
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
 	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
+	if ( AP.preError ) return(0);
 	while ( *s == ' ' || *s == '\t' ) s++;
 /*
 	Determine where to write
@@ -3624,6 +3626,7 @@ int DoPreRemove(UBYTE *s)
 	UBYTE *name, *to;
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
 	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
+	if ( AP.preError ) return(0);
 	while ( *s == ' ' || *s == '\t' ) s++;
 	if ( *s == '<' ) { s++; }
 	else {
@@ -3656,6 +3659,7 @@ int DoPreClose(UBYTE *s)
 	UBYTE *name, *to;
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
 	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
+	if ( AP.preError ) return(0);
 	while ( *s == ' ' || *s == '\t' ) s++;
 	if ( *s == '<' ) { s++; }
 	else {
@@ -3700,6 +3704,7 @@ int DoPreWrite(UBYTE *s)
 
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
 	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
+	if ( AP.preError ) return(0);
 
 #ifdef WITHMPI
 	if ( PF.me != MASTER ) return 0;
@@ -3981,6 +3986,7 @@ int DoSystem(UBYTE *s)
 {
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
 	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
+	if ( AP.preError ) return(0);
 #ifdef WITHSYSTEM
 	FLUSHCONSOLE;
 	while ( *s == ' ' || *s == '\t' ) s++;
@@ -5047,6 +5053,7 @@ int DoExternal(UBYTE *s)
 #endif
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
 	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
+	if ( AP.preError ) return(0);
 
 #ifdef WITHEXTERNALCHANNEL
 	while ( *s == ' ' || *s == '\t' ) s++;
@@ -5160,6 +5167,7 @@ int DoSetExternal(UBYTE *s)
 #endif
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
 	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
+	if ( AP.preError ) return(0);
 
 #ifdef WITHEXTERNALCHANNEL
 	while ( *s == ' ' || *s == '\t' ) s++;
@@ -5230,6 +5238,7 @@ int DoSetExternalAttr(UBYTE *s)
 #endif
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
 	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
+	if ( AP.preError ) return(0);
 
 #ifdef WITHEXTERNALCHANNEL
 	do{
@@ -5344,6 +5353,7 @@ int DoRmExternal(UBYTE *s)
 #endif
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
 	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
+	if ( AP.preError ) return(0);
 
 #ifdef WITHEXTERNALCHANNEL
 	while ( *s == ' ' || *s == '\t' ) s++;
@@ -5414,6 +5424,7 @@ int DoFromExternal(UBYTE *s)
 #endif
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
 	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
+	if ( AP.preError ) return(0);
 #ifdef WITHEXTERNALCHANNEL
 	
 	FLUSHCONSOLE;
@@ -5606,6 +5617,7 @@ int DoToExternal(UBYTE *s)
 #endif
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
 	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
+	if ( AP.preError ) return(0);
 #ifdef WITHEXTERNALCHANNEL
 
 	h.oldsilent=AM.silent;

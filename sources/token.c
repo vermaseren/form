@@ -175,7 +175,7 @@ donumber:		i = 0;
 			case 1:		/* 0-9 */
 				CHECKPOLY
 				s = in;
-				while ( *s == '0' && s[1] == '0' ) s++;
+				while ( *s == '0' && FG.cTable[*s] == 1 ) s++;
 				in = s+1; i = 1;
 				while ( FG.cTable[*in] == 1 ) { in++; i++; }
 				if ( object > 0 ) {
@@ -576,7 +576,7 @@ IllPos:			MesPrint("&Illegal character at this position: %s",in);
 }
 
 /*
- 		#] tokenize : 
+ 		#] tokenize :
  		#[ WriteTokens :
 */
 
