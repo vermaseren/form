@@ -681,7 +681,7 @@ WORD TestSub(PHEAD WORD *term, WORD level)
 {
 	GETBIDENTITY
 	WORD *m, *t, *r, retvalue, funflag, j, oldncmod, nexpr;
-	WORD *stop, *t1, *t2, funnum, wilds, tbufnum;
+	WORD *stop, *t1, *t2, funnum, wilds, tbufnum, stilldirty = 0;
 	NESTING n;
 	CBUF *C = cbuf+AT.ebufnum;
 	LONG isp, i;
@@ -1462,6 +1462,17 @@ DoSpec:
 							else {
 								Normalize(BHEAD t);
 /*								if ( i > *t ) { retvalue = 1; goto redosize; } */
+								{
+									WORD *tend = t + *t, *tt = t+1;
+									stilldirty = 0;
+									tend -= ABS(tend[-1]);
+									while ( tt < tend ) {
+										if ( *tt == SUBEXPRESSION ) {
+											stilldirty = 1; break;
+										}
+										tt += tt[1];
+									}
+								}
 								if ( i > *t ) {
 									retvalue = 1;
 									i -= *t;
@@ -1539,7 +1550,7 @@ DoSpec:
 						while ( *m ) m += *m;
 						i = WORDDIF(m,AT.WorkPointer);
 						*AT.WorkPointer = i;
-						AT.WorkPointer[1] = 0;
+						AT.WorkPointer[1] = stilldirty;
 						if ( ToFast(AT.WorkPointer,AT.WorkPointer) ) {
 							m = AT.WorkPointer;
 							if ( *m <= -FUNCTION ) { m++; i = 1; }
@@ -1867,7 +1878,7 @@ EndTest2:;
 }
 
 /*
- 		#] TestSub : 
+ 		#] TestSub :
  		#[ InFunction :			WORD InFunction(term,termout)
 */
 /**
