@@ -1,8 +1,8 @@
 #! /bin/sh
-exec ruby -S -x "$0" "$@"
+exec ruby "-S" "-x" "$0" "$@"
 #! ruby
 
-# The default prefix for the root temporary directory.
+# The default prefix for the root temporary directory. See TempDir.root.
 TMPDIR_PREFIX = "form_check_"
 
 # The default maximal running time in seconds of FORM jobs before they get
@@ -15,36 +15,21 @@ TESTDIR = File.dirname(__FILE__)
 # Check the Ruby version.
 if RUBY_VERSION < "1.8.0"
   warn("ruby 1.8 required for the test suite")
-  exit
+  exit(1)
 end
 
-# Register the cleanup function before loading test/unit.
-at_exit { cleanup }
-
+require "fileutils"
 require "open3"
 require "ostruct"
 require "optparse"
 require "set"
 require "tmpdir"
 
-# We use test/unit, which is now not in the standard library.
-begin
-  require "test/unit"
-rescue LoadError
-  def cleanup
-  end
-  warn("test/unit required for the test suite")
-  exit
-end
-
-# The root temporary directory.
-$tmpdir = nil
-
 # Show an error message and exit.
-def fatal(message, file=nil, lineno=nil)
-  if file != nil && lineno != nil
+def fatal(message, file = nil, lineno = nil)
+  if !file.nil? && !lineno.nil?
     STDERR.puts("#{file}:#{lineno}: error: #{message}")
-  elsif file != nil
+  elsif !file.nil?
     STDERR.puts("#{file}: error: #{message}")
   else
     STDERR.puts("error: #{message}")
@@ -53,94 +38,122 @@ def fatal(message, file=nil, lineno=nil)
 end
 
 # Show a warning message.
-def warn(message, file=nil, lineno=nil)
-  if file != nil && lineno != nil
+def warn(message, file = nil, lineno = nil)
+  if !file.nil? && !lineno.nil?
     STDERR.puts("#{file}:#{lineno}: warning: #{message}")
-  elsif file != nil
+  elsif !file.nil?
     STDERR.puts("#{file}: warning: #{message}")
   else
     STDERR.puts("warning: #{message}")
   end
 end
 
-# Clean up the temporary directory specified by the global variable $tmpdir.
-def cleanup
-  if $tmpdir != nil
-    rm($tmpdir)
-    50.times do  # up to 5 seconds
-      if !FileTest.directory?($tmpdir) then
-        break
+# Routines for temporary directories.
+class TempDir
+  @root = nil
+
+  # Return the root temporary directory name.
+  def self.root
+    if @root.nil?
+      @root = Dir.mktmpdir(TMPDIR_PREFIX)
+    end
+    @root
+  end
+
+  # Create a temporary directory under the root temporary directory, and return
+  # the directory name.
+  def self.mktmpdir(prefix)
+    Dir.mktmpdir(prefix, root)
+  end
+
+  # Clean up the all temporary directory.
+  def self.cleanup
+    return if @root.nil?
+
+    # The first try.
+    FileUtils.rm_rf(@root)
+
+    # Wait up to 5 seconds.
+    50.times do
+      # If the directory still remains, try to remove it after 0.1 seconds.
+      if !FileTest.directory?(@root)
+        return
       end
       sleep(0.1)
-      rm($tmpdir)
+      FileUtils.rm_rf(@root)
     end
-    if FileTest.directory?($tmpdir) then
-      warn("failed to delete the temporary directory '#{$tmpdir}'")
+
+    # Failed.
+    if FileTest.directory?(@root)
+      warn("failed to delete the temporary directory '#{@root}'")
     end
+
+    @root = nil
   end
+
+  # We need to register the cleanup function before loading test/unit.
+  at_exit { TempDir.cleanup }
 end
 
-# Create a temporary directory and return the name.
-def mktmpdir(prefix)
-  1000.times do |i|
-    dir = prefix + (Process.pid.to_s + i.to_s + Time.now.to_s).hash.abs.to_s
-    begin
-      if Dir.mkdir(dir, 0700) == 0
-        return dir
+# Register a finalization function before loading test/unit.
+at_exit { defined?(finalize) && finalize }
+
+# We use test/unit, which is now not in the standard library.
+begin
+  require "test/unit"
+rescue LoadError
+  warn("test/unit required for the test suite")
+  exit(1)
+end
+
+# Find the path to a program.
+def which(name)
+  result = nil
+  if name != File.basename(name)
+    # Convert the relative path to the absolute path.
+    result = File.expand_path(name)
+  else
+    # Search from $PATH.
+    ENV["PATH"].split(":").each do |path|
+      candidate = File.join(path, name)
+      if File.executable?(candidate)
+        result = File.expand_path(candidate)
+        break
       end
-    rescue
     end
   end
-  fatal("failed to make a temporary directory starting with '#{prefix}'")
+  result = name if result.nil? # Fallback.
+  result
 end
-
-# Delete the given file/directory.
-def rm(file)
-  if FileTest.directory?(file) then
-    Dir.foreach(file) do |f|
-      next if /^\.+$/ =~ f
-      rm(file.sub(/\/+$/,"") + "/" + f)
-    end
-    begin
-      Dir.rmdir(file)
-    rescue
-    end
-  elsif FileTest.exists?(file)
-    begin
-      File.delete(file)
-    rescue
-    end
-  end
-end
-
-# Here create the root temporary directory.
-$tmpdir = mktmpdir(File.join(Dir.tmpdir, TMPDIR_PREFIX))
 
 # To be mixed-in all FORM tests.
 module FormTest
-  # The interplay with globals (static members).
+  # Interplay with globals.
+
+  @cfg = nil
+  @tests = nil
 
   def self.cfg=(val)
-    @@cfg = val
+    @cfg = val
   end
 
   def self.cfg
-    @@cfg
+    @cfg
   end
 
   def self.tests=(val)
-    @@tests = val
+    @tests = val
   end
 
   def self.tests
-    @@tests
+    @tests
   end
 
-  def self.tmproot
-    $tmpdir
+  def info
+    FormTest.tests.classes_info[self.class.name]
   end
 
-  # Accessor to the configuration.
+  # Accessors to the configuration.
 
   def timeout
     FormTest.cfg.timeout
@@ -160,6 +173,10 @@ module FormTest
 
   def mpi?
     FormTest.cfg.mpi?
+  end
+
+  def valgrind?
+    !FormTest.cfg.valgrind.nil?
   end
 
   def wordsize
@@ -182,64 +199,74 @@ module FormTest
   # Set up the working directory and put FORM files.
   def setup_files
     cleanup_files
-    @tmpdir = mktmpdir(File.join(FormTest.tmproot, "test"))
-    nfiles.times do |n0|
-      n = n0 + 1
-      open(File.join(@tmpdir, "#{n}.frm"), "w") do |file|
-        file.write(FormTest.tests.source(self.class.name, n))
+    @tmpdir = TempDir.mktmpdir(self.class.name + "_")
+    nfiles.times do |i|
+      open(File.join(@tmpdir, "#{i + 1}.frm"), "w") do |file|
+        file.write(info.sources[i])
       end
     end
   end
 
   # Delete the working directory.
   def cleanup_files
-    if @tmpdir != nil
-      rm(@tmpdir)
+    if !@tmpdir.nil?
+      FileUtils.rm_rf(@tmpdir)
     end
     @tmpdir = nil
   end
 
-  # Called from derived classes' test_* methods
+  # Called from derived classes' test_* methods.
   def do_test
     if requires
       setup_files
+      prepare
       @stdout = ""
       @stderr = ""
       begin
-        nfiles.times do |n0|
-          n = n0 + 1
-          @filename = "#{n}.frm"
+        nfiles.times do |i|
+          @filename = "#{i + 1}.frm"
           execute("#{FormTest.cfg.form_cmd} #{@filename}")
-          if not finished?
-            assert(false, "timeout (= #{timeout} sec) in #{@filename} of #{self.name_of_test}")
+          if !finished?
+            info.status = "TIMEOUT"
+            assert(false, "timeout (= #{timeout} sec) in #{@filename} of #{info.desc}")
           end
           if return_value != 0
             break
           end
         end
         yield
+      # NOTE: Here we catch all exceptions, though it is a very bad style. This
+      #       is because, in Ruby 1.9, test/unit is implemented based on
+      #       minitest and MiniTest::Assertion is not a subclass of
+      #       StandardError.
       rescue Exception => e
-        STDERR.puts()
+        STDERR.puts
         STDERR.puts("=" * 79)
-        if nfiles <= 1
-          STDERR.puts("#{self.name_of_test} FAILED")
-        else
-          STDERR.puts("#{self.name_of_test} (#{n}/${nfiles}) FAILED")
-        end
+        STDERR.puts("#{info.desc} FAILED")
         STDERR.puts("=" * 79)
         STDERR.puts(@stdout)
         STDERR.puts("=" * 79)
-        STDERR.puts()
-        raise e
-      end
-    else
-      if defined? omit
-        omit(requires_str) do
-          yield
+        STDERR.puts
+        if info.status.nil?
+          if (defined?(MiniTest::Assertion) && e.is_a?(MiniTest::Assertion)) ||
+             (defined?(Test::Unit::AssertionFailedError) && e.is_a?(Test::Unit::AssertionFailedError))
+            info.status = "FAILED"
+          else
+            info.status = "ERROR"
+          end
         end
-      elsif defined? skip
-        skip(requires_str)
+        raise e
+      else
+        info.status = "OK"
       end
+    elsif defined? omit
+      info.status = "SKIPPED"
+      omit(requires_str) do
+        yield
+      end
+    elsif defined? skip
+      info.status = "SKIPPED"
+      skip(requires_str)
     end
   end
 
@@ -247,7 +274,17 @@ module FormTest
   def execute(cmdline)
     @finished = false
     @exit_status = nil
-    execute_popen3(cmdline, timeout)
+    t0 = Time.now
+    begin
+      execute_popen3(cmdline, timeout)
+    ensure
+      t1 = Time.now
+      dt = t1 - t0
+      if info.times.nil?
+        info.times = []
+      end
+      info.times.push(dt)
+    end
   end
 
   # An implementation by popen3. Should work with Ruby 1.8 on Unix.
@@ -275,26 +312,32 @@ module FormTest
     Open3.popen3(cmdline) do |stdinstream, stdoutstream, stderrstream|
       stdinstream.close
       out = Thread.new do
-        while line = stdoutstream.gets do
+        while (line = stdoutstream.gets)
           stdout << line
         end
       end
       err = Thread.new do
-        while line = stderrstream.gets do
+        while (line = stderrstream.gets)
           stderr << line
+          if !FormTest.cfg.valgrind.nil?
+            # We print both stdout and stderr when the test fails under
+            # Valgrind, by copying stderr into stdout. Unfortunately,
+            # their orders are not preserved.
+            stdout << line
+          end
         end
       end
       begin
         runner = Thread.current
-        killer = Thread.new(timeout) do |timeout|
-          sleep(timeout)
+        killer = Thread.new(timeout) do |timeout_|
+          sleep(timeout_)
           runner.raise
         end
         out.join
         err.join
         killer.kill
       rescue
-        while out.alive? && stdout.empty? do
+        while out.alive? && stdout.empty?
           sleep(0.01)
         end
         if !stdout.empty? && stdout[0] =~ /pid=([0-9]+)/
@@ -306,7 +349,7 @@ module FormTest
       else
         @finished = true
       ensure
-        out.kill  # avoid SEGFAULT at IO#close in some old versions
+        out.kill # avoid SEGFAULT at IO#close in some old versions
         err.kill
       end
     end
@@ -327,18 +370,12 @@ module FormTest
   # Default assertions.
   def default_check
     if return_value != 0
-      assert(false, "nonzero return value (= #{return_value}) from #{@filename} of #{self.name_of_test}")
+      assert(false, "nonzero return value (= #{return_value}) from #{@filename} of #{info.desc}")
     elsif warning?
-      assert(false, "warning in #{@filename} of #{self.name_of_test}")
+      assert(false, "warning in #{@filename} of #{info.desc}")
     else
       assert(true)
     end
-  end
-
-  # The name of the test.
-  def name_of_test
-    classname = self.class.name[5..-1]
-    "#{FormTest.tests.classes_testname[classname]} (#{FormTest.tests.classes_at[classname]})"
   end
 
   # Methods to be overridden in derived classes.
@@ -358,6 +395,10 @@ module FormTest
     "true"
   end
 
+  # The method to be called before the test.
+  def prepare
+  end
+
   # Test-result functions.
 
   # The exit status as a number
@@ -367,38 +408,57 @@ module FormTest
 
   # The verbatim result keeping line breaks and whitespaces.
   # Must be in the default output format.
-  def exact_result(exprname, index=-1)
+  def exact_result(exprname, index = -1)
     matches = @stdout.scan(/^[ \t]+#{exprname}\s*=(.+?);/m)
-    return matches[index].first if not matches.empty? and not matches[index].nil?
-    return ""
+    return matches[index].first if !matches.empty? && !matches[index].nil?
+    ""
   end
 
   # The result on one line with multiple whitespaces reduced to one.
   # Must be in the default output format.
-  def result(exprname, index=-1)
+  def result(exprname, index = -1)
     r = exact_result(exprname, index)
-    return r.gsub(/\s+/, "") if not r.nil?
-    return ""
+    return r.gsub(/\s+/, "") if !r.nil?
+    ""
   end
 
   # The size in byte.
   # Must be in the default statistics format.
-  def bytesize(exprname, index=-1)
+  def bytesize(exprname, index = -1)
     matches = @stdout.scan(/^[ \t]+#{exprname}\s*Terms in output\s*=\s*\d+\s*Bytes used\s*=\s*(\d+)/m)
-    return matches[index].first.to_i if not matches.empty? and not matches[index].nil?
-    return -1
+    return matches[index].first.to_i if !matches.empty? && !matches[index].nil?
+    -1
   end
 
-  # The file contents as a string.
+  # The file contents as a string (in the working directory).
   def file(filename)
     begin
       open(File.join(@tmpdir, filename), "r") do |f|
         return f.read
       end
     rescue
-      STDERR.puts("warning: file not found '#{filename}'")
-      return ""
+      STDERR.puts("warning: failed to read '#{filename}'")
     end
+    ""
+  end
+
+  # Same as file(filename).
+  def read(filename)
+    file filename
+  end
+
+  # Write to a file (in the working directory).
+  def write(filename, text)
+    fname = File.join(@tmpdir, filename)
+    FileUtils.mkdir_p(File.dirname(fname))
+    open(fname, "w") do |f|
+      f.write(text)
+    end
+  end
+
+  # The working directory for the test.
+  def workdir
+    @tmpdir
   end
 
   # The standard output of the FORM job as a string.
@@ -442,8 +502,31 @@ module FormTest
   # true if the FORM job completed without any warnings/errors and
   # the exit code was 0.
   def succeeded?
-    finished? && !warning? && !compile_error? && !runtime_error? &&
-    @stderr.empty? && return_value == 0
+    if finished? && !warning? && !compile_error? && !runtime_error? && return_value == 0
+      if FormTest.cfg.valgrind.nil?
+        return @stderr.empty?
+      end
+      # Check for Valgrind errors.
+      ok = !@stderr.include?("Invalid read") &&
+           !@stderr.include?("Invalid write") &&
+           !@stderr.include?("Invalid free") &&
+           !@stderr.include?("Mismatched free") &&
+           !@stderr.include?("Use of uninitialised value") &&
+           !@stderr.include?("Conditional jump or move depends on uninitialised value") &&
+           !@stderr.include?("points to uninitialised byte") &&
+           !@stderr.include?("contains uninitialised byte") &&
+           !@stderr.include?("Source and destination overlap in memcpy") &&
+           !@stderr.include?("has a fishy") &&
+           @stderr !~ /definitely lost: [1-9]/ &&
+           @stderr !~ /indirectly lost: [1-9]/ &&
+           @stderr !~ /possibly lost: [1-9]/
+      if !ok
+        @stdout += "Valgrind test failed"
+      end
+      return ok
+    else
+      return false
+    end
   end
 
   # Utility functions for pattern matching.
@@ -468,46 +551,79 @@ module FormTest
   end
 end
 
+# Information of a test case.
+class TestInfo
+  def initialize
+    @where = nil    # where the test is defined
+    @foldname = nil # fold name of the test
+    @enabled = nil  # enabled or not
+    @sources = []   # FORM sources
+
+    @status = nil   # status
+    @times = nil    # elapsed time (array)
+  end
+
+  attr_accessor :where, :foldname, :enabled, :sources, :status, :times
+
+  # Return the description of the test.
+  def desc
+    "#{@foldname} (#{@where})"
+  end
+end
+
 # List of test cases.
 class TestCases
   def initialize
-    @files = []             # ruby files
-    @classes = []           # test classes (unsorted)
-    @classes_set = Set.new  # set of test classes
-    @classes_at = {}        # where tests are defined
-    @classes_testname = {}  # fold name of test classes
-    @sources = {}           # form sources
+    @files = []             # Ruby files
+
+    @classes = []           # test class names (unsorted)
+    @classes_set = Set.new  # set of test class names
+    @classes_info = {}      # TestInfo objects, key: Ruby class name
 
     @name_patterns = []
     @exclude_patterns = []
   end
 
+  attr_reader :classes_info
   attr_accessor :name_patterns, :exclude_patterns
-  attr_reader :classes, :classes_at, :classes_testname
+
+  # Return a list containing info objects for enabled tests.
+  def classes_info_list
+    infos = []
+    @classes.each do |c|
+      info = @classes_info["Test_" + c]
+      if info.enabled
+        infos.push(info)
+      end
+    end
+    infos
+  end
 
   # Convert a .frm file to a .rb file and load it.
   def make_ruby_file(filename)
     # Check existing files.
     inname = File.basename(filename)
     outname = File.basename(filename, ".frm") + ".rb"
-    if @files.index(outname) != nil
+    if @files.include?(outname)
       fatal("duplicate output file name", inname)
     end
     @files.push(outname)
 
-    outname = File.join($tmpdir, outname)
+    outname = File.join(TempDir.root, outname)
 
     open(filename, "r") do |infile|
       open(outname, "w") do |outfile|
         lineno = 0
         level = 0
         classname = nil
+        info = nil
         block = nil
         blockno = 0
         fileno = 0
         skipping = false
         heredoc = nil
         requires = nil
+        prepares = nil
 
         infile.each_line do |line|
           line.chop!
@@ -520,18 +636,22 @@ class TestCases
                 fatal("empty fold", inname, lineno)
               end
               classname = canonical_name(fold)
+              info = TestInfo.new
               @classes.push(classname)
               @classes_set.add(classname)
-              @classes_at[classname] = "#{inname}:#{lineno.to_s}"
-              @classes_testname[classname] = fold
+              @classes_info["Test_#{classname}"] = info
+              info.where = "#{inname}:#{lineno}"
+              info.foldname = fold
+              info.enabled = test_enabled?(classname)
 
               level += 1
               block = ""
               blockno = 0
               fileno = 0
-              skipping = !test_enabled?(classname)
+              skipping = !info.enabled
               heredoc = nil
               requires = nil
+              prepares = nil
               if skipping
                 line = ""
               else
@@ -544,108 +664,118 @@ class TestCases
               # as commentary
               line = ""
             end
-          else
-            if heredoc == nil && line =~ /^\*..#\]\s*([^:]*)/ && level == 1
-              # fold close: end of the class
-              fold = $1.strip
-              foldname = @classes_testname[classname]
-              if !fold.empty? && fold != foldname
-                warn("unmatched fold '#{fold}', which should be '#{foldname}'", inname, lineno)
-              end
+          elsif heredoc.nil? && line =~ /^\*..#\]\s*([^:]*)/ && level == 1
+            # fold close: end of the class
+            fold = $1.strip
+            foldname = info.foldname
+            if !fold.empty? && fold != foldname
+              warn("unmatched fold '#{fold}', which should be '#{foldname}'", inname, lineno)
+            end
 
-              if skipping
-                line = ""
-              else
-                line = ""
-                if fileno == 0
-                  # no .end
-                  blockno.times do
-                    outfile.write("\n")
-                  end
-
-                  block += ".end\n"
-                  fileno += 1
-                  @sources["Test_#{classname}##{fileno.to_s}"] = block
-
-                  line += "def test_#{classname}; do_test { default_check } end; "
-                else
-                  outfile.write("def test_#{classname}; do_test {\n" + block)
-                  line = "} end; "
-                end
-                line += "def nfiles; #{fileno.to_s} end; " if fileno != 1
-                if requires != nil
-                  requires = requires.map{|s| "(" + s + ")"}.join(" and ")
-                  line += "def requires; #{requires} end; "
-                  line += "def requires_str; %&#{requires}& end; "
-                end
-                line += "end"
-              end
-              level = 0
-            elsif heredoc == nil && line =~ /^\s*\.end/
-              # .end
-              if skipping
-                line = ""
-              else
-                blockno += 1 if fileno > 0  # previous .end
+            if skipping
+              line = ""
+            else
+              line = ""
+              if fileno == 0
+                # no .end
                 blockno.times do
                   outfile.write("\n")
                 end
 
-                block += line + "\n"
+                block += ".end\n"
                 fileno += 1
-                @sources["Test_#{classname}##{fileno.to_s}"] = block
+                info.sources.push(block)
 
-                block = ""
-                blockno = 0
-
-                line = nil  # later
+                line += "def test_#{classname}; do_test { default_check } end; "
+              else
+                outfile.write("def test_#{classname}; do_test {\n" + block)
+                line = "} end; "
               end
-            elsif heredoc == nil && line =~ /^\s*#\s*require\s+(.*)/
-              # #require
-              line = ""
-              if requires == nil
-                requires = []
+              line += "def nfiles; #{fileno} end; " if fileno != 1
+              if !requires.nil?
+                requires = requires.map { |s| "(" + s + ")" }.join(" and ")
+                line += "def requires; #{requires} end; "
+                line += "def requires_str; %&#{requires}& end; "
               end
-              requires << $1
-            elsif heredoc == nil && line =~ /^\*\s*#\s*require\s+(.*)/
-              # *#require (commented out in the FORM way)
+              if !prepares.nil?
+                prepares = prepares.join("; ")
+                line += "def prepare; #{prepares} end; "
+              end
+              line += "end"
+            end
+            level = 0
+            classname = nil
+            info = nil
+          elsif heredoc.nil? && line =~ /^\s*\.end/
+            # .end
+            if skipping
               line = ""
             else
-              if heredoc == nil
-                if line =~ /^\*..#\[/
-                  # fold open
-                  level += 1
-                elsif line =~ /^\*..#\]\s*([^:]*)/
-                  # fold close
-                  level -= 1
-                end
-                if line =~ /<</
-                  if line =~ /<</ && (line =~ /<<-?(\w+)/ ||
-                                      line =~ /<<-?"(\w+)"/ ||
-                                      line =~ /<<-?'(\w+)'/ ||
-                                      line =~ /<<-?`(\w+)`/)
-                    # start here document
-                    heredoc = Regexp.new($1)
-                  end
-                end
-              elsif line =~ heredoc
-                # end here document
-                heredoc = nil
+              blockno += 1 if fileno > 0 # previous .end
+              blockno.times do
+                outfile.write("\n")
               end
-              if skipping
-                line = ""
-              else
-                # some typical assertions
-                if line =~ /^\s*assert\s+(succeeded\?|finished\?)\s*$/
-                  line = "assert(#{$1}, 'Failed for #{$1}')"
-                end
-                block += line + "\n"
-                blockno += 1
-                line = nil
+
+              block += line + "\n"
+              fileno += 1
+              info.sources.push(block)
+
+              block = ""
+              blockno = 0
+
+              line = nil # later
+            end
+          elsif heredoc.nil? && line =~ /^\s*#\s*require\s+(.*)/
+            # #require <condition>
+            line = ""
+            if requires.nil?
+              requires = []
+            end
+            requires << $1
+          elsif heredoc.nil? && line =~ /^\s*#\s*prepare\s+(.*)/
+            # #prepare <statement>
+            line = ""
+            if prepares.nil?
+              prepares = []
+            end
+            prepares << $1
+          elsif heredoc.nil? && line =~ /^\*\s*#\s*(require|prepare)\s+(.*)/
+            # *#require/prepare, commented out in the FORM way
+            line = ""
+          else
+            if heredoc.nil?
+              if line =~ /^\*..#\[/
+                # fold open
+                level += 1
+              elsif line =~ /^\*..#\]\s*([^:]*)/
+                # fold close
+                level -= 1
+              elsif line =~ /<</ && (line =~ /<<-?(\w+)/ ||
+                                     line =~ /<<-?"(\w+)"/ ||
+                                     line =~ /<<-?'(\w+)'/ ||
+                                     line =~ /<<-?`(\w+)`/)
+                # start here document
+                heredoc = Regexp.new($1)
+                # NOTE: Currently, we don't support more than one << operators
+                #       in the same line.
               end
+            elsif line =~ heredoc
+              # end here document
+              heredoc = nil
+            end
+            if skipping
+              line = ""
+            else
+              # some typical assertions
+              if line =~ /^\s*assert\s+(succeeded\?|finished\?)\s*$/
+                line = "assert(#{$1}, 'Failed for #{$1}')"
+              end
+              block += line + "\n"
+              blockno += 1
+              line = nil
             end
           end
-          if line != nil
+          if !line.nil?
             outfile.write(line + "\n")
           end
         end
@@ -661,15 +791,15 @@ class TestCases
   def test_enabled?(name)
     # construct regular expressions (wildcards: '*' and '?')
     @name_patterns.length.times do |i|
-      if !@name_patterns[i].kind_of?(Regexp)
-        s = @name_patterns[i].to_s.gsub("\*", ".*").gsub("\?", ".")
+      if !@name_patterns[i].is_a?(Regexp)
+        s = @name_patterns[i].to_s.gsub("\*", ".*").tr("\?", ".")
         s = "^" + s + "$"
         @name_patterns[i] = Regexp.new(s)
       end
     end
     @exclude_patterns.length.times do |i|
-      if !@exclude_patterns[i].kind_of?(Regexp)
-        s = @exclude_patterns[i].to_s.gsub("\*", ".*").gsub("\?", ".")
+      if !@exclude_patterns[i].is_a?(Regexp)
+        s = @exclude_patterns[i].to_s.gsub("\*", ".*").tr("\?", ".")
         s = "^" + s + "$"
         @exclude_patterns[i] = Regexp.new(s)
       end
@@ -697,12 +827,7 @@ class TestCases
         end
       end
     end
-    return ok
-  end
-
-  # Return a FORM source.
-  def source(classname, n)
-    @sources["#{classname}##{n}"]
+    ok
   end
 
   # Return a class name that is valid and unique.
@@ -710,26 +835,32 @@ class TestCases
     prefix = name.gsub(/[^a-zA-Z0-9_]/, "_")
     s = prefix
     i = 0
-    while true do
-      if not @classes.include?(s)
+    loop do
+      if !@classes.include?(s)
         break
       end
       i += 1
       s = prefix + "_" + i.to_s
     end
-    return s
+    s
   end
 end
 
 # FORM configuration.
 class FormConfig
-  def initialize(form, mpirun, ncpu, timeout)
-    @form    = form
-    @mpirun  = mpirun
-    @ncpu    = ncpu
-    @timeout = timeout
+  def initialize(form, mpirun, valgrind, ncpu, timeout, stat)
+    @form     = form
+    @mpirun   = mpirun
+    @valgrind = valgrind
+    @ncpu     = ncpu
+    @timeout  = timeout
+    @stat     = stat
 
-    @bin         = nil
+    @form_bin      = nil
+    @mpirun_bin    = nil
+    @valgrind_bin  = nil
+    @valgrind_supp = nil
+
     @head        = nil
     @is_serial   = nil
     @is_threaded = nil
@@ -738,7 +869,9 @@ class FormConfig
     @form_cmd    = nil
   end
 
-  attr_reader :form, :mpirun, :ncpu, :timeout, :bin, :head, :wordsize, :form_cmd
+  attr_reader :form, :mpirun, :valgrind, :ncpu, :timeout, :stat
+  attr_reader :form_bin, :mpirun_bin, :valgrind_bin, :valgrind_supp
+  attr_reader :head, :wordsize, :form_cmd
 
   def serial?
     @is_serial
@@ -752,34 +885,29 @@ class FormConfig
     @is_mpi
   end
 
-  def check
-    # Find a FORM excutable as the shell does.
-    @bin = nil
-    if @form != File.basename(@form)
-      # The relative path to the absolute path.
-      @bin = File.expand_path(@form)
-    else
-      # Search from $PATH.
-      for path in ENV["PATH"].split(":") do
-        candidate = File.join(path, @form)
-        if File.executable?(candidate)
-          @bin = File.expand_path(candidate)
-          break
-        end
+  def check_bin(name, bin)
+    # Check if the executable is available.
+    system("cd #{TempDir.root}; type #{bin} >/dev/null 2>&1")
+    if $? != 0
+      if name == bin
+        fatal("executable '#{name}' not found")
+      else
+        fatal("executable '#{name}' ('#{bin}') not found")
       end
     end
-    @bin = @form if @bin.nil?  # fallback, probably won't work
+  end
+
+  def check
     # Check if FORM is available.
-    system("cd #{$tmpdir}; type #{@bin} >/dev/null 2>&1")
-    if $? != 0
-      if @form == @bin
-        fatal("executable '#{@form}' not found")
-      else
-        fatal("executable '#{@form}' ('#{@bin}') not found")
-      end
+    @form_bin = which(@form)
+    check_bin(@form, @form_bin)
+    # Check if Valgrind is available.
+    if !@valgrind.nil?
+      @valgrind_bin = which(@valgrind)
+      check_bin(@valgrind, @valgrind_bin)
     end
     # Check the FORM version.
-    tmpdir = mktmpdir(File.join($tmpdir, "ver_"))
+    tmpdir = TempDir.mktmpdir("ver_")
     begin
       frmname = File.join(tmpdir, "ver.frm")
       open(frmname, "w") do |f|
@@ -789,7 +917,7 @@ Off finalstats;
 .end
   EOF
       end
-      @head = `#{@bin} #{frmname} 2>/dev/null`.split("\n").first
+      @head = `#{@form_bin} #{frmname} 2>/dev/null`.split("\n").first
       @is_serial = false
       if @head =~ /^FORM/
         @is_serial   = true
@@ -811,71 +939,99 @@ Off finalstats;
       else
         fatal("failed to get the wordsize of '#{@form}'")
       end
-      # Construct the command.
-      case
-      when @is_serial
-        @form_cmd = @bin
-      when @is_threaded
-        @form_cmd = "#{@bin} -w#{@ncpu}"
-      when @is_mpi
-        @form_cmd = "#{@mpirun} -np #{@ncpu} #{@bin}"
+      # Prepare for mpirun
+      if @is_mpi
+        @mpirun_bin = which(@mpirun)
+        check_bin(@mpirun, @mpirun_bin)
+        # Open MPI is known to be not Valgrind-clean. Try to suppress some
+        # errors. Unfortunately, it would be insufficient.
+        supp = File.expand_path(File.join(File.dirname(@mpirun_bin),
+                                          "..", "share", "openmpi",
+                                          "openmpi-valgrind.supp"))
+        if File.exist?(supp)
+          @valgrind_supp = supp
+        end
       end
+      # Construct the command.
+      cmdlist = []
+      if @is_mpi
+        cmdlist << @mpirun_bin << "-np" << @ncpu.to_s
+      end
+      if !@valgrind_bin.nil?
+        cmdlist << @valgrind_bin
+        cmdlist << "--leak-check=full"
+        if !@valgrind_supp.nil?
+          cmdlist << "--suppressions=#{@valgrind_supp}"
+        end
+      end
+      cmdlist << @form_bin
+      if @is_threaded
+        cmdlist << "-w#{@ncpu}"
+      end
+      @form_cmd = cmdlist.join(" ")
+      # Check the output header.
       @head = `#{@form_cmd} #{frmname} 2>/dev/null`.split("\n").first
       if $? != 0
         fatal("failed to execute '#{@form_cmd}'")
       end
+      if !@valgrind.nil?
+        @head += "\n" + `#{@form_cmd} @{frmname} 2>&1 >/dev/null`.split("\n")[0..2].join("\n")
+      end
     ensure
-      rm(tmpdir)
+      FileUtils.rm_rf(tmpdir)
     end
   end
 end
 
+# Return paths obtained by `oldpath` + `newpath`.
+def add_path(oldpath, newpath)
+  newpath = File.expand_path(newpath)
+  if oldpath.nil?
+    return newpath
+  end
+  newpath + ":" + oldpath
+end
+
+# Parse `TEST=...`.
+def parse_def(pat)
+  if pat =~ /^TEST=(.*)/
+    return $1
+  end
+  nil
+end
+
+# Search for the `file`.
+def search_file(file, opts)
+  f = file
+  return f if File.exist?(f)
+  if !opts.dir.nil?
+    f = File.join(opts.dir, file)
+    return f if File.exist?(f)
+  end
+  if !TESTDIR.nil?
+    f = File.join(TESTDIR, file)
+    return f if File.exist?(f)
+  end
+  fatal("file '#{file}' not found")
+end
+
+# Search for the `dir`.
+def search_dir(dir, opts)
+  d = dir
+  return d if File.directory?(d)
+  if !opts.dir.nil?
+    d = File.join(opts.dir, dir)
+    return d if File.directory?(d)
+  end
+  if !TESTDIR.nil?
+    d = File.join(TESTDIR, dir)
+    return d if File.directory?(d)
+  end
+  fatal("directory '#{dir}' not found")
+end
+
 def main
   # Parse options.
-
-  def add_path(oldpath, newpath)
-    newpath = File.expand_path(newpath)
-    if oldpath.nil?
-      return newpath
-    else
-      return newpath + ":" + oldpath
-    end
-  end
-
-  def parse_D(pat)
-    if pat =~ /^TEST=(.*)/
-      return $1
-    end
-    return nil
-  end
-
-  def search_file(file, opts)
-    f = file
-    return f if File.exist?(f)
-    if not opts.dir.nil?
-      f = File.join(opts.dir, file)
-      return f if File.exist?(f)
-    end
-    if not TESTDIR.nil?
-      f = File.join(TESTDIR, file)
-      return f if File.exist?(f)
-    end
-    fatal("file '#{file}' not found")
-  end
-
-  def search_dir(dir, opts)
-    d = dir
-    return d if File.directory?(d)
-    if not opts.dir.nil?  # may be confusing
-      d = File.join(opts.dir, dir)
-      return d if File.directory?(d)
-    end
-    if not TESTDIR.nil?
-      d = File.join(TESTDIR, dir)
-      return d if File.directory?(d)
-    end
-    fatal("directory '#{dir}' not found")
-  end
 
   opts = OpenStruct.new
   opts.list = false
@@ -883,34 +1039,51 @@ def main
   opts.form = "form"
   opts.mpirun = "mpirun"
   opts.ncpu = 4
-  opts.timeout = TIMEOUT
+  opts.timeout = nil
+  opts.stat = false
+  opts.enable_valgrind = false
+  opts.valgrind = "valgrind"
   opts.dir = nil
   opts.name_patterns = []
   opts.exclude_patterns = []
   opts.files = []
 
   parser = OptionParser.new
-  parser.banner = "Usage: #{File.basename($0)} [options] [binname] [files|tests..]";
-  parser.on("-h", "--help",          "Show this help and exit")           { puts parser; exit }
-  parser.on("-l", "--list",          "list all tests and exit")           { opts.list = true }
-  parser.on(      "--path PATH",     "Use PATH for executables")          { |path| opts.path = add_path(opt_path, path) }
-  parser.on(      "--form BIN",      "Use BIN as FORM executable")        { |bin|  opts.form = bin }
-  parser.on(      "--mpirun BIN",    "Use BIN as mpirun executable")      { |bin|  opts.mpirun = bin }
-  parser.on("-w", "--ncpu N",        "Use N cpus")                        { |n|    opts.ncpu = n.to_i }
+  parser.banner = "Usage: #{File.basename($0)} [options] [--] [binname] [files|tests..]"
+  parser.on("-h", "--help",          "Show this help and exit")           { puts(parser); exit }
+  parser.on("-l", "--list",          "List all tests and exit")           { opts.list = true }
+  parser.on("--path PATH",           "Use PATH for executables")          { |path| opts.path = add_path(opts.path, path) }
+  parser.on("--form BIN",            "Use BIN as FORM executable")        { |bin|  opts.form = bin }
+  parser.on("--mpirun BIN",          "Use BIN as mpirun executable")      { |bin|  opts.mpirun = bin }
+  parser.on("-w", "--ncpu N",        "Use N CPUs")                        { |n|    opts.ncpu = n.to_i }
   parser.on("-t", "--timeout N",     "Timeout N in seconds")              { |n|    opts.timeout = n.to_i }
+  parser.on("--stat",                "Print detailed statistics")         { opts.stat = true }
+  parser.on("--enable-valgrind",     "Enable Valgrind")                   { opts.enable_valgrind = true }
+  parser.on("--valgrind BIN",        "Use BIN as Valgrind executable")    { |bin| opts.enable_valgrind = true; opts.valgrind = bin }
   parser.on("-C", "--directory DIR", "Directory for test cases")          { |dir|  opts.dir = search_dir(dir, opts) }
   parser.on("-n", "--name NAME",     "Run tests matching NAME")           { |pat|  opts.name_patterns << pat }
   parser.on("-x", "--exclude NAME",  "Do not run tests matching NAME")    { |pat|  opts.exclude_patterns << pat }
-  parser.on("-D TEST=NAME",          "Alternative way to run tests NAME") { |pat|  opts.name_patterns << parse_D(pat) }
-  parser.parse!(ARGV)
+  parser.on("-D TEST=NAME",          "Alternative way to run tests NAME") { |pat|  opts.name_patterns << parse_def(pat) }
+  begin
+    parser.parse!(ARGV)
+  rescue OptionParser::ParseError => e
+    STDERR.puts(e.backtrace.first + ": #{e.message} (#{e.class})")
+    e.backtrace[1..-1].each { |m| STDERR.puts("\tfrom #{m}") }
+    puts(parser)
+    exit(1)
+  end
 
   # Parse other arguments.
 
-  while ARGV.length > 0
-    case
-    when ARGV[0] =~ /\.frm$/
+  while !ARGV.empty?
+    if ARGV[0] =~ /\.frm$/
       opts.files << search_file(ARGV[0], opts)
-    when ARGV[0] =~ /form/ || ARGV[0] =~ /vorm/ || File.executable?(ARGV[0])
+    elsif ARGV[0] =~ /valgrind/
+      opts.enable_valgrind = true
+      opts.valgrind = ARGV[0]
+    elsif ARGV[0] =~ /mpirun/ || ARGV[0] =~ /mpiexec/
+      opts.mpirun = ARGV[0]
+    elsif ARGV[0] =~ /form/ || ARGV[0] =~ /vorm/ || File.executable?(ARGV[0])
       opts.form = ARGV[0]
     else
       opts.name_patterns << ARGV[0]
@@ -924,7 +1097,7 @@ def main
   FormTest.tests.name_patterns = opts.name_patterns
   FormTest.tests.exclude_patterns = opts.exclude_patterns
 
-  if opts.files.length == 0
+  if opts.files.empty?
     Dir.glob(File.join(opts.dir.nil? ? TESTDIR : opts.dir, "*.frm")).sort.each do |file|
       opts.files << search_file(file, opts)
     end
@@ -936,30 +1109,159 @@ def main
 
   # --list option.
   if opts.list
-    FormTest.tests.classes.each do |key|
-      puts("#{key} (#{FormTest.tests.classes_at[key]})")
+    infos = FormTest.tests.classes_info_list
+    infos.each do |info|
+      puts("#{info.foldname} (#{info.where})")
     end
+    puts("#{infos.length} tests")
     exit
   end
 
   # --path option.
-  if not opts.path.nil?
-    ENV["PATH"] = opt.path + ":" + ENV["PATH"]
+  if !opts.path.nil?
+    ENV["PATH"] = opts.path + ":" + ENV["PATH"]
   end
 
   # Set FORMPATH
   ENV["FORMPATH"] = File.expand_path(opts.dir.nil? ? TESTDIR : opts.dir) +
                     (ENV["FORMPATH"].nil? ? "" : ":" + ENV["FORMPATH"])
 
+  # Default timeout.
+  if opts.timeout.nil?
+    opts.timeout = TIMEOUT
+    # Running Valgrind can be really slow.
+    if opts.enable_valgrind
+      opts.timeout *= 30
+    end
+  end
+
   # Initialize the FORM configuration.
-  FormTest.cfg = FormConfig.new(opts.form, opts.mpirun, opts.ncpu,
-                                opts.timeout > 1 ? opts.timeout : 1)
+  FormTest.cfg = FormConfig.new(opts.form,
+                                opts.mpirun,
+                                opts.enable_valgrind ? opts.valgrind : nil,
+                                opts.ncpu,
+                                opts.timeout > 1 ? opts.timeout : 1,
+                                opts.stat)
   FormTest.cfg.check
-  puts "Check #{FormTest.cfg.bin}"
-# puts "FORMPATH=#{ENV["FORMPATH"]}"
-# puts "FORMTMP=#{ENV["FORMTMP"]}"
-# puts "FORMSETUP=#{ENV["FORMSETUP"]}"
-  puts FormTest.cfg.head
+  puts("Check #{FormTest.cfg.form_bin}")
+  puts(FormTest.cfg.head)
+end
+
+def finalize
+  return if FormTest.cfg.nil? || !FormTest.cfg.stat
+
+  infos = FormTest.tests.classes_info_list
+
+  return if infos.empty?
+
+  # Print detailed statistics.
+
+  term_width = guess_term_width
+
+  max_foldname_width = infos.map { |info| info.foldname.length }.max
+  max_where_width = infos.map { |info| info.where.length }.max + 2
+  status_width = 7
+  time_width = 13
+  bar_width = term_width - max_foldname_width - max_where_width - status_width -
+              time_width - 5
+
+  if bar_width < 12
+    bar_width = 12
+  elsif bar_width > 40
+    bar_width = 40
+  end
+
+  puts("timeout: #{FormTest.cfg.timeout}s")
+
+  infos.each do |info|
+    (0..info.sources.length - 1).each do |i|
+      t = 0
+      if !info.times.nil? && i < info.times.length
+        t = info.times[i]
+      end
+      if i == 0
+        puts(format("%s %s  %s %s%s",
+                    lpad(info.foldname, max_foldname_width),
+                    lpad("(" + info.where + ")", max_where_width),
+                    lpad(info.status.nil? ? "UNKNOWN" : info.status, status_width),
+                    bar_str(t, FormTest.cfg.timeout, bar_width),
+                    format_time(t, FormTest.cfg.timeout)))
+      else
+        puts(format("%s %s  %s %s%s",
+                    lpad("", max_foldname_width),
+                    lpad("", max_where_width),
+                    lpad("", status_width),
+                    bar_str(t, FormTest.cfg.timeout, bar_width),
+                    format_time(t, FormTest.cfg.timeout)))
+      end
+    end
+  end
+end
+
+# Return the string with padding to left.
+def lpad(str, len)
+  if str.length > len
+    str[0..len - 1]
+  elsif str.length < len
+    str + " " * (len - str.length)
+  else
+    str
+  end
+end
+
+# Return a string for a bar chart.
+def bar_str(n, nmax, len)
+  bar_body_width = len - 2
+  bar = " " * len
+  bar[0] = "|"
+  bar[len - 1] = "|"
+  pos = (Float(n) / nmax * bar_body_width).round
+  if pos < 0
+    pos = 0
+  elsif pos > bar_body_width
+    pos = bar_body_width
+  end
+  if pos >= 1
+    (1..pos).each do |i|
+      bar[i] = "#"
+    end
+  end
+  bar
+end
+
+# Format an elapsed time.
+def format_time(t, tmax)
+  overflow = t > tmax
+  if overflow
+    t = tmax
+  end
+  t = Float(t)
+  h = Integer(t / 3600)
+  t = t % 3600
+  m = Integer(t / 60)
+  t = t % 60
+  s = Integer(t)
+  t = t % 1
+  ms = Integer(t * 1000)
+  format("%s%02d:%02d:%02d.%03d", overflow ? ">" : " ", h, m, s, ms)
+end
+
+# Return a guessed terminal width.
+def guess_term_width
+  require "io/console"
+  IO.console.winsize[1]
+rescue LoadError
+  system("type tput >/dev/null 2>&1")
+  if $? == 0
+    cols = `tput cols`
+  else
+    cols = ENV["COLUMNS"] || ENV["TERM_WIDTH"]
+  end
+  begin
+    Integer(cols)
+  rescue ArgumentError, TypeError
+    80
+  end
 end
 
 if __FILE__ == $0
