@@ -27,7 +27,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */ 
+/* #] License : */
 /*
   	#[ Includes :
 
@@ -115,7 +115,7 @@ SETUPPARAMETERS setupparameters[] =
 };
 
 /*
-  	#] Includes : 
+  	#] Includes :
 	#[ Setups :
  		#[ DoSetups :
 */
@@ -164,7 +164,7 @@ int DoSetups()
 }
 
 /*
- 		#] DoSetups : 
+ 		#] DoSetups :
  		#[ ProcessOption :
 */
 
@@ -267,8 +267,22 @@ restart:;
 				sp->flags = USEDFLAG;
 				break;
 			case PATHVALUE:
-				MesPrint("Setups: PATHVALUE not yet implemented");
-				error = 1; break;
+				if ( StrICmp(s1,(UBYTE *)"incdir") == 0 ) {
+					AM.IncDir = 0;
+				}
+				else if ( StrICmp(s1,(UBYTE *)"path") == 0 ) {
+					AM.Path = 0;
+				}
+				else {
+					MesPrint("Setups: %s not yet implemented",s1);
+					error = 1;
+					break;
+				}
+				if ( sp->flags == USEDFLAG && sp->value != 0 )
+					M_free((VOID *)(sp->value),"Process option");
+				sp->value = (LONG)strDup1(s2,"Process option");
+				sp->flags = USEDFLAG;
+				break;
 			case ONOFFVALUE:
 				if ( tolower(*s2) == 'o' && tolower(s2[1]) == 'n'
 				&& ( s2[2] == 0 || s2[2] == ' ' || s2[2] == '\t' ) )
@@ -306,7 +320,7 @@ restart:;
 }
 
 /*
- 		#] ProcessOption : 
+ 		#] ProcessOption :
  		#[ GetSetupPar :
 */
 
@@ -326,7 +340,7 @@ SETUPPARAMETERS *GetSetupPar(UBYTE *s)
 }
 
 /*
- 		#] GetSetupPar : 
+ 		#] GetSetupPar :
  		#[ RecalcSetups :
 */
 
@@ -373,7 +387,7 @@ int RecalcSetups()
 }
 
 /*
- 		#] RecalcSetups : 
+ 		#] RecalcSetups :
  		#[ AllocSetups :
 */
 
@@ -731,7 +745,7 @@ int AllocSetups()
 }
 
 /*
- 		#] AllocSetups : 
+ 		#] AllocSetups :
  		#[ WriteSetup :
 
 	The routine writes the values of the setup parameters.
@@ -794,7 +808,7 @@ VOID WriteSetup()
 }
 
 /*
- 		#] WriteSetup : 
+ 		#] WriteSetup :
  		#[ AllocSort :
 
 		Routine allocates a complete struct for sorting.
@@ -928,7 +942,7 @@ SORTING *AllocSort(LONG LargeSize, LONG SmallSize, LONG SmallEsize, LONG TermsIn
 }
 
 /*
- 		#] AllocSort : 
+ 		#] AllocSort :
  		#[ AllocSortFileName :
 */
 
@@ -953,7 +967,7 @@ VOID AllocSortFileName(SORTING *sort)
 }
 
 /*
- 		#] AllocSortFileName : 
+ 		#] AllocSortFileName :
  		#[ AllocFileHandle :
 */
 
@@ -1011,7 +1025,7 @@ FILEHANDLE *AllocFileHandle(WORD par,char *name)
 }
 
 /*
- 		#] AllocFileHandle : 
+ 		#] AllocFileHandle :
  		#[ DeAllocFileHandle :
 
 		Made to repair deallocation of AN.filenum. 21-sep-2000
@@ -1030,7 +1044,7 @@ void DeAllocFileHandle(FILEHANDLE *fh)
 }
 
 /*
- 		#] DeAllocFileHandle : 
+ 		#] DeAllocFileHandle :
  		#[ MakeSetupAllocs :
 */
 
@@ -1041,7 +1055,7 @@ int MakeSetupAllocs()
 }
 
 /*
- 		#] MakeSetupAllocs : 
+ 		#] MakeSetupAllocs :
  		#[ TryFileSetups :
 
 		Routine looks in the input file for a start of the type
@@ -1127,7 +1141,7 @@ eoi:
 }
 
 /*
- 		#] TryFileSetups : 
+ 		#] TryFileSetups :
  		#[ TryEnvironment :
 */
 
@@ -1152,6 +1166,6 @@ int TryEnvironment()
 }
 
 /*
- 		#] TryEnvironment : 
+ 		#] TryEnvironment :
 	#] Setups :
 */
