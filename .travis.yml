@@ -4,35 +4,450 @@ language: cpp
 git:
   depth: 10000
 
-addons:
-  apt:
-    packages:
-      - libgmp-dev
-      - libopenmpi-dev
-      - openmpi-bin
-      - zlib1g-dev
+my_recipes:
+  - &linux_gcc_form
+    os: linux
+    compiler: gcc
+    env: TEST=form
+    addons:
+      apt:
+        packages:
+          - libgmp-dev
+          - zlib1g-dev
+    script:
+      - autoreconf -iv
+      - ./configure --enable-scalar --disable-threaded --disable-parform
+      - MAKEFLAGS='-j 4' make
+      - make check TEST_OPTS=--stat
+
+  - &linux_gcc_tform
+    os: linux
+    compiler: gcc
+    env: TEST=tform
+    addons:
+      apt:
+        packages:
+          - libgmp-dev
+          - zlib1g-dev
+    script:
+      - autoreconf -iv
+      - ./configure --disable-scalar --enable-threaded --disable-parform
+      - MAKEFLAGS='-j 4' make
+      - make check TEST_OPTS=--stat
+
+  - &linux_gcc_parform
+    os: linux
+    compiler: gcc
+    env: TEST=parform
+    addons:
+      apt:
+        packages:
+          - libgmp-dev
+          - libopenmpi-dev
+          - openmpi-bin
+          - zlib1g-dev
+    script:
+      - autoreconf -iv
+      - ./configure --disable-scalar --disable-threaded --enable-parform
+      - MAKEFLAGS='-j 4' make
+      - make check TEST_OPTS=--stat
+
+  - &linux_clang_form
+    <<: *linux_gcc_form
+    compiler: clang
+
+  - &linux_clang_tform
+    <<: *linux_gcc_tform
+    compiler: clang
+
+  - &linux_clang_parform
+    <<: *linux_gcc_parform
+    compiler: clang
+
+  - &linux_gcc5_form
+    os: linux
+    compiler: gcc-5
+    env: TEST=form
+    addons:
+      apt:
+        sources:
+          - ubuntu-toolchain-r-test
+        packages:
+          - gcc-5
+          - g++-5
+          - libgmp-dev
+          - zlib1g-dev
+    script:
+      - autoreconf -iv
+      - ./configure --enable-scalar --disable-threaded --disable-parform CC=gcc-5 CXX=g++-5
+      - MAKEFLAGS='-j 4' make
+      - make check TEST_OPTS=--stat
+
+  - &linux_gcc5_tform
+    os: linux
+    compiler: gcc-5
+    env: TEST=tform
+    addons:
+      apt:
+        sources:
+          - ubuntu-toolchain-r-test
+        packages:
+          - gcc-5
+          - g++-5
+          - libgmp-dev
+          - zlib1g-dev
+    script:
+      - autoreconf -iv
+      - ./configure --disable-scalar --enable-threaded --disable-parform CC=gcc-5 CXX=g++-5
+      - MAKEFLAGS='-j 4' make
+      - make check TEST_OPTS=--stat
+
+  - &linux_gcc5_parform
+    os: linux
+    compiler: gcc-5
+    env: TEST=parform
+    addons:
+      apt:
+        sources:
+          - ubuntu-toolchain-r-test
+        packages:
+          - gcc-5
+          - g++-5
+          - libgmp-dev
+          - libopenmpi-dev
+          - openmpi-bin
+          - zlib1g-dev
+    script:
+      - autoreconf -iv
+      - ./configure --disable-scalar --disable-threaded --enable-parform CC=gcc-5 CXX=g++-5
+      - MAKEFLAGS='-j 4' make
+      - make check TEST_OPTS=--stat
+
+  - &linux_gcc6_form
+    os: linux
+    compiler: gcc-6
+    env: TEST=form
+    addons:
+      apt:
+        sources:
+          - ubuntu-toolchain-r-test
+        packages:
+          - gcc-6
+          - g++-6
+          - libgmp-dev
+          - zlib1g-dev
+    script:
+      - autoreconf -iv
+      - ./configure --enable-scalar --disable-threaded --disable-parform CC=gcc-6 CXX=g++-6
+      - MAKEFLAGS='-j 4' make
+      - make check TEST_OPTS=--stat
+
+  - &linux_gcc6_tform
+    os: linux
+    compiler: gcc-6
+    env: TEST=tform
+    addons:
+      apt:
+        sources:
+          - ubuntu-toolchain-r-test
+        packages:
+          - gcc-6
+          - g++-6
+          - libgmp-dev
+          - zlib1g-dev
+    script:
+      - autoreconf -iv
+      - ./configure --disable-scalar --enable-threaded --disable-parform CC=gcc-6 CXX=g++-6
+      - MAKEFLAGS='-j 4' make
+      - make check TEST_OPTS=--stat
+
+  - &linux_gcc6_parform
+    os: linux
+    compiler: gcc-6
+    env: TEST=parform
+    addons:
+      apt:
+        sources:
+          - ubuntu-toolchain-r-test
+        packages:
+          - gcc-6
+          - g++-6
+          - libgmp-dev
+          - libopenmpi-dev
+          - openmpi-bin
+          - zlib1g-dev
+    script:
+      - autoreconf -iv
+      - ./configure --disable-scalar --disable-threaded --enable-parform CC=gcc-6 CXX=g++-6
+      - MAKEFLAGS='-j 4' make
+      - make check TEST_OPTS=--stat
+
+  - &linux_gcc_noextlib
+    os: linux
+    compiler: gcc
+    env: TEST=noextlib
+    script:
+      - autoreconf -iv
+      - ./configure --without-gmp --without-zlib
+      - MAKEFLAGS='-j 4' make
+      - make check TEST_OPTS=--stat
+
+  - &linux_gcc_m32
+    os: linux
+    compiler: gcc
+    env: TEST=m32
+    addons:
+      apt:
+        packages:
+          - gcc-multilib
+          - g++-multilib
+          - libgmp-dev:i386
+          - zlib1g-dev:i386
+    script:
+      - autoreconf -iv
+      - ./configure CFLAGS=-m32 CXXFLAGS=-m32
+      - MAKEFLAGS='-j 4' make
+      - make check TEST_OPTS=--stat
+
+  - &linux_gcc_m32_noextlib
+    os: linux
+    compiler: gcc
+    env: TEST=m32-noextlib
+    addons:
+      apt:
+        packages:
+          - gcc-multilib
+          - g++-multilib
+    script:
+      - autoreconf -iv
+      - ./configure CFLAGS=-m32 CXXFLAGS=-m32 --without-gmp --without-zlib
+      - MAKEFLAGS='-j 4' make
+      - make check TEST_OPTS=--stat
+
+  - &linux_gcc_distcheck
+    os: linux
+    compiler: gcc
+    env: TEST=distcheck
+    addons:
+      apt:
+        packages:
+          - libgmp-dev
+          - zlib1g-dev
+    script:
+      - autoreconf -iv
+      - ./configure
+      - MAKEFLAGS='-j 4' make distcheck
+
+  - &linux_gcc_valgrind_vorm
+    os: linux
+    compiler: gcc
+    env: TEST=valgrind-vorm
+    addons:
+      apt:
+        packages:
+          - libgmp-dev
+          - valgrind
+          - zlib1g-dev
+    script:
+      - autoreconf -iv
+      - ./configure --enable-scalar --disable-threaded --disable-parform --enable-debug
+      - MAKEFLAGS='-j 4' make -C sources vorm
+      - make -C check check TEST_BINS=vorm TEST_OPTS='valgrind --stat'
+
+  - &linux_gcc_valgrind_tvorm
+    os: linux
+    compiler: gcc
+    env: TEST=valgrind-tvorm
+    addons:
+      apt:
+        packages:
+          - libgmp-dev
+          - valgrind
+          - zlib1g-dev
+    script:
+      - autoreconf -iv
+      - ./configure --disable-scalar --enable-threaded --disable-parform --enable-debug
+      - MAKEFLAGS='-j 4' make -C sources tvorm
+      - make -C check check TEST_BINS=tvorm TEST_OPTS='valgrind --stat'
+
+  - &linux_gcc_valgrind_parvorm
+    os: linux
+    compiler: gcc
+    env: TEST=valgrind-parvorm
+    addons:
+      apt:
+        packages:
+          - libgmp-dev
+          - libopenmpi-dev
+          - openmpi-bin
+          - valgrind
+          - zlib1g-dev
+    script:
+      - autoreconf -iv
+      - ./configure --disable-scalar --disable-threaded --enable-parform --enable-debug
+      - MAKEFLAGS='-j 4' make -C sources parvorm
+      - make -C check check TEST_BINS=parvorm TEST_OPTS='valgrind --stat'
+
+  - &linux_gcc_noextlib_valgrind
+    os: linux
+    compiler: gcc
+    env: TEST=noextlib-valgrind
+    addons:
+      apt:
+        packages:
+          - valgrind
+    script:
+      - autoreconf -iv
+      - ./configure --without-gmp --without-zlib --enable-debug
+      - MAKEFLAGS='-j 4' make -C sources vorm tvorm
+      - make -C check check TEST_BINS='vorm tvorm' TEST_OPTS='valgrind --stat'
+
+  - &linux_gcc_m32_valgrind
+    os: linux
+    compiler: gcc
+    env: TEST=m32-valgrind
+    addons:
+      apt:
+        packages:
+          - gcc-multilib
+          - g++-multilib
+          - libgmp-dev:i386
+          - valgrind:i386
+          - zlib1g-dev:i386
+    script:
+      - autoreconf -iv
+      - ./configure CFLAGS=-m32 CXXFLAGS=-m32 --enable-debug
+      - MAKEFLAGS='-j 4' make -C sources vorm tvorm
+      - make -C check check TEST_BINS='vorm tvorm' TEST_OPTS='valgrind --stat'
+
+  - &linux_gcc_m32_noextlib_valgrind
+    os: linux
+    compiler: gcc
+    env: TEST=m32-noextlib-valgrind
+    addons:
+      apt:
+        packages:
+          - gcc-multilib
+          - g++-multilib
+          - valgrind:i386
+    script:
+      - autoreconf -iv
+      - ./configure CFLAGS=-m32 CXXFLAGS=-m32 --without-gmp --without-zlib --enable-debug
+      - MAKEFLAGS='-j 4' make -C sources vorm tvorm
+      - make -C check check TEST_BINS='vorm tvorm' TEST_OPTS='valgrind --stat'
+
+  - &osx_gcc_form
+    os: osx
+    compiler: gcc
+    env: TEST=form
+    script:
+      - autoreconf -iv
+      - ./configure --enable-scalar --disable-threaded --disable-parform
+      - MAKEFLAGS='-j 4' make
+      - make check TEST_OPTS=--stat
+
+  - &osx_gcc_tform
+    os: osx
+    compiler: gcc
+    env: TEST=tform
+    script:
+      - autoreconf -iv
+      - ./configure --disable-scalar --enable-threaded --disable-parform
+      - MAKEFLAGS='-j 4' make
+      - make check TEST_OPTS=--stat
+
+  - &osx_gcc_parform
+    os: osx
+    compiler: gcc
+    env: TEST=parform
+    before_install:
+      - brew update
+      - brew install mpich
+    script:
+      - autoreconf -iv
+      - ./configure --disable-scalar --disable-threaded --enable-parform
+      - MAKEFLAGS='-j 4' make
+      - make check TEST_OPTS=--stat
+
+  - &osx_gcc_distcheck
+    os: osx
+    compiler: gcc
+    env: TEST=distcheck
+    script:
+      - autoreconf -iv
+      - ./configure
+      - MAKEFLAGS='-j 4' make distcheck
+
+  - &osx_gcc_valgrind_vorm
+    os: osx
+    compiler: gcc
+    env: TEST=valgrind-vorm
+    before_install:
+      - brew update
+      - brew install valgrind
+    script:
+      - autoreconf -iv
+      - ./configure --enable-scalar --disable-threaded --disable-parform --enable-debug
+      - MAKEFLAGS='-j 4' make -C sources vorm
+      - make -C check check TEST_BINS=vorm TEST_OPTS='valgrind --stat'
+
+  - &osx_gcc_valgrind_tvorm
+    os: osx
+    compiler: gcc
+    env: TEST=valgrind-tvorm
+    before_install:
+      - brew update
+      - brew install valgrind
+    script:
+      - autoreconf -iv
+      - ./configure --disable-scalar --enable-threaded --disable-parform --enable-debug
+      - MAKEFLAGS='-j 4' make -C sources tvorm
+      - make -C check check TEST_BINS=tvorm TEST_OPTS='valgrind --stat'
+
+  - &osx_gcc_valgrind_parvorm
+    os: osx
+    compiler: gcc
+    env: TEST=valgrind-parvorm
+    before_install:
+      - brew update
+      - brew install mpich valgrind
+    script:
+      - autoreconf -iv
+      - ./configure --disable-scalar --disable-threaded --enable-parform --enable-debug
+      - MAKEFLAGS='-j 4' make -C sources parvorm
+      - make -C check check TEST_BINS=parvorm TEST_OPTS='valgrind --stat'
 
 matrix:
   include:
-    - compiler: gcc
-      env: BUILD=scalar
-    - compiler: gcc
-      env: BUILD=threaded
-    - compiler: gcc
-      env: BUILD=parform
-    - compiler: clang
-      env: BUILD=scalar
-    - compiler: clang
-      env: BUILD=threaded
-    - compiler: clang
-      env: BUILD=parform
-
-script:
-  - autoreconf -iv
-  - ./configure --disable-scalar --disable-threaded --disable-parform
-    --enable-$BUILD
-  - make
-  - make check
+    - *linux_gcc_form
+    - *linux_gcc_tform
+    - *linux_gcc_parform
+#    - *linux_clang_form
+#    - *linux_clang_tform
+#    - *linux_clang_parform
+#    - *linux_gcc5_form
+#    - *linux_gcc5_tform
+#    - *linux_gcc5_parform
+#    - *linux_gcc6_form
+#    - *linux_gcc6_tform
+#    - *linux_gcc6_parform
+#    - *linux_gcc_noextlib
+#    - *linux_gcc_m32
+#    - *linux_gcc_m32_noextlib
+#    - *linux_gcc_distcheck
+#    - *linux_gcc_valgrind_vorm
+#    - *linux_gcc_valgrind_tvorm
+#    - *linux_gcc_valgrind_parvorm
+#    - *linux_gcc_noextlib_valgrind
+#    - *linux_gcc_m32_valgrind
+#    - *linux_gcc_m32_noextlib_valgrind
+    - *osx_gcc_form
+    - *osx_gcc_tform
+    - *osx_gcc_parform
+#    - *osx_gcc_distcheck
+#    - *osx_gcc_valgrind_vorm
+#    - *osx_gcc_valgrind_tvorm
+#    - *osx_gcc_valgrind_parvorm
 
 notifications:
   email: false
