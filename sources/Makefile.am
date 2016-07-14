@@ -93,7 +93,7 @@ tform-startup.$(OBJEXT): version.h
 parform-startup.$(OBJEXT): version.h
 vorm-startup.$(OBJEXT): version.h
 tvorm-startup.$(OBJEXT): version.h
-pavform-startup.$(OBJEXT): version.h
+parvorm-startup.$(OBJEXT): version.h
 
 .PHONY: update_version_h
 
