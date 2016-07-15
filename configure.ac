@@ -59,6 +59,11 @@ AC_HEADER_STDC
 AC_HEADER_TIME
 AC_CHECK_HEADERS([fcntl.h limits.h sys/file.h])
 
+AC_LANG_PUSH([C++])
+AC_CHECK_HEADERS([unordered_map tr1/unordered_map boost/unordered_map.hpp])
+AC_CHECK_HEADERS([unordered_set tr1/unordered_set boost/unordered_set.hpp])
+AC_LANG_POP([C++])
+
 # Check for inline
 AC_C_INLINE
 
@@ -650,16 +655,6 @@ if test "$my_test_COMPILEFLAGS" != set; then
 				fi
 			fi
 		fi
-		# NOTE: Recent versions of clang seem not to work without
-		# -mmacosx-version-min=10.4 because it fails to find the tr1 library.
-		# So, we always add this option as a workaround, but in future it should
-		# be fixed by detecting whether tr1 exists at the configure.
-		if test "x$print_os" = xOSX; then
-			COMPILEFLAGS="$COMPILEFLAGS -mmacosx-version-min=10.4"
-		fi
-#		if test "x$print_os" = xOSX && test "x$enable_native" = xno; then
-#			COMPILEFLAGS="$COMPILEFLAGS -mmacosx-version-min=10.4"
-#		fi
 	elif test "x$vendor" = xintel; then
 		# NOTE: -fast option includes -static and may cause an error in linking.
 		COMPILEFLAGS="-Wall -ipo -O3 -no-prec-div"
@@ -672,14 +667,20 @@ if test "$my_test_COMPILEFLAGS" != set; then
 fi
 my_test_LINKFLAGS=${LINKFLAGS+set}
 if test "$my_test_LINKFLAGS" != set; then
-	LINKFLAGS=-s
+	if test "x$vendor" = xgnu && test "x$print_os" = xOSX; then
+		# On OS X Mavericks, -s option has a funny effect: though the linker
+		# warns the option is obsolete and being ignored, it causes an internal
+		# error "atom not found in symbolIndex...".
+		LINKFLAGS=
+	else
+		LINKFLAGS=-s
+	fi
 fi
 my_test_DEBUGCOMPILEFLAGS=${DEUBUGCOMPILEFLAGS+set}
 if test "$my_test_DEBUGCOMPILEFLAGS" != set; then
 	DEBUGCOMPILEFLAGS=-g
 	if test "x$vendor" = xgnu; then
 		DEBUGCOMPILEFLAGS="$DEBUGCOMPILEFLAGS -Wall -Wextra -Wpadded"
-
 		# Check for -Og.
 		AC_MSG_CHECKING([whether compiler accepts -Og])
 		ok=no
@@ -692,10 +693,6 @@ if test "$my_test_DEBUGCOMPILEFLAGS" != set; then
 			DEBUGCOMPILEFLAGS="$DEBUGCOMPILEFLAGS -Og"
 		else
 			DEBUGCOMPILEFLAGS="$DEBUGCOMPILEFLAGS -O0"
-		fi
-
-		if test "x$print_os" = xOSX && test "x$enable_native" = xno; then
-			DEBUGCOMPILEFLAGS="$DEBUGCOMPILEFLAGS -mmacosx-version-min=10.4"
 		fi
 	elif test "x$vendor" = xintel; then
 		DEBUGCOMPILEFLAGS="$DEBUGCOMPILEFLAGS -Wall -O0"

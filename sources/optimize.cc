@@ -48,8 +48,34 @@
 #include <string>
 #include <algorithm>
 #include <iostream>
-#include <tr1/unordered_set>
-#include <tr1/unordered_map>
+
+#ifdef HAVE_CONFIG_H
+#ifndef CONFIG_H_INCLUDED
+#define CONFIG_H_INCLUDED
+#include <config.h>
+#endif
+#endif
+
+#ifdef HAVE_UNORDERED_MAP
+	#include <unordered_map>
+	using std::unordered_map;
+#elif !defined(HAVE_TR1_UNORDERED_MAP) && defined(HAVE_BOOST_UNORDERED_MAP_HPP)
+	#include <boost/unordered_map.hpp>
+	using boost::unordered_map;
+#else
+	#include <tr1/unordered_map>
+	using std::tr1::unordered_map;
+#endif
+#ifdef HAVE_UNORDERED_SET
+	#include <unordered_set>
+	using std::unordered_set;
+#elif !defined(HAVE_TR1_UNORDERED_SET) && defined(HAVE_BOOST_UNORDERED_SET_HPP)
+	#include <boost/unordered_set.hpp>
+	using boost::unordered_set;
+#else
+	#include <tr1/unordered_set>
+	using std::tr1::unordered_set;
+#endif
 
 extern "C" {
 #include "form3.h"
@@ -1034,7 +1060,7 @@ vector<WORD> generate_instructions (const vector<WORD> &tree, bool do_CSE) {
 						thetime_str().c_str(), do_CSE?1:0);
 #endif
 
-	typedef tr1::unordered_map<vector<WORD>, int, CSEHash, CSEEq> csemap;
+	typedef unordered_map<vector<WORD>, int, CSEHash, CSEEq> csemap;
 	csemap ID;
 
 	// reserve lots of space, to prevent later rehashes
@@ -1240,7 +1266,7 @@ vector<WORD> generate_instructions (const vector<WORD> &tree, bool do_CSE) {
 int count_operators_cse (const vector<WORD> &tree) {
 	//MesPrint ("*** [%s] Starting CSEE", thetime_str().c_str());
 
-	typedef tr1::unordered_map<vector<WORD>, int, CSEHash, CSEEq> csemap;
+	typedef unordered_map<vector<WORD>, int, CSEHash, CSEEq> csemap;
 	csemap ID;
 
 	// reserve lots of space, to prevent later rehashes
@@ -1522,7 +1548,7 @@ NODE* buildTree(vector<WORD> &tree) {
 }
 
 int count_operators_cse_topdown (vector<WORD> &tree) {
-	typedef tr1::unordered_set<NODE*, NodeHash, NodeEq> nodeset;
+	typedef unordered_set<NODE*, NodeHash, NodeEq> nodeset;
 	nodeset ID;
 
 	// reserve lots of space, to prevent later rehashes
