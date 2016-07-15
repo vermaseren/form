@@ -13,7 +13,25 @@ m4_define([FORM_VERSION], m4_esyscmd_s([
 	if test -f .version; then
 		cat .version
 	else
-		scripts/git-version-gen.sh -C . -v
+		scripts/git-version-gen.sh -C . -v || cat <<END >&2
+========================================================================
+Failed to determine the version of the source code.
+
+The reason may be
+  - this is neither a source distribution (containing the configure script)
+    nor a cloned Git repository,
+  - some required utilities (e.g., git) are missing.
+
+Source distributions and some binaries can be found in:
+
+  http://www.nikhef.nl/~form/maindir/binaries/binaries.html
+  https://github.com/vermaseren/form/releases
+
+The latest source code can be obtained as
+
+  git clone https://github.com/vermaseren/form.git
+========================================================================
+END
 	fi
 ]))
 
