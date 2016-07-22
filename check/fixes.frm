@@ -396,6 +396,23 @@ Print;
 assert succeeded?
 assert result("xx") =~ expr("f(2*a,2*a^2,3,4)")
 *--#] Issue54_2 :
+*--#[ Issue56 :
+* PolyRatFun(expand) does not expand substituted expressions
+CF rat;
+S x;
+PolyRatFun rat;
+L F = rat(1,1+x);
+L G = rat(1-x,1);
+.sort
+PolyRatFun rat(expand,x,2);
+Drop;
+L H = F - G;
+*.sort;  * <-- (1)
+P;
+.end
+assert succeeded?
+assert result("H") =~ expr("rat(x^2)")
+*--#] Issue56 :
 *--#[ Issue59_1 :
 * Crash when PolyRatFun(expand)
 CF num,rat;
