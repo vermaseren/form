@@ -4576,7 +4576,7 @@ WORD PrepPoly(PHEAD WORD *term)
 		poly = t = tstop;
 		if ( i == 3 && m[-2] == 1 && (m[-3]&MAXPOSITIVE) == m[-3] ) {
 			*m++ = AR.PolyFun;
-			if ( AR.PolyFunType == 1 ) {
+			if ( AR.PolyFunType == 1 || (AR.PolyFunType == 2 && AR.PolyFunExp == 2) ) {
 				*m++ = FUNHEAD+2;
 				FILLFUN(m)
 				*m++ = -SNUMBER;
@@ -4595,7 +4595,7 @@ WORD PrepPoly(PHEAD WORD *term)
 		}
 		else {
 			r = tstop;
-			if ( AR.PolyFunType == 1 ) {
+			if ( AR.PolyFunType == 1 || (AR.PolyFunType == 2 && AR.PolyFunExp == 2) ) {
 				*m++ = AR.PolyFun;
 				*m++ = FUNHEAD+ARGHEAD+i+1;
 				FILLFUN(m)
@@ -4644,7 +4644,7 @@ WORD PrepPoly(PHEAD WORD *term)
  		#] Create a PolyFun : 
 */
 	}
-	else if ( AR.PolyFunType == 1 ) {
+	else if ( AR.PolyFunType == 1 || (AR.PolyFunType == 2 && AR.PolyFunExp == 2) ) {
 /*
  		#[ One argument :
 */

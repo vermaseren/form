@@ -963,3 +963,39 @@ assert result("test2") =~ expr("+ 1")
 assert result("test3") =~ expr("+ 10")
 assert result("test4") =~ expr("+ 11")
 *--#] Issue104 :
+*--#[ Issue111 :
+* PolyRatFun(expand) doesn't expand numeric coefficients in one go
+S x;
+CF rat;
+PolyRatFun rat(expand,x,3);
+L F = rat(1+x);
+.sort
+multiply 2;
+*.sort; * <-- workaround
+P;
+.sort
+Drop;
+L F1 = 3/5;
+L F2 = 6/5;
+L F3 = 2/5;
+L F4 = 12345678901234567890123456789012345678901234567890;
+L F5 = 2/5 * rat(1+x);
+L F6 = 2/5 * rat(1,1-x);
+L F7 = 2/5 * rat(1+x) * rat(1-2*x);
+L F8 = 2/5 * rat(1+x) * rat(1,1-x);
+L F9 = 2/5 * rat(1,1+x) * rat(1,1-2*x);
+multiply 5/3;
+P;
+.end
+assert succeeded?
+assert result("F") =~ expr("rat(2 + 2*x)")
+assert result("F1") =~ expr("rat(1)")
+assert result("F2") =~ expr("rat(2)")
+assert result("F3") =~ expr("rat(2/3)")
+assert result("F4") =~ expr("rat(20576131502057613150205761315020576131502057613150)")
+assert result("F5") =~ expr("rat(2/3 + 2/3*x)")
+assert result("F6") =~ expr("rat(2/3 + 2/3*x + 2/3*x^2 + 2/3*x^3)")
+assert result("F7") =~ expr("rat(2/3 - 2/3*x - 4/3*x^2)")
+assert result("F8") =~ expr("rat(2/3 + 4/3*x + 4/3*x^2 + 4/3*x^3)")
+assert result("F9") =~ expr("rat(2/3 + 2/3*x + 2*x^2 + 10/3*x^3)")
+*--#] Issue111 :
