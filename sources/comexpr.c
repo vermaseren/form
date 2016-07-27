@@ -756,6 +756,7 @@ IllField:			c = *p; *p = 0;
 /*
 	Now read the LHS
 */
+	ClearWildcardNames();
 	oldcpointer = AddLHS(AC.cbufnum) - C->Buffer;
 
 	*p = 0;
