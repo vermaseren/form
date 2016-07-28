@@ -3344,7 +3344,7 @@ NormArg:;
 		Note that the return value is an offset in AT.pWorkSpace.
 		Hence there is no need to free memory afterwards.
 */
-		ipoly = InvPoly(BHEAD denominator,AR.PolyFunPow-minpow,AR.PolyFunVar);
+		ipoly = InvPoly(BHEAD denominator,AR.PolyFunPow,AR.PolyFunVar);
 /*
 		Now we start the multiplying
 */
@@ -3368,7 +3368,7 @@ NormArg:;
 /*
 			2: Multiply by the proper terms in ipoly
 */
-			for ( i = 0; i <= AR.PolyFunPow-eppow; i++ ) {
+			for ( i = 0; i <= AR.PolyFunPow-eppow+minpow; i++ ) {
 				if ( AT.pWorkSpace[ipoly+i] == 0 ) continue;
 /*
 				Copy the term, add i to the power of ep and multiply coef.
