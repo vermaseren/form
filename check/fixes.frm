@@ -1016,3 +1016,25 @@ assert result("F7") =~ expr("rat(2/3 - 2/3*x - 4/3*x^2)")
 assert result("F8") =~ expr("rat(2/3 + 4/3*x + 4/3*x^2 + 4/3*x^3)")
 assert result("F9") =~ expr("rat(2/3 + 2/3*x + 2*x^2 + 10/3*x^3)")
 *--#] Issue111 :
+*--#[ Issue113 :
+* ?a crashes the program if used only on the rhs
+CF f;
+L F = f;
+id f(?a) = f(?a);
+id f = f(?a);
+Print;
+.end
+assert compile_error?
+*--#] Issue113 :
+*--#[ Issue114 :
+* Crash on PolyRatFun(expand) when the result is zero
+CF rat;
+S x;
+L F = rat(x^10,1-x);
+P;
+.sort
+PolyRatFun rat(expand,x,5);
+P;
+.end
+assert result("F") =~ expr("rat(x^10 + x^11 + x^12 + x^13 + x^14 + x^15)")
+*--#] Issue114 :
