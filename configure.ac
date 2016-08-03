@@ -18,8 +18,9 @@ m4_define([FORM_VERSION], m4_esyscmd_s([
 Failed to determine the version of the source code.
 
 The reason may be
-  - this is neither a source distribution (containing the configure script)
-    nor a cloned Git repository,
+  - this is neither a source distribution (containing the configure
+    script) nor a cloned Git repository,
+  - this is a shallow clone and no version tags are reachable,
   - some required utilities (e.g., git) are missing.
 
 Source distributions and some binaries can be found in:
