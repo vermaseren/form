@@ -697,9 +697,8 @@ if test "$my_test_LINKFLAGS" != set; then
 fi
 my_test_DEBUGCOMPILEFLAGS=${DEUBUGCOMPILEFLAGS+set}
 if test "$my_test_DEBUGCOMPILEFLAGS" != set; then
-	DEBUGCOMPILEFLAGS=-g
 	if test "x$vendor" = xgnu; then
-		DEBUGCOMPILEFLAGS="$DEBUGCOMPILEFLAGS -Wall -Wextra -Wpadded"
+		DEBUGCOMPILEFLAGS='-g3 -Wall -Wextra -Wpadded'
 		# Check for -Og.
 		AC_MSG_CHECKING([whether compiler accepts -Og])
 		ok=no
@@ -714,7 +713,9 @@ if test "$my_test_DEBUGCOMPILEFLAGS" != set; then
 			DEBUGCOMPILEFLAGS="$DEBUGCOMPILEFLAGS -O0"
 		fi
 	elif test "x$vendor" = xintel; then
-		DEBUGCOMPILEFLAGS="$DEBUGCOMPILEFLAGS -Wall -O0"
+		DEBUGCOMPILEFLAGS='-g3 -Wall -O0'
+	else
+		DEBUGCOMPILEFLAGS=-g
 	fi
 fi
 my_test_DEBUGLINKFLAGS=${DEBUGLINKFLAGS+set}
