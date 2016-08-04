@@ -1461,6 +1461,10 @@ redosize:
 								return(retvalue);
 							}
 							else {
+								/*
+								 * Somehow the next line fixes Issue #106.
+								 */
+								i = *t;
 								Normalize(BHEAD t);
 /*								if ( i > *t ) { retvalue = 1; goto redosize; } */
 								/*

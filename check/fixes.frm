@@ -996,6 +996,33 @@ assert succeeded?
 assert result("F") =~ expr("f(p.p)")
 assert result("G") =~ expr("f(0)")
 *--#] Issue105 :
+*--#[ Issue106 :
+* Crash with replace_ and nested functions
+cfunction prop, mom;
+vector q1, q2, k1, k2, p;
+
+l test =  prop(mom(-q1-q2+p));
+multiply replace_(q1,k1-k2);
+print+s;
+.sort
+multiply replace_(q2,k2);
+print+s;
+.end
+
+CF f,g;
+V p1,p2;
+L F1 = f(f(p1-p2));
+L F2 = f(f(f(p1-p2)));
+L F3 = f(f(f(f(p1-p2)+g(p1-p2))+g(p1-p2)));
+multiply replace_(p1,p2);
+P;
+.end
+assert succeeded?
+assert result("test") =~ expr("+ prop(mom(- k1 + p))")
+assert result("F1") =~ expr("f(f(0))")
+assert result("F2") =~ expr("f(f(f(0)))")
+assert result("F3") =~ expr("f(f(f(f(0)+g(0))+g(0)))")
+*--#] Issue106 :
 *--#[ Issue111 :
 * PolyRatFun(expand) doesn't expand numeric coefficients in one go
 S x;
