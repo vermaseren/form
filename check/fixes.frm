@@ -127,6 +127,58 @@ assert succeeded?
 assert stdout =~ /~~~ZERO_F1 = 0/
 assert stdout =~ /~~~ZERO_ = 0/
 *--#] Issue25 :
+*--#[ Issue30_1 :
+* Substitutions just after putinside/antiputinside may fail
+S x;
+CF f;
+L F1 = 1+x+x^2;
+L F2 =-1-x-x^2;
+putinside f, x;
+*argument; endargument;  * <-- (1)
+id f( 1)   = 0;
+id f(-1)   = 0;
+id f( x)   = 0;
+id f(-x)   = 0;
+id f( x^2) = 0;
+id f(-x^2) = 0;
+P;
+.end
+assert succeeded?
+assert result("F1") =~ expr("0")
+assert result("F2") =~ expr("0")
+*--#] Issue30_1 :
+*--#[ Issue30_2 :
+S x;
+CF f;
+L F1 = 1+x+x^2;
+L F2 =-1-x-x^2;
+antiputinside f, x;
+*argument; endargument;  * <-- (1)
+id f( 1) = 0;
+id f(-1) = 0;
+P;
+.end
+assert succeeded?
+assert result("F1") =~ expr("0")
+assert result("F2") =~ expr("0")
+*--#] Issue30_2 :
+*--#[ Issue30_3:
+CF f;
+S x;
+L F = 1;
+$a = f;
+inside $a;
+  putinside f,x;
+endinside;
+*inside $a; endinside;  * <-- (1) workaround
+P " a=%$;", $a;
+$a = f($a);
+P " a=%$;", $a;
+.end
+assert succeeded?
+assert result("a", 0) =~ expr("f*f(1)")
+assert result("a", 1) =~ expr("f(f*f(1))")
+*--#] Issue30_3 :
 *--#[ Issue37_1 :
 * Polyratfun infinite loop in Print statement
 S ep;

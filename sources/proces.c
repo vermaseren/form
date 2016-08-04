@@ -3580,7 +3580,12 @@ CommonEnd:
 					AT.WorkPointer = term + *term;
 					if ( PutInside(BHEAD term,C->lhs[level]) < 0 ) goto GenCall;
 					AT.WorkPointer = term + *term;
-					break;
+					/*
+					 * We need to call Generator() to convert slow notation to
+					 * fast notation, which fixes Issue #30.
+					 */
+					if ( Generator(BHEAD term,level) < 0 ) goto GenCall;
+					goto Return0;
 				  case TYPETOSPECTATOR:
 					if ( PutInSpectator(term,C->lhs[level][2]) < 0 ) goto GenCall;
 					goto Return0;
