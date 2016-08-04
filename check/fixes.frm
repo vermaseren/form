@@ -980,6 +980,22 @@ assert result("test2") =~ expr("+ 1")
 assert result("test3") =~ expr("+ 10")
 assert result("test4") =~ expr("+ 11")
 *--#] Issue104 :
+*--#[ Issue105 :
+* Crash by replace_(x,0)
+S x;
+V p;
+CF f;
+
+L F = f(p.p+x);
+L G = f(p.p*x);
+
+multiply replace_(x,0);
+P;
+.end
+assert succeeded?
+assert result("F") =~ expr("f(p.p)")
+assert result("G") =~ expr("f(0)")
+*--#] Issue105 :
 *--#[ Issue111 :
 * PolyRatFun(expand) doesn't expand numeric coefficients in one go
 S x;

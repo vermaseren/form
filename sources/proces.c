@@ -1438,6 +1438,7 @@ DoSpec:
 								Possible size changes:
 								Note defs at 471,467,460,400,425,328
 */
+redosize:
 								if ( i > *t ) {
 									i -= *t;
 									*t2 -= i;
@@ -1462,6 +1463,10 @@ DoSpec:
 							else {
 								Normalize(BHEAD t);
 /*								if ( i > *t ) { retvalue = 1; goto redosize; } */
+								/*
+								 * Experimentally, the next line fixes Issue #105.
+								 */
+								if ( *t == 0 ) { retvalue = 1; goto redosize; }
 								{
 									WORD *tend = t + *t, *tt = t+1;
 									stilldirty = 0;
