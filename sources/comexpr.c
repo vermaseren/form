@@ -1027,6 +1027,7 @@ int CoMultiply(UBYTE *inp)
 		*p = ',';
 		inp = p + 1;
 	}
+	ClearWildcardNames();
 	while ( *inp == ',' ) inp++;
 	AC.ProtoType = mularray+3;
 	mularray[7] = AC.cbufnum;

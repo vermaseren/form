@@ -98,7 +98,7 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 {
 	GETBIDENTITY
 	WORD *ll, *m, *w, *llf, *OldWork, *StartWork, *ww, *mm, *t, *OldTermBuffer = 0;
-	WORD power = 0, match = 0, i, msign = 0;
+	WORD power = 0, match = 0, i, msign = 0, ll2;
 	int numdollars = 0, protosize, oldallnumrhs;
 	CBUF *C = cbuf+AM.rbufnum, *CC;
 	AT.idallflag = 0;
@@ -180,6 +180,7 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 	m += m[1];
 	AN.WildStop = m;
 	StartWork = ww;
+	ll2 = ll[2];
 /*
  		#[ Expand dollars :
 */
@@ -244,7 +245,32 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 		m = AN.patternbuffer + protosize;
 		AR.Eside = RHSIDE;
 		*mm = 0;
-
+/*
+		Test the pattern. If only wildcard powers -> SUBONCE
+*/
+		{
+			WORD *mmm = m + *m, *m1 = m+1, jm, noveto = 0;
+			while ( m1 < mmm ) {
+				if ( *m1 == SYMBOL ) {
+					for ( jm = 2; jm < m1[1]; jm+=2 ) {
+						if ( m1[jm+1] < MAXPOWER && m1[jm+1] > -MAXPOWER ) break;
+					}
+					if ( jm < m1[1] ) { noveto = 1; break; }
+				}
+				else if ( *m1 == DOTPRODUCT ) {
+					for ( jm = 2; jm < m1[1]; jm+=3 ) {
+						if ( m1[jm+2] < MAXPOWER && m1[jm+2] > -MAXPOWER ) break;
+					}
+					if ( jm < m1[1] ) { noveto = 1; break; }
+				}
+				else { noveto = 1; break; }
+				m1 += m1[1];
+			}
+			if ( noveto == 0 ) {
+				ll2 = ll2 & ~SUBMASK;
+				ll2 |= SUBONCE;
+			}
+		}
 		AT.WorkPointer = ww = StartWork;
 		*AN.RepPoint = oldRepPoint;
 	}
@@ -254,7 +280,7 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 	In case of id,all we have to check at this point that there are only
 	functions in the pattern.
 */
-	if ( ( ll[2] & SUBMASK ) == SUBALL ) {
+	if ( ( ll2 & SUBMASK ) == SUBALL ) {
 		WORD *t = AN.patternbuffer+IDHEAD, *tt;
 		WORD *tstop, *ttstop, ii;
 		t += t[1]; tstop = t + *t; t++;
@@ -302,9 +328,9 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 		MUNLOCK(ErrorMessageLock);
 		return(-1);
 	}
-	AN.DisOrderFlag = ll[2] & SUBDISORDER;
+	AN.DisOrderFlag = ll2 & SUBDISORDER;
 	AN.nogroundlevel = 0;
-	switch ( ll[2] & SUBMASK ) {
+	switch ( ll2 & SUBMASK ) {
 		case SUBONLY :
 			/* Must be an exact match */
 			AN.UseFindOnly = 1; AN.ForFindOnly = 0;
@@ -418,10 +444,10 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 				}
 			}
 			if ( match ) {
-				if ( ( ll[2] & SUBAFTER ) != 0 ) *level = AC.Labels[ll[3]];
+				if ( ( ll2 & SUBAFTER ) != 0 ) *level = AC.Labels[ll[3]];
 			}
 			else {
-				if ( ( ll[2] & SUBAFTERNOT ) != 0 ) *level = AC.Labels[ll[3]];
+				if ( ( ll2 & SUBAFTERNOT ) != 0 ) *level = AC.Labels[ll[3]];
 			}
 			goto nextlevel;
 		case SUBONCE :
@@ -472,7 +498,7 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 						t1 = term; t2 = AN.selecttermundo; i = *t2;
 						NCOPY(t1,t2,i);
 #if IDHEAD > 3
-						if ( ( ll[2] & SUBAFTERNOT ) != 0 ) {
+						if ( ( ll2 & SUBAFTERNOT ) != 0 ) {
 							*level = AC.Labels[ll[3]];
 						}
 #endif
@@ -484,12 +510,12 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 					numdollars = 0;
 				}
 				match = 1;
-				if ( ( ll[2] & SUBAFTER ) != 0 ) {
+				if ( ( ll2 & SUBAFTER ) != 0 ) {
 					*level = AC.Labels[ll[3]];
 				}
 			}
 			else {
-				if ( ( ll[2] & SUBAFTERNOT ) != 0 ) {
+				if ( ( ll2 & SUBAFTERNOT ) != 0 ) {
 					*level = AC.Labels[ll[3]];
 				}
 				power = 0;
@@ -562,7 +588,7 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 				tt = AT.WorkPointer; t = term;
 				NCOPY(t,tt,ii);
 
-				if ( ( ll[2] & SUBAFTER ) != 0 ) { /* ifmatch -> */
+				if ( ( ll2 & SUBAFTER ) != 0 ) { /* ifmatch -> */
 					*level = AC.Labels[ll[3]];
 				}
 				TermFree(AN.termbuffer,"id,all");
@@ -589,13 +615,13 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 			numdollars = 0;
 		}
 		match = 1;
-		if ( ( ll[2] & SUBAFTER ) != 0 ) { /* ifmatch -> */
+		if ( ( ll2 & SUBAFTER ) != 0 ) { /* ifmatch -> */
 			*level = AC.Labels[ll[3]];
 		}
 	}
 	else {
 		AT.WorkPointer = AN.RepFunList;
-		if ( ( ll[2] & SUBAFTERNOT ) != 0 ) { /* ifnomatch -> */
+		if ( ( ll2 & SUBAFTERNOT ) != 0 ) { /* ifnomatch -> */
 			*level = AC.Labels[ll[3]];
 		}
 	}

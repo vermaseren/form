@@ -579,6 +579,66 @@ NextSymbol:;
 					if ( d->index != NOINDEX ) pind[nind++] = d->index;
 				}
 				else if ( d->type == DOLTERMS ) {
+					if ( t[3] >= MAXPOWER || t[3] <= -MAXPOWER ) {
+						if ( d->where[0] == 0 ) goto NormZero;
+						if ( d->where[d->where[0]] != 0 ) {
+IllDollarExp:
+							MLOCK(ErrorMessageLock);
+							MesPrint("!!!Illegal $ expansion with wildcard power!!!");
+							MUNLOCK(ErrorMessageLock);
+							goto FromNorm;
+						}
+/*
+						At this point we should only admit symbols and dotproducts
+						We expand the dollar directly and do not send it back.
+*/
+						{	WORD *td, *tdstop, dj;
+							td = d->where+1;
+							tdstop = d->where+d->where[0];
+							if ( tdstop[-1] != 3 || tdstop[-2] != 1
+								|| tdstop[-3] != 1 ) goto IllDollarExp;
+							tdstop -= 3;
+							if ( td >= tdstop ) goto IllDollarExp;
+							while ( td < tdstop ) {
+								if ( *td == SYMBOL ) {
+									for ( dj = 2; dj < td[1]; dj += 2 ) {
+										if ( td[dj+1] == 1 ) {
+											*ppsym++ = td[dj];
+											*ppsym++ = t[3];
+											nsym++;
+										}
+										else if ( td[dj+1] == -1 ) {
+											*ppsym++ = td[dj];
+											*ppsym++ = -t[3];
+											nsym++;
+										}
+										else goto IllDollarExp;
+									}
+								}
+								else if ( *td == DOTPRODUCT ) {
+									for ( dj = 2; dj < td[1]; dj += 3 ) {
+										if ( td[dj+2] == 1 ) {
+											*ppdot++ = td[dj];
+											*ppdot++ = td[dj+1];
+											*ppdot++ = t[3];
+											ndot++;
+										}
+										else if ( td[dj+2] == -1 ) {
+											*ppdot++ = td[dj];
+											*ppdot++ = td[dj+1];
+											*ppdot++ = -t[3];
+											ndot++;
+										}
+										else goto IllDollarExp;
+									}
+								}
+								else goto IllDollarExp;
+								td += td[1];
+							}
+							regval = 2;
+							break;
+						}
+					}
 					t[0] = SUBEXPRESSION;
 					t[4] = AM.dbufnum;
 					if ( t[3] == 0 ) {
@@ -2445,7 +2505,7 @@ TryAgain:;
 		goto conscan;
 	}
 /*
-  	#] First scan : 
+  	#] First scan :
   	#[ Easy denominators :
 
 	Easy denominators are denominators that can be replaced by
@@ -3961,7 +4021,7 @@ FromNorm:
 }
 
 /*
- 		#] Normalize : 
+ 		#] Normalize :
  		#[ ExtraSymbol :
 */
 
