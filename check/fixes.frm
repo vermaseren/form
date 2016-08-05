@@ -905,6 +905,28 @@ P;
 assert succeeded?
 assert result("F") =~ expr("K(rat(1 + ep,1))*rat(1,1) + K(rat(1,1))*rat(1,1)")
 *--#] Issue73 :
+*--#[ Issue77_1 :
+* Freeze when pattern matchings with powers of dollar variables ($x^n?)
+S x,n;
+L F = 1;
+#$x = x;
+id $x^n? = 1;
+P;
+.end
+assert succeeded?
+assert result("F") =~ expr("1")
+*--#] Issue77_1 :
+*--#[ Issue77_2 :
+S x,y,z,n;
+V p,q;
+L F = x^3 * y^5 * p.q^6;
+#$x = x*y*p.q;
+id $x^n? = z^n;
+P;
+.end
+assert succeeded?
+assert result("F") =~ expr("p.q^3*y^2*z^3")
+*--#] Issue77_2 :
 *--#[ Issue78_1 :
 * Minus sign is ignored in set restriction
 V p,p1;
