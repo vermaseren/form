@@ -563,19 +563,19 @@ matrix:
 #    - *linux_gcc_src_release
 #    - *linux_gcc_doc_release
 #    - *linux_gcc_release
-#    - *linux_gcc_valgrind_vorm
-#    - *linux_gcc_valgrind_tvorm
-#    - *linux_gcc_valgrind_parvorm
-#    - *linux_gcc_noextlib_valgrind
-#    - *linux_gcc_m32_valgrind
-#    - *linux_gcc_m32_noextlib_valgrind
     - *osx_gcc_form
     - *osx_gcc_tform
     - *osx_gcc_parform
 #    - *osx_gcc_distcheck
+    - *linux_gcc_valgrind_vorm
+    - *linux_gcc_valgrind_tvorm
+#    - *linux_gcc_valgrind_parvorm
+#    - *linux_gcc_noextlib_valgrind
+#    - *linux_gcc_m32_valgrind
+#    - *linux_gcc_m32_noextlib_valgrind
 #    - *osx_gcc_valgrind_vorm
 #    - *osx_gcc_valgrind_tvorm
-#    - *osx_gcc_valgrind_parvorm
+    - *osx_gcc_valgrind_parvorm
 
 notifications:
   email: false
