@@ -1241,7 +1241,7 @@ WORD RunReplace(PHEAD WORD *fun, WORD *args, WORD *info)
 	int n = 0, i, dirty = 0, totarg, nfix, nwild, ngeneral;
 	WORD *t, *tt, *u, *tstop, *info1, *infoend, *oldwork = AT.WorkPointer;
 	WORD *term, *newterm, *nt, *term1, *term2;
-	WORD wild[4], mask, *term3, *term4;
+	WORD wild[4], mask, *term3, *term4, *oldmask = AT.WildMask;
 	WORD n1, n2, doanyway;
 	info++;
 	t = fun; tstop = fun + fun[1]; u = tstop;
@@ -1537,6 +1537,7 @@ getthisone:;
 						if ( Generator(BHEAD term2,AR.Cnumlhs) ) {
 							LowerSortLevel();
 							AT.WorkPointer = oldwork;
+							AT.WildMask = oldmask;
 							return(-1);
 						}
 						term4 = AT.WorkPointer;
@@ -1663,6 +1664,7 @@ dothisnow:;
 			if ( Generator(BHEAD term2,AR.Cnumlhs) ) {
 				LowerSortLevel();
 				AT.WorkPointer = oldwork;
+				AT.WildMask = oldmask;
 				return(-1);
 			}
 			term4 = AT.WorkPointer;
@@ -1701,6 +1703,7 @@ nextt:;
 	i = u - tstop; tstop[1] = i; tstop[2] = dirty;
 	t = fun; u = tstop; NCOPY(t,u,i)
 	AT.WorkPointer = oldwork;
+	AT.WildMask = oldmask;
 	return(0);
 }
 
