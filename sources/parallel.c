@@ -1072,7 +1072,7 @@ ReceiveNew:
 		{
 			LONG ninterms;
 			UNPACK_LONG(fi->POfill, ninterms);
-			if ( *fi->POfill ) {
+			if ( fi->POfill < fi->POfull ) {
 				DBGOUT_NINTERMS(2, ("PF.me=%d AN.ninterms=%d PF_linterms=%d ninterms=%d GET\n", (int)PF.me, (int)AN.ninterms, (int)PF_linterms, (int)ninterms));
 				AN.ninterms = ninterms - 1;
 			} else {
