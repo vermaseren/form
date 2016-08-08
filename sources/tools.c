@@ -127,6 +127,7 @@ UBYTE *LoadInputFile(UBYTE *filename, int type)
 	if ( ReadFile(handle,buffer,filesize) != filesize ) {
 		Error1("Read error for file ",name);
 		M_free(buffer,"LoadInputFile");
+		if ( name != filename ) M_free(name,"FromLoadInputFile");
 		CloseFile(handle);
 		return(0);
 	}
@@ -138,6 +139,7 @@ UBYTE *LoadInputFile(UBYTE *filename, int type)
 	else {
 		buffer[filesize] = 0;
 	}
+	if ( name != filename ) M_free(name,"FromLoadInputFile");
 	return(buffer);
 }
 
