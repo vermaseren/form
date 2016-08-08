@@ -1721,6 +1721,7 @@ int simp4token(SBYTE *s)
 {
 	int error = 0, n, nsym, settype;
 	WORD i, *w, *wstop, level;
+	SBYTE *const s0 = s;
 	SBYTE *fill = s, *s1, *s2, *s3, type, s1buf[10];
 	SBYTE *tbuf = s, *t, *t1;
 
@@ -1730,8 +1731,8 @@ int simp4token(SBYTE *s)
 			else *fill++ = *s++;
 			continue;
 		}
-		if ( fill[-1] == TWILDCARD ) { *fill++ = *s++; continue; }
-		if ( fill[-1] == TNOT && fill[-2] == TWILDCARD ) { *fill++ = *s++; continue; }
+		if ( fill >= (s0+1) && fill[-1] == TWILDCARD ) { *fill++ = *s++; continue; }
+		if ( fill >= (s0+2) && fill[-1] == TNOT && fill[-2] == TWILDCARD ) { *fill++ = *s++; continue; }
 		s1 = s++; n = 0; while ( *s >= 0 ) { n = 128*n + *s++; }
 		i = Sets[n].type;
 		if ( *s != LBRACE ) { while ( s1 < s ) *fill++ = *s1++; continue; }
