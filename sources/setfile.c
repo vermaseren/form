@@ -1119,11 +1119,18 @@ int TryFileSetups()
 		*s++ = '\n';
 		t = s = buff; /* name of the option */
 		while ( tolower(*s) >= 'a' && tolower(*s) <= 'z' ) s++;
-		*s++ = 0;
-		while ( *s == ' ' || *s == '\t' ) s++;
-		u = s; /* 'value' of the option */
-		while ( *s && *s != '\n' && *s != '\r' ) s++;
-		if ( *s ) *s++ = 0;
+		if ( *s != '\n' ) {
+			*s++ = 0;
+			while ( *s == ' ' || *s == '\t' ) s++;
+			u = s; /* 'value' of the option */
+			while ( *s && *s != '\n' && *s != '\r' ) s++;
+			if ( *s ) *s++ = 0;
+		}
+		else {
+			/* The value is empty. */
+			u = s;
+			*s++ = 0;
+		}
 		error += ProcessOption(t,u,1);
 nextline:;
 	}
