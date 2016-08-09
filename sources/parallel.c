@@ -3182,10 +3182,10 @@ int PF_BroadcastCBuf(int bufnum)
 			l = C->rhs[i] - C->Buffer;
 			PF_LongMultiPack(&l, 1, PF_LONG);
 		}
-		PF_LongMultiPack(C->CanCommu, C->maxrhs + 1, PF_LONG);
-		PF_LongMultiPack(C->NumTerms, C->maxrhs + 1, PF_LONG);
-		PF_LongMultiPack(C->numdum, C->maxrhs + 1, PF_WORD);
-		PF_LongMultiPack(C->dimension, C->maxrhs + 1, PF_WORD);
+		PF_LongMultiPack(C->CanCommu, C->numrhs + 1, PF_LONG);
+		PF_LongMultiPack(C->NumTerms, C->numrhs + 1, PF_LONG);
+		PF_LongMultiPack(C->numdum, C->numrhs + 1, PF_WORD);
+		PF_LongMultiPack(C->dimension, C->numrhs + 1, PF_WORD);
 		if ( C->MaxTreeSize > 0 )
 			PF_LongMultiPack(C->boomlijst, (C->numtree + 1) * (sizeof(COMPTREE) / sizeof(int)), PF_INT);
 #ifdef PF_DEBUG_BCAST_CBUF
@@ -3236,10 +3236,10 @@ int PF_BroadcastCBuf(int bufnum)
 			PF_LongMultiUnpack(&l, 1, PF_LONG);
 			C->rhs[i] = C->Buffer + l;
 		}
-		PF_LongMultiUnpack(C->CanCommu, C->maxrhs + 1, PF_LONG);
-		PF_LongMultiUnpack(C->NumTerms, C->maxrhs + 1, PF_LONG);
-		PF_LongMultiUnpack(C->numdum, C->maxrhs + 1, PF_WORD);
-		PF_LongMultiUnpack(C->dimension, C->maxrhs + 1, PF_WORD);
+		PF_LongMultiUnpack(C->CanCommu, C->numrhs + 1, PF_LONG);
+		PF_LongMultiUnpack(C->NumTerms, C->numrhs + 1, PF_LONG);
+		PF_LongMultiUnpack(C->numdum, C->numrhs + 1, PF_WORD);
+		PF_LongMultiUnpack(C->dimension, C->numrhs + 1, PF_WORD);
 		if ( C->MaxTreeSize > 0 )
 			PF_LongMultiUnpack(C->boomlijst, (C->numtree + 1) * (sizeof(COMPTREE) / sizeof(int)), PF_INT);
 /*
