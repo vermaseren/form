@@ -227,7 +227,7 @@ L F = rat(a.a,1);
 P;
 .end
 # Runtime errors may freeze ParFORM.
-#require not mpi?
+#pend_if mpi?
 assert runtime_error?
 *--#] Issue39 :
 *--#[ Issue41 :
@@ -297,7 +297,8 @@ Factorize F4;
 
 P;
 .end
-#require not mpi?
+# ParFORM hangs for #FactDollar (#46)
+#pend_if mpi?
 assert succeeded?
 f = expr("""
       num(n1)^5*num(n2)^2*num(n5)^4*num(n6)^4*num(n7)^7*num(n8)^10*num(n9)^21*
@@ -1037,7 +1038,7 @@ L F6 = f(1000*g5_);
 L F7 = f(10000*g5_);
 .end
 # Runtime errors may freeze ParFORM.
-#require not mpi?
+#pend_if mpi?
 assert runtime_error?
 *--#] Issue94 :
 *--#[ Issue104 :

@@ -672,15 +672,14 @@ assert result("G") =~ expr("
     Local F = B(1);
     Print;
     .end
+# RHS expressions in Fill doesn't work in ParFORM. (#17)
+# Anyway, the user is warned even in the sequential FORM, and should avoid it.
+#pend_if mpi?
     assert finished?
     assert warning?
     assert return_value == 0
-# RHS expressions in Fill doesn't work in ParFORM. (#17)
-# Anyway the user is warned to avoid it.
-    if not mpi?
-      assert result("F", 0) =~ expr("1")
-      assert result("F", 1) =~ expr("2")
-    end
+    assert result("F", 0) =~ expr("1")
+    assert result("F", 1) =~ expr("2")
 *--#] Sta_Fill_2 :
 *--#[ Sta_Fill_3 :
     Table B(1:1);
@@ -708,14 +707,13 @@ assert result("G") =~ expr("
     Local F = B(1);
     Print;
     .end
+# RHS expressions in Fill doesn't work in ParFORM. (#17)
+# Anyway, the user is warned even in the sequential FORM, and should avoid it.
+#pend_if mpi?
     assert finished?
     assert warning?
     assert return_value == 0
-# RHS expressions in Fill doesn't work in ParFORM. (#17)
-# Anyway the user is warned to avoid it.
-    if not mpi?
-      assert result("F") =~ expr("5")
-    end
+    assert result("F") =~ expr("5")
 *--#] Sta_Fill_4 :
 *--#[ Sta_Identify_1 :
     Vector Q,p1,...,p5,q1,...,q5;
