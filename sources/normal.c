@@ -2505,7 +2505,7 @@ TryAgain:;
 		goto conscan;
 	}
 /*
-  	#] First scan :
+  	#] First scan : 
   	#[ Easy denominators :
 
 	Easy denominators are denominators that can be replaced by
@@ -4021,7 +4021,7 @@ FromNorm:
 }
 
 /*
- 		#] Normalize :
+ 		#] Normalize : 
  		#[ ExtraSymbol :
 */
 
@@ -5186,7 +5186,7 @@ WORD BracketNormalize(PHEAD WORD *term)
 	if ( tstart[1] > 5 ) { /* sorting */
 		r = tstart+2; ii = tstart[1]-2;
 		for ( i = 0; i < ii; i += 3 ) {
-			if ( r[i] < r[i+1] ) EXCH(r[i],r[i+1])
+			if ( r[i] > r[i+1] ) EXCH(r[i],r[i+1])
 		}
 		for ( i = 0; i < ii-3; i += 3 ) {	/* Bubble sort */
 			for ( j = i+3; j > 0; j -= 3 ) {
