@@ -1950,17 +1950,14 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
  */
 int PF_Init(int *argc, char ***argv)
 {
-	UBYTE *fp, *ubp;
-	char *c;
-	int fpsize = 0;
 /*
 		this should definitly be somewhere else ...
 */
 	PF_CurrentBracket = 0;
 
-	PF.numtasks = 0; /* number of tasks, is determined in PF_Lib_Init or must be set before! */
-	PF.numsbufs = 2; /* might be changed by LibInit ! */
-	PF.numrbufs = 2; /* might be changed by LibInit ! */
+	PF.numtasks = 0; /* number of tasks, is determined in PF_LibInit ! */
+	PF.numsbufs = 2; /* might be changed by the environment variable on the master ! */
+	PF.numrbufs = 2; /* might be changed by the environment variable on the master ! */
 
 	PF_LibInit(argc,argv);
 	PF_RealTime(PF_RESET);
@@ -1971,8 +1968,9 @@ int PF_Init(int *argc, char ***argv)
 	PF.rhsInParallel=1;
 	PF.exprbufsize=4096;/*in WORDs*/
 
-	if ( PF.me == MASTER ) {
 #ifdef PF_WITHGETENV
+	if ( PF.me == MASTER ) {
+		char *c;
 /*
 			get these from the environment at the moment sould be in setfile/tail
 */
@@ -2005,22 +2003,8 @@ int PF_Init(int *argc, char ***argv)
 			fflush(stderr);
 			if ( PF_statsinterval < 1 ) PF_statsinterval = 10;
 		}
-		fp = (UBYTE*)getenv("FORMPATH");
-		if ( fp ) {
-			ubp = fp;
-			while ( *ubp++ ) fpsize++;
-			if ( AC.OldParallelStats ) {
-				fprintf(stderr,"[%d] changing Path to %s\n",PF.me,fp);
-				fflush(stderr);
-			}
-		}
-		else {
-			fp = (UBYTE*)"";
-			fpsize++;
-		}
-		fpsize++;
-#endif
 	}
+#endif
 /*
   	#[ Broadcast settings from getenv: could also be done in PF_DoSetup
 */
@@ -2029,20 +2013,15 @@ int PF_Init(int *argc, char ***argv)
 		PF_Pack(&PF.log,1,PF_INT);
 		PF_Pack(&PF.numrbufs,1,PF_WORD);
 		PF_Pack(&PF.numsbufs,1,PF_WORD);
-		PF_Pack(&fpsize,1,PF_INT);
-		PF_Pack(fp,fpsize,PF_BYTE);
 	}
 	PF_Broadcast();
 	if ( PF.me != MASTER ) {
 		PF_Unpack(&PF.log,1,PF_INT);
 		PF_Unpack(&PF.numrbufs,1,PF_WORD);
 		PF_Unpack(&PF.numsbufs,1,PF_WORD);
-		PF_Unpack(&fpsize,1,PF_INT);
-		AM.Path = (UBYTE*)Malloc1(fpsize*sizeof(UBYTE),"Path");
-		PF_Unpack(AM.Path,fpsize,PF_BYTE);
 		if ( PF.log ) {
-			fprintf(stderr, "[%d] log=%d rbufs=%d sbufs=%d path=%s\n",
-			        PF.me, PF.log, PF.numrbufs, PF.numsbufs, AM.Path);
+			fprintf(stderr, "[%d] log=%d rbufs=%d sbufs=%d\n",
+			        PF.me, PF.log, PF.numrbufs, PF.numsbufs);
 			fflush(stderr);
 		}
 	}
