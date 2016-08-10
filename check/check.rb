@@ -183,6 +183,18 @@ module FormTest
     FormTest.cfg.wordsize
   end
 
+  def cygwin?
+    RUBY_PLATFORM =~ /cygwin/i
+  end
+
+  def mac?
+    RUBY_PLATFORM =~ /darwin/i
+  end
+
+  def linux?
+    RUBY_PLATFORM =~ /linux/i
+  end
+
   # Override methods in Test::Unit::TestCase.
 
   def setup
@@ -217,56 +229,71 @@ module FormTest
 
   # Called from derived classes' test_* methods.
   def do_test
-    if requires
-      setup_files
-      prepare
-      @stdout = ""
-      @stderr = ""
-      begin
-        nfiles.times do |i|
-          @filename = "#{i + 1}.frm"
-          execute("#{FormTest.cfg.form_cmd} #{@filename}")
-          if !finished?
-            info.status = "TIMEOUT"
-            assert(false, "timeout (= #{timeout} sec) in #{@filename} of #{info.desc}")
-          end
-          if return_value != 0
-            break
-          end
-        end
-        yield
-      # NOTE: Here we catch all exceptions, though it is a very bad style. This
-      #       is because, in Ruby 1.9, test/unit is implemented based on
-      #       minitest and MiniTest::Assertion is not a subclass of
-      #       StandardError.
-      rescue Exception => e
-        STDERR.puts
-        STDERR.puts("=" * 79)
-        STDERR.puts("#{info.desc} FAILED")
-        STDERR.puts("=" * 79)
-        STDERR.puts(@stdout)
-        STDERR.puts("=" * 79)
-        STDERR.puts
-        if info.status.nil?
-          if (defined?(MiniTest::Assertion) && e.is_a?(MiniTest::Assertion)) ||
-             (defined?(Test::Unit::AssertionFailedError) && e.is_a?(Test::Unit::AssertionFailedError))
-            info.status = "FAILED"
-          else
-            info.status = "ERROR"
-          end
-        end
-        raise e
-      else
-        info.status = "OK"
-      end
-    elsif defined? omit
+    if !requires
       info.status = "SKIPPED"
-      omit(requires_str) do
-        yield
+      if defined? omit
+        omit(requires_str) do
+          yield
+        end
+      elsif defined? skip
+        skip(requires_str)
       end
-    elsif defined? skip
+      return
+    end
+
+    if !FormTest.cfg.full && pendings
       info.status = "SKIPPED"
-      skip(requires_str)
+      if defined? pend
+        pend(pendings_str) do
+          assert(false)
+          yield
+        end
+      elsif defined? skip
+        skip(requires_str)
+      end
+      return
+    end
+
+    setup_files
+    prepare
+    @stdout = ""
+    @stderr = ""
+    begin
+      nfiles.times do |i|
+        @filename = "#{i + 1}.frm"
+        execute("#{FormTest.cfg.form_cmd} #{@filename}")
+        if !finished?
+          info.status = "TIMEOUT"
+          assert(false, "timeout (= #{timeout} sec) in #{@filename} of #{info.desc}")
+        end
+        if return_value != 0
+          break
+        end
+      end
+      yield
+    # NOTE: Here we catch all exceptions, though it is a very bad style. This
+    #       is because, in Ruby 1.9, test/unit is implemented based on
+    #       minitest and MiniTest::Assertion is not a subclass of
+    #       StandardError.
+    rescue Exception => e
+      STDERR.puts
+      STDERR.puts("=" * 79)
+      STDERR.puts("#{info.desc} FAILED")
+      STDERR.puts("=" * 79)
+      STDERR.puts(@stdout)
+      STDERR.puts("=" * 79)
+      STDERR.puts
+      if info.status.nil?
+        if (defined?(MiniTest::Assertion) && e.is_a?(MiniTest::Assertion)) ||
+           (defined?(Test::Unit::AssertionFailedError) && e.is_a?(Test::Unit::AssertionFailedError))
+          info.status = "FAILED"
+        else
+          info.status = "ERROR"
+        end
+      end
+      raise e
+    else
+      info.status = "OK"
     end
   end
 
@@ -385,7 +412,8 @@ module FormTest
     1
   end
 
-  # The required condition.
+  # The required condition. The test will be skipped if the condition does not
+  # hold.
   def requires
     true
   end
@@ -393,6 +421,16 @@ module FormTest
   # The string representation for the required condition.
   def requires_str
     "true"
+  end
+
+  # The pending condition. The test will be skipped if the condition holds.
+  def pendings
+    false
+  end
+
+  # The string representation for the pending condition.
+  def pendings_str
+    "false"
   end
 
   # The method to be called before the test.
@@ -623,6 +661,7 @@ class TestCases
         skipping = false
         heredoc = nil
         requires = nil
+        pendings = nil
         prepares = nil
 
         infile.each_line do |line|
@@ -651,6 +690,7 @@ class TestCases
               skipping = !info.enabled
               heredoc = nil
               requires = nil
+              pendings = nil
               prepares = nil
               if skipping
                 line = ""
@@ -693,9 +733,14 @@ class TestCases
               end
               line += "def nfiles; #{fileno} end; " if fileno != 1
               if !requires.nil?
-                requires = requires.map { |s| "(" + s + ")" }.join(" and ")
+                requires = requires.map { |s| "(" + s + ")" }.join(" && ")
                 line += "def requires; #{requires} end; "
-                line += "def requires_str; %&#{requires}& end; "
+                line += "def requires_str; %(#{requires}) end; "
+              end
+              if !pendings.nil?
+                pendings = pendings.map { |s| "(" + s + ")" }.join(" || ")
+                line += "def pendings; #{pendings} end; "
+                line += "def pendings_str; %(#{pendings}) end; "
               end
               if !prepares.nil?
                 prepares = prepares.join("; ")
@@ -732,6 +777,13 @@ class TestCases
               requires = []
             end
             requires << $1
+          elsif heredoc.nil? && line =~ /^\s*#\s*pend_if\s+(.*)/
+            # #pend_if <condition>
+            line = ""
+            if pendings.nil?
+              pendings = []
+            end
+            pendings << $1
           elsif heredoc.nil? && line =~ /^\s*#\s*prepare\s+(.*)/
             # #prepare <statement>
             line = ""
@@ -739,8 +791,8 @@ class TestCases
               prepares = []
             end
             prepares << $1
-          elsif heredoc.nil? && line =~ /^\*\s*#\s*(require|prepare)\s+(.*)/
-            # *#require/prepare, commented out in the FORM way
+          elsif heredoc.nil? && line =~ /^\*\s*#\s*(require|prepare|pend_if)\s+(.*)/
+            # *#require/prepare/pend_if, commented out in the FORM way
             line = ""
           else
             if heredoc.nil?
@@ -848,13 +900,14 @@ end
 
 # FORM configuration.
 class FormConfig
-  def initialize(form, mpirun, valgrind, ncpu, timeout, stat)
+  def initialize(form, mpirun, valgrind, ncpu, timeout, stat, full)
     @form     = form
     @mpirun   = mpirun
     @valgrind = valgrind
     @ncpu     = ncpu
     @timeout  = timeout
     @stat     = stat
+    @full     = full
 
     @form_bin      = nil
     @mpirun_bin    = nil
@@ -869,7 +922,7 @@ class FormConfig
     @form_cmd    = nil
   end
 
-  attr_reader :form, :mpirun, :valgrind, :ncpu, :timeout, :stat
+  attr_reader :form, :mpirun, :valgrind, :ncpu, :timeout, :stat, :full
   attr_reader :form_bin, :mpirun_bin, :valgrind_bin, :valgrind_supp
   attr_reader :head, :wordsize, :form_cmd
 
@@ -1041,6 +1094,7 @@ def main
   opts.ncpu = 4
   opts.timeout = nil
   opts.stat = false
+  opts.full = false
   opts.enable_valgrind = false
   opts.valgrind = "valgrind"
   opts.dir = nil
@@ -1058,6 +1112,7 @@ def main
   parser.on("-w", "--ncpu N",        "Use N CPUs")                        { |n|    opts.ncpu = n.to_i }
   parser.on("-t", "--timeout N",     "Timeout N in seconds")              { |n|    opts.timeout = n.to_i }
   parser.on("--stat",                "Print detailed statistics")         { opts.stat = true }
+  parser.on("--full",                "Full test, ignoring pending")       { opts.full = true }
   parser.on("--enable-valgrind",     "Enable Valgrind")                   { opts.enable_valgrind = true }
   parser.on("--valgrind BIN",        "Use BIN as Valgrind executable")    { |bin| opts.enable_valgrind = true; opts.valgrind = bin }
   parser.on("-C", "--directory DIR", "Directory for test cases")          { |dir|  opts.dir = search_dir(dir, opts) }
@@ -1141,7 +1196,8 @@ def main
                                 opts.enable_valgrind ? opts.valgrind : nil,
                                 opts.ncpu,
                                 opts.timeout > 1 ? opts.timeout : 1,
-                                opts.stat)
+                                opts.stat,
+                                opts.full)
   FormTest.cfg.check
   puts("Check #{FormTest.cfg.form_bin}")
   puts(FormTest.cfg.head)
