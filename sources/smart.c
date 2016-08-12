@@ -83,14 +83,25 @@ int StudyPattern(WORD *lhs)
 */
 			if ( ( functions[nn].symmetric == SYMMETRIC ) ||
 				 ( functions[nn].symmetric == ANTISYMMETRIC ) ) {
-				p2 = p+p[1]; p1 = p+FUNHEAD;
+			  p2 = p+p[1]; p1 = p+FUNHEAD;
+			  if ( functions[nn].spec ) {
 				while ( p1 < p2 ) {
 					if ( *p1 == FUNNYWILD ) {
 						MesPrint("&Argument field wildcards are not allowed inside (anti)symmetric functions or tensors");
 						return(1);
 					}
+					p1++;
+				}
+			  }
+			  else {
+				while ( p1 < p2 ) {
+					if ( *p1 == -ARGWILD ) {
+						MesPrint("&Argument field wildcards are not allowed inside (anti)symmetric functions or tensors");
+						return(1);
+					}
 					NEXTARG(p1);
 				}
+			  }
 			}
 		}
 		p += p[1];
@@ -341,7 +352,7 @@ int MatchIsPossible(WORD *pattern, WORD *term)
 */
 	for ( i = 0, inf = info+1, p = pattern+1; i < inpat; i++, inf += 4, p+=p[1] ) {
 		if ( inf[2] ) continue;
-		if ( *p >= FUNCTION+WILDOFFSET ) continue;
+		if ( *p >= (FUNCTION+WILDOFFSET) ) continue;
 		for ( j = 0, finf = AN.FunInfo; j < numfun; j++, finf++ ) {
 			if ( *p == *(finf->location) && *inf == finf->numargs ) {
 				finf->numargs = -finf->numargs-1;
@@ -352,7 +363,7 @@ int MatchIsPossible(WORD *pattern, WORD *term)
 	}
 	for ( i = 0, inf = info+1, p = pattern+1; i < inpat; i++, inf += 4, p+=p[1] ) {
 		if ( inf[2] ) continue;
-		if ( *p < FUNCTION+WILDOFFSET ) continue;
+		if ( *p < (FUNCTION+WILDOFFSET) ) continue;
 		for ( j = 0, finf = AN.FunInfo; j < numfun; j++, finf++ ) {
 			if ( *inf == finf->numargs ) {
 				finf->numargs = -finf->numargs-1;
@@ -363,9 +374,9 @@ int MatchIsPossible(WORD *pattern, WORD *term)
 	}
 	for ( i = 0, inf = info+1, p = pattern+1; i < inpat; i++, inf += 4, p+=p[1] ) {
 		if ( inf[2] == 0 ) continue;
-		if ( *p >= FUNCTION+WILDOFFSET ) continue;
+		if ( *p >= (FUNCTION+WILDOFFSET) ) continue;
 		for ( j = 0, finf = AN.FunInfo; j < numfun; j++, finf++ ) {
-			if ( *p == *(finf->location) && *inf <= finf->numargs ) {
+			if ( *p == *(finf->location) && (*inf-inf[2]) <= finf->numargs ) {
 				finf->numargs = -finf->numargs-1;
 				break;
 			}
@@ -374,9 +385,9 @@ int MatchIsPossible(WORD *pattern, WORD *term)
 	}
 	for ( i = 0, inf = info+1, p = pattern+1; i < inpat; i++, inf += 4, p+=p[1] ) {
 		if ( inf[2] == 0 ) continue;
-		if ( *p < FUNCTION+WILDOFFSET ) continue;
+		if ( *p < (FUNCTION+WILDOFFSET) ) continue;
 		for ( j = 0, finf = AN.FunInfo; j < numfun; j++, finf++ ) {
-			if ( *inf <= finf->numargs ) {
+			if ( (*inf-inf[2]) <= finf->numargs ) {
 				finf->numargs = -finf->numargs-1;
 				break;
 			}
