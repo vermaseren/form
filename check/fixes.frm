@@ -1156,3 +1156,38 @@ P;
 .end
 assert result("F") =~ expr("rat(x^10 + x^11 + x^12 + x^13 + x^14 + x^15)")
 *--#] Issue114 :
+*--#[ Issue117_1 :
+* Id not matching when using ?a and symmetric function
+S n1,n2;
+CF f,g(s);
+L F = f(n1,n2)*g(n1,n2);
+id f(n1?,n2?,?a)*g(n1?,n2?) = 1; * works if g not symmetric or ?a is removed
+Print;
+.end
+assert result("F") =~ expr("1")
+*--#] Issue117_1 :
+*--#[ Issue117_2 :
+S n1,n2;
+CF f(s),g(s);
+id f(n1?,n2?,?a)*g(n1?,n2?) = 1;
+.end
+assert compile_error?
+*--#] Issue117_2 :
+*--#[ Issue117_3 :
+S n1,n2;
+S x1,x2,x3;
+CF f,g(s);
+L F1 = f(x1,x2)*g(x1,x2);
+L F2 = f(x2,x1)*g(x1,x2);
+L F3 = f(x1,x2,x3)*g(x1,x2);
+L F4 = f(x2,x1,x3)*g(x1,x2);
+L F5 = f(x1,x2)*f(x2,x1,x3)*g(x2,x1)^2;
+id f(n1?,n2?,?a) * g(n1?,n2?) = 1;
+P;
+.end
+assert result("F1") =~ expr("1")
+assert result("F2") =~ expr("1")
+assert result("F3") =~ expr("1")
+assert result("F4") =~ expr("1")
+assert result("F5") =~ expr("1")
+*--#] Issue117_3 :
