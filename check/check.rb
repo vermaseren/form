@@ -231,11 +231,11 @@ module FormTest
   def do_test
     if !requires
       info.status = "SKIPPED"
-      if defined? omit
+      if defined?(omit)
         omit(requires_str) do
           yield
         end
-      elsif defined? skip
+      elsif defined?(skip)
         skip(requires_str)
       end
       return
@@ -243,12 +243,12 @@ module FormTest
 
     if !FormTest.cfg.full && pendings
       info.status = "SKIPPED"
-      if defined? pend
+      if defined?(pend)
         pend(pendings_str) do
           assert(false)
           yield
         end
-      elsif defined? skip
+      elsif defined?(skip)
         skip(requires_str)
       end
       return

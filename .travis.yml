@@ -503,6 +503,7 @@ my_recipes:
     before_install:
       - brew update
       - brew install valgrind
+      - gem install test-unit
     script:
       - autoreconf -iv
       - ./configure --enable-scalar --disable-threaded --disable-parform --enable-debug
@@ -516,6 +517,7 @@ my_recipes:
     before_install:
       - brew update
       - brew install valgrind
+      - gem install test-unit
     script:
       - autoreconf -iv
       - ./configure --disable-scalar --enable-threaded --disable-parform --enable-debug
@@ -529,6 +531,7 @@ my_recipes:
     before_install:
       - brew update
       - brew install mpich valgrind
+      - gem install test-unit
     script:
       - autoreconf -iv
       - ./configure --disable-scalar --disable-threaded --enable-parform --enable-debug
