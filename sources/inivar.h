@@ -78,7 +78,8 @@ FIXEDGLOBALS FG = {
 		,"(global-to be unhidden)"
 		,"(into-hide-local)"
 		,"(into-hide-global)"
-		,"(spectator)"}
+		,"(spectator)"
+		,"(drop/spectator)"}
 
 		,{" Functions"
 		," Commuting Functions"}

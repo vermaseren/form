@@ -2394,7 +2394,7 @@ typedef struct FixedGlobals {
 	WCN		Operation[8];
 	WCN2	OperaFind[6];
 	char	*VarType[10];
-	char	*ExprStat[20];
+	char	*ExprStat[21];
 	char	*FunNam[2];
 	char	*swmes[3];
 	char	*fname;
