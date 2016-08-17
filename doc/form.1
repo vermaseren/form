@@ -1,0 +1,89 @@
+.TH FORM 1 "July 29 2016"
+.SH NAME
+form \- Symbolic manipulation system
+.SH SYNOPSIS
+.B form
+.RB [ options ]
+.RI "file" ...
+.br
+.SH OPTIONS
+.IP "-c"
+Error checking only. Notice that this will not work properly if there are conditionals in the
+preprocessor phase that depend on results obtained at earlier stages of the program.
+.IP "-d"
+Next argument/option is the name of a preprocessor variable that will be defined before the
+run starts. A specific value can be assigned with the syntax -d VARIABLENAME=VALUE. The
+default value is 1.
+.IP "-D"
+Same as -d.
+.IP "-f"
+Output goes only to log file.
+.IP "-F"
+Output only to log file. Further like -L or -ll.
+.IP "-h"
+Wait for some key to be touched before finishing the run. Basically only for some old window
+based systems.
+.IP "-I"
+Next argument/option is the path of a directory for include, procedure and subroutine files.
+.IP "-l"
+Make a regular log file.
+.IP "-ll"
+Make a log file without intermediate statistics.
+.IP "-L"
+Same as -ll.
+.IP "-M"
+Put the PID (process identifier) in the name of the temporary files. This makes for longer
+names, but gives a better guarantee of uniqueness. If a file with the created name exists
+already it will be overwritten. This option is for when several instances of FORM are started
+at nearly the same time as can happen from minos or make (with the make -j option).
+.IP "-p"
+Next argument/option is the path of a directory for input, include, procedure and subroutine
+files.
+.IP "-pipe"
+Indicates that FORM is started up as the receiving end of a pipe. Action will be taken to
+set up the proper communication channels.
+.IP "-q"
+Quiet option. Only output expressions are printed.
+.IP "-R"
+Recover from a crash. See the checkpoint mechanism in 4.1.
+.IP "-s"
+Next argument/option is the path of a directory for a setup file.
+.IP "-si"
+Same as -q.
+.IP "-S"
+Next argument/option is the name of a setup file.
+.IP "-t"
+Next argument/option is the path of a directory for temporary files.
+.IP "-T"
+Puts FORM in a mode in which the maximum totalsize is measured and printed at the end of
+the program. For more information see the ?..On TotalSize;?.. statement7.97.
+.IP "-v"
+Only the version will be printed. The program terminates immediately after it.
+.IP "-w"
+This should be followed immediately by a number. The number indicates the number of worker
+threads for TFORM. All other versions of FORM ignore this parameter. It should be noted
+that TFORM is a different program. For more information, please consult chapter 16.
+.IP "-y"
+Run only the preprocessor and dump its output.
+.SH DESCRIPTION
+This manual page documents briefly the
+.B form
+and
+.B tform
+and
+.B parform
+commands.
+.PP
+\fBform\fP is a symbolic manipulation system. It reads text files containing
+definitions of mathematical expressions as well as statements that tell it
+how to manipulate these expressions. It is widely used in the theoretical
+particle physics community, but it is not restricted to applications in this
+specific field.
+.PP
+\fBtform\fP is the threaded version.
+.PP
+\fBparform\fP is the parallel version (MPI).
+.PP
+For a complete description, consult the manual online at
+http://www.nikhef.nl/~form/maindir/documentation/reference/online/online.html
+or the included PDF.
