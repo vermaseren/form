@@ -560,7 +560,7 @@ restart:;
 		AS.OldOnFile = (POSITION *)Malloc1(2*AS.NumOldOnFile*sizeof(POSITION),"file pointers");
 		for ( i = 0; i < AS.NumOldOnFile; i++ ) AS.OldOnFile[i] = old[i];
 		AS.NumOldOnFile = 2*AS.NumOldOnFile;
-		M_free(old,"proces file pointers");
+		M_free(old,"process file pointers");
 	}
 	if ( AS.OldNumFactors == 0 ) {
 		AS.NumOldNumFactors = 20;
@@ -2218,7 +2218,7 @@ void UpdatePositions()
 			AS.OldOnFile = (POSITION *)Malloc1(NumExpressions*sizeof(POSITION),"file pointers");
 			for ( i = 0; i < AS.NumOldOnFile; i++ ) AS.OldOnFile[i] = old[i];
 			AS.NumOldOnFile = NumExpressions;
-			M_free(old,"proces file pointers");
+			M_free(old,"process file pointers");
 		}
 		else {
 			AS.OldOnFile = (POSITION *)Malloc1(NumExpressions*sizeof(POSITION),"file pointers");
