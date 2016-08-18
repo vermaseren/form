@@ -185,7 +185,7 @@ static void PrintHeader(int with_full_info)
 }
 
 /*
- 		#] PrintHeader :
+ 		#] PrintHeader : 
  		#[ DoTail :
 
 		Routine reads the command tail and handles the commandline options.
@@ -851,7 +851,7 @@ VOID StartVariables()
 	AC.exprfillwarning = 0;
 	AM.gLineLength = 79;
 	AM.OutBufSize = 80;
-	AM.MaxStreamSize = 1024;
+	AM.MaxStreamSize = MAXFILESTREAMSIZE;
 	AC.iBufferSize = 512;
 	AP.pSize = 128;
 	AP.MaxPreIfLevel = 10;
