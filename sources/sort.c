@@ -1339,6 +1339,9 @@ WORD PutOut(PHEAD WORD *term, POSITION *position, FILEHANDLE *fi, WORD ncomp)
 						fi->handle = (WORD)RetCode;
 						PUTZERO(fi->filesize);
 						PUTZERO(fi->POposition);
+#ifdef WITHZLIB
+						fi->ziobuffer = 0;
+#endif
 					}
 					else {
 						MLOCK(ErrorMessageLock);
@@ -1550,6 +1553,9 @@ nocompress:
 						fi->handle = (WORD)RetCode;
 						PUTZERO(fi->filesize);
 						PUTZERO(fi->POposition);
+#ifdef WITHZLIB
+						fi->ziobuffer = 0;
+#endif
 					}
 					else {
 						MLOCK(ErrorMessageLock);
@@ -1681,6 +1687,9 @@ WORD FlushOut(POSITION *position, FILEHANDLE *fi, int compr)
 				PUTZERO(fi->filesize);
 				PUTZERO(fi->POposition);
 				fi->handle = (WORD)RetCode;
+#ifdef WITHZLIB
+				fi->ziobuffer = 0;
+#endif
 			}
 			else {
 				MLOCK(ErrorMessageLock);
