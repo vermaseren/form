@@ -3463,6 +3463,9 @@ FileMake:
 			fout->handle = fhandle;
 			PUTZERO(fout->filesize);
 			PUTZERO(fout->POposition);
+#ifdef WITHZLIB
+			fout->ziobuffer = 0;
+#endif
 #ifdef ALLLOCK
 			LOCK(fout->pthreadslock);
 #endif
