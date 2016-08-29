@@ -3394,15 +3394,16 @@ LONG TimeWallClock(WORD par)
 	/*
 	 * NOTE: this function is not thread-safe. Operations on tp are not atomic.
 	 */
-	struct timeb tp;
-	ftime(&tp);
+	struct timespec tp;
+	clock_gettime(CLOCK_MONOTONIC, &tp);
+	
 	if ( par ) {
-		return(((LONG)(tp.time)-AM.OldSecTime)*100 + 
-			((LONG)(tp.millitm)-AM.OldMilliTime)/10);
+		return(((LONG)(tp.tv_sec)-AM.OldSecTime)*100 +
+			((LONG)(tp.tv_nsec / 1000000)-AM.OldMilliTime)/10);
 	}
 	else {
-		AM.OldSecTime   = (LONG)(tp.time);
-		AM.OldMilliTime = (LONG)(tp.millitm);
+		AM.OldSecTime   = (LONG)(tp.tv_sec);
+		AM.OldMilliTime = (LONG)(tp.tv_nsec / 1000000);
 		return(0L);
 	}
 }
