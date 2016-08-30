@@ -1417,6 +1417,8 @@ WORD DoDelta3(PHEAD WORD *term, WORD level)
 		m = m2; while ( m < tstop ) *t++ = *m++;
 		*termout = WORDDIF(t,termout);
 		AT.WorkPointer = t;
+		*AN.RepPoint = 1;
+		AR.expchanged = 1;
 		if ( Generator(BHEAD termout,level) ) {
 			MLOCK(ErrorMessageLock);
 			MesCall("Do dd_");
@@ -1525,6 +1527,8 @@ WORD DoDelta3(PHEAD WORD *term, WORD level)
 			while ( m < tstop ) *t++ = *m++;
 			*termout = WORDDIF(t,termout);
 			AT.WorkPointer = t;
+			*AN.RepPoint = 1;
+			AR.expchanged = 1;
 			if ( Generator(BHEAD termout,level) ) {
 				MLOCK(ErrorMessageLock);
 				MesCall("Do dd_");
