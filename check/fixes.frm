@@ -1191,3 +1191,17 @@ assert result("F3") =~ expr("1")
 assert result("F4") =~ expr("1")
 assert result("F5") =~ expr("1")
 *--#] Issue117_3 :
+*--#[ Issue121 :
+* repeat ignored in some output terms of dd_
+V p1,p2,p3,p4;
+CF f;
+L F = f(p1,p2,p3,p4)*f(p3,p4);
+repeat id once f(?a) = dd_(?a);
+P +s;
+.end
+assert result("F") =~ expr("
+       + p1.p2*p3.p4^2
+       + p1.p3*p2.p4*p3.p4
+       + p1.p4*p2.p3*p3.p4
+")
+*--#] Issue121 :
