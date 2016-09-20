@@ -3211,18 +3211,37 @@ argerror:
  		#[ TimeWallClock :
 */
 
+#include <unistd.h> // defines _POSIX_TIMERS if clock_gettime() available
+#ifdef _POSIX_TIMERS
+#include <sys/timeb.h>
+#endif
+
 LONG TimeWallClock(WORD par)
 {
+#ifdef _POSIX_TIMERS
 	struct timespec tp;
 	clock_gettime(CLOCK_MONOTONIC, &tp);
-	
+#else
+	struct timeb tp;
+	ftime(&tp);
+#endif
 	if ( par ) {
+#ifdef _POSIX_TIMERS
 		return(((LONG)(tp.tv_sec)-AM.OldSecTime)*100 +
 			((LONG)(tp.tv_nsec / 1000000)-AM.OldMilliTime)/10);
+#else
+		return(((LONG)(tp.time)-AM.OldSecTime)*100 + 
+			((LONG)(tp.millitm)-AM.OldMilliTime)/10);
+#endif
 	}
 	else {
+#ifdef _POSIX_TIMERS
 		AM.OldSecTime   = (LONG)(tp.tv_sec);
 		AM.OldMilliTime = (LONG)(tp.tv_nsec / 1000000);
+#else
+		AM.OldSecTime   = (LONG)(tp.time);
+		AM.OldMilliTime = (LONG)(tp.millitm);
+#endif
 		return(0L);
 	}
 }
