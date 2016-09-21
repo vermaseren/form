@@ -1088,7 +1088,11 @@ WORD TryDo(PHEAD WORD *term, WORD *pattern, WORD level)
 		if ( *r == 0 ) return(0);
 		ReNumber(BHEAD r); Normalize(BHEAD r);
 		if ( *r == 0 ) return(0);
-		if ( ( i = CompareTerms(BHEAD term,r,0) ) < 0 ) return(Generator(BHEAD r,level));
+		if ( ( i = CompareTerms(BHEAD term,r,0) ) < 0 ) {
+			*AN.RepPoint = 1;
+			AR.expchanged = 1;
+			return(Generator(BHEAD r,level));
+		}
 		if ( i == 0 && CompCoef(term,r) != 0 ) { return(0); }
 	}
 	AT.WorkPointer = r;
