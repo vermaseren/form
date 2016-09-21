@@ -1887,7 +1887,7 @@ EndTest2:;
 }
 
 /*
- 		#] TestSub :
+ 		#] TestSub : 
  		#[ InFunction :			WORD InFunction(term,termout)
 */
 /**
@@ -4916,7 +4916,7 @@ WORD PolyFunMul(PHEAD WORD *term)
 {
 	GETBIDENTITY
 	WORD *t, *fun1, *fun2, *t1, *t2, *m, *w, *ww, *tt1, *tt2, *tt4, *arg1, *arg2;
-	WORD *tstop, i, dirty = 0;
+	WORD *tstop, i, dirty = 0, OldPolyFunPow = AR.PolyFunPow, minp1, minp2;
 	WORD n1, n2, i1, i2, l1, l2, l3, l4, action = 0, noac = 0;
 	if ( AR.PolyFunType == 2 && AR.PolyFunExp == 1 ) {
 		WORD pow = 0, pow1;
@@ -5184,7 +5184,50 @@ retry:
 */
 	w = AT.WorkPointer;
 	NewSort(BHEAD0);
-	if ( AR.PolyFunType == 2 && AR.PolyFunExp == 2 ) AT.TrimPower = 1;
+	if ( AR.PolyFunType == 2 && AR.PolyFunExp == 2 ) {
+		AT.TrimPower = 1;
+/*
+		We have to find the lowest power in both polynomials.
+		This will be needed to temporarily correct the AR.PolyFunPow
+*/
+		minp1 = MAXPOWER;
+		for ( t1 = arg1, i1 = 0; i1 < n1; i1++, t1 += *t1 ) {
+			if ( *t1 == 4 ) {
+				if ( minp1 > 0 ) minp1 = 0;
+			}
+			else if ( ABS(t1[*t1-1]) == (*t1-1) ) {
+				if ( minp1 > 0 ) minp1 = 0;
+			}
+			else {
+				if ( t1[1] == SYMBOL && t1[2] == 4 && t1[3] == AR.PolyFunVar ) {
+					if ( t1[4] < minp1 ) minp1 = t1[4];
+				}
+				else {
+					MesPrint("Illegal term in expanded polyratfun.");
+					goto PolyCall;
+				}
+			}
+		}
+		minp2 = MAXPOWER;
+		for ( t2 = arg2, i2 = 0; i2 < n2; i2++, t2 += *t2 ) {
+			if ( *t2 == 4 ) {
+				if ( minp2 > 0 ) minp2 = 0;
+			}
+			else if ( ABS(t2[*t2-1]) == (*t2-1) ) {
+				if ( minp2 > 0 ) minp2 = 0;
+			}
+			else {
+				if ( t2[1] == SYMBOL && t2[2] == 4 && t2[3] == AR.PolyFunVar ) {
+					if ( t2[4] < minp2 ) minp2 = t2[4];
+				}
+				else {
+					MesPrint("Illegal term in expanded polyratfun.");
+					goto PolyCall;
+				}
+			}
+		}
+		AR.PolyFunPow += minp1+minp2;
+	}
 	for ( t1 = arg1, i1 = 0; i1 < n1; i1++, t1 += *t1 ) {
 	for ( t2 = arg2, i2 = 0; i2 < n2; i2++, t2 += *t2 ) {
 		m = w;
@@ -5239,6 +5282,7 @@ retry:
 	}	
 	}	
 	if ( EndSort(BHEAD w,0) < 0 ) goto PolyCall;
+	AR.PolyFunPow = OldPolyFunPow;
 	AT.TrimPower = 0;
 	if ( *w == 0 ) {
 		*term = 0;
@@ -5289,6 +5333,7 @@ done:
 PolyCall:;
 	MLOCK(ErrorMessageLock);
 PolyCall2:;
+	AR.PolyFunPow = OldPolyFunPow;
 	MesCall("PolyFunMul");
 	MUNLOCK(ErrorMessageLock);
 	SETERROR(-1)

@@ -3056,6 +3056,7 @@ int ExpandRat(PHEAD WORD *fun)
 	WORD *numerator, *denominator, *rnext;
 	WORD *thecopy, *rc, ncoef, newcoef, *m, *mm, nco, *outarg = 0;
 	UWORD co[2], co1[2], co2[2];
+	WORD OldPolyFunPow = AR.PolyFunPow;
 	int i, j, minpow = 0, eppow, first, error = 0, ipoly;
 	if ( fun[1] == FUNHEAD ) { return(0); }
 	tnext = fun + fun[1];
@@ -3069,6 +3070,29 @@ NormArg:;
 		AT.TrimPower = 1;
 		NewSort(BHEAD0);
 		r = fun+FUNHEAD+ARGHEAD;
+		if ( AR.PolyFunExp ==  2 ) {	/* Find minimum power */
+			WORD minpow2 = MAXPOWER, *rrm;
+			rrm = r;
+			while ( rrm < tnext ) {
+				if ( *rrm == 4 ) {
+					if ( minpow2 > 0 ) minpow2 = 0;
+				}
+				else if ( ABS(rrm[*rrm-1]) == (*rrm-1) ) {
+					if ( minpow2 > 0 ) minpow2 = 0;
+				}
+				else {
+					if ( rrm[1] == SYMBOL && rrm[2] == 4 && rrm[3] == AR.PolyFunVar ) {
+						if ( rrm[4] < minpow2 ) minpow2 = rrm[4];
+					}
+					else {
+						MesPrint("Illegal term in expanded polyratfun.");
+						goto onerror;
+					}
+				}
+				rrm += *rrm;
+			}
+			AR.PolyFunPow += minpow2;
+		}
 		while ( r < tnext ) {
 			rr = r + *r;
 			i = *r; rrr = outarg; NCOPY(rrr,r,i);
@@ -3157,6 +3181,29 @@ NormArg:;
 			else {	/* Multi-term numerator. */
 				m = arg1+ARGHEAD;
 				NewSort(BHEAD0);	/* Technically maybe not needed */
+				if ( AR.PolyFunExp ==  2 ) {	/* Find minimum power */
+					WORD minpow2 = MAXPOWER, *rrm;
+					rrm = m;
+					while ( rrm < arg2 ) {
+						if ( *rrm == 4 ) {
+							if ( minpow2 > 0 ) minpow2 = 0;
+						}
+						else if ( ABS(rrm[*rrm-1]) == (*rrm-1) ) {
+							if ( minpow2 > 0 ) minpow2 = 0;
+						}
+						else {
+							if ( rrm[1] == SYMBOL && rrm[2] == 4 && rrm[3] == AR.PolyFunVar ) {
+								if ( rrm[4] < minpow2 ) minpow2 = rrm[4];
+							}
+							else {
+								MesPrint("Illegal term in expanded polyratfun.");
+								goto onerror;
+							}
+						}
+						rrm += *rrm;
+					}
+					AR.PolyFunPow += minpow2-1;
+				}
 				while ( m < arg2 ) {
 					r = outarg;
 					rrr = r++; mm = m + *m;
@@ -3214,6 +3261,29 @@ NormArg:;
 			else {	/* Multi-term numerator. */
 				m = arg1+ARGHEAD;
 				NewSort(BHEAD0);	/* Technically maybe not needed */
+				if ( AR.PolyFunExp ==  2 ) {	/* Find minimum power */
+					WORD minpow2 = MAXPOWER, *rrm;
+					rrm = m;
+					while ( rrm < arg2 ) {
+						if ( *rrm == 4 ) {
+							if ( minpow2 > 0 ) minpow2 = 0;
+						}
+						else if ( ABS(rrm[*rrm-1]) == (*rrm-1) ) {
+							if ( minpow2 > 0 ) minpow2 = 0;
+						}
+						else {
+							if ( rrm[1] == SYMBOL && rrm[2] == 4 && rrm[3] == AR.PolyFunVar ) {
+								if ( rrm[4] < minpow2 ) minpow2 = rrm[4];
+							}
+							else {
+								MesPrint("Illegal term in expanded polyratfun.");
+								goto onerror;
+							}
+						}
+						rrm += *rrm;
+					}
+					AR.PolyFunPow += minpow2;
+				}
 				while ( m < arg2 ) {
 					r = rr;
 					rrr = r++; mm = m + *m;
@@ -3344,7 +3414,12 @@ NormArg:;
 		Note that the return value is an offset in AT.pWorkSpace.
 		Hence there is no need to free memory afterwards.
 */
-		ipoly = InvPoly(BHEAD denominator,AR.PolyFunPow,AR.PolyFunVar);
+		if ( AR.PolyFunExp == 3 ) {
+			ipoly = InvPoly(BHEAD denominator,AR.PolyFunPow-minpow,AR.PolyFunVar);
+		}
+		else {
+			ipoly = InvPoly(BHEAD denominator,AR.PolyFunPow,AR.PolyFunVar);
+		}
 /*
 		Now we start the multiplying
 */
@@ -3413,11 +3488,13 @@ NormArg:;
 	}
 done:
 	if ( outarg ) TermFree(outarg-ARGHEAD,"ExpandRat");
+	AR.PolyFunPow = OldPolyFunPow;
 	AT.WorkPointer = ow;
 	AN.PolyNormFlag = 1;
 	return(0);
 onerror:
 	if ( outarg ) TermFree(outarg-ARGHEAD,"ExpandRat");
+	AR.PolyFunPow = OldPolyFunPow;
 	AT.WorkPointer = ow;
 	MLOCK(ErrorMessageLock);
 	MesPrint(TheErrorMessage[error]);
