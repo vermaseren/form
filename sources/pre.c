@@ -2171,6 +2171,7 @@ int Include(UBYTE *s, int type)
 			MesPrint("@Empty fold name");
 			return(-1);
 		}
+continue_fold:
 		while ( *s && *s != ' ' && *s != '\t' ) {
 			if ( *s == '\\' ) s++;
 			s++;
@@ -2178,8 +2179,10 @@ int Include(UBYTE *s, int type)
 		t = s;
 		while ( *s == ' ' || *s == '\t' ) s++;
 		if ( *s ) {
-			MesPrint("@Improper fold name");
-			return(-1);
+			/*
+			 * A non-whitespace character is found. Continue parsing the fold.
+			 */
+			goto continue_fold;
 		}
 	}
 	else if ( *s == 0 ) {
