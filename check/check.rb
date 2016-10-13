@@ -1306,7 +1306,7 @@ end
 def guess_term_width
   require "io/console"
   IO.console.winsize[1]
-rescue LoadError
+rescue LoadError, NoMethodError
   system("type tput >/dev/null 2>&1")
   if $? == 0
     cols = `tput cols`
