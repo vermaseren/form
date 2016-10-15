@@ -1978,6 +1978,7 @@ struct T_const {
     int     numpoly;
     int     LeaveNegative;
     int     TrimPower;             /* Indicates trimming in polyratfun expansion */
+    int     FunDepth;              /* Depth in pattern matching */
     WORD    small_power_maxx;      /*     size of the cache for small powers  */
     WORD    small_power_maxn;      /*     size of the cache for small powers */
     WORD    dummysubexp[SUBEXPSIZE+4]; /* () used in normal.c */
@@ -2005,12 +2006,12 @@ struct T_const {
     WORD    fromindex;             /* Tells the compare routine whether call from index */
 #ifdef WITHPTHREADS
 #ifdef WITHSORTBOTS
-	PADPOINTER(4,25,100+SUBEXPSIZE*4+FUNHEAD*2+ARGHEAD*2,0);
+	PADPOINTER(4,26,100+SUBEXPSIZE*4+FUNHEAD*2+ARGHEAD*2,0);
 #else
-	PADPOINTER(4,23,100+SUBEXPSIZE*4+FUNHEAD*2+ARGHEAD*2,0);
+	PADPOINTER(4,24,100+SUBEXPSIZE*4+FUNHEAD*2+ARGHEAD*2,0);
 #endif
 #else
-	PADPOINTER(4,21,100+SUBEXPSIZE*4+FUNHEAD*2+ARGHEAD*2,0);
+	PADPOINTER(4,22,100+SUBEXPSIZE*4+FUNHEAD*2+ARGHEAD*2,0);
 #endif
 };
 /*

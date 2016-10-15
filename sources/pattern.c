@@ -99,7 +99,7 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 	GETBIDENTITY
 	WORD *ll, *m, *w, *llf, *OldWork, *StartWork, *ww, *mm, *t, *OldTermBuffer = 0;
 	WORD power = 0, match = 0, i, msign = 0, ll2;
-	int numdollars = 0, protosize, oldallnumrhs;
+	int numdollars = 0, protosize, oldallnumrhs, oldFunDepth;
 	CBUF *C = cbuf+AM.rbufnum, *CC;
 	AT.idallflag = 0;
 	do {
@@ -330,6 +330,7 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 	}
 	AN.DisOrderFlag = ll2 & SUBDISORDER;
 	AN.nogroundlevel = 0;
+	oldFunDepth = AT.FunDepth;
 	switch ( ll2 & SUBMASK ) {
 		case SUBONLY :
 			/* Must be an exact match */
@@ -364,6 +365,7 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 								MLOCK(ErrorMessageLock);
 								MesWork();
 								MUNLOCK(ErrorMessageLock);
+								AT.FunDepth = oldFunDepth;
 								return(-1);
 							}
 /*
@@ -397,6 +399,7 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 								MLOCK(ErrorMessageLock);
 								MesWork();
 								MUNLOCK(ErrorMessageLock);
+								AT.FunDepth = oldFunDepth;
 								return(-1);
 							}
 /*
@@ -430,6 +433,7 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 								MLOCK(ErrorMessageLock);
 								MesWork();
 								MUNLOCK(ErrorMessageLock);
+								AT.FunDepth = oldFunDepth;
 								return(-1);
 							}
 /*
@@ -597,6 +601,7 @@ WORD TestMatch(PHEAD WORD *term, WORD *level)
 				AT.idallflag = 0;
 				CC->Pointer[0] = 0;
 				TransferBuffer(AT.aebufnum,AT.ebufnum,AT.allbufnum);
+				AT.FunDepth = oldFunDepth;
 				return(1);
 			}
 			AT.idallflag = 0;
@@ -629,6 +634,7 @@ nextlevel:;
 	} while ( (*level)++ < AR.Cnumlhs && C->lhs[*level][0] == TYPEIDOLD );
 	(*level)--;
 	AT.WorkPointer = AN.RepFunList;
+	AT.FunDepth = oldFunDepth;
 	return(match);
 }
 
