@@ -1205,3 +1205,88 @@ assert result("F") =~ expr("
        + p1.p4*p2.p3*p3.p4
 ")
 *--#] Issue121 :
+*--#[ Issue125_1 :
+* Form compiler allows lone ? on rhs
+CF f;
+L F = f;
+id f = f(?);
+.end
+assert compile_error?
+*--#] Issue125_1 :
+*--#[ Issue125_2 :
+V p;
+I mu;
+CF f;
+L F = p(mu);
+id p = f(?);
+P;
+.end
+assert result("F") =~ expr("f(mu)")
+*--#] Issue125_2 :
+*--#[ Issue126 :
+* Print rejects local-to be unhidden expressions
+L F = 1;
+.sort
+Hide;
+.sort
+Unhide;
+P F;
+.end
+assert result("F") =~ expr("1")
+*--#] Issue126 :
+*--#[ Issue129_1 :
+* Redefining a hidden expression #129
+L F = 1;
+.sort
+
+#procedure redefine()
+  Hide F;
+  .sort
+  L F = F + 1;
+  .sort
+#endprocedure
+
+#do i=1,5
+  #call redefine()
+#enddo
+
+On names;
+P;
+.end
+assert result("F") =~ expr("6")
+assert stdout =~ exact_pattern(<<'EOF')
+ Expressions
+   F(local)
+ Expressions to be printed
+   F
+EOF
+*--#] Issue129_1 :
+*--#[ Issue129_2:
+L F = 1;
+.sort
+
+#procedure redefine()
+  Hide F;
+  .sort
+  L tmp = 1;
+  .sort
+  Drop tmp;
+  L F = F + 1;
+  .sort
+#endprocedure
+
+#do i=1,5
+  #call redefine()
+#enddo
+
+On names;
+P;
+.end
+assert result("F") =~ expr("6")
+assert stdout =~ exact_pattern(<<'EOF')
+ Expressions
+   F(local)
+ Expressions to be printed
+   F
+EOF
+*--#] Issue129_2 :
