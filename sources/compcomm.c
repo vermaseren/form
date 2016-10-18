@@ -1109,7 +1109,10 @@ FoundExpr:;
 			}
 			else if ( GetLastExprName(name,&numexpr)
 			&& ( Expressions[numexpr].status == LOCALEXPRESSION
-			|| Expressions[numexpr].status == GLOBALEXPRESSION ) ) {
+			|| Expressions[numexpr].status == GLOBALEXPRESSION
+			|| Expressions[numexpr].status == UNHIDELEXPRESSION
+			|| Expressions[numexpr].status == UNHIDEGEXPRESSION
+			) ) {
 				goto FoundExpr;
 			}
 			else {
@@ -5285,7 +5288,7 @@ int CoPolyRatFun(UBYTE *s)
 			symbols[AC.lPolyFunVar].maxpower =  MAXPOWER;
 		}
 		else if ( StrICmp(s,(UBYTE *)"expand") == 0 ) {
-			WORD x = 0;
+			WORD x = 0, etype = 2;
 			if ( c != ',' ) {
 				MesPrint("&Illegal option field in PolyRatFun statement.");
 				return(1);
@@ -5309,17 +5312,35 @@ int CoPolyRatFun(UBYTE *s)
 			while ( *t <= '9' && *t >= '0' ) x = 10*x + *t++ - '0';
 			while ( *t == ',' || *t == ' ' || *t == '\t' ) t++;
 			if ( *t != ')' ) {
-				MesPrint("&Illegal termination of option in PolyRatFun statement.");
-				return(1);
+				s = t;
+				t = SkipAName(s);
+				if ( t == 0 ) goto ParErr;
+				c = *t; *t = 0;
+				if ( StrICmp(s,(UBYTE *)"fixed") == 0 ) {
+					etype = 3;
+				}
+				else if ( StrICmp(s,(UBYTE *)"relative") == 0 ) {
+					etype = 2;
+				}
+				else {
+					MesPrint("&Illegal termination of option in PolyRatFun statement.");
+					return(1);
+				}
+				*t = c;
+				while ( *t == ',' || *t == ' ' || *t == '\t' ) t++;
+				if ( *t != ')' ) {
+					MesPrint("&Illegal termination of option in PolyRatFun statement.");
+					return(1);
+				}
 			}
-			AR.PolyFunExp = AC.lPolyFunExp = 2;
+			AR.PolyFunExp = AC.lPolyFunExp = etype;
 			AR.PolyFunVar = AC.lPolyFunVar;
 			AR.PolyFunPow = AC.lPolyFunPow = x;
 			symbols[AC.lPolyFunVar].minpower = -MAXPOWER;
 			symbols[AC.lPolyFunVar].maxpower =  MAXPOWER;
 		}
 		else {
-			MesPrint("&Illegal option %s in PolyRatFun statement.",s);
+ParErr:		MesPrint("&Illegal option %s in PolyRatFun statement.",s);
 			return(1);
 		}
 		t++;

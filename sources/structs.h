@@ -1702,6 +1702,7 @@ struct C_const {
     int     sizepfirstnum;         /* For redefine */
 #endif
     int     origin;                /* Determines whether .sort or ModuleOption */
+    int     vectorlikeLHS;
     WORD    argsumcheck[MAXNEST];  /* (C) Checking of nesting */
     WORD    insidesumcheck[MAXNEST];/* (C) Checking of nesting */
     WORD    inexprsumcheck[MAXNEST];/* (C) Checking of nesting */
@@ -1754,11 +1755,11 @@ struct C_const {
     UBYTE   Commercial[COMMERCIALSIZE+2]; /* (C) Message to be printed in statistics */
     UBYTE   debugFlags[MAXFLAGS+2];    /* On/Off Flag number(s) */
 #if defined(WITHPTHREADS)
-	PADPOSITION(47,8+3*MAXNEST,70,45+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17+sizeof(pthread_mutex_t));
+	PADPOSITION(47,8+3*MAXNEST,71,45+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17+sizeof(pthread_mutex_t));
 #elif defined(WITHMPI)
-	PADPOSITION(47,8+3*MAXNEST,70,46+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17);
+	PADPOSITION(47,8+3*MAXNEST,71,46+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17);
 #else
-	PADPOSITION(45,8+3*MAXNEST,68,45+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17);
+	PADPOSITION(45,8+3*MAXNEST,69,45+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17);
 #endif
 };
 /*
@@ -1978,7 +1979,6 @@ struct T_const {
     int     numpoly;
     int     LeaveNegative;
     int     TrimPower;             /* Indicates trimming in polyratfun expansion */
-    int     FunDepth;              /* Depth in pattern matching */
     WORD    small_power_maxx;      /*     size of the cache for small powers  */
     WORD    small_power_maxn;      /*     size of the cache for small powers */
     WORD    dummysubexp[SUBEXPSIZE+4]; /* () used in normal.c */
@@ -2006,12 +2006,12 @@ struct T_const {
     WORD    fromindex;             /* Tells the compare routine whether call from index */
 #ifdef WITHPTHREADS
 #ifdef WITHSORTBOTS
-	PADPOINTER(4,26,100+SUBEXPSIZE*4+FUNHEAD*2+ARGHEAD*2,0);
+	PADPOINTER(4,25,100+SUBEXPSIZE*4+FUNHEAD*2+ARGHEAD*2,0);
 #else
-	PADPOINTER(4,24,100+SUBEXPSIZE*4+FUNHEAD*2+ARGHEAD*2,0);
+	PADPOINTER(4,23,100+SUBEXPSIZE*4+FUNHEAD*2+ARGHEAD*2,0);
 #endif
 #else
-	PADPOINTER(4,22,100+SUBEXPSIZE*4+FUNHEAD*2+ARGHEAD*2,0);
+	PADPOINTER(4,21,100+SUBEXPSIZE*4+FUNHEAD*2+ARGHEAD*2,0);
 #endif
 };
 /*

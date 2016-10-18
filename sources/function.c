@@ -1612,7 +1612,6 @@ WORD ScanFunctions(PHEAD WORD *inpat, WORD *inter, WORD par)
 	int ntwa = AN.NumTotWildArgs;
 	LONG oldcpointer = C->Pointer - C->Buffer;
 	WORD oldSignCheck = AN.SignCheck;
-	AT.FunDepth++;
 	instart = inter;
 /*
 	Only active for the last function in the pattern.
@@ -1886,15 +1885,13 @@ maybenext:
 Failure:
     AN.SignCheck = oldSignCheck;
 	AT.WorkPointer = OldWork;
-	AT.FunDepth--;
 	return(0);
 OnSuccess:
-	if ( AT.idallflag && AT.FunDepth <= 1 ) {
+	if ( AT.idallflag && AN.nogroundlevel <= 0 ) {
 		if ( AT.idallmaxnum > 0 && AT.idallnum >= AT.idallmaxnum ) {
 			AN.terfirstcomm = Oterfirstcomm;
     		AN.SignCheck = oldSignCheck;
 			AT.WorkPointer = OldWork;
-			AT.FunDepth--;
 			return(0);
 		}
 		SubsInAll(BHEAD0);
@@ -1944,7 +1941,6 @@ NextFor:;
 	}
 doesmatch:
 	AT.WorkPointer = OldWork;
-	AT.FunDepth--;
 	return(1);
 }
 

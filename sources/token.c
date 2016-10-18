@@ -253,6 +253,10 @@ donumber:		i = 0;
 							*out++ = (SBYTE)i;
 						}
 						else {
+							if ( AC.vectorlikeLHS == 0 ) {
+								MesPrint("&Generated index ? only allowed in vector substitution",s);
+								error = 1;
+							}
 							*out++ = TGENINDEX;
 						}
 						object = 1;
@@ -576,7 +580,7 @@ IllPos:			MesPrint("&Illegal character at this position: %s",in);
 }
 
 /*
- 		#] tokenize :
+ 		#] tokenize : 
  		#[ WriteTokens :
 */
 

@@ -139,6 +139,10 @@ int DoExpr(UBYTE *inp, int type, int par)
 								*w = DROPLEXPRESSION;
 							else if ( *w == GLOBALEXPRESSION || *w == SKIPGEXPRESSION )
 								*w = DROPGEXPRESSION;
+							else if ( *w == HIDDENLEXPRESSION )
+								*w = DROPHLEXPRESSION;
+							else if ( *w == HIDDENGEXPRESSION )
+								*w = DROPHGEXPRESSION;
 						}
 						AC.TransEname = Expressions[c2].name;
 						j = EntVar(CEXPRESSION,0,type,0,0,0);
@@ -318,6 +322,9 @@ int DoExpr(UBYTE *inp, int type, int par)
 						case INTOHIDEGEXPRESSION:
 							*w = INTOHIDELEXPRESSION;
 							break;
+						case DROPHGEXPRESSION:
+							*w = DROPHLEXPRESSION;
+							break;
 					}
 				}
 				else if ( type == GLOBALEXPRESSION ) {
@@ -342,6 +349,9 @@ int DoExpr(UBYTE *inp, int type, int par)
 							break;
 						case INTOHIDELEXPRESSION:
 							*w = INTOHIDEGEXPRESSION;
+							break;
+						case DROPHLEXPRESSION:
+							*w = DROPHGEXPRESSION;
 							break;
 					}
 				}
@@ -843,6 +853,7 @@ IllLeft:MesPrint("&Illegal LHS");
 	C->numlhs--;
 
 	m = w + *w - 3;
+	AC.vectorlikeLHS = 0;
 	if ( !error ) {
 	  if ( m[2] != 3 || m[1] != 1 || *m != 1 ) {
 		if ( *m == 1 && m[1] == 1 && m[2] == -3 ) {
@@ -875,6 +886,7 @@ IllLeft:MesPrint("&Illegal LHS");
 		w[3] = c1;
 		w[4] = AC.DumNum + WILDOFFSET;
 		OldWork[idhead+1] = w - OldWork - idhead;
+		AC.vectorlikeLHS = 1;
 	  }
 	  else {
 		AC.DumNum = 0;
