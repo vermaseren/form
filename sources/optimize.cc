@@ -77,6 +77,26 @@
 	using std::tr1::unordered_set;
 #endif
 
+#if defined(HAVE_BUILTIN_POPCOUNT)
+	static inline int popcount(unsigned int x) {
+		return __builtin_popcount(x);
+	}
+#elif defined(HAVE_POPCNT)
+	#include <intrin.h>
+	static inline int popcount(unsigned int x) {
+		return __popcnt(x);
+	}
+#else
+	static inline int popcount(unsigned int x) {
+		int count = 0;
+		while (x > 0) {
+			if ((x & 1) == 1) count++;
+			x >>= 1;
+		}
+		return count;
+	}
+#endif
+
 extern "C" {
 #include "form3.h"
 }
@@ -399,7 +419,7 @@ int count_operators (const WORD *expr, bool print=false) {
 				}
 				if (t[i+1]>2) { 		 // (extra)symbol power>2
 					cntpow++;
-					sumpow += (int)floor(log(t[i+1])/log(2.0)) + __builtin_popcount(t[i+1]) - 1;
+					sumpow += (int)floor(log(t[i+1])/log(2.0)) + popcount(t[i+1]) - 1;
 				}
 				if (t[i+1]==2) cntmul++; // (extra)symbol squared
 				cntsym++;
@@ -445,7 +465,7 @@ int count_operators (const vector<WORD> &instr, bool print=false) {
 				if (*(t+4)==2) cntmul++;			// (extra)symbol squared
 				if (*(t+4)>2) { 					// (extra)symbol power>2
 					cntpow++;
-					sumpow += (int)floor(log(*(t+4))/log(2.0)) + __builtin_popcount(*(t+4)) - 1;
+					sumpow += (int)floor(log(*(t+4))/log(2.0)) + popcount(*(t+4)) - 1;
 				}
 			}
 			if (ABS(*(t+*t-1))!=3 || *(t+*t-2)!=1 || *(t+*t-3)!=1) cntmul++; // non +/-1 coefficient
@@ -1317,7 +1337,7 @@ int count_operators_cse (const vector<WORD> &tree) {
 					if (tree[i + 3] == 2)
 						numinstr++;
 					else
-						numinstr += (int)floor(log(tree[i+3])/log(2.0)) + __builtin_popcount(tree[i+3]) - 1;
+						numinstr += (int)floor(log(tree[i+3])/log(2.0)) + popcount(tree[i+3]) - 1;
 
 					ID[x] = numinstr;
 					s.push(1);
@@ -1573,7 +1593,7 @@ int count_operators_cse_topdown (vector<WORD> &tree) {
 					if (c->data[3] == 2)
 						numinstr++;
 					else
-						numinstr += (int)floor(log(c->data[3])/log(2.0)) + __builtin_popcount(c->data[3]) - 1;
+						numinstr += (int)floor(log(c->data[3])/log(2.0)) + popcount(c->data[3]) - 1;
 				}
 			}
 		} else {
