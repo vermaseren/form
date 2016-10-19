@@ -1,3 +1,10 @@
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
+// A timing routine for debugging. Only on Unix (where sys/time.h is available).
+#ifdef UNIX
+
 #include <sys/time.h>
 #include <cstdlib>
 #include <cstdio>
@@ -37,3 +44,5 @@ std::string thetime_str() {
 	sprintf (res,"%.4lf", thetime());
 	return res;
 }
+
+#endif  // UNIX

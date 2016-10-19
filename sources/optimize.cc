@@ -1408,7 +1408,7 @@ int count_operators_cse (const vector<WORD> &tree) {
 		}
 	}
 
-	MesPrint ("*** [%s] Stopping CSEE", thetime_str().c_str());
+	//MesPrint ("*** [%s] Stopping CSEE", thetime_str().c_str());
 	return numinstr - numcommas;
 }
 
