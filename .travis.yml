@@ -530,7 +530,8 @@ my_recipes:
     env: TEST=valgrind-parvorm
     before_install:
       - brew update
-      - brew install mpich valgrind
+      - brew install mpich
+      - brew install https://raw.githubusercontent.com/Homebrew/homebrew-core/7a4dabfc1a2acd9f01a1670fde4f0094c4fb6ffa/Formula/valgrind.rb
       - gem install test-unit
     script:
       - autoreconf -iv
