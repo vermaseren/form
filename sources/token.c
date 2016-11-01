@@ -60,7 +60,7 @@ int tokenize(UBYTE *in, WORD leftright)
 	int error = 0, object, funlevel = 0, bracelevel = 0, explevel = 0, numexp;
 	int polyflag = 0;
 	WORD number, type;
-	UBYTE *s, c;
+	UBYTE *s = in, c;
 	SBYTE *out, *outtop, num[MAXNUMSIZE], *t;
 	LONG i;
 	if ( AC.tokens == 0 ) {

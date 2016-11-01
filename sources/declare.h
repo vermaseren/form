@@ -295,6 +295,27 @@ extern VOID TELLFILE(int,POSITION *);
 TP=T+1;while(TP<TT){if(*TP==AR.PolyFun){TP[2]|=(DIRTYFLAG|CLEANPRF);}TP+=TP[1];}}}
 
 /*
+	Macros for nesting input levels for #$name = ...; assign instructions.
+	Note that the level should never go below zero.
+*/
+#define PUSHPREASSIGNLEVEL AP.PreAssignLevel++; { GETIDENTITY \
+    if ( AP.PreAssignLevel >= AP.MaxPreAssignLevel ) { int i; \
+		LONG *ap = (LONG *)Malloc1(2*AP.MaxPreAssignLevel*sizeof(LONG *),"PreAssignStack"); \
+		for ( i = 0; i < AP.MaxPreAssignLevel; i++ ) ap[i] = AP.PreAssignStack[i]; \
+		M_free(AP.PreAssignStack,"PreAssignStack"); \
+		AP.MaxPreAssignLevel *= 2; AP.PreAssignStack = ap; \
+	} \
+	*AT.WorkPointer++ = AP.PreContinuation; AP.PreContinuation = 0; \
+	AP.PreAssignStack[AP.PreAssignLevel] = AC.iPointer - AC.iBuffer; }
+
+#define POPPREASSIGNLEVEL if ( AP.PreAssignLevel > 0 ) { GETIDENTITY \
+	AC.iPointer = AC.iBuffer + AP.PreAssignStack[AP.PreAssignLevel--]; \
+	AP.PreContinuation = *--AT.WorkPointer; \
+	*AC.iPointer = 0; }
+
+/*
+	MesPrint("P-level popped to %d with %d",AP.PreAssignLevel,(WORD)(AC.iPointer - AC.iBuffer));
+
   	#] Macro's : 
   	#[ Thread objects :
 */

@@ -2154,6 +2154,7 @@ int DoRecovery(int *moduletype)
 	R_COPY_S(AP.procedureExtension,UBYTE*);
 	R_COPY_S(AP.cprocedureExtension,UBYTE*);
 
+	R_COPY_B(AP.PreAssignStack,AP.MaxPreAssignLevel*(LONG)sizeof(LONG),LONG*);
 	R_COPY_B(AP.PreIfStack, AP.MaxPreIfLevel*(LONG)sizeof(int), int*);
 	R_COPY_B(AP.PreSwitchModes, (AP.NumPreSwitchStrings+1)*(LONG)sizeof(int), int*);
 	R_COPY_B(AP.PreTypes, (AP.MaxPreTypes+1)*(LONG)sizeof(int), int*);
@@ -2872,6 +2873,7 @@ static int DoSnapshot(int moduletype)
 	S_WRITE_S(AP.procedureExtension);
 	S_WRITE_S(AP.cprocedureExtension);
 
+	S_WRITE_B(AP.PreAssignStack, AP.MaxPreAssignLevel*(LONG)sizeof(LONG));
 	S_WRITE_B(AP.PreIfStack, AP.MaxPreIfLevel*(LONG)sizeof(int));
 	S_WRITE_B(AP.PreSwitchModes, (AP.NumPreSwitchStrings+1)*(LONG)sizeof(int));
 	S_WRITE_B(AP.PreTypes, (AP.MaxPreTypes+1)*(LONG)sizeof(int));

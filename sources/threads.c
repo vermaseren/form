@@ -1928,7 +1928,8 @@ void *RunSortBot(void *dummy)
 				if ( AR.PolyFun == 0 ) { AT.SS->PolyFlag = 0; }
 				else if ( AR.PolyFunType == 1 ) { AT.SS->PolyFlag = 1; }
 				else if ( AR.PolyFunType == 2 ) {
-					if ( AR.PolyFunExp == 2 ) AT.SS->PolyFlag = 1;
+					if ( AR.PolyFunExp == 2
+					  || AR.PolyFunExp == 3 ) AT.SS->PolyFlag = 1;
 					else                      AT.SS->PolyFlag = 2;
 				}
 				AT.SS->PolyWise = 0;
@@ -3572,8 +3573,9 @@ int MasterMerge()
 	if ( AR0.PolyFun == 0 ) { S->PolyFlag = 0; }
 	else if ( AR0.PolyFunType == 1 ) { S->PolyFlag = 1; }
 	else if ( AR0.PolyFunType == 2 ) {
-		if ( AR0.PolyFunExp == 2 ) S->PolyFlag = 1;
-		else                      S->PolyFlag = 2;
+		if ( AR0.PolyFunExp == 2
+		  || AR0.PolyFunExp == 3 ) S->PolyFlag = 1;
+		else                       S->PolyFlag = 2;
 	}
 	S->TermsLeft = 0;
 	coef = AN0.SoScratC;
@@ -3971,6 +3973,7 @@ EndOfMerge:
 	}
 	WriteStats(&position,2);
 	Expressions[AR0.CurExpr].counter = S->TermsLeft;
+	Expressions[AR0.CurExpr].size = position;
 /*
 	Release all locks
 */
@@ -4112,6 +4115,7 @@ int SortBotMasterMerge()
 	S->TermsLeft = numberofterms;
 	WriteStats(&position,2);
 	Expressions[AR.CurExpr].counter = S->TermsLeft;
+	Expressions[AR.CurExpr].size = position;
 	AS.MasterSort = 0;
 /*
 	The next statement is to prevent one of the sortbots not having

@@ -378,6 +378,7 @@ typedef struct TaBlEs {
 typedef struct ExPrEsSiOn {
 	POSITION	onfile;
 	POSITION	prototype;
+    POSITION    size;
 	RENUMBER renum;			/* For Renumbering of global stored expressions */
 	BRACKETINFO *bracketinfo;
 	BRACKETINFO *newbracketinfo;
@@ -397,11 +398,12 @@ typedef struct ExPrEsSiOn {
 	WORD	compression;
 	WORD	numdummies;
 	WORD	numfactors;
+	WORD	sizeprototype;
 #ifdef PARALLELCODE
     WORD    partodo;        /* Whether to be done in parallel mode */
-	PADPOSITION(5,2,0,12,0);
+	PADPOSITION(5,2,0,13,0);
 #else
-	PADPOSITION(5,2,0,11,0);
+	PADPOSITION(5,2,0,12,0);
 #endif
 } *EXPRESSIONS;
 
@@ -1479,6 +1481,7 @@ struct P_const {
     UBYTE *preFill;                /* (P) Filling point in preStart */
     UBYTE *procedureExtension;     /* (P) Extension for procedure files (prc) */
     UBYTE *cprocedureExtension;    /* (P) Extension after .clear */
+    LONG  *PreAssignStack;         /* For nesting #$name assignments */
     int *PreIfStack;               /* (P) Tracks nesting of #if */
     int *PreSwitchModes;           /* (P) Stack of switch status */
     int *PreTypes;                 /* (P) stack of #call, #do etc nesting */
@@ -1507,11 +1510,13 @@ struct P_const {
     int     gNumPre;               /* (P) Number of preprocessor variables for .clear */
     int     PreDebug;              /* (C) */
     int     OpenDictionary;
+    int     PreAssignLevel;        /* For nesting #$name = ...; assignments */
+    int     MaxPreAssignLevel;     /* For nesting #$name = ...; assignments */
     WORD    DebugFlag;             /* (P) For debugging purposes */
     WORD    preError;              /* (P) Blocks certain types of execution */
     UBYTE   ComChar;               /* (P) Commentary character */
     UBYTE   cComChar;              /* (P) Old commentary character for .clear */
-    PADPOINTER(3,19,2,2);
+    PADPOINTER(3,21,2,2);
 };
 
 /*

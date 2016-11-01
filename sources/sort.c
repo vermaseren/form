@@ -572,7 +572,8 @@ WORD NewSort(PHEAD0)
 		if ( AR.PolyFun == 0 ) { AT.S0->PolyFlag = 0; }
 		else if ( AR.PolyFunType == 1 ) { AT.S0->PolyFlag = 1; }
 		else if ( AR.PolyFunType == 2 ) {
-			if ( AR.PolyFunExp == 2 ) AT.S0->PolyFlag = 1;
+			if ( AR.PolyFunExp == 2
+			  || AR.PolyFunExp == 3 ) AT.S0->PolyFlag = 1;
 			else                      AT.S0->PolyFlag = 2;
 		}
 		AR.ShortSortCount = 0;
@@ -664,7 +665,8 @@ LONG EndSort(PHEAD WORD *buffer, int par)
 		if ( AR.PolyFun == 0 ) { S->PolyFlag = 0; }
 		else if ( AR.PolyFunType == 1 ) { S->PolyFlag = 1; }
 		else if ( AR.PolyFunType == 2 ) {
-			if ( AR.PolyFunExp == 2 ) S->PolyFlag = 1;
+			if ( AR.PolyFunExp == 2
+			  || AR.PolyFunExp == 3 ) S->PolyFlag = 1;
 			else                      S->PolyFlag = 2;
 		}
 		S->PolyWise = 0;
@@ -773,6 +775,7 @@ LONG EndSort(PHEAD WORD *buffer, int par)
 			DIFPOS(oldpos,position,oldpos);
 			S->SpaceLeft = BASEPOSITION(oldpos);
 			WriteStats(&oldpos,(WORD)2);
+			pp = oldpos;
 			goto RetRetval;
 		}
 	}
@@ -853,11 +856,11 @@ LONG EndSort(PHEAD WORD *buffer, int par)
 					retval = -1; goto RetRetval;
 				}
 				if ( S == AT.S0 ) {
+					pp = S->SizeInFile[2];
+					MULPOS(pp,sizeof(WORD));
 #ifdef WITHPTHREADS
 					if ( AS.MasterSort && ( fout == AR.outfile ) ) goto RetRetval;
 #endif
-					pp = S->SizeInFile[2];
-					MULPOS(pp,sizeof(WORD));
 					WriteStats(&pp,2);
 					UpdateMaxSize();
 				}
@@ -1026,10 +1029,12 @@ RetRetval:
 	/* NOTE: PF_EndSort has been changed such that it sets S->TermsLeft. (TU 30 Jun 2011) */
 	if ( AR.sLevel == 0 && (PF.me == MASTER || PF.exprtodo >= 0) ) {
 		Expressions[AR.CurExpr].counter = S->TermsLeft;
+		Expressions[AR.CurExpr].size = pp;
 	}
 #else
 	if ( AR.sLevel == 0 ) {
 		Expressions[AR.CurExpr].counter = S->TermsLeft;
+		Expressions[AR.CurExpr].size = pp;
 	}/*if ( AR.sLevel == 0 )*/
 #endif
 /*:[25nov2003 mt]*/
@@ -1999,7 +2004,7 @@ WORD AddPoly(PHEAD WORD **ps1, WORD **ps2)
 /*
 	Add here the two arguments. Is a straight merge.
 */
-	if ( S->PolyFlag == 2 && AR.PolyFunExp != 2 ) {
+	if ( S->PolyFlag == 2 && AR.PolyFunExp != 2 && AR.PolyFunExp != 3 ) {
 		WORD **oldSplitScratch = AN.SplitScratch;
 		LONG oldSplitScratchSize = AN.SplitScratchSize;
 		LONG oldInScratch = AN.InScratch;
@@ -2455,7 +2460,8 @@ WORD Compare1(PHEAD WORD *term1, WORD *term2, WORD level)
 */
 		count = 0; localPoly = 1; S->PolyWise = polyhit = 0;
 		S->PolyFlag = AR.PolyFunType;
-		if ( AR.PolyFunType == 2 && AR.PolyFunExp == 2 ) S->PolyFlag = 1;
+		if ( AR.PolyFunType == 2 &&
+			 ( AR.PolyFunExp == 2 || AR.PolyFunExp == 3 ) ) S->PolyFlag = 1;
 	}
 	else { localPoly = 0; }
 	prevorder = 0;

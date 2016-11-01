@@ -148,6 +148,7 @@ WORD CleanExpr(WORD par)
 					node->number = e_out - Expressions;
 
 					e_out->onfile = e_in->onfile;
+					e_out->size = e_in->size;
 					e_out->printflag = 0;
 					if ( par ) e_out->status = STOREDEXPRESSION;
 					else e_out->status = e_in->status;
@@ -163,6 +164,7 @@ WORD CleanExpr(WORD par)
 					e_out->numdummies = e_in->numdummies;
 					e_out->numfactors = e_in->numfactors;
 					e_out->vflags = e_in->vflags;
+					e_out->sizeprototype = e_in->sizeprototype;
 				}
 #ifdef PARALLELCODE
 				e_out->partodo = 0;

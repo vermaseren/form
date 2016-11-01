@@ -1916,7 +1916,7 @@ FinishUp:;
 }
 
 /*
-  	#] DoTable :
+  	#] DoTable : 
   	#[ CoTable :
 */
 
@@ -2559,6 +2559,7 @@ int AddExpression(UBYTE *name, int x, int y)
 	expr->status = x;
 	expr->printflag = y;
 	PUTZERO(expr->onfile);
+	PUTZERO(expr->size);
 	expr->renum = 0;
 	expr->renumlists = 0;
 	expr->hidelevel = 0;

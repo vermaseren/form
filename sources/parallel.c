@@ -919,7 +919,8 @@ int PF_EndSort(void)
 	if ( AR.PolyFun == 0 ) { S->PolyFlag = 0; }
 	else if ( AR.PolyFunType == 1 ) { S->PolyFlag = 1; }
 	else if ( AR.PolyFunType == 2 ) {
-		if ( AR.PolyFunExp == 2 ) S->PolyFlag = 1;
+		if ( AR.PolyFunExp == 2
+		  || AR.PolyFunExp == 3 ) S->PolyFlag = 1;
 		else                      S->PolyFlag = 2;
 	}
 	*AR.CompressPointer = 0;
@@ -1775,6 +1776,7 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 			}
 			AT.SS->GenTerms = genterms;
 			WriteStats(&PF_exprsize, 2);
+			Expressions[AR.CurExpr].size = PF_exprsize;
 		}
 		PF_Statistics(PF_stats,0);
 /*

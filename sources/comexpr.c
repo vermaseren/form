@@ -261,6 +261,7 @@ int DoExpr(UBYTE *inp, int type, int par)
 				error = -1;
 			}
 			else {
+				Expressions[j].sizeprototype = OldWork[2];
 				OldWork[2] = 4+SUBEXPSIZE;
 				OldWork[4] = SUBEXPSIZE;
 				OldWork[5] = i;

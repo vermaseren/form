@@ -27,7 +27,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */
+/* #] License : */ 
 /*
   	#[ Includes :
 
@@ -115,7 +115,7 @@ SETUPPARAMETERS setupparameters[] =
 };
 
 /*
-  	#] Includes :
+  	#] Includes : 
 	#[ Setups :
  		#[ DoSetups :
 */
@@ -164,7 +164,7 @@ int DoSetups()
 }
 
 /*
- 		#] DoSetups :
+ 		#] DoSetups : 
  		#[ ProcessOption :
 */
 
@@ -320,7 +320,7 @@ restart:;
 }
 
 /*
- 		#] ProcessOption :
+ 		#] ProcessOption : 
  		#[ GetSetupPar :
 */
 
@@ -340,7 +340,7 @@ SETUPPARAMETERS *GetSetupPar(UBYTE *s)
 }
 
 /*
- 		#] GetSetupPar :
+ 		#] GetSetupPar : 
  		#[ RecalcSetups :
 */
 
@@ -387,7 +387,7 @@ int RecalcSetups()
 }
 
 /*
- 		#] RecalcSetups :
+ 		#] RecalcSetups : 
  		#[ AllocSetups :
 */
 
@@ -395,7 +395,7 @@ int AllocSetups()
 {
 	SETUPPARAMETERS *sp;
 	LONG LargeSize, SmallSize, SmallEsize, TermsInSmall, IOsize;
-	int MaxPatches, MaxFpatches, error = 0;
+	int MaxPatches, MaxFpatches, error = 0, i;
 	UBYTE *s;
 #ifndef WITHPTHREADS
 	int j, size;
@@ -404,6 +404,8 @@ int AllocSetups()
 	if ( sp->value > 0 ) AM.totalnumberofthreads = sp->value+1;
 
 	AM.OutBuffer = (UBYTE *)Malloc1(AM.OutBufSize+1,"OutputBuffer");
+	AP.PreAssignStack =(LONG *)Malloc1(AP.MaxPreAssignLevel*sizeof(LONG *),"PreAssignStack");
+	for ( i = 0; i < AP.MaxPreAssignLevel; i++ ) AP.PreAssignStack[0] = 0;
 	AC.iBuffer = (UBYTE *)Malloc1(AC.iBufferSize+1,"statement buffer");
 	AC.iStop = AC.iBuffer + AC.iBufferSize-2;
 	AP.preStart = (UBYTE *)Malloc1(AP.pSize,"instruction buffer");
@@ -745,7 +747,7 @@ int AllocSetups()
 }
 
 /*
- 		#] AllocSetups :
+ 		#] AllocSetups : 
  		#[ WriteSetup :
 
 	The routine writes the values of the setup parameters.
@@ -808,7 +810,7 @@ VOID WriteSetup()
 }
 
 /*
- 		#] WriteSetup :
+ 		#] WriteSetup : 
  		#[ AllocSort :
 
 		Routine allocates a complete struct for sorting.
@@ -942,7 +944,7 @@ SORTING *AllocSort(LONG LargeSize, LONG SmallSize, LONG SmallEsize, LONG TermsIn
 }
 
 /*
- 		#] AllocSort :
+ 		#] AllocSort : 
  		#[ AllocSortFileName :
 */
 
@@ -967,7 +969,7 @@ VOID AllocSortFileName(SORTING *sort)
 }
 
 /*
- 		#] AllocSortFileName :
+ 		#] AllocSortFileName : 
  		#[ AllocFileHandle :
 */
 
@@ -1025,7 +1027,7 @@ FILEHANDLE *AllocFileHandle(WORD par,char *name)
 }
 
 /*
- 		#] AllocFileHandle :
+ 		#] AllocFileHandle : 
  		#[ DeAllocFileHandle :
 
 		Made to repair deallocation of AN.filenum. 21-sep-2000
@@ -1044,7 +1046,7 @@ void DeAllocFileHandle(FILEHANDLE *fh)
 }
 
 /*
- 		#] DeAllocFileHandle :
+ 		#] DeAllocFileHandle : 
  		#[ MakeSetupAllocs :
 */
 
@@ -1055,7 +1057,7 @@ int MakeSetupAllocs()
 }
 
 /*
- 		#] MakeSetupAllocs :
+ 		#] MakeSetupAllocs : 
  		#[ TryFileSetups :
 
 		Routine looks in the input file for a start of the type
@@ -1148,7 +1150,7 @@ eoi:
 }
 
 /*
- 		#] TryFileSetups :
+ 		#] TryFileSetups : 
  		#[ TryEnvironment :
 */
 
@@ -1173,6 +1175,6 @@ int TryEnvironment()
 }
 
 /*
- 		#] TryEnvironment :
+ 		#] TryEnvironment : 
 	#] Setups :
 */

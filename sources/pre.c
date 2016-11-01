@@ -744,7 +744,6 @@ VOID IniModule(int type)
 		if ( AC.LabelNames[AC.NumLabels] ) M_free(AC.LabelNames[AC.NumLabels],"LabelName");
 	}
 
-	if ( type == FIRSTMODULE ) AC.iPointer = AC.iBuffer;
 	C->Pointer = C->Buffer;
 
 	AC.Commercial[0] = 0;
@@ -809,7 +808,10 @@ VOID PreProcessor()
 	AP.StopWatchZero = GetRunningTime();
 	AC.compiletype = 0;
 	AP.PreContinuation = 0;
+	AP.PreAssignLevel = 0;
 	AP.gNumPre = NumPre;
+	AC.iPointer = AC.iBuffer;
+	AC.iPointer[0] = 0;
 
 	if ( AC.CheckpointFlag == -1 ) DoRecovery(&moduletype);
 	AC.CheckpointStamp = Timer(0);
@@ -974,8 +976,9 @@ endmodule:			if ( error2 == 0 && AM.qError == 0 ) {
 						if ( AP.PreAssignFlag ) AC.RhsExprInModuleFlag = 0;
 #endif
 						if ( AP.PreOut || ( AP.PreDebug & DUMPTOCOMPILER )
-								== DUMPTOCOMPILER ) MesPrint(" %s",AC.iBuffer);
-						retcode = CompileStatement(AC.iBuffer);
+								== DUMPTOCOMPILER )
+									MesPrint(" %s",AC.iBuffer+AP.PreAssignStack[AP.PreAssignLevel]);
+						retcode = CompileStatement(AC.iBuffer+AP.PreAssignStack[AP.PreAssignLevel]);
 						if ( retcode < 0 ) error1++;
 						if ( retcode ) { error2++; AP.preError++; }
 						if ( AP.PreAssignFlag ) {
@@ -984,7 +987,9 @@ endmodule:			if ( error2 == 0 && AM.qError == 0 ) {
 								else if ( retcode > 0 ) { error2++; AP.preError++; }
 							}
 							else CatchDollar(-1);
-							AP.PreAssignFlag = 0;
+							POPPREASSIGNLEVEL;
+							if ( AP.PreAssignLevel <=0 )
+								AP.PreAssignFlag = 0;
 							NumPotModdollars = onpmd;
 #ifdef WITHMPI
 							AC.RhsExprInModuleFlag = oldRhsExprInModuleFlag;
@@ -992,10 +997,19 @@ endmodule:			if ( error2 == 0 && AM.qError == 0 ) {
 						}
 					}
 					else {
-						MesPrint(" %s",AC.iBuffer);
+						MesPrint(" %s",AC.iBuffer+AP.PreAssignStack[AP.PreAssignLevel]);
 					}
 				}
+				else if ( !AP.PreContinuation ) {
+					if ( AP.PreAssignLevel > 0 ) {
+						POPPREASSIGNLEVEL;
+						if ( AP.PreAssignLevel <=0 )
+							AP.PreAssignFlag = 0;
+					}
+				}
+/*
 				if ( !AP.PreContinuation ) AP.PreAssignFlag = 0;
+*/
 			}
 		}
 	}
@@ -1297,7 +1311,8 @@ int LoadStatement(int type)
 {
 	UBYTE *s, c, cp;
 	int retval = 0, stringlevel = 0, newstatement = 0;
-	if ( type == NEWSTATEMENT ) { AP.eat = 1; s = AC.iBuffer; newstatement = 1; }
+	if ( type == NEWSTATEMENT ) { AP.eat = 1; newstatement = 1;
+		s = AC.iBuffer+AP.PreAssignStack[AP.PreAssignLevel]; }
 	else { s = AC.iPointer; *s = 0; c = ' '; goto blank; }
 	*s = 0;
 	for(;;) {
@@ -1353,7 +1368,7 @@ doall:;			if ( AP.eat < 0 ) {
 				}
 				else if ( newstatement == 1 ) newstatement = 0;
 				AP.eat = 1;
-				if ( c == '*' && s > AC.iBuffer && s[-1] == '*' ) {
+				if ( c == '*' && s > AC.iBuffer+AP.PreAssignStack[AP.PreAssignLevel] && s[-1] == '*' ) {
 					s[-1] = '^';
 					continue;
 				}
@@ -1433,7 +1448,7 @@ int ExpandTripleDots(int par)
 	int i, error = 0, i1 ,i2, ii, *nums = 0;
 
 	if ( par == 0 ) {
-		Buffer = AC.iBuffer; Stop = AC.iStop;
+		Buffer = AC.iBuffer+AP.PreAssignStack[AP.PreAssignLevel]; Stop = AC.iStop;
 	}
 	else {
 		Buffer = AP.preStart; Stop = AP.preStop;
@@ -1538,7 +1553,7 @@ int ExpandTripleDots(int par)
 							Terminate(-1);
 					}
 					AC.iStop = AC.iBuffer + AC.iBufferSize-2;
-					Buffer = AC.iBuffer; Stop = AC.iStop;
+					Buffer = AC.iBuffer+AP.PreAssignStack[AP.PreAssignLevel]; Stop = AC.iStop;
 				}
 				else {
 					LONG fillpos = 0;
@@ -1744,14 +1759,32 @@ theend:			M_free(nums,"Expand ...");
 			while ( *s ) *n1++ = *s++;
 			*n1 = 0;
 			if ( par == 0 ) {
-				AC.iStop = nBuffer + x2 - 2;
-				AC.iBufferSize = x2;
-				M_free(AC.iBuffer,"input buffer");
+				LONG nnn1 = n1-nBuffer;
+				LONG nnn2 = n2-nBuffer;
+				LONG nnn3;
+				while ( AC.iBuffer+AP.PreAssignStack[AP.PreAssignLevel] + x2 >= AC.iStop ) {
+					LONG position = s-Buffer;
+					UBYTE **ppp;
+					ppp = &(AC.iBuffer); /* to avoid a compiler warning */
+					if ( DoubleLList((VOID ***)ppp,&AC.iBufferSize
+						,sizeof(UBYTE),"statement buffer") ) {
+							Terminate(-1);
+					}
+					AC.iStop = AC.iBuffer + AC.iBufferSize-2;
+					Buffer = AC.iBuffer+AP.PreAssignStack[AP.PreAssignLevel]; Stop = AC.iStop;
+					s  = Buffer + position;
+				}
+/*
+				This can be improved. We only have to start from the first term.
+*/
+				for ( nnn3 = 0; nnn3 < nnn1; nnn3++ ) Buffer[nnn3] = nBuffer[nnn3];
+				Buffer[nnn3] = 0;
+				n1 = Buffer + nnn1;
+				n2 = Buffer + nnn2;
+				M_free(nBuffer,"input buffer");
 				M_free(nums,"Expand ...");
-				AC.iBuffer = nBuffer;
-				Buffer = AC.iBuffer; Stop = AC.iStop;
 			}
-			else {
+			else { /* Comes here only inside a real preprocessor instruction */
 				AP.preStop = nBuffer + x2 - 2;
 				AP.pSize = x2;
 				M_free(AP.preStart,"input buffer");
@@ -1949,13 +1982,16 @@ int DoPreAssign(UBYTE *s)
 		MesPrint("@Illegal characters in %#assign instruction");
 		error = 1;
 	}
+	PUSHPREASSIGNLEVEL;
 	AP.PreAssignFlag = 1;
+/*
 	if ( AP.PreContinuation ) {
 		MesPrint("@Assign instructions cannot occur inside statements");
 		MesPrint("@Missing ; ?");
 		AP.PreContinuation = 0;
 		error = 1;
 	}
+*/
 	return(error);
 }
 
@@ -2124,13 +2160,13 @@ int DoInclude(UBYTE *s) { return(Include(s,FILESTREAM)); }
 
 /*
  		#] DoInclude : 
- 		#[ DoInclude :
+ 		#[ DoReverseInclude :
 */
 
 int DoReverseInclude(UBYTE *s) { return(Include(s,REVERSEFILESTREAM)); }
 
 /*
- 		#] DoInclude : 
+ 		#] DoReverseInclude : 
  		#[ Include :
 */
 
@@ -2598,7 +2634,7 @@ int DoDo(UBYTE *s)
 	DOLOOP *loop;
 	WORD expnum;
 	LONG linenum  = AC.CurrentStream->linenumber;
-	int oldNoShowInput = AC.NoShowInput, i;
+	int oldNoShowInput = AC.NoShowInput, i, oldpreassignflag;
 
 	if ( ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH )
 	|| ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) ) {
@@ -2768,13 +2804,14 @@ int DoDo(UBYTE *s)
 		Compile and put in dollar variable.
 		Note that we remember the dollar by name and that this name ends in _
 */
+		oldpreassignflag = AP.PreAssignFlag;
 		AP.PreAssignFlag = 2;
         CompileStatement(loop->dollarname);
 		if ( CatchDollar(0) ) {
 			MesPrint("@Cannot load expression in do loop");
 			return(-1);
 		}
-		AP.PreAssignFlag = 0;
+		AP.PreAssignFlag = oldpreassignflag;
 		NumPotModdollars = oldNumPotModdollars;
 #ifdef WITHMPI
 		AC.RhsExprInModuleFlag = oldRhsExprInModuleFlag;
@@ -5415,13 +5452,10 @@ int DoRmExternal(UBYTE *s)
 int DoFromExternal(UBYTE *s)
 {
 #ifdef WITHEXTERNALCHANNEL
-	/*[02feb2006 mt]:*/
 	UBYTE *prevar=0; 
 	int lbuf=-1;
-	/*:[02feb20006 mt]*/
-	/*[17may2006 mt]:*/
-   int withNoList=AC.NoShowInput;
-	/*:[17may2006 mt]*/
+	int withNoList=AC.NoShowInput;
+	int oldpreassignflag;
 #else
 	DUMMYUSE(s);
 #endif
@@ -5559,11 +5593,12 @@ int DoFromExternal(UBYTE *s)
 			*c++='=';
 			b=buf;
 			while(  (*c++=*b++)!='\0'  );
+			oldpreassignflag = AP.PreAssignFlag;
 			AP.PreAssignFlag = 1;
 			if ( ( cc = CompileStatement(pbuf) ) || ( cc = CatchDollar(0) ) ) {
 				Error1("External channel: can't asign output to dollar variable ",prevar);
 			}
-			AP.PreAssignFlag = 0;
+			AP.PreAssignFlag = oldpreassignflag;
 			NumPotModdollars = oldNumPotModdollars;
 #ifdef WITHMPI
 			AC.RhsExprInModuleFlag = oldRhsExprInModuleFlag;

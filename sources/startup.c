@@ -852,6 +852,7 @@ VOID StartVariables()
 	AM.gLineLength = 79;
 	AM.OutBufSize = 80;
 	AM.MaxStreamSize = MAXFILESTREAMSIZE;
+	AP.MaxPreAssignLevel = 4;
 	AC.iBufferSize = 512;
 	AP.pSize = 128;
 	AP.MaxPreIfLevel = 10;
