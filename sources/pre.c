@@ -3258,10 +3258,13 @@ int DoInside(UBYTE *s)
 		MesPrint("@Illegal nesting of %#inside/%#endinside instructions");
 		return(-1);
 	}
+/*
 	if ( AP.PreContinuation ) {
 		error = -1;
 		MesPrint("@%#inside cannot be inside a regular statement");
 	}
+*/
+	PUSHPREASSIGNLEVEL
 /*
 	Now the dollars to do
 */
@@ -3455,6 +3458,7 @@ cleanup:
 	AS.MultiThreaded = oldmultithreaded;
 	AC.mparallelflag = AP.inside.oldparallelflag;
 	NumPotModdollars = AP.inside.oldnumpotmoddollars;
+	POPPREASSIGNLEVEL
 #ifdef WITHMPI
 	PF_RestoreInsideInfo();
 	if ( error ) return error;
