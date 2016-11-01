@@ -346,3 +346,57 @@ assert result("test") =~ expr("
           )
 ")
 *--#] Issue87 :
+*--#[ Issue135_1 :
+* "Assign instructions cannot occur inside statements" without inside statements
+L F =
+  #do i=1,10
+    #$x = `i';
+    + `$x'
+  #enddo
+;
+P;
+.end
+assert succeeded?
+assert result("F") =~ expr("55")
+*--#] Issue135_1 :
+*--#[ Issue135_2 :
+S a1,...,a10;
+L F =
+  #do i = 1,10
+    #$x = `i'*a`i'
+          +2;
+    +`$x'
+  #enddo
+;
+P;
+.end
+assert succeeded?
+assert result("F") =~ expr("
+      20 + 10*a10 + 9*a9 + 8*a8 + 7*a7 + 6*a6 + 5*a5 + 4*a4 + 3*a3 + 2*a2 + a1
+")
+*--#] Issue135_2 :
+*--#[ Issue135_3 :
+S a1,...,a10,x;
+CF f;
+CTable sparse,tab(1);
+
+#do i=1,10
+  Fill tab(`i') = f(`i'*a`i') + 2;
+#enddo
+
+L F =
+  #do i = 1,10
+    #$tmp = tab(`i');
+    #inside $tmp
+      id f(x?) = x;
+    #endinside
+    + (`$tmp')
+  #enddo
+;
+P;
+.end
+assert succeeded?
+assert result("F") =~ expr("
+      20 + 10*a10 + 9*a9 + 8*a8 + 7*a7 + 6*a6 + 5*a5 + 4*a4 + 3*a3 + 2*a2 + a1
+")
+*--#] Issue135_3 :
