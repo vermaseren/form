@@ -279,6 +279,9 @@ int DoTail(int argc, UBYTE **argv)
 /*							if ( threadnum == 1 ) threadnum = 0; */
 							threadnum++;
 							break;
+				case 'W': /* Print the wall-clock time on the master. */
+							AM.ggWTimeStatsFlag = 1;
+							break;
 /*
 				case 'n':
 							Reserved for number of slaves without MPI
@@ -1141,6 +1144,7 @@ VOID StartVariables()
 	AC.OldParallelStats = AM.gOldParallelStats = AM.ggOldParallelStats = 0;
 	AC.OldFactArgFlag = AM.gOldFactArgFlag = AM.ggOldFactArgFlag = NEWFACTARG;
 	AC.OldGCDflag = AM.gOldGCDflag = AM.ggOldGCDflag = 1;
+	AC.WTimeStatsFlag = AM.gWTimeStatsFlag = AM.ggWTimeStatsFlag = 0;
 	AM.gcNumDollars = AP.DollarList.num;
 	AC.SizeCommuteInSet = AM.gSizeCommuteInSet = 0;
 	AC.CommuteInSet = 0;

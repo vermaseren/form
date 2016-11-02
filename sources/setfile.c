@@ -112,6 +112,7 @@ SETUPPARAMETERS setupparameters[] =
     ,{(UBYTE *)"threadsortfilesynch",       ONOFFVALUE, 0, (LONG)0}
 	,{(UBYTE *)"totalsize",                 ONOFFVALUE, 0, (LONG)2}
 	,{(UBYTE *)"workspace",             NUMERICALVALUE, 0, (LONG)WORKBUFFER}
+	,{(UBYTE *)"wtimestats",                ONOFFVALUE, 0, (LONG)2}
 };
 
 /*
@@ -676,6 +677,9 @@ int AllocSetups()
 	AC.OldFactArgFlag = AM.gOldFactArgFlag = AM.ggOldFactArgFlag = sp->value;
 	sp = GetSetupPar((UBYTE *)"oldgcd");
 	AC.OldGCDflag = AM.gOldGCDflag = AM.ggOldGCDflag = sp->value;
+	sp = GetSetupPar((UBYTE *)"wtimestats");
+	if ( sp->value == 2 ) sp->value = AM.ggWTimeStatsFlag;
+	AC.WTimeStatsFlag = AM.gWTimeStatsFlag = AM.ggWTimeStatsFlag = sp->value;
 	sp = GetSetupPar((UBYTE *)"sorttype");
 	if ( StrICmp((UBYTE *)"lowfirst",(UBYTE *)sp->value) == 0 ) {
 		AC.lSortType = SORTLOWFIRST;

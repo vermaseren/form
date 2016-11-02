@@ -3213,8 +3213,17 @@ argerror:
 
 #include <sys/timeb.h>
 
+/**
+ * Returns the wall-clock time.
+ *
+ * @param   par  If zero, the wall-clock time will be reset to 0.
+ * @return       The wall-clock time in centiseconds.
+ */
 LONG TimeWallClock(WORD par)
 {
+	/*
+	 * NOTE: this function is not thread-safe. Operations on tp are not atomic.
+	 */
 	struct timeb tp;
 	ftime(&tp);
 	if ( par ) {
@@ -3245,6 +3254,12 @@ LONG TimeChildren(WORD par)
  		#[ TimeCPU :
 */
 
+/**
+ * Returns the CPU time.
+ *
+ * @param   par  If zero, the CPU time will be reset to 0.
+ * @return       The CPU time in milliseconds.
+ */
 LONG TimeCPU(WORD par)
 {
 	GETIDENTITY

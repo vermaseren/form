@@ -283,6 +283,7 @@ WORD PopVariables()
 	AC.ThreadStats = AM.gThreadStats;
 	AC.FinalStats = AM.gFinalStats;
 	AC.OldGCDflag = AM.gOldGCDflag;
+	AC.WTimeStatsFlag = AM.gWTimeStatsFlag;
 	AC.ThreadsFlag = AM.gThreadsFlag;
 	AC.ThreadBalancing = AM.gThreadBalancing;
 	AC.ThreadSortFileSynch = AM.gThreadSortFileSynch;
@@ -415,6 +416,7 @@ VOID MakeGlobal()
 	AM.gThreadStats = AC.ThreadStats;
 	AM.gFinalStats = AC.FinalStats;
 	AM.gOldGCDflag = AC.OldGCDflag;
+	AM.gWTimeStatsFlag = AC.WTimeStatsFlag;
 	AM.gThreadsFlag = AC.ThreadsFlag;
 	AM.gThreadBalancing = AC.ThreadBalancing;
 	AM.gThreadSortFileSynch = AC.ThreadSortFileSynch;

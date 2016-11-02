@@ -95,6 +95,7 @@ VOID WriteStats(POSITION *plspace, WORD par)
 	WORD timepart;
 	SORTING *S;
 	POSITION pp;
+	int use_wtime;
 	if ( AT.SS == AT.S0 && AC.StatsFlag ) {
 #ifdef WITHPTHREADS
 		if ( AC.ThreadStats == 0 && identity > 0 ) return;
@@ -132,7 +133,19 @@ VOID WriteStats(POSITION *plspace, WORD par)
 			MesPrint("");
 #endif
 		}
-		millitime = TimeCPU(1);
+		/*
+		 * We define WTimeStatsFlag as a flag to print the wall-clock time on
+		 * the *master*, not in workers. This can be confusing in thread
+		 * statistics when short statistics is used. Technically,
+		 * TimeWallClock() is not thread-safe in TFORM.
+		 */
+		use_wtime = AC.WTimeStatsFlag;
+#if defined(WITHPTHREADS)
+		if ( use_wtime && identity > 0 ) use_wtime = 0;
+#elif defined(WITHMPI)
+		if ( use_wtime && PF.me != MASTER ) use_wtime = 0;
+#endif
+		millitime = use_wtime ? TimeWallClock(1) * 10 : TimeCPU(1);
 		timepart = (WORD)(millitime%1000);
 		millitime /= 1000;
 		timepart /= 10;
@@ -391,21 +404,44 @@ VOID WriteStats(POSITION *plspace, WORD par)
 		} }
 		else {
 		if ( par == 1 ) {
-			MesPrint("Time = %7l.%2i sec",millitime,timepart);
+			if ( use_wtime ) {
+				MesPrint("WTime = %7l.%2i sec",millitime,timepart);
+			}
+			else {
+				MesPrint("Time = %7l.%2i sec",millitime,timepart);
+			}
 		}
 		else {
 #if ( BITSINLONG > 32 )
 			if ( S->GenTerms >= 10000000000L ) {
-				MesPrint("Time = %7l.%2i sec    Generated terms = %16l",
+				if ( use_wtime ) {
+					MesPrint("WTime = %7l.%2i sec   Generated terms = %16l",
+						millitime,timepart,S->GenTerms);
+				}
+				else {
+					MesPrint("Time = %7l.%2i sec    Generated terms = %16l",
+						millitime,timepart,S->GenTerms);
+				}
+			}
+			else {
+				if ( use_wtime ) {
+					MesPrint("WTime = %7l.%2i sec   Generated terms = %10l",
+						millitime,timepart,S->GenTerms);
+				}
+				else {
+					MesPrint("Time = %7l.%2i sec    Generated terms = %10l",
+						millitime,timepart,S->GenTerms);
+				}
+			}
+#else
+			if ( use_wtime ) {
+				MesPrint("WTime = %7l.%2i sec   Generated terms = %10l",
 					millitime,timepart,S->GenTerms);
 			}
 			else {
 				MesPrint("Time = %7l.%2i sec    Generated terms = %10l",
 					millitime,timepart,S->GenTerms);
 			}
-#else
-			MesPrint("Time = %7l.%2i sec    Generated terms = %10l",
-				millitime,timepart,S->GenTerms);
 #endif
 		}
 #if ( BITSINLONG > 32 )

@@ -772,6 +772,8 @@ static void print_M()
 	MesPrint("%d", AM.ggProcessStats);
 	MesPrint("%d", AM.gOldParallelStats);
 	MesPrint("%d", AM.ggOldParallelStats);
+	MesPrint("%d", AM.gWTimeStatsFlag);
+	MesPrint("%d", AM.ggWTimeStatsFlag);
 	MesPrint("%d", AM.maxFlevels);
 	MesPrint("--MARK  6");
 	MesPrint("%d", AM.resetTimeOnClear);
@@ -1065,6 +1067,7 @@ static void print_C()
 	MesPrint("%d", AC.ThreadSortFileSynch);
 	MesPrint("%d", AC.ProcessStats);
 	MesPrint("%d", AC.OldParallelStats);
+	MesPrint("%d", AC.WTimeStatsFlag);
 	MesPrint("%d", AC.BracketNormalize);
 	MesPrint("%d", AC.maxtermlevel);
 	MesPrint("%d", AC.dumnumflag);
@@ -1491,6 +1494,7 @@ int DoRecovery(int *moduletype)
 	R_SET(AM.SizeForSpectatorFiles,int);
     R_SET(AM.gOldGCDflag,int);
     R_SET(AM.ggOldGCDflag,int);
+	R_SET(AM.gWTimeStatsFlag, int);
 
 #ifdef PRINTDEBUG
 	print_M();
@@ -2556,6 +2560,7 @@ static int DoSnapshot(int moduletype)
 	S_WRITE_B(&AM.SizeForSpectatorFiles,sizeof(int));
     S_WRITE_B(&AM.gOldGCDflag,sizeof(int));
     S_WRITE_B(&AM.ggOldGCDflag,sizeof(int));
+	S_WRITE_B(&AM.gWTimeStatsFlag, sizeof(int));
 
 	/*#] AM :*/ 
 	/*#[ AC :*/

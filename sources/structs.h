@@ -1393,6 +1393,8 @@ struct M_const {
 	int		SizeForSpectatorFiles; /* Size in AM.spectatorfiles; */
     int     gOldGCDflag;
     int     ggOldGCDflag;
+    int     gWTimeStatsFlag;
+    int     ggWTimeStatsFlag;
     WORD    MaxTal;                /* (M) Maximum number of words in a number */
     WORD    IndDum;                /* (M) Basis value for dummy indices */
     WORD    DumInd;                /* (M) */
@@ -1451,9 +1453,9 @@ struct M_const {
     WORD    havesortdir;
     WORD    BracketFactors[8];
 #ifdef WITHPTHREADS
-	PADPOSITION(17,25,59,81,sizeof(pthread_rwlock_t)+sizeof(pthread_mutex_t)*2);
+	PADPOSITION(17,25,61,81,sizeof(pthread_rwlock_t)+sizeof(pthread_mutex_t)*2);
 #else
-	PADPOSITION(17,23,59,81,0);
+	PADPOSITION(17,23,61,81,0);
 #endif
 };
 /*
@@ -1695,6 +1697,7 @@ struct C_const {
     int     OldFactArgFlag;
     int     MemDebugFlag;          /* Only used when MALLOCDEBUG in tools.c */
     int     OldGCDflag;
+    int     WTimeStatsFlag;
 	int     doloopstacksize;
 	int     dolooplevel;
     int     CheckpointFlag;        /**< Tells preprocessor whether checkpoint code must executed.
@@ -1760,11 +1763,11 @@ struct C_const {
     UBYTE   Commercial[COMMERCIALSIZE+2]; /* (C) Message to be printed in statistics */
     UBYTE   debugFlags[MAXFLAGS+2];    /* On/Off Flag number(s) */
 #if defined(WITHPTHREADS)
-	PADPOSITION(47,8+3*MAXNEST,71,45+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17+sizeof(pthread_mutex_t));
+	PADPOSITION(47,8+3*MAXNEST,72,45+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17+sizeof(pthread_mutex_t));
 #elif defined(WITHMPI)
-	PADPOSITION(47,8+3*MAXNEST,71,46+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17);
+	PADPOSITION(47,8+3*MAXNEST,72,46+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17);
 #else
-	PADPOSITION(45,8+3*MAXNEST,69,45+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17);
+	PADPOSITION(45,8+3*MAXNEST,70,45+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17);
 #endif
 };
 /*

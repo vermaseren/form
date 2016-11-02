@@ -127,6 +127,7 @@ static KEYWORD onoffoptions[] = {
 	,{"memdebugflag",	(TFUN)&(AC.MemDebugFlag),	1,	0}
 	,{"oldgcd", 		(TFUN)&(AC.OldGCDflag),	1,	0}
 	,{"innertest",      (TFUN)&(AC.InnerTest),  1,  0}
+	,{"wtimestats",     (TFUN)&(AC.WTimeStatsFlag),  1,  0}
 };
 
 static WORD one = 1;
