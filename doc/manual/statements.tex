@@ -3675,6 +3675,10 @@ command~\ref{ontotalsize}.}
 \leftvitem{3.5cm}{warnings\index{off!warnings}}
 \rightvitem{13cm}{Turns off the printing of warnings.}
 
+\leftvitem{3.5cm}{wtimestats\index{off!wtimestats}}
+\rightvitem{13cm}{Disables the wall-clock time in the timing information in the 
+statistics on the master.}
+
 \noindent If a description is too short, one should also consult the 
 description in the on statement (see \ref{substaon}). \vspace{10mm}
 
@@ -3848,6 +3852,16 @@ in the command tail when \FORM\ is started (see \ref{running}).}
 \leftvitem{3.5cm}{warnings\index{on!warnings}}
 \rightvitem{13cm}{Turns on the printing of warnings in regular mode. This 
 is the default.}
+
+\leftvitem{3.5cm}{wtimestats\index{on!wtimestats}}
+\rightvitem{13cm}{Prints the wall-clock time in the timing information in the 
+statistics. The wall-clock time is indicated by `\texttt{WTime}' instead of 
+`\texttt{Time}' in the normal statistics with `\texttt{shortstatistics}' turned 
+off. For parallel versions, it affects the statistics only on the master, and 
+does not change those on the workers. The same can be obtained with the 
+\texttt{-W} option in the command line options of \FORM{} (see \ref{running}) 
+or `\texttt{WTimeStats ON}' in the setup (see \ref{setup}). Default is off.}
+
 \vspace{10mm}
 
 %--#] on : 
