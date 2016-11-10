@@ -189,6 +189,45 @@ Int. J. Mod. Phys.} {\bf A15} (2000) 725,
 \vspace{10mm}
 
 %--#] argimplode : 
+%--#[ argtoextrasymbol :
+
+\section{argtoextrasymbol}
+\label{substaargtoextrasymbol}
+
+\noindent
+\begin{tabular}{ll}
+Type &
+  Executable statement \\
+Syntax &
+  argtoextrasymbol [tonumber] [{\tt<}argument specifications{\tt>}]; \\
+See also &
+  topolynomial (\ref{substatopolynomial}) and
+  extrasymbols (\ref{substaextrasymbols}, \ref{sect-extrasymbols}).
+\end{tabular}
+\vspace{4mm}
+
+\noindent
+Converts function arguments into extra symbols. 
+An argument will be replaced with an extra symbol. 
+The arguments that have been encountered before are replaced with the same 
+extra symbols. 
+Unlike the \texttt{topolynomial} statement (\ref{substatopolynomial}), the 
+replacement occurs even for arguments consisting only of numbers and symbols 
+(including extra symbols). 
+\vspace{4mm}
+
+\noindent
+The \texttt{tonumber} option requests that function arguments are converted to 
+positive integers corresponding to extra symbols. This provides an efficient 
+mapping from any expression (stored as a function argument) to a number. 
+\vspace{4mm}
+
+\noindent
+The function arguments to be converted can be specified in the same way as the 
+\texttt{argument} statement (see \ref{substaargument}). 
+\vspace{10mm}
+
+%--#] argtoextrasymbol : 
 %--#[ argument :
 
 \section{argument}
@@ -1333,7 +1372,8 @@ indicate where \FORM\ ran into the exit statement. \vspace{10mm}
 Type & Declaration statement\\
 Syntax & extrasymbols,array\textbar{}vector\textbar{}underscore,name;
 \\ See also & ToPolynomial (\ref{substatopolynomial}), FromPolynomial 
-(\ref{substafrompolynomial}) and extra symbols 
+(\ref{substafrompolynomial}), ArgToExtraSymbol (\ref{substaargtoextrasymbol}) 
+\\& and extra symbols 
 (\ref{sect-extrasymbols}).
 \end{tabular} \vspace{4mm}
 
@@ -5515,7 +5555,8 @@ section on \TFORM\ (\ref{tform}). To find out what its value is, use the
 Type & Executable statement\\
 Syntax & topolynomial[,OnlyFunctions[,{\tt<}list of functions{\tt>}]];
 \\ See also & factarg (\ref{substafactarg}), FromPolynomial 
-(\ref{substafrompolynomial}) and ExtraSymbols (\ref{substaextrasymbols},
+(\ref{substafrompolynomial}), ArgToExtraSymbol (\ref{substaargtoextrasymbol}) 
+\\& and ExtraSymbols (\ref{substaextrasymbols},
 \ref{sect-extrasymbols}).
 \end{tabular} \vspace{4mm}
 
