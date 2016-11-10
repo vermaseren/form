@@ -400,3 +400,75 @@ assert result("F") =~ expr("
       20 + 10*a10 + 9*a9 + 8*a8 + 7*a7 + 6*a6 + 5*a5 + 4*a4 + 3*a3 + 2*a2 + a1
 ")
 *--#] Issue135_3 :
+*--#[ Issue137_1 :
+* New command: ArgToExtraSymbol (,ToNumber)
+S a,b;
+CF f;
+L F = f(1) + f(a) + f(b) + f(a+b);
+ArgToExtraSymbol f;
+P;
+.end
+assert succeeded?
+assert result("F") =~ expr("f(Z4_) + f(Z3_) + f(Z2_) + f(Z1_)")
+*--#] Issue137_1 :
+*--#[ Issue137_2 :
+S a,b;
+CF f;
+L F = f(1) + f(a) + f(b) + f(a+b);
+ArgToExtraSymbol,ToNumber,f;
+P;
+.end
+assert succeeded?
+assert result("F") =~ expr("f(1) + f(2) + f(3) + f(4)")
+*--#] Issue137_2 :
+*--#[ Issue137_3 :
+CF f;
+S s;
+I i;
+V v;
+* Fast notation.
+L F = f(0) + f(1) + f(-1) + f(s) + f(i) + f(v) + f(-v) + f(f);
+argtoextrasymbol;
+P;
+.end
+assert succeeded?
+assert result("F") =~ expr("
+         f(Z8_) + f(Z7_) + f(Z6_) + f(Z5_) + f(Z4_) + f(Z3_) + f(Z2_) + f(Z1_)
+")
+*--#] Issue137_3 :
+*--#[ Issue137_4 :
+#:threadbucketsize 10
+#:processbucketsize 10
+CF f;
+Auto S x;
+
+* NOTE: Large N gives another problem with ParFORM (#141).
+#define N "500"
+L F0 =
+  #do i=1,`N'
+    + f(1+x`i') * f(1+x{`i'+100}) * f(1+x{`i'+200})
+  #enddo
+;
+.sort
+Hide;
+
+L F1 = F0;
+.sort
+
+* If all workers fail to share an unique mapping in a consistent way,
+* the following code gives a non-zero result or a crash.
+argtoextrasymbol;
+.sort
+argument;
+  frompolynomial;
+endargument;
+.sort
+
+Drop;
+
+L ZERO = F1 - F0;
+P;
+.end
+assert succeeded?
+assert result("ZERO") =~ expr("0")
+*--#] Issue137_4 :
