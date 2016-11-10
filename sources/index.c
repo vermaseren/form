@@ -381,7 +381,7 @@ problems:;
 		Enlarge bracket buffer
 */
 		WORD *oldbracketbuffer = b->bracketbuffer;
-		i = b->bracketbuffersize * 2;
+		i = MaX(b->bracketbuffersize * 2, b->bracketfill+*term+1);
 		if ( i > AM.MaxBracketBufferSize && ( e->vflags & ISFACTORIZED ) == 0 )
 				i = AM.MaxBracketBufferSize;
 		if ( i > b->bracketfill+*term ) {
