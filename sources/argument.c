@@ -537,6 +537,103 @@ ScaledVariety:;
 					AT.mulpat[5] = CC->numrhs;
 					AT.mulpat[7] = AT.ebufnum;
 				}
+				else if ( type == TYPEARGTOEXTRASYMBOL ) {
+					STATIC_ASSERT(FUNHEAD+4 < 9);
+					WORD n;
+					if ( r[0] < 0 ) {
+						/* The argument is in the fast notation. */
+						WORD tmp[9];  /* max(8,FUNHEAD+4) < 9 */
+						switch ( r[0] ) {
+							case -SNUMBER:
+								if ( r[1] == 0 ) {
+									tmp[0] = 0;
+								}
+								else {
+									tmp[0] = 4;
+									tmp[1] = ABS(r[1]);
+									tmp[2] = 1;
+									tmp[3] = r[1] > 0 ? 3 : -3;
+									tmp[4] = 0;
+								}
+								break;
+							case -SYMBOL:
+								tmp[0] = 8;
+								tmp[1] = SYMBOL;
+								tmp[2] = 4;
+								tmp[3] = r[1];
+								tmp[4] = 1;
+								tmp[5] = 1;
+								tmp[6] = 1;
+								tmp[7] = 3;
+								tmp[8] = 0;
+								break;
+							case -INDEX:
+							case -VECTOR:
+							case -MINVECTOR:
+								tmp[0] = 7;
+								tmp[1] = INDEX;
+								tmp[2] = 3;
+								tmp[3] = r[1];
+								tmp[4] = 1;
+								tmp[5] = 1;
+								tmp[6] = r[0] != -MINVECTOR ? 3 : -3;
+								tmp[7] = 0;
+								break;
+							default:
+								if ( r[0] <= -FUNCTION ) {
+									tmp[0] = FUNHEAD+4;
+									tmp[1] = -r[0];
+									tmp[2] = FUNHEAD;
+									ZeroFillRange(tmp,3,1+FUNHEAD);
+									tmp[FUNHEAD+1] = 1;
+									tmp[FUNHEAD+2] = 1;
+									tmp[FUNHEAD+3] = 3;
+									tmp[FUNHEAD+4] = 0;
+									break;
+								}
+								else {
+									MLOCK(ErrorMessageLock);
+									MesPrint("Unknown fast notation found (TYPEARGTOEXTRASYMBOL)");
+									MUNLOCK(ErrorMessageLock);
+									return(-1);
+								}
+						}
+						n = FindSubexpression(tmp);
+					}
+					else {
+						/*
+						 * NOTE: writing to r[r[0]] is legal. As long as we work
+						 * in a part of the term, at least the coefficient of
+						 * the term must follow.
+						 */
+						WORD old_rr0 = r[r[0]];
+						r[r[0]] = 0;  /* zero-terminated */
+						n = FindSubexpression(r+ARGHEAD);
+						r[r[0]] = old_rr0;
+					}
+					/* Put the new argument in the work space. */
+					if ( AT.WorkPointer+2 > AT.WorkTop ) {
+						MLOCK(ErrorMessageLock);
+						MesWork();
+						MUNLOCK(ErrorMessageLock);
+						return(-1);
+					}
+					r1 = AT.WorkPointer;
+					if ( scale ) {  /* means "tonumber" */
+						r1[0] = -SNUMBER;
+						r1[1] = n;
+					}
+					else {
+						r1[0] = -SYMBOL;
+						r1[1] = MAXVARIABLES-n;
+					}
+					/* We need r2, r3, m and k to shift the data. */
+					r2 = r + (r[0] > 0 ? r[0] : r[0] <= -FUNCTION ? 1 : 2);
+					r3 = r;
+					m = r1+ARGHEAD+2;
+					k = 2;
+					goto do_shift;
+				}
 				r3 = r;
 				AR.DeferFlag = 0;
 				if ( *r > 0 ) {
@@ -593,7 +690,7 @@ ScaledVariety:;
 					if ( *AT.WorkPointer <= -FUNCTION ) k = 1;
 					else k = 2;
 				}
-				
+do_shift:
 				if ( *r3 > 0 ) j = k - *r3;
 				else if ( *r3 <= -FUNCTION ) j = k - 1;
 				else j = k - 2;

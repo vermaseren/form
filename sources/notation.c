@@ -1094,17 +1094,19 @@ WORD FindSubexpression(WORD *subexpr)
 {
 	WORD *term, number;
 	CBUF *C = cbuf + AM.sbufnum;
-	LONG oldCpointer = C->Pointer-C->Buffer; /* Offset of course !!!!!*/
+	LONG oldCpointer;
+
+	term = subexpr;
+	while ( *term ) term += *term;
+	number = term - subexpr;
 /*
 		We may have to add the subexpression to the tree.
 		This requires a lock.
 */
 	LOCK(AM.sbuflock);
 
+	oldCpointer = C->Pointer-C->Buffer; /* Offset of course !!!!!*/
 	AddRHS(AM.sbufnum,1);
-	term = subexpr;
-	while ( *term ) term += *term;
-	number = term - subexpr;
 /*
 		Add the terms to the compiler buffer. Paste on a zero.
 */

@@ -38,7 +38,8 @@
 */
 
 #include "form3.h"
- 
+#include "comtool.h"
+
 static KEYWORD formatoptions[] = {
 	 {"c",				(TFUN)0,	CMODE,				0}
 	,{"doublefortran",	(TFUN)0,	DOUBLEFORTRANMODE,	0}
@@ -1757,6 +1758,7 @@ int DoArgument(UBYTE *s, int par)
 		case TYPESPLITFIRSTARG:
 		case TYPESPLITLASTARG:
 		case TYPEFACTARG:
+		case TYPEARGTOEXTRASYMBOL:
 	        *w++ = cbuf[AC.cbufnum].numlhs+1;
 			break;
     }
@@ -5829,6 +5831,60 @@ int CoFromPolynomial(UBYTE *inp)
 
 /*
   	#] CoFromPolynomial : 
+  	#[ CoArgToExtraSymbol :
+
+	Converts the specified function arguments into extra symbols.
+
+	Syntax: ArgToExtraSymbol [ToNumber] [<argument specifications>]
+*/
+
+int CoArgToExtraSymbol(UBYTE *s)
+{
+	CBUF *C = cbuf + AC.cbufnum;
+	WORD *lhs;
+
+	/* TODO: resolve interference with rational arithmetic. (#138) */
+	if ( ( AC.topolynomialflag & ~TOPOLYNOMIALFLAG ) != 0 ) {
+		MesPrint("&ArgToExtraSymbol statement and FactArg statement are not allowed in the same module");
+		return(1);
+	}
+	if ( AO.OptimizeResult.code != NULL ) {
+		MesPrint("&Using ArgToExtraSymbol statement when there are still optimization results active.");
+		MesPrint("&Please use #ClearOptimize instruction first.");
+		MesPrint("&This will loose the optimized expression.");
+		return(1);
+	}
+
+	SkipSpaces(&s);
+	int tonumber = ConsumeOption(&s, "tonumber");
+
+	int ret = DoArgument(s,TYPEARGTOEXTRASYMBOL);
+	if ( ret ) return(ret);
+
+	/*
+	 * The "scale" parameter is unused. Instead, we put the "tonumber"
+	 * parameter.
+	 */
+	lhs = C->lhs[C->numlhs];
+	if ( lhs[4] != 1 ) {
+		Warning("scale parameter (^n) is ignored in ArgToExtraSymbol");
+	}
+	lhs[4] = tonumber;
+
+	AC.topolynomialflag |= TOPOLYNOMIALFLAG;  /* This flag is also used in ParFORM. */
+#ifdef WITHMPI
+	/*
+	 * In ParFORM, the conversion to extra symbols has to be performed on
+	 * the master.
+	 */
+	AC.mparallelflag |= NOPARALLEL_CONVPOLY;
+#endif
+
+	return(0);
+}
+
+/*
+  	#] CoArgToExtraSymbol : 
   	#[ CoExtraSymbols :
 */
 

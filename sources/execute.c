@@ -788,7 +788,7 @@ WORD DoExecute(WORD par, WORD skip)
 			HighWarning("This module is forced to run in sequential mode due to RHS expression names");
 		}
 		else if ( AC.mparallelflag & NOPARALLEL_CONVPOLY ) {
-			HighWarning("This module is forced to run in sequential mode due to topolynomial/frompolynomial");
+			HighWarning("This module is forced to run in sequential mode due to conversion to extra symbols");
 		}
 		else if ( AC.mparallelflag & NOPARALLEL_SPECTATOR ) {
 			HighWarning("This module is forced to run in sequential mode due to tospectator/copyspectator");

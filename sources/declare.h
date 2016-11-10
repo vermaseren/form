@@ -1,5 +1,4 @@
 #ifndef __FDECLARE__
- 
 #define __FDECLARE__
 
 /** @file declare.h
@@ -161,6 +160,18 @@
 #define NEXTARG(x) if(*x>0) x += *x; else if(*x <= -FUNCTION)x++; else x += 2;
 #define COPY1ARG(s1,t1) { int ica; if ( (ica=*t1) > 0 ) { NCOPY(s1,t1,ica) } \
 		else if(*t1<=-FUNCTION){*s1++=*t1++;} else{*s1++=*t1++;*s1++=*t1++;} }
+
+/**
+ * Fills a buffer by zero in the range [begin,end).
+ *
+ * @param  w      The buffer.
+ * @param  begin  The index for the beginning of the range.
+ * @param  end    The index for the end of the range (exclusive).
+ */
+#define ZeroFillRange(w,begin,end) do { \
+	int tmp_i; \
+	for ( tmp_i = begin; tmp_i < end; tmp_i++ ) { (w)[tmp_i] = 0; } \
+} while (0)
 
 #define TABLESIZE(a,b) (((WORD)sizeof(a))/((WORD)sizeof(b)))
 #define WORDDIF(x,y) (WORD)(x-y)
@@ -1432,6 +1443,7 @@ extern void UpdateMaxSize(VOID);
 
 extern int CoToPolynomial(UBYTE *);
 extern int CoFromPolynomial(UBYTE *);
+extern int CoArgToExtraSymbol(UBYTE *);
 extern int CoExtraSymbols(UBYTE *);
 extern UBYTE *GetDoParam(UBYTE *, WORD **, int);
 extern WORD *GetIfDollarFactor(UBYTE **, WORD *);

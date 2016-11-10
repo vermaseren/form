@@ -106,6 +106,7 @@ static KEYWORD com2commands[] = {
 	,{"aputinside",     (TFUN)CoAntiPutInside,    STATEMENT,    PARTEST}
 	,{"argexplode",     (TFUN)CoArgExplode,       STATEMENT,    PARTEST}
 	,{"argimplode",     (TFUN)CoArgImplode,       STATEMENT,    PARTEST}
+	,{"argtoextrasymbol",(TFUN)CoArgToExtraSymbol,STATEMENT,    PARTEST}
 	,{"argument",       (TFUN)CoArgument,         STATEMENT,    PARTEST}
 	,{"assign",         (TFUN)CoAssign,           STATEMENT,    PARTEST}
 	,{"auto",           (TFUN)CoAuto,             DECLARATION,  PARTEST}

@@ -562,6 +562,7 @@ typedef int (*TFUN1)();
 #define TYPEDROPSYMBOLS 76
 #define TYPEPUTINSIDE 77
 #define TYPETOSPECTATOR 78
+#define TYPEARGTOEXTRASYMBOL 79
 /*
 	The codes for the 'operations' that are part of TYPEOPERATION.
 */

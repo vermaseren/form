@@ -39,7 +39,12 @@
   	#[ inicbufs :
 */
 
-int inicbufs()
+/**
+ * Creates a new compiler buffer and returns its ID number.
+ *
+ * @return  The ID number for the new compiler buffer.
+ */
+int inicbufs(VOID)
 {
 	int i, num = AC.cbufList.num;
 	CBUF *C = cbuf;
@@ -76,6 +81,11 @@ int inicbufs()
   	#[ finishcbuf :
 */
 
+/**
+ * Frees a compiler buffer.
+ *
+ * @param  num  The ID number for the buffer to be freed.
+ */
 void finishcbuf(WORD num)
 {
 	CBUF *C = cbuf+num;
@@ -98,6 +108,11 @@ void finishcbuf(WORD num)
   	#[ clearcbuf :
 */
 
+/**
+ * Clears contents in a compiler buffer.
+ *
+ * @param  num  The ID number for the buffer to be cleared.
+ */
 void clearcbuf(WORD num)
 {
 	CBUF *C = cbuf+num;
@@ -118,6 +133,13 @@ void clearcbuf(WORD num)
   	#[ DoubleCbuffer :
 */
 
+/**
+ * Doubles a compiler buffer.
+ *
+ * @param  num  The ID number for the buffer to be doubled.
+ * @param  w    The pointer to the end (exclusive) of the current buffer. The
+ *              contents in the range of [cbuf[num].Buffer,w) will be kept.
+ */
 WORD *DoubleCbuffer(int num, WORD *w)
 {
 	CBUF *C = cbuf + num;
@@ -151,6 +173,12 @@ WORD *DoubleCbuffer(int num, WORD *w)
   	#[ AddLHS :
 */
 
+/**
+ * Adds an LHS to a compiler buffer and returns the pointer to a buffer for the
+ * new LHS.
+ *
+ * @param  num  The ID number for the buffer to get another LHS.
+ */
 WORD *AddLHS(int num)
 {
 	CBUF *C = cbuf + num;
@@ -170,6 +198,13 @@ WORD *AddLHS(int num)
   	#[ AddRHS :
 */
 
+/**
+ * Adds an RHS to a compiler buffer and returns the pointer to a buffer for the
+ * new RHS.
+ *
+ * @param  num   The ID number for the buffer to get another RHS.
+ * @param  type  If 0, the subexpression tree will be reallocated.
+ */
 WORD *AddRHS(int num, int type)
 {
 	LONG fullsize, *lold, newsize;
@@ -237,6 +272,13 @@ restart:;
   	#[ AddNtoL :
 */
 
+/**
+ * Adds an LHS with the given data to the current compiler buffer.
+ *
+ * @param  n      The length of the data.
+ * @param  array  The data to be added.
+ * @return        0 if succeeds.
+ */
 int AddNtoL(int n, WORD *array)
 {
 	int i;
@@ -258,6 +300,14 @@ int AddNtoL(int n, WORD *array)
 	more flexible (JV). Still to do with AddNtoL.
 */
 
+/**
+ * Adds the given data to the last LHS/RHS in a compiler buffer.
+ *
+ * @param  bufnum  The ID number for the buffer where the data will be added.
+ * @param  n       The length of the data.
+ * @param  array   The data to be added.
+ * @return         0 if succeeds.
+ */
 int AddNtoC(int bufnum, int n, WORD *array)
 {
 	int i;

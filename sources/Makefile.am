@@ -6,6 +6,7 @@ SRCBASE = \
 	compiler.c \
 	compress.c \
 	comtool.c \
+	comtool.h \
 	declare.h \
 	dict.c \
 	dollar.c \

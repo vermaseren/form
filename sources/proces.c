@@ -3314,6 +3314,7 @@ CommonEnd:
 				  case TYPESPLITARG2:
 				  case TYPESPLITFIRSTARG:
 				  case TYPESPLITLASTARG:
+				  case TYPEARGTOEXTRASYMBOL:
 					if ( execarg(BHEAD term,level) < 0 ) goto GenCall;
 					level = C->lhs[level][2];
 					break;
