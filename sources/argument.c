@@ -538,11 +538,10 @@ ScaledVariety:;
 					AT.mulpat[7] = AT.ebufnum;
 				}
 				else if ( type == TYPEARGTOEXTRASYMBOL ) {
-					STATIC_ASSERT(FUNHEAD+4 < 9);
 					WORD n;
 					if ( r[0] < 0 ) {
 						/* The argument is in the fast notation. */
-						WORD tmp[9];  /* max(8,FUNHEAD+4) < 9 */
+						WORD tmp[MaX(9,FUNHEAD+5)];
 						switch ( r[0] ) {
 							case -SNUMBER:
 								if ( r[1] == 0 ) {
