@@ -1290,3 +1290,143 @@ assert stdout =~ exact_pattern(<<'EOF')
    F
 EOF
 *--#] Issue129_2 :
+*--#[ Issue139 :
+* Corrupted characters in printing f(-2147483648)
+CF f;
+* Check numbers near danguous ones up to 64 bits.
+* 2^15 = 32768
+L F15p6 = f(+32766);
+L F15p7 = f(+32767);
+L F15p8 = f(+32768);
+L F15p9 = f(+32769);
+L F15p0 = f(+32770);
+L F15m6 = f(-32766);
+L F15m7 = f(-32767);
+L F15m8 = f(-32768);
+L F15m9 = f(-32769);
+L F15m0 = f(-32770);
+* 2^16 = 65536
+L F16p4 = f(+65534);
+L F16p5 = f(+65535);
+L F16p6 = f(+65536);
+L F16p7 = f(+65537);
+L F16p8 = f(+65538);
+L F16m4 = f(-65534);
+L F16m5 = f(-65535);
+L F16m6 = f(-65536);
+L F16m7 = f(-65537);
+L F16m8 = f(-65538);
+* 2^31 = 2147483648
+L F31p6 = f(+2147483646);
+L F31p7 = f(+2147483647);
+L F31p8 = f(+2147483648);
+L F31p9 = f(+2147483649);
+L F31p0 = f(+2147483650);
+L F31m6 = f(-2147483646);
+L F31m7 = f(-2147483647);
+L F31m8 = f(-2147483648);
+L F31m9 = f(-2147483649);
+L F31m0 = f(-2147483650);
+* 2^32 = 4294967296
+L F32p4 = f(+4294967294);
+L F32p5 = f(+4294967295);
+L F32p6 = f(+4294967296);
+L F32p7 = f(+4294967297);
+L F32p8 = f(+4294967298);
+L F32m4 = f(-4294967294);
+L F32m5 = f(-4294967295);
+L F32m6 = f(-4294967296);
+L F32m7 = f(-4294967297);
+L F32m8 = f(-4294967298);
+* 2^63 = 9223372036854775808
+L F63p6 = f(+9223372036854775806);
+L F63p7 = f(+9223372036854775807);
+L F63p8 = f(+9223372036854775808);
+L F63p9 = f(+9223372036854775809);
+L F63p0 = f(+9223372036854775810);
+L F63m6 = f(-9223372036854775806);
+L F63m7 = f(-9223372036854775807);
+L F63m8 = f(-9223372036854775808);
+L F63m9 = f(-9223372036854775809);
+L F63m0 = f(-9223372036854775810);
+* 2^64 = 18446744073709551616
+L F64p4 = f(+18446744073709551614);
+L F64p5 = f(+18446744073709551615);
+L F64p6 = f(+18446744073709551616);
+L F64p7 = f(+18446744073709551617);
+L F64p8 = f(+18446744073709551618);
+L F64m4 = f(-18446744073709551614);
+L F64m5 = f(-18446744073709551615);
+L F64m6 = f(-18446744073709551616);
+L F64m7 = f(-18446744073709551617);
+L F64m8 = f(-18446744073709551618);
+P;
+.end
+assert succeeded?
+
+assert result("F15p6") =~ expr("f(32766)")
+assert result("F15p7") =~ expr("f(32767)")
+assert result("F15p8") =~ expr("f(32768)")
+assert result("F15p9") =~ expr("f(32769)")
+assert result("F15p0") =~ expr("f(32770)")
+assert result("F15m6") =~ expr("f(-32766)")
+assert result("F15m7") =~ expr("f(-32767)")
+assert result("F15m8") =~ expr("f(-32768)")
+assert result("F15m9") =~ expr("f(-32769)")
+assert result("F15m0") =~ expr("f(-32770)")
+
+assert result("F16p4") =~ expr("f(65534)")
+assert result("F16p5") =~ expr("f(65535)")
+assert result("F16p6") =~ expr("f(65536)")
+assert result("F16p7") =~ expr("f(65537)")
+assert result("F16p8") =~ expr("f(65538)")
+assert result("F16m4") =~ expr("f(-65534)")
+assert result("F16m5") =~ expr("f(-65535)")
+assert result("F16m6") =~ expr("f(-65536)")
+assert result("F16m7") =~ expr("f(-65537)")
+assert result("F16m8") =~ expr("f(-65538)")
+
+assert result("F31p6") =~ expr("f(2147483646)")
+assert result("F31p7") =~ expr("f(2147483647)")
+assert result("F31p8") =~ expr("f(2147483648)")
+assert result("F31p9") =~ expr("f(2147483649)")
+assert result("F31p0") =~ expr("f(2147483650)")
+assert result("F31m6") =~ expr("f(-2147483646)")
+assert result("F31m7") =~ expr("f(-2147483647)")
+assert result("F31m8") =~ expr("f(-2147483648)")
+assert result("F31m9") =~ expr("f(-2147483649)")
+assert result("F31m0") =~ expr("f(-2147483650)")
+
+assert result("F32p4") =~ expr("f(4294967294)")
+assert result("F32p5") =~ expr("f(4294967295)")
+assert result("F32p6") =~ expr("f(4294967296)")
+assert result("F32p7") =~ expr("f(4294967297)")
+assert result("F32p8") =~ expr("f(4294967298)")
+assert result("F32m4") =~ expr("f(-4294967294)")
+assert result("F32m5") =~ expr("f(-4294967295)")
+assert result("F32m6") =~ expr("f(-4294967296)")
+assert result("F32m7") =~ expr("f(-4294967297)")
+assert result("F32m8") =~ expr("f(-4294967298)")
+
+assert result("F63p6") =~ expr("f(9223372036854775806)")
+assert result("F63p7") =~ expr("f(9223372036854775807)")
+assert result("F63p8") =~ expr("f(9223372036854775808)")
+assert result("F63p9") =~ expr("f(9223372036854775809)")
+assert result("F63p0") =~ expr("f(9223372036854775810)")
+assert result("F63m6") =~ expr("f(-9223372036854775806)")
+assert result("F63m7") =~ expr("f(-9223372036854775807)")
+assert result("F63m8") =~ expr("f(-9223372036854775808)")
+assert result("F63m9") =~ expr("f(-9223372036854775809)")
+assert result("F63m0") =~ expr("f(-9223372036854775810)")
+
+assert result("F64p4") =~ expr("f(18446744073709551614)")
+assert result("F64p5") =~ expr("f(18446744073709551615)")
+assert result("F64p6") =~ expr("f(18446744073709551616)")
+assert result("F64p7") =~ expr("f(18446744073709551617)")
+assert result("F64p8") =~ expr("f(18446744073709551618)")
+assert result("F64m4") =~ expr("f(-18446744073709551614)")
+assert result("F64m5") =~ expr("f(-18446744073709551615)")
+assert result("F64m6") =~ expr("f(-18446744073709551616)")
+assert result("F64m7") =~ expr("f(-18446744073709551617)")
+assert result("F64m8") =~ expr("f(-18446744073709551618)")
+*--#] Issue139 :

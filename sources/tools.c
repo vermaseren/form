@@ -1902,11 +1902,18 @@ WORD ReadSnum(UBYTE **p)
 
 */
 
-UBYTE *NumCopy(WORD x, UBYTE *to)
+UBYTE *NumCopy(WORD y, UBYTE *to)
 {
 	UBYTE *s;
 	WORD i = 0, j;
-	if ( x < 0 ) { x = -x; *to++ = '-'; }
+	UWORD x;
+	if ( y < 0 ) {
+		x = (UWORD)(-y);
+		*to++ = '-';
+	}
+	else {
+		x = (UWORD)y;
+	}
 	s = to;
 	do { *s++ = (UBYTE)((x % 10)+'0'); i++; } while ( ( x /= 10 ) != 0 );
 	*s-- = '\0';
@@ -1925,11 +1932,18 @@ UBYTE *NumCopy(WORD x, UBYTE *to)
 
 */
 
-char *LongCopy(LONG x, char *to)
+char *LongCopy(LONG y, char *to)
 {
 	char *s;
 	WORD i = 0, j;
-	if ( x < 0 ) { x = -x; *to++ = '-'; }
+	ULONG x;
+	if ( y < 0 ) {
+		x = (ULONG)(-y);
+		*to++ = '-';
+	}
+	else {
+		x = (ULONG)y;
+	}
 	s = to;
 	do { *s++ = (x % 10)+'0'; i++; } while ( ( x /= 10 ) != 0 );
 	*s-- = '\0';
@@ -1950,6 +1964,14 @@ char *LongCopy(LONG x, char *to)
 
 char *LongLongCopy(off_t *y, char *to)
 {
+	/*
+	 * This code fails to print the maximum negative value on systems with two's
+	 * complement. To fix this, we need the unsigned version of off_t with the
+	 * same size, but unfortunately it is undefined. On the other hand, if a
+	 * system is configured with a 64-bit off_t, in practice one never reaches
+	 * 2^63 ~ 10^18 as of 2016. If one really reach such a big number, then it
+	 * would be the time to move on a 128-bit off_t.
+	 */
 	off_t x = *y;
 	char *s;
 	WORD i = 0, j;
