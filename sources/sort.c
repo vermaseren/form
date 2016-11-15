@@ -1092,8 +1092,10 @@ RetRetval:
 	if ( par == 1 ) {
 		if ( retval < 0 ) {
 			UpdateMaxSize();
-			DeAllocFileHandle(newout);
-			newout = 0;
+			if ( newout ) {
+				DeAllocFileHandle(newout);
+				newout = 0;
+			}
 		}
 		else if ( newout ) {
 		  if ( newout->handle >= 0 ) {
