@@ -155,16 +155,16 @@
 /* Undefine/rename conflicted symbols. */
 #undef VOID  /* WinNT.h */
 #undef MAXLONG  /* WinNT.h */
-#define WORD WORD__Renamed  /* WinDef.h */
-#define LONG LONG__Renamed /* WinNT.h */
-#define ULONG ULONG__Renamed  /* WinDef.h */
+#define WORD FORM_WORD  /* WinDef.h */
+#define LONG FORM_LONG /* WinNT.h */
+#define ULONG FORM_ULONG  /* WinDef.h */
 #undef CreateFile  /* WinBase.h */
 #undef CopyFile  /* WinBase.h */
-#define OpenFile OpenFile__Renamed  /* WinBase.h */
-#define ReOpenFile ReOpenFile__Renamed  /* WinBase.h */
-#define ReadFile ReadFile__Renamed  /* WinBase.h */
-#define WriteFile WriteFile__Renamed  /* WinBase.h */
-#define DeleteObject DeleteObject__Renamed  /* WinGDI.h */
+#define OpenFile FORM_OpenFile  /* WinBase.h */
+#define ReOpenFile FORM_ReOpenFile  /* WinBase.h */
+#define ReadFile FORM_ReadFile  /* WinBase.h */
+#define WriteFile FORM_WriteFile  /* WinBase.h */
+#define DeleteObject FORM_DeleteObject  /* WinGDI.h */
 #else
 #error UNIX or WINDOWS must be defined!
 #endif
