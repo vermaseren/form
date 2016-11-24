@@ -131,6 +131,27 @@
 
 #endif  /* HAVE_CONFIG_H */
 
+/* Workaround for MSVC. */
+#if defined(_MSC_VER)
+/*
+ * Recent versions of MSVC++ (>= 2012) don't like reserved keywords being
+ * macroized even when they are not available. This is problematic for
+ * `alignof`, which is used in legacy `PADXXX` macros. We disable tests in
+ * xkeycheck.h.
+ */
+#if _MSC_VER >= 1700
+#define _ALLOW_KEYWORD_MACROS
+#endif
+/*
+ * Old versions of MSVC didn't support C99 function `snprintf`, which is used
+ * in poly.cc. On the other hand, macroizing `snprintf` gives a fatal error
+ * with MSVC >= 2015.
+ */
+#if _MSC_VER < 1900
+#define snprintf _snprintf
+#endif
+#endif
+
 /*
  * STATIC_ASSERT(condition) will fail to be compiled if the given
  * condition is false.
