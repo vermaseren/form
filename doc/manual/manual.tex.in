@@ -2,6 +2,7 @@
 \def\formmajorversion{\repomajorversion}
 \def\formminorversion{\repominorversion}
 \def\formdate{\repodate}
+\providecommand{\repodate}{\today}
 
 
 \documentclass[11pt]{report}

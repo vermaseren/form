@@ -13,9 +13,22 @@ m4_define([FORM_VERSION], m4_esyscmd_s([
 	if test -f .version; then
 		cat .version
 	else
-		scripts/git-version-gen.sh -C . -v || cat <<END >&2
+		scripts/git-version-gen.sh -C . -v || {
+			# As a fallback, try for form3.h.
+			major_version=`grep MAJORVERSION sources/form3.h | sed -e 's/ *#define  *MAJORVERSION *//'`
+			minor_version=`grep MINORVERSION sources/form3.h | sed -e 's/ *#define  *MINORVERSION *//'`
+			if test "x$major_version" != x && test "x$minor_version" != x; then
+				# Make the version files.
+				echo "$major_version.$minor_version" >.version
+				echo "#define REPO_MAJOR_VERSION $major_version"  >sources/version.h.in
+				echo "#define REPO_MINOR_VERSION $minor_version" >>sources/version.h.in
+				echo "\\def\\repomajorversion{$major_version}"  >doc/manual/version.tex.in
+				echo "\\def\\repominorversion{$minor_version}" >>doc/manual/version.tex.in
+				cp doc/manual/version.tex.in doc/devref/version.tex.in
+			fi
+			cat <<END >&2
 ========================================================================
-Failed to determine the version of the source code.
+Failed to determine the revision of the source code.
 
 The reason may be
   - this is neither a source distribution (containing the configure
@@ -28,11 +41,20 @@ Source distributions and some binaries can be found in:
   http://www.nikhef.nl/~form/maindir/binaries/binaries.html
   https://github.com/vermaseren/form/releases
 
-The latest source code can be obtained as
+The latest source code can be cloned by:
 
   git clone https://github.com/vermaseren/form.git
+END
+			test -f .version && cat <<END >&2
+
+You can continue the build, but binaries will not contain the revision
+information.
+END
+			cat <<END >&2
 ========================================================================
 END
+			test -f .version && cat .version
+		}
 	fi
 ]))
 

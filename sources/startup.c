@@ -67,7 +67,18 @@
 #ifdef HAVE_CONFIG_H
 	/* We have also version.h. */
 	#include "version.h"
-	#define VERSIONSTR FORMNAME " " REPO_VERSION " (" REPO_DATE ", " REPO_REVISION ")"
+	#ifndef REPO_VERSION
+		#define REPO_VERSION STRINGIFY(REPO_MAJOR_VERSION) "." STRINGIFY(REPO_MINOR_VERSION)
+	#endif
+	#ifndef REPO_DATE
+		/* The build date, instead of the repo date. */
+		#define REPO_DATE __DATE__
+	#endif
+	#ifdef REPO_REVISION
+		#define VERSIONSTR FORMNAME " " REPO_VERSION " (" REPO_DATE ", " REPO_REVISION ")"
+	#else
+		#define VERSIONSTR FORMNAME " " REPO_VERSION " (" REPO_DATE ")"
+	#endif
 	#define MAJORVERSION REPO_MAJOR_VERSION
 	#define MINORVERSION REPO_MINOR_VERSION
 #else
