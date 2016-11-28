@@ -1430,3 +1430,32 @@ assert result("F64m6") =~ expr("f(-18446744073709551616)")
 assert result("F64m7") =~ expr("f(-18446744073709551617)")
 assert result("F64m8") =~ expr("f(-18446744073709551618)")
 *--#] Issue139 :
+*--#[ Issue149 :
+* Index matches to -1 but crashes in output
+Index mu;
+CF f;
+L F1 = f(-1);
+L F2 = <f(-2)>+...+<f(130)>;
+id f(mu?) = mu;
+P;
+.end
+assert succeeded?
+assert result("F1") =~ expr("f(-1)")
+assert result("F2") =~ expr("8256 + f(-2) + f(-1) + f(129) + f(130)")
+*--#] Issue149 :
+*--#[ Issue153 :
+* Pattern with index and set restriction matches to number
+I mu1,...,mu9;
+CF f;
+Set indices: mu1,...,mu9;
+Set indices2: mu1,...,mu9, 127, 128;
+L F1 = f(132);
+L F2 = <f(126)>+...+<f(132)>;
+id f(mu1?indices) = 1;
+id f(mu1?indices2) = 0;
+P;
+.end
+assert succeeded?
+assert result("F1") =~ expr("f(132)")
+assert result("F2") =~ expr("f(126) + f(129) + f(130) + f(131) + f(132)")
+*--#] Issue153 :
