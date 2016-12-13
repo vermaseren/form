@@ -1240,10 +1240,14 @@ WORD IniVars()
 #endif
 	WORD *fi, i, one = 1;
 	CBUF *C = cbuf+AC.cbufnum;
-	UBYTE buf[32];
 
+#ifdef WITHPTHREADS
+	UBYTE buf[32];
 	sprintf((char*)buf,"%d",AM.totalnumberofthreads);
 	PutPreVar((UBYTE *)"NTHREADS_",buf,0,1);
+#else
+	PutPreVar((UBYTE *)"NTHREADS_",(UBYTE *)"1",0,1);
+#endif
 
 	AC.ShortStats = 0;
 	AC.WarnFlag = 1;
