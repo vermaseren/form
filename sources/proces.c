@@ -2525,7 +2525,11 @@ ComAct:		if ( t < u ) do { *m++ = *t++; } while ( t < u );
 				}
 			}
 			*termout = WORDDIF(m,termout);
-			if ( (*termout)*((LONG)sizeof(WORD)) > AM.MaxTer ) goto InsCall;
+			if ( (*termout)*((LONG)sizeof(WORD)) > AM.MaxTer ) {
+				MLOCK(ErrorMessageLock);
+				MesPrint("Term too complex during substitution. MaxTermSize of %l is too small",AM.MaxTer);
+				goto InsCall2;
+			}
 			AT.WorkPointer = coef;
 			return(0);
 		}
@@ -2552,6 +2556,7 @@ ComAct:		if ( t < u ) do { *m++ = *t++; } while ( t < u );
 
 InsCall:
 	MLOCK(ErrorMessageLock);
+InsCall2:
 	MesCall("InsertTerm");
 	MUNLOCK(ErrorMessageLock);
 	SETERROR(-1)
