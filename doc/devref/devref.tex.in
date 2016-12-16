@@ -1,5 +1,6 @@
 \input{version.tex}
 \def\formdate{\repodate}
+\providecommand{\repodate}{\today}
 
 
 \documentclass[11pt,titlepage]{article}

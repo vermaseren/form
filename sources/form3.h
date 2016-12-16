@@ -131,6 +131,27 @@
 
 #endif  /* HAVE_CONFIG_H */
 
+/* Workaround for MSVC. */
+#if defined(_MSC_VER)
+/*
+ * Recent versions of MSVC++ (>= 2012) don't like reserved keywords being
+ * macroized even when they are not available. This is problematic for
+ * `alignof`, which is used in legacy `PADXXX` macros. We disable tests in
+ * xkeycheck.h.
+ */
+#if _MSC_VER >= 1700
+#define _ALLOW_KEYWORD_MACROS
+#endif
+/*
+ * Old versions of MSVC didn't support C99 function `snprintf`, which is used
+ * in poly.cc. On the other hand, macroizing `snprintf` gives a fatal error
+ * with MSVC >= 2015.
+ */
+#if _MSC_VER < 1900
+#define snprintf _snprintf
+#endif
+#endif
+
 /*
  * STATIC_ASSERT(condition) will fail to be compiled if the given
  * condition is false.
@@ -155,16 +176,16 @@
 /* Undefine/rename conflicted symbols. */
 #undef VOID  /* WinNT.h */
 #undef MAXLONG  /* WinNT.h */
-#define WORD WORD__Renamed  /* WinDef.h */
-#define LONG LONG__Renamed /* WinNT.h */
-#define ULONG ULONG__Renamed  /* WinDef.h */
+#define WORD FORM_WORD  /* WinDef.h */
+#define LONG FORM_LONG /* WinNT.h */
+#define ULONG FORM_ULONG  /* WinDef.h */
 #undef CreateFile  /* WinBase.h */
 #undef CopyFile  /* WinBase.h */
-#define OpenFile OpenFile__Renamed  /* WinBase.h */
-#define ReOpenFile ReOpenFile__Renamed  /* WinBase.h */
-#define ReadFile ReadFile__Renamed  /* WinBase.h */
-#define WriteFile WriteFile__Renamed  /* WinBase.h */
-#define DeleteObject DeleteObject__Renamed  /* WinGDI.h */
+#define OpenFile FORM_OpenFile  /* WinBase.h */
+#define ReOpenFile FORM_ReOpenFile  /* WinBase.h */
+#define ReadFile FORM_ReadFile  /* WinBase.h */
+#define WriteFile FORM_WriteFile  /* WinBase.h */
+#define DeleteObject FORM_DeleteObject  /* WinGDI.h */
 #else
 #error UNIX or WINDOWS must be defined!
 #endif

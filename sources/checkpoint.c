@@ -2393,7 +2393,7 @@ int DoRecovery(int *moduletype)
 		for ( i = 0; i < AO.NumDictionaries; i++ ) {
 			R_SET(l,LONG)
 			AO.Dictionaries[i] = DictFromBytes(p);
-			p += l;
+			p = (char *)p + l;
 		}
 	}
 	/*#] AO :*/ 

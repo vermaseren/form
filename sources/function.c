@@ -1239,7 +1239,8 @@ IndAll:				i = m[1] - WILDOFFSET;
 			else if ( *m == -ARGWILD ) goto ArgAll;
 			else if ( *m == -INDEX && m[1] >= AM.OffsetIndex+WILDOFFSET
 			&& m[1] < AM.OffsetIndex+(WILDOFFSET<<1) ) {
-				if ( *t == -VECTOR || *t == -SNUMBER ) goto IndAll;
+				if ( *t == -VECTOR ) goto IndAll;
+				if ( *t == -SNUMBER && t[1] >= 0 && t[1] < AM.OffsetIndex ) goto IndAll;
 				if ( *t == -MINVECTOR ) {
 					i = m[1] - WILDOFFSET;
 					AN.argaddress = AT.MinVecArg;

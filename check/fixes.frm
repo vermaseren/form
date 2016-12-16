@@ -1430,3 +1430,67 @@ assert result("F64m6") =~ expr("f(-18446744073709551616)")
 assert result("F64m7") =~ expr("f(-18446744073709551617)")
 assert result("F64m8") =~ expr("f(-18446744073709551618)")
 *--#] Issue139 :
+*--#[ Issue149_1 :
+* Index matches to -1 but crashes in output
+Index mu;
+CF f;
+L F1 = f(-1);
+L F2 = <f(-2)>+...+<f(130)>;
+id f(mu?) = mu;
+P;
+.end
+assert succeeded?
+assert result("F1") =~ expr("f(-1)")
+assert result("F2") =~ expr("8256 + f(-2) + f(-1) + f(129) + f(130)")
+*--#] Issue149_1 :
+*--#[ Issue149_2 :
+Index mu;
+CF f1(s),f2(a),f3(c),f4(r);
+L F1 = <f1(-2)>+...+<f1(130)>;
+L F2 = <f2(-2)>+...+<f2(130)>;
+L F3 = <f3(-2)>+...+<f3(130)>;
+L F4 = <f4(-2)>+...+<f4(130)>;
+id f1?(mu?) = mu;
+P;
+.end
+assert succeeded?
+assert result("F1") =~ expr("8256 + f1(-2) + f1(-1) + f1(129) + f1(130)")
+assert result("F2") =~ expr("8256 + f2(-2) + f2(-1) + f2(129) + f2(130)")
+assert result("F3") =~ expr("8256 + f3(-2) + f3(-1) + f3(129) + f3(130)")
+assert result("F4") =~ expr("8256 + f4(-2) + f4(-1) + f4(129) + f4(130)")
+*--#] Issue149_2 :
+*--#[ Issue153_1 :
+* Pattern with index and set restriction matches to number
+I mu1,...,mu9;
+CF f;
+Set indices: mu1,...,mu9;
+Set indices2: mu1,...,mu9, 127, 128;
+L F1 = f(132);
+L F2 = <f(126)>+...+<f(132)>;
+id f(mu1?indices) = 1;
+id f(mu1?indices2) = 0;
+P;
+.end
+assert succeeded?
+assert result("F1") =~ expr("f(132)")
+assert result("F2") =~ expr("f(126) + f(129) + f(130) + f(131) + f(132)")
+*--#] Issue153_1 :
+*--#[ Issue153_2 :
+I mu1,...,mu9;
+CF f1(s),f2(a),f3(c),f4(r);
+Set indices: mu1,...,mu9;
+Set indices2: mu1,...,mu9, 127, 128;
+L F1 = <f1(126)>+...+<f1(132)>;
+L F2 = <f2(126)>+...+<f2(132)>;
+L F3 = <f3(126)>+...+<f3(132)>;
+L F4 = <f4(126)>+...+<f4(132)>;
+id f1?(mu1?indices) = 1;
+id f1?(mu1?indices2) = 0;
+P;
+.end
+assert succeeded?
+assert result("F1") =~ expr("f1(126) + f1(129) + f1(130) + f1(131) + f1(132)")
+assert result("F2") =~ expr("f2(126) + f2(129) + f2(130) + f2(131) + f2(132)")
+assert result("F3") =~ expr("f3(126) + f3(129) + f3(130) + f3(131) + f3(132)")
+assert result("F4") =~ expr("f4(126) + f4(129) + f4(130) + f4(131) + f4(132)")
+*--#] Issue153_2 :
