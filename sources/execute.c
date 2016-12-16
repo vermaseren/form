@@ -2325,9 +2325,8 @@ LONG CountTerms1(PHEAD0)
 	for(;;) {
 		numterms++;
 		retval = GetOneTerm(BHEAD AT.WorkPointer,AR.infile,&startposition,0);
+		if ( retval >= 0 ) AR.CompressPointer = oldipointer;
 		if ( retval <= 0 ) break;
-
-		AR.CompressPointer = oldipointer;
 		t = AR.CompressPointer;
 		if ( *t < (1 + decr + ABS(*(t+*t-1))) ) break;
 		t++;
