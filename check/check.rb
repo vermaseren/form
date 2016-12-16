@@ -195,6 +195,10 @@ module FormTest
     RUBY_PLATFORM =~ /linux/i
   end
 
+  def travis?
+    ENV["TRAVIS"] == "true"
+  end
+
   # Override methods in Test::Unit::TestCase.
 
   def setup
@@ -356,8 +360,8 @@ module FormTest
       end
       begin
         runner = Thread.current
-        killer = Thread.new(timeout) do |timeout_|
-          sleep(timeout_)
+        killer = Thread.new(timeout) do |timeout1|
+          sleep(timeout1)
           runner.raise
         end
         out.join
@@ -435,6 +439,7 @@ module FormTest
 
   # The method to be called before the test.
   def prepare
+    # Can be overridden in child classes.
   end
 
   # Test-result functions.
@@ -562,9 +567,8 @@ module FormTest
         @stdout += "Valgrind test failed"
       end
       return ok
-    else
-      return false
     end
+    false
   end
 
   # Utility functions for pattern matching.
@@ -941,12 +945,14 @@ class FormConfig
   def check_bin(name, bin)
     # Check if the executable is available.
     system("cd #{TempDir.root}; type #{bin} >/dev/null 2>&1")
-    if $? != 0
-      if name == bin
-        fatal("executable '#{name}' not found")
-      else
-        fatal("executable '#{name}' ('#{bin}') not found")
-      end
+    if $? == 0
+      # OK.
+      return
+    end
+    if name == bin
+      fatal("executable '#{name}' not found")
+    else
+      fatal("executable '#{name}' ('#{bin}') not found")
     end
   end
 
