@@ -1494,3 +1494,20 @@ assert result("F2") =~ expr("f2(126) + f2(129) + f2(130) + f2(131) + f2(132)")
 assert result("F3") =~ expr("f3(126) + f3(129) + f3(130) + f3(131) + f3(132)")
 assert result("F4") =~ expr("f4(126) + f4(129) + f4(130) + f4(131) + f4(132)")
 *--#] Issue153_2 :
+*--#[ Issue154 :
+* CompressSize insufficient while the compression is off, when Keep Brackets
+Off compress;
+I mu1,...,mu16;
+L F = g_(1,mu1,...,mu16);
+B g_;
+.sort;
+Keep Brackets;
+tracen,1;
+.sort
+Drop;
+L F1 = termsin_(F);
+P;
+.end
+assert succeeded?
+assert result("F1") =~ expr("2027025")
+*--#] Issue154 :
