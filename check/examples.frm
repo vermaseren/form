@@ -638,6 +638,7 @@ assert result("G") =~ expr("
     Factarg,(-1),f3;
     Print;
     .end
+	assert succeeded?
 	assert result("F") =~ expr("
           f(a,b,-1,3) + f(a,b,3) + 2*f1(a*b) + f2(a*b,-1,3) + f2(a*b,3)
           + f3(a*b,-3) + f3(a*b,3)

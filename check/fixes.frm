@@ -1154,6 +1154,7 @@ P;
 PolyRatFun rat(expand,x,5);
 P;
 .end
+assert succeeded?
 assert result("F") =~ expr("rat(x^10 + x^11 + x^12 + x^13 + x^14 + x^15)")
 *--#] Issue114 :
 *--#[ Issue117_1 :
@@ -1164,6 +1165,7 @@ L F = f(n1,n2)*g(n1,n2);
 id f(n1?,n2?,?a)*g(n1?,n2?) = 1; * works if g not symmetric or ?a is removed
 Print;
 .end
+assert succeeded?
 assert result("F") =~ expr("1")
 *--#] Issue117_1 :
 *--#[ Issue117_2 :
@@ -1185,6 +1187,7 @@ L F5 = f(x1,x2)*f(x2,x1,x3)*g(x2,x1)^2;
 id f(n1?,n2?,?a) * g(n1?,n2?) = 1;
 P;
 .end
+assert succeeded?
 assert result("F1") =~ expr("1")
 assert result("F2") =~ expr("1")
 assert result("F3") =~ expr("1")
@@ -1199,6 +1202,7 @@ L F = f(p1,p2,p3,p4)*f(p3,p4);
 repeat id once f(?a) = dd_(?a);
 P +s;
 .end
+assert succeeded?
 assert result("F") =~ expr("
        + p1.p2*p3.p4^2
        + p1.p3*p2.p4*p3.p4
@@ -1221,6 +1225,7 @@ L F = p(mu);
 id p = f(?);
 P;
 .end
+assert succeeded?
 assert result("F") =~ expr("f(mu)")
 *--#] Issue125_2 :
 *--#[ Issue126 :
@@ -1232,6 +1237,7 @@ Hide;
 Unhide;
 P F;
 .end
+assert succeeded?
 assert result("F") =~ expr("1")
 *--#] Issue126 :
 *--#[ Issue129_1 :
@@ -1253,6 +1259,7 @@ L F = 1;
 On names;
 P;
 .end
+assert succeeded?
 assert result("F") =~ expr("6")
 assert stdout =~ exact_pattern(<<'EOF')
  Expressions
@@ -1282,6 +1289,7 @@ L F = 1;
 On names;
 P;
 .end
+assert succeeded?
 assert result("F") =~ expr("6")
 assert stdout =~ exact_pattern(<<'EOF')
  Expressions
