@@ -3988,7 +3988,7 @@ AutoGen:	i = *AT.TMout;
 #endif
 					if ( Generator(BHEAD termout,level) ) goto GenCall;
 #ifdef WITHPTHREADS
-					if ( dtype > 0 && dtype != MODLOCAL ) { dtype = 0; break; }
+					if ( dtype > 0 && dtype != MODLOCAL && dtype != MODSUM ) { dtype = 0; break; }
 #endif
 					if ( iscopy == 0 && ( extractbuff != AM.dbufnum ) )
 							StartBuf = cbuf[extractbuff].Buffer;
