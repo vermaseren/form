@@ -1146,6 +1146,8 @@ def main
       opts.mpirun = ARGV[0]
     elsif ARGV[0] =~ /form/ || ARGV[0] =~ /vorm/ || File.executable?(ARGV[0])
       opts.form = ARGV[0]
+    elsif File.exist?(ARGV[0])
+      opts.files << ARGV[0]
     else
       opts.name_patterns << ARGV[0]
     end

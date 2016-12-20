@@ -219,7 +219,7 @@ InVe:
 			  if ( *v == VECTOR || *v == INDEX ) { /* we need to check arguments */
 				int i;
 				for ( i = FUNHEAD; i < t[1]; i++ ) {
-					if ( *v == t[i] ) return(1);
+					if ( v[1] == t[i] ) return(1);
 				}
 			  }
 			}
