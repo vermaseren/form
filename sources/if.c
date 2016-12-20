@@ -209,8 +209,8 @@ InVe:
 		else if ( ( *v == VECTOR || *v == INDEX ) && *t == DOTPRODUCT ) {
 			m = t+2; mstop = t+t[1];
 			while ( m < mstop ) {
-				if ( v[1] == t[0] || v[1] == t[1] ) return(1);
-				t += 3;
+				if ( v[1] == m[0] || v[1] == m[1] ) return(1);
+				m += 3;
 			}
 		}
 		else if ( *t >= FUNCTION ) {
