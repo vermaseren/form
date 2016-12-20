@@ -215,8 +215,17 @@ InVe:
 		}
 		else if ( *t >= FUNCTION ) {
 			if ( *v == FUNCTION && v[1] == *t ) return(1);
-			fstop = t + t[1]; f = t + FUNHEAD;
-			while ( f < fstop ) { /* Do the arguments one by one */
+			if ( functions[*t-FUNCTION].spec > 0 ) {
+			  if ( *v == VECTOR || *v == INDEX ) { /* we need to check arguments */
+				int i;
+				for ( i = FUNHEAD; i < t[1]; i++ ) {
+					if ( *v == t[i] ) return(1);
+				}
+			  }
+			}
+			else {
+			  fstop = t + t[1]; f = t + FUNHEAD;
+			  while ( f < fstop ) { /* Do the arguments one by one */
 				if ( *f <= 0 ) {
 					switch ( *f ) {
 						case -SYMBOL:
@@ -248,6 +257,7 @@ InVe:
 					}
 					f = astop;
 				}
+			  }
 			}
 		}
 		t += t[1];
