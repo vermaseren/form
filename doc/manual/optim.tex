@@ -128,8 +128,10 @@ code optimization. The easiest to use are the following:
 \item[O2] Activates the medium level of optimization. This is slower
   than the previous setting, but usually gives better results.
 
-\item[O3] Activates the highest level of optimization. It can be
+\item[O3] Activates the highest level of optimization using MCTS. It can be
   rather slow, but usually gives even better results.
+
+\item[O4] Activates the highest level of optimization using Local Stochastic Search. It is usually much faster than MCTS and may give better results.
 \end{description}
 
 These levels of optimization refer to some default settings of all
@@ -140,9 +142,9 @@ that can be set are divided in several categories. First, it is
 possible to set which Horner schemes\index{Horner scheme} are tried:
 
 \begin{description}
-\item[Horner=(Occurrence $|$ MCTS)] Determines whether an 
-  occurrence order\index{occurrence order} Horner scheme is used
-  or whether MCTS\index{MCTS}\index{Monte Carlo tree search} is employed to
+\item[Horner=(Occurrence $|$ MCTS $|$ SA)] Determines whether an 
+  occurrence order\index{occurrence order} Horner scheme is used, or
+  whether MCTS\index{MCTS}\index{Monte Carlo tree search}, or Stochastic Local Search is employed to
   find Horner schemes.
 
 \item[HornerDirection=(Forward $|$ Backward $|$ ForwardOrBackward $|$] \hfill
@@ -164,7 +166,7 @@ possible to set which Horner schemes\index{Horner scheme} are tried:
 \end{description}
 
 In the case of MCTS\index{MCTS}\index{Monte Carlo tree search} there are 
-various parameters that can control thesearch process:
+various parameters that can control the search process:
 
 \begin{description}
 \item[MCTSConstant=$<$\emph{value}$>$] 
@@ -195,6 +197,16 @@ various parameters that can control thesearch process:
 \item[MCTSTimeLimit=$<$\emph{value}$>$] The maximum time in seconds
   that is used when searching through the tree.
 \end{description}
+
+For Stochastic Local Search the following parameters can be set:
+\begin{description}
+\item[saIter=$<$\emph{value}$>$] Number of optimization steps that will be performed. This has the most influence on the quality of the simplification. The default value is 1000.
+\item[saMaxT=$<$\emph{value}$>$] Maximum temperature used in Simulated Annealing. The higher the temperature,
+the more exploration occurs. The default value is 2000.
+\item[saMinT=$<$\emph{value}$>$] Minimum temperature used in Simulated Annealing. The lower the temperature,
+the more exploitation occurs. The default value is 1.
+\end{description}
+The cooling rate from saMaxT to saMinT is exponential in saIter. More can be read in the following paper: \url{https://arxiv.org/pdf/1409.5223.pdf}.
 
 The Horner methods generate a number of Horner schemes: one or two in
 the case of occurrence order schemes, depending of the direction
@@ -278,23 +290,26 @@ PrintScheme option in the O1 mode.
 { \small
 \begin{table}[!ht]
 \centering
-\begin{tabular}{|l|c|c|c|}
+\begin{tabular}{|l|c|c|c|c|}
 \hline
-                &     O1      &    O2       & O3 (default) \\
+                &     O1      &    O2       & O3 (default) & O4 (default) \\
  \hline
-Horner          &  occurrence &  occurrence &   MCTS   \\
-HornerDirection &     OR      &      OR     &    OR    \\
-MCTSConstant    &    ---      &     ---     &   1.0    \\
-MCTSNumExpand   &    ---      &     ---     &  1000    \\
-MCTSNumKeep     &    ---      &     ---     &   10     \\
-MCTSNumRepeat   &    ---      &     ---     &    1     \\
-MCTSTimeLimit   &    ---      &     ---     &    0     \\
-Method          &    cse      &    greedy   &  greedy  \\
-GreedyMinNum    &    ---      &     10      &   10     \\
-GreedyMaxPerc   &    ---      &      5      &    5     \\
-GreedyTimeLimit &    ---      &      0      &    0     \\
-Stats           &    off      &     off     &   off    \\ 
-TimeLimit       &     0       &      0      &    0     \\
+Horner          &  occurrence &  occurrence &   MCTS  &      SA     \\
+HornerDirection &     OR      &      OR     &    OR   &      OR     \\
+MCTSConstant    &    ---      &     ---     &   1.0   &     ---     \\
+MCTSNumExpand   &    ---      &     ---     &  1000   &     ---     \\
+MCTSNumKeep     &    ---      &     ---     &   10    &     ---     \\
+MCTSNumRepeat   &    ---      &     ---     &    1    &     ---     \\
+MCTSTimeLimit   &    ---      &     ---     &    0    &     ---     \\
+saIter          &    ---      &     ---     &   ---   &     1000    \\
+saMinT          &    ---      &     ---     &   ---   &      1      \\
+saMaxT          &    ---      &     ---     &   ---   &     2000    \\
+Method          &    cse      &    greedy   &  greedy &    greedy   \\
+GreedyMinNum    &    ---      &     10      &   10    &     10      \\
+GreedyMaxPerc   &    ---      &      5      &    5    &      5      \\
+GreedyTimeLimit &    ---      &      0      &    0    &      0      \\
+Stats           &    off      &     off     &   off   &     off     \\ 
+TimeLimit       &     0       &      0      &    0    &      0      \\
 \hline
 \end{tabular}
 \caption{Values for the various parameters in the predefined
