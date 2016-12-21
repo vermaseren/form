@@ -6,6 +6,55 @@
 #endif
 .end
 
+*--#[ dedup :
+* Test deduplication
+#-
+Auto S n;
+Auto V p;
+CF f1,f2,f3,f,g;
+T t1,t2,t3;
+
+L F1 =
+#do i = 1,20
+  +ranperm_(f,<p1,p1>,...,<p50,p50>)
+#enddo
+;
+
+L F2 = f1(1,2,3,p,1,1,2,2,p);
+L F3 = f2(1,2,3,p,1,1,2,2,p);
+L F4 = f3(1,2,3,p,1,1,2,2,p);
+L F5 = t1(1,2,3,p,1,1,2,2,p);
+L F6 = t2(1,2,3,p,1,1,2,2,p);
+L F7 = t3(1,2,3,p,1,1,2,2,p);
+L F8 = f1(1,2,1,100000000,n^4,100,n^4,n^5,-10000,p1.p2,p6,p1.p2);
+
+id f(?a) = f(?a)*g(?a);
+transform f,dedup(1,last);
+repeat id g(?a,p?,?b,p?,?c) = g(?a,p,?b,?c);
+id f(?a)*g(?a) = 0;
+
+* Test functions
+transform f1,dedup(1,last);
+transform f2,dedup(3,last);
+transform f3,dedup(1,5);
+
+* Test tensors
+transform t1,dedup(1,last);
+transform t2,dedup(3,last);
+transform t3,dedup(1,5);
+
+P;
+.end
+assert succeeded?
+assert result("F1")  =~ expr("0")
+assert result("F2")  =~ expr("f1(1,2,3,p)")
+assert result("F3")  =~ expr("f2(1,2,3,p,1,2)")
+assert result("F4")  =~ expr("f3(1,2,3,p,1,2,2,p)")
+assert result("F5")  =~ expr("t1(1,2,3,p)")
+assert result("F6")  =~ expr("t2(1,2,3,p,1,2)")
+assert result("F7")  =~ expr("t3(1,2,3,p,1,2,2,p)")
+assert result("F8")  =~ expr("f1(1,2,100000000,n^4,100,n^5,-10000,p1.p2,p6)")
+*--#] dedup :
 *--#[ CoToTensor :
 V p1,p2,q1,q2,nosquare;
 Set pp:p1,p2;

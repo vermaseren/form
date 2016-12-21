@@ -53,6 +53,7 @@
 			Explode(argfirst,arglast)
 			Permute(cycle)(cycle)(cycle)...(cycle)
 			Reverse(argfirst,arglast)
+			Dedup(argfirst,arglast)
 			Cycle(argfirst,arglast)=+/-num
 			IsLyndon(argfirst,arglast)=(yes,no)
 			ToLyndon(argfirst,arglast)=(yes,no)
@@ -444,6 +445,25 @@ illsize:					MesPrint("&Illegal value for base in encode/decode transformation")
 		}
 /*
  		#] reverse : 
+		#[ dedup :
+*/
+		else if ( StrICmp(s,(UBYTE *)"dedup") == 0 ) {
+			type = DEDUPARG;
+			*ss = c;
+			if ( ( in = ReadRange(in,range,1) ) == 0 ) {
+				if ( error == 0 ) error = 1;
+				return(error);
+			}
+			*wp++ = ARGRANGE;
+			*wp++ = range[0];
+			*wp++ = range[1];
+			*wp++ = type;
+			*work = wp-work;
+			work = wp; *wp++ = 0;
+			s = in;
+		}
+/*
+		#] dedup :
  		#[ cycle :
 */
 		else if ( StrICmp(s,(UBYTE *)"cycle") == 0 ) {
@@ -704,6 +724,10 @@ hit:;
 						break;
 					case REVERSEARG:
 						if ( RunReverse(BHEAD fun,args) ) goto abo;
+						out = fun + fun[1];
+						break;
+					case DEDUPARG:
+						if ( RunDedup(BHEAD fun,args) ) goto abo;
 						out = fun + fun[1];
 						break;
 					case CYCLEARG:
@@ -2213,6 +2237,95 @@ OverWork:;
 
 /*
  		#] RunReverse : 
+ 		#[ RunDedup :
+*/
+
+WORD RunDedup(PHEAD WORD *fun, WORD *args)
+{
+	WORD *tt, totarg, *tstop, arg1, arg2, n, i, j,k, *f, *f1, *f2, *fd, *fstart;
+	if ( *args != ARGRANGE ) {
+		MLOCK(ErrorMessageLock);
+		MesPrint("Illegal range encountered in RunDedup");
+		MUNLOCK(ErrorMessageLock);
+		Terminate(-1);
+	}
+	if ( functions[fun[0]-FUNCTION].spec != TENSORFUNCTION ) {
+	  tt = fun+FUNHEAD; tstop = fun+fun[1]; totarg = 0;
+	  while ( tt < tstop ) { totarg++; NEXTARG(tt); }
+	  if ( FindRange(BHEAD args,&arg1,&arg2,totarg) ) return(-1);
+
+	  if ( arg2 < arg1 ) { n = arg1; arg1 = arg2; arg2 = n; }
+	  if ( arg2 > totarg ) return(0);
+
+	  f = fun+FUNHEAD; n = 1;
+	  while ( n < arg1 ) { n++; NEXTARG(f) }
+	  f1 = f; // fast forward to first element in range
+	  i = 0; // new argument count
+	  fstart = f1;
+
+	  for (; n <= arg2; n++ ) {
+	  	f2 = fstart;
+	  	for ( j = 0; j < i; j++ ) { // check all previous terms
+	  		fd = f2;
+	  		NEXTARG(fd)
+	  		for ( k = 0; k < fd-f2; k++ ) // byte comparison of args
+	  			if ( f2[k] != f[k] ) break;
+
+	  		if ( k == fd-f2 ) break; // duplicate arg
+	  		f2 = fd;
+	  	}
+
+	  	if ( j == i ) {
+	  		// unique factor, copy in situ
+	  		COPY1ARG(f1,f)
+	  		i++;
+	  	} else {
+	  		NEXTARG(f)
+	  	}
+	  }
+
+	  // move the terms from after the range
+	  for (j = n; j <= totarg; j++) {
+	  	COPY1ARG(f1,f)
+	  }
+
+	  fun[1] = f1 - fun; // resize function
+	}
+	else {	/* Tensors */
+	  tt = fun+FUNHEAD; tstop = fun+fun[1]; totarg = tstop - tt;
+	  if ( FindRange(BHEAD args,&arg1,&arg2,totarg) ) return(-1);
+
+	  if ( arg2 < arg1 ) { n = arg1; arg1 = arg2; arg2 = n; }
+	  if ( arg2 > totarg ) return(0);
+
+	  f = fun+FUNHEAD;
+	  i = arg1; // new argument count
+	  n = i;
+
+	  for (; n <= arg2; n++ ) {
+	  	for ( j = arg1; j < i; j++ ) { // check all previous terms
+	  		if ( f[n-1] == f[j-1] ) break; // duplicate arg
+	  	}
+
+	  	if ( j == i ) {
+	  		// unique factor, copy in situ
+	  		f[i-1] = f[n-1];
+	  		i++;
+	  	}
+	  }
+
+	  // move the terms from after the range
+	  for (j = n; j <= totarg; j++, i++) {
+	  	f[i-1] = f[j-1];
+	  }
+
+	  fun[1] = f + i - 1 - fun; // resize function
+	}
+	return(0);
+}
+
+/*
+ 		#] RunDedup : 
  		#[ RunCycle :
 */
 

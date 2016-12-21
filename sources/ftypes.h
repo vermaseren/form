@@ -972,6 +972,7 @@ typedef int (*TFUN1)();
 #define MULTIPLYARG 18
 #define DROPARG     19
 #define SELECTARG   20
+#define DEDUPARG    21
 
 #define BASECODE 1
 #define YESLYNDON 1

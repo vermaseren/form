@@ -1427,6 +1427,7 @@ extern WORD RunIsLyndon(PHEAD WORD *fun, WORD *args, int par);
 extern WORD RunToLyndon(PHEAD WORD *fun, WORD *args, int par);
 extern WORD RunDropArg(PHEAD WORD *fun, WORD *args);
 extern WORD RunSelectArg(PHEAD WORD *fun, WORD *args);
+extern WORD RunDedup(PHEAD WORD *fun, WORD *args);
 
 extern int NormPolyTerm(PHEAD WORD *);
 extern WORD ComparePoly(WORD *, WORD *, WORD);
