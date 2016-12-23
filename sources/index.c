@@ -74,7 +74,6 @@ POSITION *FindBracket(WORD nexp, WORD *bracket)
 	WORD *tstop, *cp, a[4];
 	FILEHANDLE *fi;
 	POSITION auxpos, toppos;
-
 	switch ( e->status ) {
 		case UNHIDELEXPRESSION:
 		case UNHIDEGEXPRESSION:
@@ -107,7 +106,8 @@ POSITION *FindBracket(WORD nexp, WORD *bracket)
 		return(0);
 	}
 	else if ( i == 0 ) med = hi-1;
-	else for (;;) {
+	else {
+		for (;;) {
 		med = (hi+low)/2;
 		bi = bracketinfo->indexbuffer + med;
 		if ( *bracket == 4 ) {
@@ -129,7 +129,7 @@ POSITION *FindBracket(WORD nexp, WORD *bracket)
 			if ( low == med ) break;
 			low = med;
 		}
-	}
+	}}
 /*
 	The bracket is now either bi itself or between bi and the next one
 	or it is not present at all.
@@ -195,6 +195,7 @@ POSITION *FindBracket(WORD nexp, WORD *bracket)
 				a[1] = t2[0]; a[2] = t2[1]; a[3] = t2[2];
 				*t2++ = 1; *t2++ = 1; *t2++ = 3;
 				*AR.CompressPointer = t2 - AR.CompressPointer;
+				bsize = *AR.CompressPointer - 1;
 				if ( *bracket == 4 ) {
 					if ( AR.CompressPointer[0] == 4 ) i = 0;
 					else i = -1;
@@ -220,6 +221,7 @@ POSITION *FindBracket(WORD nexp, WORD *bracket)
 				while ( t4 < t2 ) *t3++ = *t4++;
 				*t3++ = 1; *t3++ = 1; *t3++ = 3;
 				*oldworkpointer = t3 - oldworkpointer;
+				bsize = *oldworkpointer - 1;
 				AT.WorkPointer = t3;
 				t3 = oldworkpointer;
 				if ( *bracket == 4 ) {
@@ -421,7 +423,7 @@ problems:;
 	    than average. How much is something we can tune.
 */
 		average = DIVPOS(thepos,b->indexfill+1);
-		if ( ( average <= 0 ) || ( (average*4) <= 0 ) ) {
+		if ( average <= 0 ) {
 			MLOCK(ErrorMessageLock);
 			MesPrint("Problems with bracket buffer. Increase MaxBracketBufferSize in form.set");
 			MesPrint("Current size is %l",AM.MaxBracketBufferSize*sizeof(WORD));
