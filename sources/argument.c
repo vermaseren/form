@@ -277,17 +277,20 @@ HaveTodo:
 				}
 				else if ( type == TYPENORM || type == TYPENORM2 || type == TYPENORM3 || type == TYPENORM4 ) {
 					if ( *r < 0 ) {
-						if ( *r != -SNUMBER || r[1] == 1 || r[1] == 0 ) continue;
+						WORD rone;
+						if ( *r == -MINVECTOR ) { rone = -1; *r = -INDEX; }
+						else if ( *r != -SNUMBER || r[1] == 1 || r[1] == 0 ) continue;
+						else { rone = r[1]; r[1] = 1; }
 /*
 						Now we must multiply the general coefficient by r[1]
 */
 						if ( scale && ( factor == 0 || *factor ) ) {
 							action = 1;
 							v[2] |= DIRTYFLAG;
-							if ( r[1] < 0 ) {
+							if ( rone < 0 ) {
 								if ( type == TYPENORM3 ) k = 1;
 								else k = -1;
-								r[1] = -r[1];
+								rone = -rone;
 							}
 							else k = 1;
 							r1 = term + *term;
@@ -295,13 +298,13 @@ HaveTodo:
 							size = REDLENG(size);
 							if ( scale > 0 ) {
 								for ( jj = 0; jj < scale; jj++ ) {
-									if ( Mully(BHEAD (UWORD *)rstop,&size,(UWORD *)(r+1),k) )
+									if ( Mully(BHEAD (UWORD *)rstop,&size,(UWORD *)(&rone),k) )
 										goto execargerr;
 								}
 							}
 							else {
 								for ( jj = 0; jj > scale; jj-- ) {
-									if ( Divvy(BHEAD (UWORD *)rstop,&size,(UWORD *)(r+1),k) )
+									if ( Divvy(BHEAD (UWORD *)rstop,&size,(UWORD *)(&rone),k) )
 										goto execargerr;
 								}
 							}
@@ -310,7 +313,6 @@ HaveTodo:
 							rstop[k-1] = size;
 							*term = (WORD)(rstop - term) + k;
 						}
-						r[1] = 1;
 						continue;
 					}
 /*
