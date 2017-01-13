@@ -1803,6 +1803,7 @@ bucketstolen:;
 				AR.CompressPointer = ttco;
 				term = AT.WorkPointer;
 				while ( GetTerm(BHEAD term) ) {
+					SeekScratch(fi,&where);
 					AT.WorkPointer = term + *term;
 					AN.IndDum = AM.IndDum;
 					AR.CurDum = ReNumber(BHEAD term);
@@ -1831,7 +1832,7 @@ bucketstolen:;
 						Terminate(-1);
 					}
 					AN.ninterms++;
-					SeekScratch(fi,&where);
+					SetScratch(fi,&(where));
 					if ( ISGEPOS(where,stoppos) ) break;
 				}
 				AT.WorkPointer = term;
