@@ -71,7 +71,7 @@ POSITION *FindBracket(WORD nexp, WORD *bracket)
 	LONG hi, low, med;
 	int i;
 	WORD oldsorttype = AR.SortType, *t1, *t2, j, bsize, *term, *p, *pstop, *pp;
-	WORD *tstop, *cp, a[4];
+	WORD *tstop, *cp, a[4], *bracketh;
 	FILEHANDLE *fi;
 	POSITION auxpos, toppos;
 	switch ( e->status ) {
@@ -91,18 +91,30 @@ POSITION *FindBracket(WORD nexp, WORD *bracket)
 	else                  bracketinfo = e->bracketinfo;
 	hi = bracketinfo->indexfill; low = 0;
 	if ( hi <= 0 ) return(0);
+/*
+	The next code is needed for a problem with sorting when there are
+	only functions outside the bracket. This gives ordinarily the wrong
+	sorting. We solve that by taking HAAKJE along with the outside while
+	running the Compare. But this means that we need to copy bracket.
+*/
+	bracketh = TermMalloc("FindBracket");
+	i = *bracket; p = bracket; pp = bracketh; NCOPY(pp,p,i)
+	pp -= 3; *pp++ = HAAKJE; *pp++ = 3; *pp++ = 0; *pp++ = 1; *pp++ = 1; *pp++ = 3;
+	*bracketh += 3;
+
 	AT.fromindex = 1;
 	AR.SortType = bracketinfo->SortType;
 	bi = bracketinfo->indexbuffer + hi - 1;
-	if ( *bracket == 4 ) {
-		if ( bracketinfo->bracketbuffer[bi->bracket] == 4 ) i = 0;
+	if ( *bracketh == 7 ) {
+		if ( bracketinfo->bracketbuffer[bi->bracket] == 7 ) i = 0;
 		else i = -1;
 	}
-	else if ( bracketinfo->bracketbuffer[bi->bracket] == 4 ) i = 1;
-	else i = CompareTerms(BHEAD bracket,bracketinfo->bracketbuffer+bi->bracket,0);
+	else if ( bracketinfo->bracketbuffer[bi->bracket] == 7 ) i = 1;
+	else i = CompareTerms(BHEAD bracketh,bracketinfo->bracketbuffer+bi->bracket,0);
 	if ( i < 0 ) {
 		AR.SortType = oldsorttype;
 		AT.fromindex = 0;
+		TermFree(bracketh,"FindBracket");
 		return(0);
 	}
 	else if ( i == 0 ) med = hi-1;
@@ -110,17 +122,18 @@ POSITION *FindBracket(WORD nexp, WORD *bracket)
 		for (;;) {
 		med = (hi+low)/2;
 		bi = bracketinfo->indexbuffer + med;
-		if ( *bracket == 4 ) {
-			if ( bracketinfo->bracketbuffer[bi->bracket] == 4 ) i = 0;
+		if ( *bracketh == 7 ) {
+			if ( bracketinfo->bracketbuffer[bi->bracket] == 7 ) i = 0;
 			else i = -1;
 		}
-		else if ( bracketinfo->bracketbuffer[bi->bracket] == 4 ) i = 1;
-		else i = CompareTerms(BHEAD bracket,bracketinfo->bracketbuffer+bi->bracket,0);
+		else if ( bracketinfo->bracketbuffer[bi->bracket] == 7 ) i = 1;
+		else i = CompareTerms(BHEAD bracketh,bracketinfo->bracketbuffer+bi->bracket,0);
 		if ( i == 0 ) { break; }
 		if ( i > 0 ) {
 			if ( low == med ) { /* no occurrence */
 				AR.SortType = oldsorttype;
 				AT.fromindex = 0;
+				TermFree(bracketh,"FindBracket");
 				return(0);
 			}
 			hi = med;
@@ -150,6 +163,8 @@ POSITION *FindBracket(WORD nexp, WORD *bracket)
 	t1 = bracketinfo->bracketbuffer+bi->bracket;
 	j = *t1;
 /*
+	Note that in the bracketbuffer, the bracket sits with HAAKJE.
+
 	The next is (hopefully) a bug fix. Originally the code read bsize = j
 	but that overcounts one. We have the part outside the bracket and the
 	coefficient which is 1,1,3. But we also have the length indicator.
@@ -162,6 +177,7 @@ POSITION *FindBracket(WORD nexp, WORD *bracket)
 	if ( i == 0 ) {	/* We found the proper bracket already */
 		AR.SortType = oldsorttype;
 		AT.fromindex = 0;
+		TermFree(bracketh,"FindBracket");
 		return(&AN.theposition);
 	}
 /*
@@ -192,16 +208,17 @@ POSITION *FindBracket(WORD nexp, WORD *bracket)
 				j = *p++;
 				NCOPY(t1,p,j)
 				t2++; while ( *t2 != HAAKJE ) t2 += t2[1];
+				t2 += t2[1];
 				a[1] = t2[0]; a[2] = t2[1]; a[3] = t2[2];
 				*t2++ = 1; *t2++ = 1; *t2++ = 3;
 				*AR.CompressPointer = t2 - AR.CompressPointer;
 				bsize = *AR.CompressPointer - 1;
-				if ( *bracket == 4 ) {
-					if ( AR.CompressPointer[0] == 4 ) i = 0;
+				if ( *bracketh == 7 ) {
+					if ( AR.CompressPointer[0] == 7 ) i = 0;
 					else i = -1;
 				}
 				else if ( AR.CompressPointer[0] == 4 ) i = 1;
-				else i = CompareTerms(BHEAD bracket,AR.CompressPointer,0);
+				else i = CompareTerms(BHEAD bracketh,AR.CompressPointer,0);
 				t2[-3] = a[1]; t2[-2] = a[2]; t2[-1] = a[3];
 				if ( i == 0 ) {
 					SETBASEPOSITION(AN.theposition,(pp-fi->PObuffer)*sizeof(WORD));
@@ -224,13 +241,13 @@ POSITION *FindBracket(WORD nexp, WORD *bracket)
 				bsize = *oldworkpointer - 1;
 				AT.WorkPointer = t3;
 				t3 = oldworkpointer;
-				if ( *bracket == 4 ) {
-					if ( t3[0] == 4 ) i = 0;
+				if ( *bracketh == 7 ) {
+					if ( t3[0] == 7 ) i = 0;
 					else i = -1;
 				}
 				else if ( t3[0] == 4 ) i = 1;
 				else {
-					i = CompareTerms(BHEAD bracket,t3,0);
+					i = CompareTerms(BHEAD bracketh,t3,0);
 				}
 				AT.WorkPointer = oldworkpointer;
 				if ( i == 0 ) {
@@ -244,9 +261,14 @@ POSITION *FindBracket(WORD nexp, WORD *bracket)
 		}
 		AR.SortType = oldsorttype;
 		AT.fromindex = 0;
+		TermFree(bracketh,"FindBracket");
 		return(0);	/* Bracket does not exist */
 	}
 	else {
+/*
+		In this case we can work with the old representation without HAAKJE.
+		We stop searching when we reach toppos and we do not call Compare.
+*/
 		toppos = AS.OldOnFile[nexp];
 		ADD2POS(toppos,bi->next);
 		cp = AR.CompressPointer;
@@ -280,6 +302,7 @@ POSITION *FindBracket(WORD nexp, WORD *bracket)
 				AR.SortType = oldsorttype;
 				AR.CompressPointer = cp;
 				AT.fromindex = 0;
+				TermFree(bracketh,"FindBracket");
 				return(0);	/* Bracket does not exist */
 			}
 		}
@@ -287,6 +310,7 @@ POSITION *FindBracket(WORD nexp, WORD *bracket)
 found:
 	AR.SortType = oldsorttype;
 	AT.fromindex = 0;
+	TermFree(bracketh,"FindBracket");
 	return(&AN.theposition);
 }
 
@@ -311,7 +335,7 @@ VOID PutBracketInIndex(PHEAD WORD *term, POSITION *newpos)
 	POSITION thepos;
 	EXPRESSIONS e = Expressions + AR.CurExpr;
 	LONG hi, i, average;
-	WORD *t, *tstop, *t1, *t2, *oldt, oldsize, oldh, oldhs;
+	WORD *t, *tstop, *t1, *t2, *oldt, oldsize, a[4];
 	if ( ( b = e->newbracketinfo ) == 0 ) return;
 	DIFPOS(thepos,*newpos,e->onfile);
 	tstop = term + *term;
@@ -319,8 +343,10 @@ VOID PutBracketInIndex(PHEAD WORD *term, POSITION *newpos)
 	t = term+1;
 	while ( *t != HAAKJE && t < tstop ) t += t[1];
 	if ( *t != HAAKJE ) return; /* no ticket, no laundry */
-	oldt = t; oldsize = *term; *t++ = 1; oldhs = *t; *t++ = 1;
-	oldh = *t; *t++ = 3; *term = t - term;
+	t += t[1];  /* include HAAKJE for the sorting */
+	a[0] = t[0]; a[1] = t[1]; a[2] = t[2];
+	oldt = t; oldsize = *term; *t++ = 1; *t++ = 1; *t++ = 3;
+	*term = t - term;
 	AT.fromindex = 1;
 /*
 	Check now with the last bracket in the buffer.
@@ -358,7 +384,7 @@ VOID PutBracketInIndex(PHEAD WORD *term, POSITION *newpos)
 /*
 problems:;
 */
-				*term = oldsize; oldt[0] = HAAKJE; oldt[1] = oldhs; oldt[2] = oldh;
+				*term = oldsize; oldt[0] = a[0]; oldt[1] = a[1]; oldt[2] = a[2];
 				MLOCK(ErrorMessageLock);
 				MesPrint("Error!!!! Illegal bracket sequence detected in PutBracketInIndex");
 #ifdef WITHPTHREADS
@@ -507,7 +533,7 @@ problems:;
 	b->bracketfill += i;
 	NCOPY(t2,t1,i)
 bracketdone:
-	*term = oldsize; oldt[0] = HAAKJE; oldt[1] = oldhs; oldt[2] = oldh;
+	*term = oldsize; oldt[0] = a[0]; oldt[1] = a[1]; oldt[2] = a[2];
 	AT.fromindex = 0;
 }
 
