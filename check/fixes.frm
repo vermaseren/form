@@ -1572,6 +1572,15 @@ assert result("F2") =~ expr("8256 + f2(-2) + f2(-1) + f2(129) + f2(130)")
 assert result("F3") =~ expr("8256 + f3(-2) + f3(-1) + f3(129) + f3(130)")
 assert result("F4") =~ expr("8256 + f4(-2) + f4(-1) + f4(129) + f4(130)")
 *--#] Issue149_2 :
+*--#[ Issue151 :
+* Compiler crashes with Print
+#do i=1,200
+  P "123456789012345678901234567890";
+  P "%t";
+#enddo
+.end
+assert succeeded?
+*--#] Issue151 :
 *--#[ Issue153_1 :
 * Pattern with index and set restriction matches to number
 I mu1,...,mu9;
@@ -1626,3 +1635,90 @@ P;
 assert succeeded?
 assert result("F1") =~ expr("2027025")
 *--#] Issue154 :
+*--#[ Issue162 :
+* Missing Expr[x] with B+ for functions
+#define N "5"
+#define M "2"
+#define P "3"
+
+S x;
+CF x1,...,x`M';
+S x{`M'+1},...,x`N';
+
+* Test input.
+
+L F = (x1+...+x`N')^`P';
+.sort:input;
+
+* Bracket for some functions.
+
+B+ x1,...,x`M';
+Print[];
+.sort:bracket;
+Hide;
+
+* Check if all entries exist.
+
+L FF = F;
+B x1,...,x`M';
+.sort:test input;
+Keep Brackets;
+
+#define failed "0"
+
+$x = term_;
+$y = F[$x];
+$n = termsin_($y);
+if ($n == 0);
+  P "Error: F[%$] == %$", $x, $y;
+  redefine failed "1";
+endif;
+.sort:test;
+
+#if `failed'
+  #terminate
+#endif
+.end
+assert succeeded?
+*--#] Issue162 :
+*--#[ Issue163 :
+* Normalize statement doesn't work for "MINVECTOR"
+CF f1,f2;
+V p;
+L F1 = f1(-p);
+L F2 = f2(-p);
+normalize f1;
+normalize (0) f2;
+P;
+.end
+assert succeeded?
+assert result("F1") =~ expr("-f1(p)")
+assert result("F2") =~ expr("f2(p)")
+*--#] Issue163 :
+*--#[ Issue165 :
+* [tform] reading a bracket may crash with B+ when the expression doesn't fit in the scratch buffer
+#:MaxTermSize 200
+#:ScratchSize 12800
+CF f,g;
+S n;
+#define N "100"
+#define M "100"
+L F = <f(1)>+...+<f(`N')>;
+multiply <g(1)>+...+<g(`M')>;
+B+ f;
+*B- f;  * <-- (1)
+*ModuleOption noparallel;
+.sort
+id g(n?) = F[f(n)];
+*ModuleOption noparallel;  * <-- (2)
+.sort
+* Checksum
+id f(n?) = n;
+id g(n?) = n;
+P;
+.end
+# Known to fail with ParFORM (#166)
+#pend_if mpi?
+assert succeeded?
+assert result("F") =~ expr("2550250000")
+*--#] Issue165 :
