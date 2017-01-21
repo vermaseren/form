@@ -217,7 +217,7 @@ POSITION *FindBracket(WORD nexp, WORD *bracket)
 					if ( AR.CompressPointer[0] == 7 ) i = 0;
 					else i = -1;
 				}
-				else if ( AR.CompressPointer[0] == 4 ) i = 1;
+				else if ( AR.CompressPointer[0] == 7 ) i = 1;
 				else i = CompareTerms(BHEAD bracketh,AR.CompressPointer,0);
 				t2[-3] = a[1]; t2[-2] = a[2]; t2[-1] = a[3];
 				if ( i == 0 ) {
@@ -230,6 +230,7 @@ POSITION *FindBracket(WORD nexp, WORD *bracket)
 			else {	/* no compression. We have to check! */
 				WORD *oldworkpointer = AT.WorkPointer, *t3, *t4;
 				t2 = p + 1; while ( *t2 != HAAKJE ) t2 += t2[1];
+				t2 += t2[1];
 /*
 				Here we need to copy the term. Modifying has proven to
 				be NOT threadsafe.
@@ -245,7 +246,7 @@ POSITION *FindBracket(WORD nexp, WORD *bracket)
 					if ( t3[0] == 7 ) i = 0;
 					else i = -1;
 				}
-				else if ( t3[0] == 4 ) i = 1;
+				else if ( t3[0] == 7 ) i = 1;
 				else {
 					i = CompareTerms(BHEAD bracketh,t3,0);
 				}
@@ -342,7 +343,7 @@ VOID PutBracketInIndex(PHEAD WORD *term, POSITION *newpos)
 	tstop -= ABS(tstop[-1]);
 	t = term+1;
 	while ( *t != HAAKJE && t < tstop ) t += t[1];
-	if ( *t != HAAKJE ) return; /* no ticket, no laundry */
+	if ( t >= tstop ) return; /* no ticket, no laundry */
 	t += t[1];  /* include HAAKJE for the sorting */
 	a[0] = t[0]; a[1] = t[1]; a[2] = t[2];
 	oldt = t; oldsize = *term; *t++ = 1; *t++ = 1; *t++ = 3;
@@ -356,11 +357,11 @@ VOID PutBracketInIndex(PHEAD WORD *term, POSITION *newpos)
 	if ( hi > 0 ) {
 		bi = b->indexbuffer + hi - 1;
 		bi->next = thepos;
-		if ( *term == 4 ) {
-			if ( b->bracketbuffer[bi->bracket] == 4 ) i = 0;
+		if ( *term == 7 ) {
+			if ( b->bracketbuffer[bi->bracket] == 7 ) i = 0;
 			else i = -1;
 		}
-		else if ( b->bracketbuffer[bi->bracket] == 4 ) i = 1;
+		else if ( b->bracketbuffer[bi->bracket] == 7 ) i = 1;
 		else i = CompareTerms(BHEAD term,b->bracketbuffer+bi->bracket,0);
 		if ( i == 0 ) {	/* still the same bracket */
 			bi->termsinbracket++;
@@ -368,7 +369,7 @@ VOID PutBracketInIndex(PHEAD WORD *term, POSITION *newpos)
 		}
 		if ( i > 0 ) { /* We have a problem */
 /*
-			There is a special case in which // we have only functions and
+			There is a special case in which we have only functions and
 			term is contained completely in the bracket
 */
 /*
