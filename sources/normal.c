@@ -858,12 +858,14 @@ MulIn:
 			case COUNTFUNCTION:
 				if ( AN.cTerm ) {
 					k = CountFun(AN.cTerm,t);
-					if ( k == 0 ) goto NormZero;
-					if ( k > 0 ) { *((UWORD *)lnum) = k; nnum = 1; }
-					else { *((UWORD *)lnum) = -k; nnum = -1; }
-					goto MulIn;
 				}
-				break;
+				else {
+					k = CountFun(term,t);
+				}
+				if ( k == 0 ) goto NormZero;
+				if ( k > 0 ) { *((UWORD *)lnum) = k; nnum = 1; }
+				else { *((UWORD *)lnum) = -k; nnum = -1; }
+				goto MulIn;
 			case MAKERATIONAL:
 				if ( t[FUNHEAD] == -SNUMBER && t[FUNHEAD+2] == -SNUMBER
 					&& t[1] == FUNHEAD+4 && t[FUNHEAD+3] > 1 ) {
