@@ -1146,6 +1146,41 @@ L F7 = f(10000*g5_);
 #pend_if mpi?
 assert runtime_error?
 *--#] Issue94 :
+*--#[ Issue97_1 :
+* "Program terminating" with oldFactArg and dot products
+V e1, e2, k1, k2;
+S a, b;
+CF dotM;
+L testbad = dotM(e1.k1*e2.k1);
+L testok = dotM(a*b);
+.sort
+On oldFactArg;
+factarg dotM;
+P;
+.end
+assert succeeded?
+assert result("testbad") =~ expr("dotM(e1.k1,e2.k1,1)")
+assert result("testok") =~ expr("dotM(a,b,1)")
+*--#] Issue97_1 :
+*--#[ Issue97_2 :
+On OldFactArg;
+V p1,p2,p3,p4;
+S x;
+CF f;
+T t;
+L OK1 = f(t(p1)*x);
+L OK2 = f(t(p1,p2)*x);
+L OK3 = f(t(p1,p2,p3)*x);
+L BAD = f(t(p1,p2,p3,p4)*x);
+factarg f;
+P;
+.end
+assert succeeded?
+assert result("OK1") =~ expr("f(t(p1),x,1)")
+assert result("OK2") =~ expr("f(t(p1,p2),x,1)")
+assert result("OK3") =~ expr("f(t(p1,p2,p3),x,1)")
+assert result("BAD") =~ expr("f(t(p1,p2,p3,p4),x,1)")
+*--#] Issue97_2 :
 *--#[ Issue104 :
 * Leading zeroes in rational numbers not handled consistently
 Local test1 = 0001;
@@ -1722,3 +1757,35 @@ P;
 assert succeeded?
 assert result("F") =~ expr("2550250000")
 *--#] Issue165 :
+*--#[ Issue167 :
+* Mystery of count_ in functions
+S x;
+CF f;
+L F = 1 + x + x^2;
+multiply f(count_(x,1));
+P;
+.sort
+Drop;
+L G = 1 + x + x^2;
+$x = f(count_(x,1));
+multiply $x;
+P;
+.end
+assert succeeded?
+assert result("F") =~ expr("f(0) + f(0)*x + f(0)*x^2")
+assert result("G") =~ expr("f(0) + f(1)*x + f(2)*x^2")
+*--#] Issue167 :
+*--#[ Issue169 :
+* Crash from multiply replace_ in large expression
+S x;
+CF den;
+L F =
+  + 16608736983689726473/192*den(2+x)
+  + 18358130244940416000*den(2+x)
+;
+multiply replace_(x,1);
+P +s;
+.end
+assert succeeded?
+assert result("F") =~ expr("+ 3541369744012249598473/192*den(3)")
+*--#] Issue169 :
