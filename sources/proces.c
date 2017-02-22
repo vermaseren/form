@@ -1492,6 +1492,7 @@ redosize:
 									m = term + *term;
 									while ( r < m ) *t++ = *r++;
 									*term -= i;
+									t = AT.NestPoin[-1].argsize + ARGHEAD;
 								}
 							}
 							AN.subsubveto = 0;
