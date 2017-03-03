@@ -1742,7 +1742,7 @@ int InsideDollar(PHEAD WORD *ll, WORD level)
 		else {
 			d->type = DOLTERMS;
 			r = d->where; while ( *r ) r += *r;
-			d->size = r-d->where;
+			d->size = (r-d->where)+1;
 		}
 /*		cbuf[AM.dbufnum].rhs[numdol] = d->where; */
 		cbuf[AM.dbufnum].rhs[numdol] = (WORD *)(1);
