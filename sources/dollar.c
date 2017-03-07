@@ -56,7 +56,7 @@ int CatchDollar(int par)
 	GETIDENTITY
 	CBUF *C = cbuf + AC.cbufnum;
 	int error = 0, numterms = 0, numdollar, resetmods = 0;
-	LONG newsize;
+	LONG newsize, retval;
 	WORD *w, *t, n, nsize, *oldwork = AT.WorkPointer, *dbuffer;
 	WORD oldncmod = AN.ncmod;
 	DOLLARS d;
@@ -112,14 +112,22 @@ int CatchDollar(int par)
 		if ( Generator(BHEAD oldwork,C->numlhs) ) { error = 1; break; }
 	}
 	AT.WorkPointer = oldwork;
-	if ( EndSort(BHEAD (WORD *)((VOID *)(&dbuffer)),2) < 0 ) { error = 1; }
+	if ( ( retval = EndSort(BHEAD (WORD *)((VOID *)(&dbuffer)),2) ) < 0 ) { error = 1; }
 	LowerSortLevel();
+ 	if ( retval <= 1 || dbuffer == 0 ) {
+ 		d->type = DOLZERO;
+ 		if ( d->where && d->where != &(AM.dollarzero) ) M_free(d->where,"$-buffer old");
+ 		d->size = 0; d->where = &(AM.dollarzero);
+ 		cbuf[AM.dbufnum].CanCommu[numdollar] = 0;
+ 		cbuf[AM.dbufnum].NumTerms[numdollar] = 0;
+ 		goto docopy2;
+	}
 	w = dbuffer;
 	if ( error == 0 )
 		while ( *w ) { w += *w; numterms++; }
 	else
 		goto onerror;
-	newsize = w - dbuffer+1;
+	newsize = (w - dbuffer)+1;
 #ifdef WITHMPI
 	}
 	if ( AC.RhsExprInModuleFlag )
@@ -161,6 +169,7 @@ doterms:;
 docopy:;
 		if ( d->where && d->where != &(AM.dollarzero) ) M_free(d->where,"$-buffer old");
 		d->size = newsize; d->where = dbuffer;
+docopy2:;
 		cbuf[AM.dbufnum].rhs[numdollar] = d->where;
 	}
 	if ( C->Pointer > C->rhs[C->numrhs] ) C->Pointer = C->rhs[C->numrhs];
@@ -290,13 +299,16 @@ NoChangeZero:;
 		if ( dtype > 0 ) {
 /*			LOCK(d->pthreadslockwrite); */
 			LOCK(d->pthreadslockread);
-			if ( d->size < 5 ) {
+			if ( d->size < 20 ) {
 				WORD oldsize, *oldwhere, i;
 				oldsize = d->size; oldwhere = d->where;
 				d->size = 20;
 				d->where = (WORD *)Malloc1(d->size*sizeof(WORD),"dollar contents");
 				cbuf[AM.dbufnum].rhs[numdollar] = d->where;
-				for ( i = 0; i < oldsize; i++ ) d->where[i] = oldwhere[i];
+ 				if ( oldsize > 0 ) {
+ 					for ( i = 0; i < oldsize; i++ ) d->where[i] = oldwhere[i];
+ 				}
+ 				else d->where[0] = 0;
 				if ( oldwhere && oldwhere != &(AM.dollarzero) ) M_free(oldwhere,"dollar contents");
 			}
 			switch ( d->type ) {
@@ -358,7 +370,7 @@ NoChangeOne:;
 /*
  		#] Thread version : 
 */
-		if ( d->size < 5 ) {
+		if ( d->size < 20 ) {
 			if ( d->where && d->where != &(AM.dollarzero) ) M_free(d->where,"dollar contents");
 			d->size = 20;
 			d->where = (WORD *)Malloc1(d->size*sizeof(WORD),"dollar contents");
@@ -934,13 +946,13 @@ void WildDollars(PHEAD WORD *term)
 				weneed = 20;
 				break;
 		}
+		if ( weneed < 20 ) weneed = 20;
 		if ( d->size > 2*weneed && d->size > 1000 ) {
 			if ( d->where && d->where != &(AM.dollarzero) ) M_free(d->where,"dollarspace");
 			d->where = &(AM.dollarzero);
 			d->size = 0;
 		}
 		if ( d->size < weneed ) {
-			if ( weneed < 20 ) weneed = 20;
 			if ( d->where && d->where != &(AM.dollarzero) ) M_free(d->where,"dollarspace");
 			d->where = (WORD *)Malloc1(weneed*sizeof(WORD),"dollarspace");
 			d->size = weneed;
@@ -969,8 +981,15 @@ void WildDollars(PHEAD WORD *term)
 				else { d->type = DOLNUMBER; d->where[4] = 0; }
 				break;
 			case SYMTOSYM:
-				*w++ = 8; *w++ = SYMBOL; *w++ = 4; *w++ = t[3]; *w++ = 1;
-				*w++ = 1; *w++ = 1; *w++ = 3; *w = 0;
+ 				*w++ = 8;
+ 				*w++ = SYMBOL;
+ 				*w++ = 4;
+ 				*w++ = t[3];
+ 				*w++ = 1;
+ 				*w++ = 1;
+ 				*w++ = 1;
+ 				*w++ = 3;
+ 				*w = 0;
 				break;
 			case SYMTOSUB:
 			case VECTOSUB:
@@ -2439,8 +2458,8 @@ int DollarRaiseLow(UBYTE *name, LONG value)
 	d = Dollars + num;
 	if ( value < 0 ) { value = -value; sgn = -1; }
 	if ( d->type == DOLZERO ) {
-		if ( d->where ) M_free(d->where,"DollarRaiseLow");
-		d->size = 7;
+		if ( d->where && d->where != &(AM.dollarzero) ) M_free(d->where,"DollarRaiseLow");
+		d->size = 20;
 		d->where = (WORD *)Malloc1(d->size*sizeof(WORD),"DollarRaiseLow");
 		if ( ( value & AWORDMASK ) != 0 ) {
 			d->where[0] = 6; d->where[1] = value >> BITSINWORD;
@@ -2489,6 +2508,7 @@ int DollarRaiseLow(UBYTE *name, LONG value)
 		if ( i+2 > d->size ) {
 			M_free(d->where,"DollarRaiseLow");
 			d->size = i+2;
+			if ( d->size < 20 ) d->size = 20;
 			d->where = (WORD *)Malloc1(d->size*sizeof(WORD),"DollarRaiseLow");
 		}
 		t1 = d->where; *t1++ = i+1; t2 = (WORD *)dscrat;
@@ -2671,7 +2691,7 @@ WORD TestDoLoop(PHEAD WORD *lhsbuf, WORD level)
 	}
 #endif
 
-	if ( d->size < 5 ) {
+	if ( d->size < 20 ) {
 		if ( d->where && d->where != &(AM.dollarzero) ) M_free(d->where,"dollar contents");
 		d->size = 20;
 		d->where = (WORD *)Malloc1(d->size*sizeof(WORD),"dollar contents");
@@ -2772,7 +2792,7 @@ WORD TestEndDoLoop(PHEAD WORD *lhsbuf, WORD level)
 		 ( finish == start && value == finish ) ) {}
 	else level = lhsbuf[3];
 
-	if ( d->size < 5 ) {
+	if ( d->size < 20 ) {
 		if ( d->where && d->where != &(AM.dollarzero) ) M_free(d->where,"dollar contents");
 		d->size = 20;
 		d->where = (WORD *)Malloc1(d->size*sizeof(WORD),"dollar contents");
