@@ -2970,10 +2970,10 @@ WORD Generator(PHEAD WORD *term, WORD level)
 {
 	GETBIDENTITY
 	WORD replac, *accum, *termout, *t, i, j, tepos, applyflag = 0, *StartBuf;
-	WORD *a, power, power1, DumNow = AR.CurDum, oldtoprhs, retnorm, extractbuff;
+	WORD *a, power, power1, DumNow = AR.CurDum, oldtoprhs, oldatoprhs, retnorm, extractbuff;
 	int *RepSto = AN.RepPoint, iscopy = 0;
-	CBUF *C = cbuf+AM.rbufnum, *CC = cbuf + AT.ebufnum;
-	LONG posisub, oldcpointer;
+	CBUF *C = cbuf+AM.rbufnum, *CC = cbuf + AT.ebufnum, *CCC = cbuf + AT.aebufnum;
+	LONG posisub, oldcpointer, oldacpointer;
 	DOLLARS d = 0;
 	WORD numfac[5], idfunctionflag;
 #ifdef WITHPTHREADS
@@ -2981,6 +2981,8 @@ WORD Generator(PHEAD WORD *term, WORD level)
 #endif
 	oldtoprhs = CC->numrhs;
 	oldcpointer = CC->Pointer - CC->Buffer;
+	oldatoprhs = CCC->numrhs;
+	oldacpointer = CCC->Pointer - CCC->Buffer;
 ReStart:
 	if ( ( replac = TestSub(BHEAD term,level) ) == 0 ) {
 		if ( applyflag ) { TableReset(); applyflag = 0; }
@@ -3072,6 +3074,8 @@ SkipCount:	level++;
 					AT.WorkPointer = termout;
 					CC->numrhs = oldtoprhs;
 					CC->Pointer = CC->Buffer + oldcpointer;
+					CCC->numrhs = oldatoprhs;
+					CCC->Pointer = CCC->Buffer + oldacpointer;
 					return(i);
 				}
 				else {
@@ -3082,6 +3086,8 @@ SkipCount:	level++;
 					i = StoreTerm(BHEAD term);
 					CC->numrhs = oldtoprhs;
 					CC->Pointer = CC->Buffer + oldcpointer;
+					CCC->numrhs = oldatoprhs;
+					CCC->Pointer = CCC->Buffer + oldacpointer;
 					return(i);
 				}
 			}
@@ -3470,6 +3476,8 @@ CommonEnd:
 					AR.CurDum = DumNow;
 					CC->numrhs = oldtoprhs;
 					CC->Pointer = CC->Buffer + oldcpointer;
+					CCC->numrhs = oldatoprhs;
+					CCC->Pointer = CCC->Buffer + oldacpointer;
 					return(retnorm);
 				  case TYPEDETCURDUM:
 					AT.WorkPointer = term + *term;
@@ -4144,6 +4152,8 @@ Return0:
 	AN.RepPoint = RepSto;
 	CC->numrhs = oldtoprhs;
 	CC->Pointer = CC->Buffer + oldcpointer;
+	CCC->numrhs = oldatoprhs;
+	CCC->Pointer = CCC->Buffer + oldacpointer;
 	return(0);
 
 GenCall:
@@ -4165,10 +4175,14 @@ GenCall:
 	}
 	CC->numrhs = oldtoprhs;
 	CC->Pointer = CC->Buffer + oldcpointer;
+	CCC->numrhs = oldatoprhs;
+	CCC->Pointer = CCC->Buffer + oldacpointer;
 	return(-1);
 OverWork:
 	CC->numrhs = oldtoprhs;
 	CC->Pointer = CC->Buffer + oldcpointer;
+	CCC->numrhs = oldatoprhs;
+	CCC->Pointer = CCC->Buffer + oldacpointer;
 	MLOCK(ErrorMessageLock);
 	MesWork();
 	MUNLOCK(ErrorMessageLock);
