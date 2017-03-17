@@ -452,7 +452,7 @@ module FormTest
   # The verbatim result keeping line breaks and whitespaces.
   # Must be in the default output format.
   def exact_result(exprname, index = -1)
-    matches = @stdout.scan(/^[ \t]+#{exprname}\s*=(.+?);/m)
+    matches = @stdout.scan(/^[ \t]+#{Regexp.escape(exprname)}\s*=(.+?);/m)
     return matches[index].first if !matches.empty? && !matches[index].nil?
     ""
   end

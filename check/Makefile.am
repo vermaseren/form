@@ -19,4 +19,4 @@ TESTS_ENVIRONMENT = \
 	$(SHELL)
 TESTS = check-help.sh
 endif
-EXTRA_DIST = check-help.sh check.rb examples.frm fixes.frm
+EXTRA_DIST = check-help.sh check.rb examples.frm features.frm fixes.frm
