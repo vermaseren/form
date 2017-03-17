@@ -521,3 +521,20 @@ P;
 assert succeeded?
 assert result("ZERO") =~ expr("0")
 *--#] Issue137_4 :
+*--#[ Issue175 :
+* Loop over currently active expressions #175
+L FF = 1;
+L [FF|a,b] = 1;
+L [FF,[GG]] = 1;
+#do e={`activeexprnames_'}
+  L `e' = `e' + 1;
+#enddo
+L N = `numactiveexprs_';
+P;
+.end
+assert succeeded?
+assert result("FF") =~ expr("2")
+assert result("[FF|a,b]") =~ expr("2")
+assert result("[FF,[GG]]") =~ expr("2")
+assert result("N") =~ expr("3")
+*--#] Issue175 :

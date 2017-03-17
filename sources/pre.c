@@ -448,6 +448,8 @@ VOID UnsetAllowDelay()
 static UBYTE *yes = (UBYTE *)"1";
 static UBYTE *no  = (UBYTE *)"0";
 static UBYTE numintopolynomial[12];
+#include "vector.h"
+static Vector(UBYTE, exprstr);  /* Used for numactiveexprs_ and activeexprnames_. */
 
 UBYTE *GetPreVar(UBYTE *name, int flag)
 {
@@ -483,6 +485,57 @@ UBYTE *GetPreVar(UBYTE *name, int flag)
 		static char timestring[40];
     	sprintf(timestring,"%ld",(GetRunningTime() - AP.StopWatchZero));
 		return((UBYTE *)timestring);
+	}
+	else if ( StrICmp(name, (UBYTE *)"numactiveexprs_") == 0 ) {
+		/* the number of active expressions */
+		int n = 0;
+		for ( i = 0; i < NumExpressions; i++ ) {
+			EXPRESSIONS e = Expressions + i;
+			switch ( e->status ) {
+				case LOCALEXPRESSION:
+				case GLOBALEXPRESSION:
+				case UNHIDELEXPRESSION:
+				case UNHIDEGEXPRESSION:
+				case INTOHIDELEXPRESSION:
+				case INTOHIDEGEXPRESSION:
+					n++;
+					break;
+			}
+		}
+		VectorReserve(exprstr, 41);  /* up to 128-bit */
+		LongCopy(n, (char *)VectorPtr(exprstr));
+		return VectorPtr(exprstr);
+	}
+	else if ( StrICmp(name, (UBYTE *)"activeexprnames_") == 0 ) {
+		/* the list of active expressions separated by commas */
+		int j = 0;
+		VectorReserve(exprstr, 16);  /* at least 1 character for '\0' */
+		for ( i = 0; i < NumExpressions; i++ ) {
+			UBYTE *p, *s;
+			int len, k;
+			EXPRESSIONS e = Expressions + i;
+			switch ( e->status ) {
+				case LOCALEXPRESSION:
+				case GLOBALEXPRESSION:
+				case UNHIDELEXPRESSION:
+				case UNHIDEGEXPRESSION:
+				case INTOHIDELEXPRESSION:
+				case INTOHIDEGEXPRESSION:
+					s = AC.exprnames->namebuffer + e->name;
+					len = e->namesize - 1;  /* Exclude the last character '\0'. */
+					VectorSize(exprstr) = j;  /* j bytes must be copied in extending the buffer. */
+					VectorReserve(exprstr, j + len * 2 + 1);
+					p = VectorPtr(exprstr);
+					if ( j > 0 ) p[j++] = ',';
+					for ( k = 0; k < len; k++ ) {
+						if ( s[k] == ',' || s[k] == '|' ) p[j++] = '\\';
+						p[j++] = s[k];
+					}
+					break;
+			}
+		}
+		VectorPtr(exprstr)[j] = '\0';
+		return VectorPtr(exprstr);
 	}
 	t = name;
 	while ( *t && *t != '_' ) t++;

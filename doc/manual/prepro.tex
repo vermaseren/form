@@ -90,6 +90,17 @@ any longer.
                unlike `time\_' this value can be used in the preprocessor 
                calculator and in numerical compares in \#if instructions.
                See also the \#reset (see \ref{prereset}) instruction.
+\item[NUMACTIVEEXPRS\_]  The number of the current active expressions.
+\item[ACTIVEEXPRNAMES\_]  The list of the current active expression names 
+               separated by commas. This can be passed to \#do lvar=\{...\} 
+               instruction~(\ref{predo}) like: 
+\begin{verbatim}
+    #do e = {`activeexprnames_'}
+        #ifdef `e'
+            Local `e' = `e' + something;
+        #endif
+    #enddo
+\end{verbatim}
 \end{description}
 
 \noindent If \FORM\ cannot find a preprocessor variable, because it has 
