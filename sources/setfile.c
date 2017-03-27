@@ -272,6 +272,7 @@ restart:;
 					AM.IncDir = 0;
 				}
 				else if ( StrICmp(s1,(UBYTE *)"path") == 0 ) {
+					if ( AM.Path ) M_free(AM.Path,"path");
 					AM.Path = 0;
 				}
 				else {

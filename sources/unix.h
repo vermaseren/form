@@ -53,4 +53,5 @@ the errno checkup*/
 
 #define SEPARATOR '/'
 #define ALTSEPARATOR '/'
+#define PATHSEPARATOR ':'
 #define WITH_ENV

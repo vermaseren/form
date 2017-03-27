@@ -44,6 +44,7 @@ static KEYWORD precommands[] = {
 	 {"add"          , DoPreAdd       , 0, 0}
 	,{"addseparator" , DoPreAddSeparator,0,0}
 	,{"append"       , DoPreAppend    , 0, 0}
+	,{"appendpath"   , DoPreAppendPath, 0, 0}
 	,{"assign"       , DoPreAssign    , 0, 0}
 	,{"break"        , DoPreBreak     , 0, 0}
 	,{"breakdo"      , DoBreakDo      , 0, 0}
@@ -79,6 +80,7 @@ static KEYWORD precommands[] = {
 	,{"optimize"     , DoOptimize     , 0, 0}
 	,{"pipe"         , DoPipe         , 0, 0}
 	,{"preout"       , DoPreOut       , 0, 0}
+	,{"prependpath"  , DoPrePrependPath,0, 0}
 	,{"printtimes"   , DoPrePrintTimes, 0, 0}
 	,{"procedure"    , DoProcedure    , 0, 0}
 	,{"procedureextension" , DoPrcExtension   , 0, 0}
@@ -536,6 +538,15 @@ UBYTE *GetPreVar(UBYTE *name, int flag)
 		}
 		VectorPtr(exprstr)[j] = '\0';
 		return VectorPtr(exprstr);
+	}
+	else if ( StrICmp(name, (UBYTE *)"path_") == 0 ) {
+		/* the current FORM path (for debugging both in .c and .frm) */
+		if ( AM.Path ) {
+			return(AM.Path);
+		}
+		else {
+			return((UBYTE *)"");
+		}
 	}
 	t = name;
 	while ( *t && *t != '_' ) t++;
@@ -6726,5 +6737,143 @@ int DoPreReset(UBYTE *s)
 
 /*
  		#] DoPreReset : 
+ 		#[ DoPreAppendPath :
+*/
+
+static int DoAddPath(UBYTE *s, int bPrepend)
+{
+	/* NOTE: this doesn't support some file systems, e.g., 0x5c with CP932. */
+
+	UBYTE *path, *path_end, *current_dir, *current_dir_end, *NewPath, *t;
+	int n;
+
+	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
+	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
+
+	/* Parse the path in the input. */
+	while ( *s == ' ' || *s == '\t' ) s++;  /* skip spaces */
+	if ( *s == '"' ) {  /* the path is given by "..." */
+		path = ++s;
+		while ( *s && *s != '"' ) {
+			if ( SEPARATOR != '\\' && *s == '\\' ) {  /* escape character, e.g., "\\\"" */
+				if ( !s[1] ) goto ImproperPath;
+				s++;
+			}
+			s++;
+		}
+		if ( *s != '"' ) goto ImproperPath;
+		path_end = s++;
+	}
+	else {
+		path = s;
+		while ( *s && *s != ' ' && *s != '\t' ) {
+			if ( SEPARATOR != '\\' && *s == '\\' ) {  /* escape character, e.g., "\\ " */
+				if ( !s[1] ) goto ImproperPath;
+				s++;
+			}
+			s++;
+		}
+		path_end = s;
+	}
+	if ( path == path_end ) goto ImproperPath;  /* empty path */
+	while ( *s == ' ' || *s == '\t' ) s++;  /* skip spaces */
+	if ( *s ) goto ImproperPath;  /* extra tokens found */
+
+	/* Get the current file directory. */
+	if ( !AC.CurrentStream ) goto FileNameUnavailable;
+	if ( AC.CurrentStream->type != FILESTREAM && AC.CurrentStream->type != REVERSEFILESTREAM ) goto FileNameUnavailable;
+	if ( !AC.CurrentStream->name ) goto FileNameUnavailable;
+	s = current_dir = current_dir_end = AC.CurrentStream->name;
+	while ( *s ) {
+		if ( SEPARATOR != '\\' && *s == '\\' && s[1] ) {  /* escape character, e.g., "\\\"" */
+			s += 2;
+			continue;
+		}
+		if ( *s == SEPARATOR ) {
+			current_dir_end = s;
+		}
+		s++;
+	}
+
+	/* Allocate a buffer for new AM.Path. */
+	n = path_end - path;
+	if ( AM.Path ) n += StrLen(AM.Path) + 1;
+	if ( current_dir != current_dir_end ) n+= current_dir_end - current_dir + 1;
+	s = NewPath = (UBYTE *)Malloc1(n + 1,"add path");
+
+	/* Construct new FORM path. */
+	if ( bPrepend ) {
+		if ( current_dir != current_dir_end ) {
+			t = current_dir;
+			while ( t != current_dir_end ) *s++ = *t++;
+			*s++ = SEPARATOR;
+		}
+		t = path;
+		while ( t != path_end ) *s++ = *t++;
+		if ( AM.Path ) *s++ = PATHSEPARATOR;
+	}
+	if ( AM.Path ) {
+		t = AM.Path;
+		while ( *t ) *s++ = *t++;
+	}
+	if ( !bPrepend ) {
+		if ( AM.Path ) *s++ = PATHSEPARATOR;
+		if ( current_dir != current_dir_end ) {
+			t = current_dir;
+			while ( t != current_dir_end ) *s++ = *t++;
+			*s++ = SEPARATOR;
+		}
+		t = path;
+		while ( t != path_end ) *s++ = *t++;
+	}
+	*s = '\0';
+
+	/* Update AM.Path. */
+	if ( AM.Path ) M_free(AM.Path,"add path");
+	AM.Path = NewPath;
+
+	return(0);
+
+ImproperPath:
+	MesPrint("@Improper syntax for %#%sPath", bPrepend ? "Prepend" : "Append");
+	return(-1);
+
+FileNameUnavailable:
+	/* This may be improved in future. */
+	MesPrint("@Sorry, %#%sPath can't resolve the current file name from here", bPrepend ? "Prepend" : "Append");
+	return(-1);
+}
+
+/**
+ * Appends the given path (relative to the current file directory) to
+ * the FORM path.
+ *
+ * Syntax:
+ *   #appendpath <path>
+ */
+int DoPreAppendPath(UBYTE *s)
+{
+	return DoAddPath(s, 0);
+}
+
+/*
+ 		#] DoPreAppendPath : 
+ 		#[ DoPrePrependPath :
+*/
+
+/**
+ * Prepends the given path (relative to the current file directory) to
+ * the FORM path.
+ *
+ * Syntax:
+ *   #prependpath <path>
+ */
+int DoPrePrependPath(UBYTE *s)
+{
+	return DoAddPath(s, 1);
+}
+
+/*
+ 		#] DoPrePrependPath : 
  	# ] PreProcessor :
 */

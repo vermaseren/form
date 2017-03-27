@@ -1496,6 +1496,10 @@ int DoRecovery(int *moduletype)
     R_SET(AM.ggOldGCDflag,int);
 	R_SET(AM.gWTimeStatsFlag, int);
 
+	R_FREE(AM.Path);
+	R_SET(AM.Path,UBYTE *);
+	R_COPY_S(AM.Path,UBYTE *);
+
 #ifdef PRINTDEBUG
 	print_M();
 #endif
@@ -2561,6 +2565,9 @@ static int DoSnapshot(int moduletype)
     S_WRITE_B(&AM.gOldGCDflag,sizeof(int));
     S_WRITE_B(&AM.ggOldGCDflag,sizeof(int));
 	S_WRITE_B(&AM.gWTimeStatsFlag, sizeof(int));
+
+	S_WRITE_B(&AM.Path,sizeof(UBYTE *));
+	S_WRITE_S(AM.Path);
 
 	/*#] AM :*/ 
 	/*#[ AC :*/

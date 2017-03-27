@@ -1547,6 +1547,9 @@ extern int InvPoly(PHEAD WORD *,WORD,WORD);
 extern int ReadFromScratch(FILEHANDLE *,POSITION *,UBYTE *,POSITION *);
 extern int AddToScratch(FILEHANDLE *,POSITION *,UBYTE *,POSITION *,int);
 
+extern int DoPreAppendPath(UBYTE *);
+extern int DoPrePrependPath(UBYTE *);
+
 /*
   	#] Declarations : 
 */

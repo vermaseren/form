@@ -223,11 +223,7 @@ int DoTail(int argc, UBYTE **argv)
 	AM.LogType = -1;
 	AM.HoldFlag = AM.qError = AM.Interact = AM.FileOnlyFlag = 0;
 	AM.InputFileName = AM.LogFileName = AM.IncDir = AM.TempDir = AM.TempSortDir =
-#ifdef WITHMPI
-	AM.SetupDir = AM.SetupFile = 0;
-#else
 	AM.SetupDir = AM.SetupFile = AM.Path = 0;
-#endif
 	if ( argc < 1 ) {
 		onlyversion = 0;
 		goto printversion;
@@ -463,6 +459,13 @@ NoFile:
 		errorflag++;
 	}
 	if ( AM.Path == 0 ) AM.Path = (UBYTE *)getenv("FORMPATH");
+	if ( AM.Path ) {
+		/*
+		 * AM.Path is taken from argv or getenv. Reallocate it to avoid invalid
+		 * frees when AM.Path has to be changed.
+		 */
+		AM.Path = strDup1(AM.Path,"DoTail Path");
+	}
 	return(errorflag);
 }
 
