@@ -6745,7 +6745,7 @@ static int DoAddPath(UBYTE *s, int bPrepend)
 	/* NOTE: this doesn't support some file systems, e.g., 0x5c with CP932. */
 
 	UBYTE *path, *path_end, *current_dir, *current_dir_end, *NewPath, *t;
-	int n;
+	int bRelative, n;
 
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
 	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
@@ -6779,20 +6779,36 @@ static int DoAddPath(UBYTE *s, int bPrepend)
 	while ( *s == ' ' || *s == '\t' ) s++;  /* skip spaces */
 	if ( *s ) goto ImproperPath;  /* extra tokens found */
 
-	/* Get the current file directory. */
-	if ( !AC.CurrentStream ) goto FileNameUnavailable;
-	if ( AC.CurrentStream->type != FILESTREAM && AC.CurrentStream->type != REVERSEFILESTREAM ) goto FileNameUnavailable;
-	if ( !AC.CurrentStream->name ) goto FileNameUnavailable;
-	s = current_dir = current_dir_end = AC.CurrentStream->name;
-	while ( *s ) {
-		if ( SEPARATOR != '\\' && *s == '\\' && s[1] ) {  /* escape character, e.g., "\\\"" */
-			s += 2;
-			continue;
+	/* Check if the path is an absolute path. */
+	bRelative = 1;
+	if ( path[0] == SEPARATOR ) {  /* starts with the directory separator */
+		bRelative = 0;
+	}
+#ifdef WINDOWS
+	else if ( chartype[path[0]] == 0 && path[1] == ':' ) {  /* starts with (drive letter): */
+		bRelative = 0;
+	}
+#endif
+
+	/* Get the current file directory when a relative path is given. */
+	if ( bRelative ) {
+		if ( !AC.CurrentStream ) goto FileNameUnavailable;
+		if ( AC.CurrentStream->type != FILESTREAM && AC.CurrentStream->type != REVERSEFILESTREAM ) goto FileNameUnavailable;
+		if ( !AC.CurrentStream->name ) goto FileNameUnavailable;
+		s = current_dir = current_dir_end = AC.CurrentStream->name;
+		while ( *s ) {
+			if ( SEPARATOR != '\\' && *s == '\\' && s[1] ) {  /* escape character, e.g., "\\\"" */
+				s += 2;
+				continue;
+			}
+			if ( *s == SEPARATOR ) {
+				current_dir_end = s;
+			}
+			s++;
 		}
-		if ( *s == SEPARATOR ) {
-			current_dir_end = s;
-		}
-		s++;
+	}
+	else {
+		current_dir = current_dir_end = NULL;
 	}
 
 	/* Allocate a buffer for new AM.Path. */
@@ -6845,8 +6861,8 @@ FileNameUnavailable:
 }
 
 /**
- * Appends the given path (relative to the current file directory) to
- * the FORM path.
+ * Appends the given path (absolute or relative to the current file directory)
+ * to the FORM path.
  *
  * Syntax:
  *   #appendpath <path>
@@ -6862,8 +6878,8 @@ int DoPreAppendPath(UBYTE *s)
 */
 
 /**
- * Prepends the given path (relative to the current file directory) to
- * the FORM path.
+ * Prepends the given path (absolute or relative to the current file directory)
+ * to the FORM path.
  *
  * Syntax:
  *   #prependpath <path>
