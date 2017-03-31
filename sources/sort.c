@@ -839,6 +839,14 @@ LONG EndSort(PHEAD WORD *buffer, int par)
 /*
 			The large buffer is too full. Merge and write it
 */
+/*
+			Determine if this is a merge because LargePatches is too small, print message.
+*/
+			if ( S->lPatch >= S->MaxPatches ) {
+				MLOCK(ErrorMessageLock);
+				MesPrint("SORTINFO: Exceeded LargePatches");
+				MUNLOCK(ErrorMessageLock);
+			}
 #ifdef GZIPDEBUG
 			MLOCK(ErrorMessageLock);
 			MesPrint("%w EndSort: lPatch = %d, MaxPatches = %d,lFill = %x, sSpace = %ld, MaxTer = %d, lTop = %x"
@@ -4236,6 +4244,14 @@ WORD StoreTerm(PHEAD WORD *term)
 /*
 	The small buffer is full. It has to be sorted and written.
 */
+/*
+		Determine if this is a sort due to insufficient TermsInSmall, print a message.
+*/
+		if ( S->sTerms >= S->TermsInSmall ) {
+			MLOCK(ErrorMessageLock);
+			MesPrint("SORTINFO: Exceeded TermsInSmall");
+			MUNLOCK(ErrorMessageLock);
+		}
 		tover = over = S->sTerms;
 		ss = S->sPointer;
 		ss[over] = 0;
@@ -4269,6 +4285,14 @@ WORD StoreTerm(PHEAD WORD *term)
 /*
 			The large buffer is too full. Merge and write it
 */
+/*
+			Determine if this is a merge because LargePatches is too small, print message.
+*/
+			if ( S->lPatch >= S->MaxPatches ) {
+				MLOCK(ErrorMessageLock);
+				MesPrint("SORTINFO: Exceeded LargePatches");
+				MUNLOCK(ErrorMessageLock);
+			}
 			if ( MergePatches(1) ) goto StoreCall;
 /*
 			pp = S->SizeInFile[1];
@@ -4340,12 +4364,16 @@ VOID StageSort(FILEHANDLE *fout)
 		POSITION position;
 		PUTZERO(position);
 		MLOCK(ErrorMessageLock);
+/*
+		Print how many patches we have; if the user is actively trying to avoid
+		stage4 sorts, this makes it easier to configure FilePatches
+*/
 #ifdef WITHPTHREADS
-		MesPrint("StageSort in thread %d",identity);
+		MesPrint("SORTINFO: StageSort in thread %d, merging %d patches",identity,S->fPatchN);
 #elif defined(WITHMPI)
-		MesPrint("StageSort in process %d",PF.me);
+		MesPrint("SORTINFO: StageSort in process %d, merging %d patches",PF.me,S->fPatchN);
 #else
-		MesPrint("StageSort");
+		MesPrint("SORTINFO: StageSort, merging %d patches",S->fPatchN);
 #endif
 		MUNLOCK(ErrorMessageLock);
 		SeekFile(fout->handle,&position,SEEK_END);

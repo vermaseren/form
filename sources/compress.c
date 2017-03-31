@@ -673,7 +673,7 @@ LONG FillInputGZIP(FILEHANDLE *f, POSITION *position, UBYTE *buffer, LONG buffer
 		}
 
 		MLOCK(ErrorMessageLock);
-		MesPrint("%wFillInputGZIP: Error in gzip handling of input.");
+		MesPrint("%wFillInputGZIP: Error in gzip handling of input. zerror = %d", zerror);
 		MUNLOCK(ErrorMessageLock);
 		return(-1);
 	}

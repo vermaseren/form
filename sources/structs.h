@@ -1783,11 +1783,17 @@ struct C_const {
  */
 
 struct S_const {
-	POSITION MaxExprSize;          /* ( ) Maximum size of in/out/sort */
+	POSITION MaxExprSize;           /* ( ) Maximum size of in/out/sort */
+	POSITION MaxScratchSize;        /* ( ) Maximum size of in or out */
+	POSITION MaxHideSize;           /* ( ) Maximum size of hide */
+	POSITION MaxThreadScratchOutSize; /* ( ) Maximum size of InParallel scratch output */
 #ifdef WITHPTHREADS
 	pthread_mutex_t	inputslock;
 	pthread_mutex_t	outputslock;
 	pthread_mutex_t	MaxExprSizeLock;
+	pthread_mutex_t	MaxScratchSizeLock;
+	pthread_mutex_t	MaxHideSizeLock;
+	pthread_mutex_t	MaxThreadScratchOutSizeLock;
 #endif
     POSITION *OldOnFile;           /* (S) File positions of expressions */
     WORD    *OldNumFactors;        /* ( ) NumFactors in (old) expression */
@@ -1809,7 +1815,7 @@ struct S_const {
 	WORD	sLevel;                /* Copy of AR0.sLevel because it can get messy */
 #endif
 #if defined(WITHPTHREADS)
-	PADPOSITION(3,0,5,3,sizeof(pthread_mutex_t)*3);
+	PADPOSITION(3,0,5,3,sizeof(pthread_mutex_t)*6);
 #elif defined(WITHMPI)
 	PADPOSITION(3,0,5,2,0);
 #else

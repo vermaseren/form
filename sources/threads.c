@@ -1726,6 +1726,21 @@ bucketstolen:;
 				Do this in one go to keep the lock occupied as short as possible
 */
 				SeekScratch(fout,&outposition);
+/*
+				JD: this is supposed to keep track of the max size of the sort output from
+				any thread when using InParallel. That is, it lets us know how large to set
+				ThreadScratchOutSize to avoid hitting the disk. AS is a global struct accessible
+				from all threads, so we need to wrap the check and update in mutex locks.
+*/
+#ifdef WITHPTHREADS
+				if (identity > 0) {
+					MLOCK(AS.MaxThreadScratchOutSizeLock);
+					if ( ISLESSPOS(AS.MaxThreadScratchOutSize,outposition) ) {
+						AS.MaxThreadScratchOutSize = outposition;
+					}
+					MUNLOCK(AS.MaxThreadScratchOutSizeLock);
+				}
+#endif
 				LOCK(AS.outputslock);
 				oldoutfile = AB[0]->R.outfile;
 				if ( e->status == INTOHIDELEXPRESSION || e->status == INTOHIDEGEXPRESSION ) {
