@@ -1551,7 +1551,7 @@ int AddComString(int n, WORD *array, UBYTE *thestring, int par)
 	}
 	AddLHS(AC.cbufnum);
 	size = numchars/sizeof(WORD)+1;
-	while ( C->Pointer+size+n+1 >= C->Top ) DoubleCbuffer(AC.cbufnum,C->Pointer,19);
+	while ( C->Pointer+size+n+2 >= C->Top ) DoubleCbuffer(AC.cbufnum,C->Pointer,19);
 #ifdef COMPBUFDEBUG
 	cc = C->Pointer;
 #endif
