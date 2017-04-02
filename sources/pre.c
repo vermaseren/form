@@ -524,7 +524,7 @@ UBYTE *GetPreVar(UBYTE *name, int flag)
 				case INTOHIDELEXPRESSION:
 				case INTOHIDEGEXPRESSION:
 					s = AC.exprnames->namebuffer + e->name;
-					len = e->namesize - 1;  /* Exclude the last character '\0'. */
+					len = StrLen(s);
 					VectorSize(exprstr) = j;  /* j bytes must be copied in extending the buffer. */
 					VectorReserve(exprstr, j + len * 2 + 1);
 					p = VectorPtr(exprstr);

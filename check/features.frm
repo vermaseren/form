@@ -549,7 +549,7 @@ P;
 assert succeeded?
 assert result("ZERO") =~ expr("0")
 *--#] Issue137_4 :
-*--#[ Issue175 :
+*--#[ Issue175_1 :
 * Loop over currently active expressions #175
 L FF = 1;
 L [FF|a,b] = 1;
@@ -565,4 +565,76 @@ assert result("FF") =~ expr("2")
 assert result("[FF|a,b]") =~ expr("2")
 assert result("[FF,[GG]]") =~ expr("2")
 assert result("N") =~ expr("3")
-*--#] Issue175 :
+*--#] Issue175_1 :
+*--#[ Issue175_2 :
+L F1 = 1;
+L F2 = 1;
+L F3 = 1;
+
+L F1 = 1;  * redefine in the same module!
+
+*.sort  ;* workaround
+
+#message `numactiveexprs_'
+#message `activeexprnames_'
+
+#do e={`activeexprnames_'}
+  L `e' = `e' + 1;
+#enddo
+
+P;
+.end
+assert succeeded?
+assert result("F1") =~ expr("2")
+assert result("F2") =~ expr("2")
+assert result("F3") =~ expr("2")
+*--#] Issue175_2 :
+*--#[ Issue175_3 :
+L F1 = 1;
+L F2 = 1;
+L F3 = 1;
+
+.sort
+
+L F1 = 1;  * replace an existing expression!
+
+*.sort  ;* workaround
+
+#message `numactiveexprs_'
+#message `activeexprnames_'
+
+#do e={`activeexprnames_'}
+  L `e' = `e' + 1;
+#enddo
+
+P;
+.end
+assert succeeded?
+assert result("F1") =~ expr("2")
+assert result("F2") =~ expr("2")
+assert result("F3") =~ expr("2")
+*--#] Issue175_3 :
+*--#[ Issue175_4 :
+CF F1,F2,F3;
+
+L [F1(1,1,1,1)] = F1(1,1,1,1);
+L [F2(-1,1,1,1)] = F2(-1,1,1,1);
+.sort
+
+* Redefine.
+Local [F1(1,1,1,1)] = F1(1,1,1,1);
+.sort
+
+#message `numactiveexprs_'
+#message `activeexprnames_'
+
+#do e={`activeexprnames_'}
+  L `e' = `e' + 1;
+#enddo
+
+P;
+.end
+assert succeeded?
+assert result("[F1(1,1,1,1)]") =~ expr("1 + F1(1,1,1,1)")
+assert result("[F2(-1,1,1,1)]") =~ expr("1 + F2(-1,1,1,1)")
+*--#] Issue175_4 :
