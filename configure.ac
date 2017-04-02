@@ -67,7 +67,7 @@ m4_define([serial_tests], [m4_esyscmd_s([
 ])])
 
 AC_PREREQ(2.59)
-AC_INIT([FORM], FORM_VERSION, [form@nikhef.nl])
+AC_INIT([FORM], FORM_VERSION, [https://github.com/vermaseren/form/issues])
 AC_CONFIG_SRCDIR([sources/form3.h])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_AUX_DIR([build-aux])
