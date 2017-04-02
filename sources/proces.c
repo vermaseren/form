@@ -3014,14 +3014,17 @@ Renormalize:
 			else {
 				WORD oldPolyFunExp = AR.PolyFunExp;
 				AR.PolyFunExp = 0;
-				if ( PolyFunMul(BHEAD term) ) goto GenCall;
+				if ( PolyFunMul(BHEAD term) < 0 ) goto GenCall;
+				AT.WorkPointer = term+*term;
 				AR.PolyFunExp = oldPolyFunExp;
 				if ( !*term ) { AN.PolyNormFlag = 0; goto Return0; }
 				if ( Normalize(BHEAD term) < 0 ) goto GenCall;
 				if ( !*term ) { AN.PolyNormFlag = 0; goto Return0; }
+				AT.WorkPointer = term+*term;
 				if ( AN.PolyNormFlag ) {
 					if ( PolyFunMul(BHEAD term) ) goto GenCall;
 					if ( !*term ) { AN.PolyNormFlag = 0; goto Return0; }
+					AT.WorkPointer = term+*term;
 				}
 				AN.PolyFunTodo = 0;
 			}
@@ -4942,7 +4945,7 @@ WORD PolyFunMul(PHEAD WORD *term)
 	GETBIDENTITY
 	WORD *t, *fun1, *fun2, *t1, *t2, *m, *w, *ww, *tt1, *tt2, *tt4, *arg1, *arg2;
 	WORD *tstop, i, dirty = 0, OldPolyFunPow = AR.PolyFunPow, minp1, minp2;
-	WORD n1, n2, i1, i2, l1, l2, l3, l4, action = 0, noac = 0;
+	WORD n1, n2, i1, i2, l1, l2, l3, l4, action = 0, noac = 0, retval = 0;
 	if ( AR.PolyFunType == 2 && AR.PolyFunExp == 1 ) {
 		WORD pow = 0, pow1;
 		t = term + 1; t1 = term + *term; t1 -= ABS(t1[-1]);
@@ -5020,7 +5023,7 @@ NoLegal:
 ReStart:
 	if ( AR.PolyFunType == 2 && ( ( AR.PolyFunExp != 2 )
 	 || ( AR.PolyFunExp == 2 && AN.PolyNormFlag > 1 ) ) ) {
-		WORD retval, count1 = 0, count2 = 0, count3;
+		WORD count1 = 0, count2 = 0, count3;
 		WORD oldtype = AR.SortType;
 		t = term + 1; t1 = term + *term; t1 -= ABS(t1[-1]);
 		while ( t < t1 ) {
@@ -5030,6 +5033,7 @@ ReStart:
 /*				ReadPolyRatFun(BHEAD term); */
 				poly_ratfun_normalize(BHEAD term);
 				if ( term[0] == 0 ) return(0);
+				action++;
 				goto ReStart;
 			  }
 			  t2 = t + t[1]; tt2 = t+FUNHEAD; count3 = 0;
@@ -5037,6 +5041,7 @@ ReStart:
 			  if ( count3 == 2 ) {
 				count1++;
 				if ( ( t[2] & CLEANPRF ) != 0 ) {	/* Better civilize this guy */
+					action++;
 					w = AT.WorkPointer;
 					AR.SortType = SORTHIGHFIRST;
 					t2 = t + t[1]; tt2 = t+FUNHEAD;
@@ -5084,7 +5089,7 @@ ReStart:
 			}
 			t += t[1];
 		}
-		if ( count1 <= 1 ) return(0);
+		if ( count1 <= 1 ) { goto checkaction; }
 		if ( AR.PolyFunExp == 1 ) {
 			t = term + *term; t -= ABS(t[-1]);
 			*t++ = 1; *t++ = 1; *t++ = 3; *term = t - term;
@@ -5127,6 +5132,8 @@ ReStart:
 
 		w = term + *term;
 		if ( w > AT.WorkSpace && w < AT.WorkTop ) AT.WorkPointer = w;
+checkaction:
+		if ( action ) retval = action;
 		return(retval);
 	}
 retry:

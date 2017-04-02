@@ -2295,7 +2295,7 @@ int ReadPolyRatFun(PHEAD WORD *term)
 /*
 		Now we can put the function back together.
 		Notice that we cannot use ToFast, because there is no reservation
-		for the header of the argument. Fortutately there are only two
+		for the header of the argument. Fortunately there are only two
 		types of fast arguments.
 */
 		if ( num1[0] == 4 && num1[4] == 0 && num1[2] == 1 && num1[1] > 0 ) {
@@ -3318,7 +3318,15 @@ NormArg:;
 					if ( r < AT.WorkTop && r >= AT.WorkSpace )
 								AT.WorkPointer = r;
 					Normalize(BHEAD rrr);
-					StoreTerm(BHEAD rrr);
+					if ( ABS(rrr[*rrr-1]) == *rrr-1 ) {
+						if ( AR.PolyFunPow >= 0 ) {
+							StoreTerm(BHEAD rrr);
+						}
+					}
+					else if ( rrr[1] == SYMBOL && rrr[2] == 4 &&
+					rrr[3] == AR.PolyFunVar && rrr[4] <= AR.PolyFunPow ) {
+						StoreTerm(BHEAD rrr);
+					}
 				}
 				EndSort(BHEAD rr,1);
 			}
