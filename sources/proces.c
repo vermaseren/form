@@ -2988,7 +2988,7 @@ ReStart:
 		if ( applyflag ) { TableReset(); applyflag = 0; }
 /*
 		if ( AN.PolyNormFlag > 1 ) {
-			if ( PolyFunMul(BHEAD term) ) goto GenCall;
+			if ( PolyFunMul(BHEAD term) < 0 ) goto GenCall;
 			AN.PolyNormFlag = 0;
 			if ( !*term ) goto Return0;
 		}
@@ -3008,7 +3008,7 @@ Renormalize:
 
 		if ( AN.PolyNormFlag ) {
 			if ( AN.PolyFunTodo == 0 ) {
-				if ( PolyFunMul(BHEAD term) ) goto GenCall;
+				if ( PolyFunMul(BHEAD term) < 0 ) goto GenCall;
 				if ( !*term ) { AN.PolyNormFlag = 0; goto Return0; }
 			}
 			else {
@@ -3022,7 +3022,7 @@ Renormalize:
 				if ( !*term ) { AN.PolyNormFlag = 0; goto Return0; }
 				AT.WorkPointer = term+*term;
 				if ( AN.PolyNormFlag ) {
-					if ( PolyFunMul(BHEAD term) ) goto GenCall;
+					if ( PolyFunMul(BHEAD term) < 0 ) goto GenCall;
 					if ( !*term ) { AN.PolyNormFlag = 0; goto Return0; }
 					AT.WorkPointer = term+*term;
 				}
