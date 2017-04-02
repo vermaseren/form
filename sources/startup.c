@@ -982,6 +982,7 @@ VOID StartVariables()
 	AT.fbufnum = inicbufs();		/* Buffer for caching in factorization */
 	AT.allbufnum = inicbufs();		/* Buffer for id,all */
 	AT.aebufnum = inicbufs();		/* Buffer for id,all */
+	AN.tryterm = 0;
 #else
 	AS.MasterSort = 0;
 #endif
@@ -995,10 +996,10 @@ VOID StartVariables()
 		WORD zero = 0;
 		AddRHS(AM.zbufnum,1);
 		AM.zerorhs = C->numrhs;
-		AddNtoC(AM.zbufnum,1,&zero);
+		AddNtoC(AM.zbufnum,1,&zero,17);
 		AddRHS(AM.zbufnum,1);
 		AM.onerhs = C->numrhs;
-		AddNtoC(AM.zbufnum,5,one);
+		AddNtoC(AM.zbufnum,5,one,17);
 	}
 	AP.inside.inscbuf = inicbufs();	/* For the #inside instruction */
 /*

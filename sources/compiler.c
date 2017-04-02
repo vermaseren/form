@@ -1860,7 +1860,7 @@ int CompleteTerm(WORD *term, UWORD *numer, UWORD *denom, WORD nnum, WORD nden, i
 	for ( ; i < nsize; i++ ) *t++ = 0;
 	*t++ = (2*nsize+1)*sign;
 	*term = t - term;
-	AddNtoC(AC.cbufnum,*term,term);
+	AddNtoC(AC.cbufnum,*term,term,7);
 	return(0);
 }
 

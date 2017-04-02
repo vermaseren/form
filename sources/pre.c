@@ -6693,7 +6693,7 @@ int DoSkipExtraSymbols(UBYTE *s)
 	j = AO.OptimizeResult.minvar - oldval;
 	while ( j > 0 ) {
 		AddRHS(AM.sbufnum,1);
-		AddNtoC(AM.sbufnum,1,&tt);
+		AddNtoC(AM.sbufnum,1,&tt,16);
 		AddToCB(C,0)
 		InsTree(AM.sbufnum,C->numrhs);
 		j--;

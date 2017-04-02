@@ -1521,7 +1521,7 @@ int CoFillExpression(UBYTE *inp)
 					if ( weneedit ) {
 						m += m[1] - 1;
 						*m = *term - (m-term);
-						AddNtoC(AC.cbufnum,*m,m);
+						AddNtoC(AC.cbufnum,*m,m,3);
 						numdummies = DetCurDum(BHEAD term) - AM.IndDum;
 						if ( numdummies > T->numdummies ) T->numdummies = numdummies;
 					}
@@ -1529,7 +1529,7 @@ int CoFillExpression(UBYTE *inp)
 				}
 			}
 			if ( weneedit ) {
-				AddNtoC(AC.cbufnum,1,&zero);	/* Terminate old bracket */
+				AddNtoC(AC.cbufnum,1,&zero,4);	/* Terminate old bracket */
 				numcommu = numcommute(C->rhs[curelement],&(C->NumTerms[curelement]));
 				C->CanCommu[curelement] = numcommu;
 			}
@@ -1681,12 +1681,12 @@ Wrong!!!!			C->rhs[T->tablepointers[sum]] = C->Pointer;
 newentry:	if ( *m == HAAKJE ) { m += m[1] - 1; }
 			else m--;
 			*m = *term - (m-term);
-			AddNtoC(AC.cbufnum,*m,m);
+			AddNtoC(AC.cbufnum,*m,m,5);
 			curelement = T->tablepointers[sum];
 nextterm:;
 		}
 		if ( weneedit ) {
-			AddNtoC(AC.cbufnum,1,&zero);	/* Terminate old bracket */
+			AddNtoC(AC.cbufnum,1,&zero,6);	/* Terminate old bracket */
 			numcommu = numcommute(C->rhs[curelement],&(C->NumTerms[curelement]));
 			C->CanCommu[curelement] = numcommu;
 		}

@@ -2074,7 +2074,7 @@ VOID SubsInAll(PHEAD0)
 								By the way: ww-w fits inside a WORD.
 */
 								AddRHS(AT.aebufnum,1);
-								AddNtoC(AT.aebufnum,ww-w,w);
+								AddNtoC(AT.aebufnum,ww-w,w,11);
 								p[3] = cbuf[AT.aebufnum].numrhs;
 								cbuf[AT.aebufnum].rhs[p[3]+1] = cbuf[AT.aebufnum].Pointer;
 								p += p[1];
@@ -2126,7 +2126,7 @@ VOID SubsInAll(PHEAD0)
 /*
 	And now we copy this to AT.allbufnum
 */
-	AddNtoC(AT.allbufnum,TemTerm[0],TemTerm);
+	AddNtoC(AT.allbufnum,TemTerm[0],TemTerm,12);
 	cbuf[AT.allbufnum].Pointer[0] = 0;
 	AN.RepFunNum = 0;
 }
@@ -2151,7 +2151,7 @@ VOID TransferBuffer(int from,int to,int spectator)
 	for ( i = 1; i <= Cf->numrhs; i++ ) {
 		size = Cf->rhs[i+1]-Cf->rhs[i];
 		AddRHS(to,1);
-		AddNtoC(to,size,Cf->rhs[i]);
+		AddNtoC(to,size,Cf->rhs[i],13);
 	}
 	Ct->rhs[Ct->numrhs+1] = Ct->Pointer;
 	Cf->numrhs = 0;
@@ -2201,13 +2201,13 @@ VOID TransferBuffer(int from,int to,int spectator)
 	r = AT.pWorkSpace[rhs+i]; \
 	if ( *r > 0 ) { \
 		oldinr = r[*r]; r[*r] = 0; \
-		AddNtoC(AT.ebufnum,(*r+1-ARGHEAD),(r+ARGHEAD)); \
+		AddNtoC(AT.ebufnum,(*r+1-ARGHEAD),(r+ARGHEAD),14); \
 		r[*r] = oldinr; \
 	} \
 	else { \
 		ToGeneral(r,buffer,1); \
 		buffer[buffer[0]] = 0; \
-		AddNtoC(AT.ebufnum,buffer[0]+1,buffer); \
+		AddNtoC(AT.ebufnum,buffer[0]+1,buffer,15); \
 	}
 
 int TakeIDfunction(PHEAD WORD *term)

@@ -526,7 +526,7 @@ ScaledVariety:;
 					argument sucessively
 */
 					r4 = AddRHS(AT.ebufnum,1);
-					while ( (r4+j+12) > CC->Top ) r4 = DoubleCbuffer(AT.ebufnum,r4);
+					while ( (r4+j+12) > CC->Top ) r4 = DoubleCbuffer(AT.ebufnum,r4,3);
 					*r4++ = j+1;
 					i = (j-1)>>1;
 					for ( k = 0; k < i; k++ ) *r4++ = r3[i+k];
@@ -1730,7 +1730,7 @@ WORD execterm(PHEAD WORD *term, WORD level)
 	WORD *buffer1 = 0;
 	WORD *oldworkpointer = AT.WorkPointer;
 	WORD *t1, i;
-	WORD olddeferflag = AR.DeferFlag;
+	WORD olddeferflag = AR.DeferFlag, tryterm = 0;
 	AR.DeferFlag = 0;
 	do {
 		AR.Cnumlhs = C->lhs[level][3];
@@ -1760,10 +1760,13 @@ WORD execterm(PHEAD WORD *term, WORD level)
 			if ( Generator(BHEAD term,level) ) goto exectermerr;
 		}
 		if ( buffer1 ) {
-			M_free((void *)buffer1,"buffer in sort statement");
+			if ( tryterm ) { TermFree(buffer1,"buffer in sort statement"); tryterm = 0; }
+			else { M_free((void *)buffer1,"buffer in sort statement"); }
 			buffer1 = 0;
 		}
+		AN.tryterm = 1;
 		if ( EndSort(BHEAD (WORD *)((VOID *)(&buffer1)),2) < 0 ) goto exectermerr;
+		tryterm = AN.tryterm; AN.tryterm = 0;
 		level = AR.Cnumlhs;
 	} while ( AR.Cnumlhs < maxisat );
 	AR.Cnumlhs = oldnumlhs;
@@ -1775,7 +1778,9 @@ WORD execterm(PHEAD WORD *term, WORD level)
 		AT.WorkPointer = t1;
 		if ( Generator(BHEAD oldworkpointer,level) ) goto exectermerr;
 	}
-	M_free(buffer1,"buffer in term statement");
+	if ( tryterm ) { TermFree(buffer1,"buffer in term statement"); tryterm = 0; }
+	else { M_free(buffer1,"buffer in term statement"); }
+	buffer1 = 0;
 	AT.WorkPointer = oldworkpointer;
 	return(0);
 exectermerr:
@@ -2494,11 +2499,11 @@ WORD InsertArg(PHEAD WORD *argin, WORD *argout,int par)
 	}
 	else { return(-1); }
 	AddRHS(bufnum,1);
-	AddNtoC(bufnum,*argin,argin);
+	AddNtoC(bufnum,*argin,argin,1);
 	AddToCB(C,0)
 	a = argout; while ( *a ) NEXTARG(a);
 	i = a - argout;
-	AddNtoC(bufnum,i,argout);
+	AddNtoC(bufnum,i,argout,2);
 	AddToCB(C,0)
 	return(InsTree(bufnum,C->numrhs));
 }

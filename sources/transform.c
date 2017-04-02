@@ -2660,7 +2660,7 @@ WORD RunMulArg(PHEAD WORD *fun, WORD *args)
 		Now add the argbuf to AT.ebufnum
 */
 		m = AddRHS(AT.ebufnum,1);
-		while ( (m + argsize + 10) > C->Top ) m = DoubleCbuffer(AT.ebufnum,m);
+		while ( (m + argsize + 10) > C->Top ) m = DoubleCbuffer(AT.ebufnum,m,17);
 		for ( i = 0; i < argsize; i++ ) m[i] = where[i];
 		m[i] = 0;
 		C->Pointer = m + i + 1;

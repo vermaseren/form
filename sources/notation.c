@@ -791,7 +791,7 @@ WORD FindSubterm(WORD *subterm)
 
 	oldCpointer = C->Pointer-C->Buffer; /* Offset of course !!!!!*/
 	AddRHS(AM.sbufnum,1);
-	AddNtoC(AM.sbufnum,*term,term);
+	AddNtoC(AM.sbufnum,*term,term,8);
 	AddToCB(C,0)
 /*
 		See whether we have this one already. If not, insert it in the tree.
@@ -874,7 +874,7 @@ WORD FindLocalSubterm(PHEAD WORD *subterm, WORD startebuf)
 	Now we have to add it to cbuf[AT.ebufnum]
 */
 	AddRHS(AT.ebufnum,1);
-	AddNtoC(AT.ebufnum,*term,term);
+	AddNtoC(AT.ebufnum,*term,term,9);
 	AddToCB(C,0)
 	number = C->numrhs-startebuf+numxsymbol;
 wearehappy:
@@ -1110,7 +1110,7 @@ WORD FindSubexpression(WORD *subexpr)
 /*
 		Add the terms to the compiler buffer. Paste on a zero.
 */
-	AddNtoC(AM.sbufnum,number,subexpr);
+	AddNtoC(AM.sbufnum,number,subexpr,10);
 	AddToCB(C,0)
 /*
 		See whether we have this one already. If not, insert it in the tree.

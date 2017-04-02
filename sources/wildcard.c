@@ -1541,7 +1541,7 @@ DEBUG(WORD *mm;)
 DEBUG(mm = m;)
 				n = *w - ARGHEAD;
 				w += ARGHEAD;
-				while ( (m + n + 10) > C->Top ) m = DoubleCbuffer(AT.ebufnum,m);
+				while ( (m + n + 10) > C->Top ) m = DoubleCbuffer(AT.ebufnum,m,4);
 				while ( --n >= 0 ) *m++ = *w++;
 				*m++ = 0;
 				C->rhs[C->numrhs+1] = m;
@@ -1571,7 +1571,7 @@ DEBUG(mm=m;)
 					w = AN.argaddress;
 					*m++ = 0;
 				}
-				while ( (m + n + 10) > C->Top ) m = DoubleCbuffer(AT.ebufnum,m);
+				while ( (m + n + 10) > C->Top ) m = DoubleCbuffer(AT.ebufnum,m,5);
 DEBUG(if ( mm != m-1 ) MesPrint("Thread %w(e): Alarm!"); mm = m-1;)
 				while ( --n >= 0 ) *m++ = *w++;
 				*m++ = 0;
@@ -1599,7 +1599,7 @@ DEBUG(mm=m;)
 					else n += 2;
 				}
 				*m++ = 0;
-				while ( (m + n + 10) > C->Top ) m = DoubleCbuffer(AT.ebufnum,m);
+				while ( (m + n + 10) > C->Top ) m = DoubleCbuffer(AT.ebufnum,m,6);
 DEBUG(if ( mm != m-1 ) MesPrint("Thread %w(f): Alarm!"); mm = m-1;)
 				a = (WORD **)(AN.argaddress);
 				while ( --k >= 0 ) {
@@ -1631,7 +1631,7 @@ DEBUG(MesPrint("Thread %w(f): w=(%d,%d,%d,%d)(%d)",mm[0],mm[1],mm[2],mm[3],C->nu
 				w = AN.argaddress;
 				n = *w - ARGHEAD;
 				w += ARGHEAD;
-				while ( (m + n + 10) > C->Top ) m = DoubleCbuffer(AT.ebufnum,m);
+				while ( (m + n + 10) > C->Top ) m = DoubleCbuffer(AT.ebufnum,m,7);
 				while ( --n >= 0 ) *m++ = *w++;
 				*m++ = 0;
 				C->rhs[C->numrhs+1] = m;
@@ -1640,7 +1640,7 @@ DEBUG(MesPrint("Thread %w(f): w=(%d,%d,%d,%d)(%d)",mm[0],mm[1],mm[2],mm[3],C->nu
 				w = AN.argaddress;
 				n = *w - ARGHEAD;
 				w += ARGHEAD;
-				while ( (m + n + 10) > C->Top ) m = DoubleCbuffer(AT.ebufnum,m);
+				while ( (m + n + 10) > C->Top ) m = DoubleCbuffer(AT.ebufnum,m,8);
 				sstop = w + n;
 				while ( w < sstop ) {			/* Run over terms */
 					tt = w + *w; ttstop = tt - ABS(tt[-1]);

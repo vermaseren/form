@@ -41,9 +41,9 @@
 	      not to be defined to make sure that all calls will be diverted
 	      to the routines here.
 #define TERMMALLOCDEBUG
+#define FILLVALUE 126
 #define MALLOCDEBUGOUTPUT
 #define MALLOCDEBUG 1
-#define FILLVALUE 126
 */
 #ifndef FILLVALUE
 	#define FILLVALUE 0
@@ -2278,7 +2278,13 @@ VOID *Malloc1(LONG size, const char *messageifwrong)
 /*	MUNLOCK(ErrorMessageLock); */
 	UNLOCK(MallocLock);
 #endif
-
+/* 
+	if ( size > 500000000L ) {
+		MLOCK(ErrorMessageLock);
+		MesPrint("Malloc1: %s, allocated %l bytes\n",messageifwrong,size);
+		MUNLOCK(ErrorMessageLock);
+	}
+*/
 	return(mem);
 }
 
@@ -2591,9 +2597,10 @@ MesPrint("AT.NumberMemMax is now %l",AT.NumberMemMax);
 
 UWORD *NumberMalloc2(PHEAD char *text)
 {
-	if ( AT.NumberMemTop <= 0 ) NumberMallocAddMemory(BHEAD0);
+	if ( AT.NumberMemTop <= 0 ) NumberMallocAddMemory(BHEAD text);
 
 #ifdef MALLOCDEBUGOUTPUT
+	if ( (AT.NumberMemMax-AT.NumberMemTop) > 10 )
 	MesPrint("NumberMalloc: %s, %l/%l (%x)",text,AT.NumberMemTop,AT.NumberMemMax,AT.NumberMemHeap[AT.NumberMemTop-1]);
 #endif
 
@@ -2615,6 +2622,57 @@ VOID NumberFree2(PHEAD UWORD *NumberMem, char *text)
 #endif
 	DUMMYUSE(text);
 	AT.NumberMemHeap[AT.NumberMemTop++] = NumberMem;
+
+#ifdef MALLOCDEBUGOUTPUT
+	if ( (AT.NumberMemMax-AT.NumberMemTop) > 10 )
+	MesPrint("NumberFree: %s, %l/%l (%x)",text,AT.NumberMemTop,AT.NumberMemMax,NumberMem);
+#endif
+}
+
+#endif
+
+/*
+ 		#] NumberMalloc : 
+ 		#[ CacheNumberMalloc :
+
+	Similar to NumberMalloc
+ */
+
+VOID CacheNumberMallocAddMemory(PHEAD0)
+{
+	UWORD *newbufs;
+	WORD extra;
+	int i;
+	if ( AT.CacheNumberMemMax == 0 ) extra = NUMBERMEMSTARTNUM;
+	else                             extra = AT.CacheNumberMemMax;
+	if ( AT.CacheNumberMemHeap ) M_free(AT.CacheNumberMemHeap,"NumberMalloc");
+	newbufs = (UWORD *)Malloc1(extra*(AM.MaxTal+NUMBEREXTRAWORDS)*sizeof(UWORD),"CacheNumberMalloc");
+	AT.CacheNumberMemHeap = (UWORD **)Malloc1((extra+AT.NumberMemMax)*sizeof(UWORD *),"CacheNumberMalloc");
+	for ( i = 0; i < extra; i++ ) {
+		AT.CacheNumberMemHeap[i] = newbufs + i*(LONG)(AM.MaxTal+NUMBEREXTRAWORDS);
+	}
+	AT.CacheNumberMemTop = extra;
+	AT.CacheNumberMemMax += extra;
+}
+
+#ifndef MEMORYMACROS
+
+UWORD *CacheNumberMalloc2(PHEAD char *text)
+{
+	if ( AT.CacheNumberMemTop <= 0 ) CacheNumberMallocAddMemory(BHEAD0);
+
+#ifdef MALLOCDEBUGOUTPUT
+	MesPrint("NumberMalloc: %s, %l/%l (%x)",text,AT.NumberMemTop,AT.NumberMemMax,AT.NumberMemHeap[AT.NumberMemTop-1]);
+#endif
+
+	DUMMYUSE(text);
+	return(AT.CacheNumberMemHeap[--AT.CacheNumberMemTop]);
+}
+ 
+VOID CacheNumberFree2(PHEAD UWORD *NumberMem, char *text)
+{
+	DUMMYUSE(text);
+	AT.CacheNumberMemHeap[AT.CacheNumberMemTop++] = NumberMem;
 	
 #ifdef MALLOCDEBUGOUTPUT
 	MesPrint("NumberFree: %s, %l/%l (%x)",text,AT.NumberMemTop,AT.NumberMemMax,NumberMem);
@@ -2624,7 +2682,7 @@ VOID NumberFree2(PHEAD UWORD *NumberMem, char *text)
 #endif
 
 /*
- 		#] NumberMalloc : 
+ 		#] CacheNumberMalloc : 
  		#[ FromList :
 
 	Returns the next object in a list.

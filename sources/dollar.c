@@ -112,22 +112,26 @@ int CatchDollar(int par)
 		if ( Generator(BHEAD oldwork,C->numlhs) ) { error = 1; break; }
 	}
 	AT.WorkPointer = oldwork;
+	AN.tryterm = 0; /* for now */
+	dbuffer = 0;
 	if ( ( retval = EndSort(BHEAD (WORD *)((VOID *)(&dbuffer)),2) ) < 0 ) { error = 1; }
 	LowerSortLevel();
- 	if ( retval <= 1 || dbuffer == 0 ) {
- 		d->type = DOLZERO;
- 		if ( d->where && d->where != &(AM.dollarzero) ) M_free(d->where,"$-buffer old");
- 		d->size = 0; d->where = &(AM.dollarzero);
- 		cbuf[AM.dbufnum].CanCommu[numdollar] = 0;
- 		cbuf[AM.dbufnum].NumTerms[numdollar] = 0;
- 		goto docopy2;
+	if ( retval <= 1 || dbuffer == 0 ) {
+		d->type = DOLZERO;
+		if ( d->where && d->where != &(AM.dollarzero) ) M_free(d->where,"$-buffer old");
+		d->size = 0; d->where = &(AM.dollarzero);
+		cbuf[AM.dbufnum].CanCommu[numdollar] = 0;
+		cbuf[AM.dbufnum].NumTerms[numdollar] = 0;
+		goto docopy2;
 	}
 	w = dbuffer;
 	if ( error == 0 )
 		while ( *w ) { w += *w; numterms++; }
 	else
 		goto onerror;
-	newsize = (w - dbuffer)+1;
+	newsize = (w-dbuffer)+1;
+	if ( newsize < 32 ) newsize = 32;
+	newsize = ((newsize+7)/8)*8;
 #ifdef WITHMPI
 	}
 	if ( AC.RhsExprInModuleFlag )
@@ -299,16 +303,16 @@ NoChangeZero:;
 		if ( dtype > 0 ) {
 /*			LOCK(d->pthreadslockwrite); */
 			LOCK(d->pthreadslockread);
-			if ( d->size < 20 ) {
+			if ( d->size < 32 ) {
 				WORD oldsize, *oldwhere, i;
 				oldsize = d->size; oldwhere = d->where;
-				d->size = 20;
+				d->size = 32;
 				d->where = (WORD *)Malloc1(d->size*sizeof(WORD),"dollar contents");
 				cbuf[AM.dbufnum].rhs[numdollar] = d->where;
- 				if ( oldsize > 0 ) {
- 					for ( i = 0; i < oldsize; i++ ) d->where[i] = oldwhere[i];
- 				}
- 				else d->where[0] = 0;
+				if ( oldsize > 0 ) {
+					for ( i = 0; i < oldsize; i++ ) d->where[i] = oldwhere[i];
+				}
+				else d->where[0] = 0;
 				if ( oldwhere && oldwhere != &(AM.dollarzero) ) M_free(oldwhere,"dollar contents");
 			}
 			switch ( d->type ) {
@@ -370,9 +374,9 @@ NoChangeOne:;
 /*
  		#] Thread version : 
 */
-		if ( d->size < 20 ) {
+		if ( d->size < 32 ) {
 			if ( d->where && d->where != &(AM.dollarzero) ) M_free(d->where,"dollar contents");
-			d->size = 20;
+			d->size = 32;
 			d->where = (WORD *)Malloc1(d->size*sizeof(WORD),"dollar contents");
 			cbuf[AM.dbufnum].rhs[numdollar] = d->where;
 		}
@@ -434,6 +438,7 @@ NoChangeOne:;
 			}
 			AT.WorkPointer = ww;
 		}
+		AN.tryterm = 0; /* for now */
 		if ( ( newsize = EndSort(BHEAD (WORD *)((VOID *)(&ss)),2) ) < 0 ) {
 			AN.ncmod = oldncmod;
 			return(1);
@@ -806,6 +811,8 @@ void TermAssign(WORD *term)
 			&& t[FUNHEAD] == -DOLLAREXPRESSION ) {
 				d = Dollars + t[FUNHEAD+1];
 				newsize = *term - FUNHEAD - 1;
+				if ( newsize < 32 ) newsize = 32;
+				newsize = ((newsize+7)/8)*8;
 				if ( d->size > 2*newsize && d->size > 1000 ) {
 					if ( d->where && d->where != &(AM.dollarzero) ) M_free(d->where,"dollar contents");
 					d->size = 0;
@@ -848,7 +855,9 @@ void TermAssign(WORD *term)
   	#[ WildDollars :
 
 	Note that we cannot upload wildcards into dollar variables when WITHPTHREADS.
+LONG alloccounter = 0;
 */
+
 
 void WildDollars(PHEAD WORD *term)
 {
@@ -857,9 +866,11 @@ void WildDollars(PHEAD WORD *term)
 	WORD *m, *t, *w, *ww, *orig = 0, *wildvalue, *wildstop;
 	int numdollar;
 	LONG weneed, i;
+	struct DoLlArS;
 #ifdef WITHPTHREADS
 	int dtype = -1;
 #endif
+/*	alloccounter++; */
 	if ( term == 0 ) {
 		m = wildvalue = AN.WildValue;
 		wildstop = AN.WildStop;
@@ -943,10 +954,11 @@ void WildDollars(PHEAD WORD *term)
 				}
 				break;
 			default:
-				weneed = 20;
+				weneed = 32;
 				break;
 		}
-		if ( weneed < 20 ) weneed = 20;
+		if ( weneed < 32 ) weneed = 32;
+		weneed = ((weneed+7)/8)*8;
 		if ( d->size > 2*weneed && d->size > 1000 ) {
 			if ( d->where && d->where != &(AM.dollarzero) ) M_free(d->where,"dollarspace");
 			d->where = &(AM.dollarzero);
@@ -981,15 +993,15 @@ void WildDollars(PHEAD WORD *term)
 				else { d->type = DOLNUMBER; d->where[4] = 0; }
 				break;
 			case SYMTOSYM:
- 				*w++ = 8;
- 				*w++ = SYMBOL;
- 				*w++ = 4;
- 				*w++ = t[3];
- 				*w++ = 1;
- 				*w++ = 1;
- 				*w++ = 1;
- 				*w++ = 3;
- 				*w = 0;
+				*w++ = 8;
+				*w++ = SYMBOL;
+				*w++ = 4;
+				*w++ = t[3];
+				*w++ = 1;
+				*w++ = 1;
+				*w++ = 1;
+				*w++ = 3;
+				*w = 0;
 				break;
 			case SYMTOSUB:
 			case VECTOSUB:
@@ -1750,6 +1762,7 @@ int InsideDollar(PHEAD WORD *ll, WORD level)
 			}
 			AT.WorkPointer = oldwork;
 		}
+		AN.tryterm = 0; /* for now */
 		if ( EndSort(BHEAD (WORD *)((VOID *)(&dbuffer)),2) < 0 ) { error = 1; break; }
 		if ( d->where && d->where != &(AM.dollarzero) ) M_free(d->where,"old buffer of dollar");
 		d->where = dbuffer;
@@ -2089,6 +2102,7 @@ WORD *TranslateExpression(UBYTE *s)
 	}
 	AR.Eside = oldEside;
 	AT.WorkPointer = w;
+	AN.tryterm = 0; /* for now */
 	if ( EndSort(BHEAD (WORD *)((VOID *)(&outbuffer)),2) < 0 ) { LowerSortLevel(); return(0); }
 	LowerSortLevel();
 	C->Pointer = C->Buffer + oldcpointer;
@@ -2458,8 +2472,8 @@ int DollarRaiseLow(UBYTE *name, LONG value)
 	d = Dollars + num;
 	if ( value < 0 ) { value = -value; sgn = -1; }
 	if ( d->type == DOLZERO ) {
-		if ( d->where && d->where != &(AM.dollarzero) ) M_free(d->where,"DollarRaiseLow");
-		d->size = 20;
+		if ( d->where ) M_free(d->where,"DollarRaiseLow");
+		d->size = 32;
 		d->where = (WORD *)Malloc1(d->size*sizeof(WORD),"DollarRaiseLow");
 		if ( ( value & AWORDMASK ) != 0 ) {
 			d->where[0] = 6; d->where[1] = value >> BITSINWORD;
@@ -2508,7 +2522,8 @@ int DollarRaiseLow(UBYTE *name, LONG value)
 		if ( i+2 > d->size ) {
 			M_free(d->where,"DollarRaiseLow");
 			d->size = i+2;
-			if ( d->size < 20 ) d->size = 20;
+			if ( d->size < 32 ) d->size = 32;
+			d->size = ((d->size+7)/8)*8;
 			d->where = (WORD *)Malloc1(d->size*sizeof(WORD),"DollarRaiseLow");
 		}
 		t1 = d->where; *t1++ = i+1; t2 = (WORD *)dscrat;
@@ -2691,9 +2706,9 @@ WORD TestDoLoop(PHEAD WORD *lhsbuf, WORD level)
 	}
 #endif
 
-	if ( d->size < 20 ) {
+	if ( d->size < 32 ) {
 		if ( d->where && d->where != &(AM.dollarzero) ) M_free(d->where,"dollar contents");
-		d->size = 20;
+		d->size = 32;
 		d->where = (WORD *)Malloc1(d->size*sizeof(WORD),"dollar contents");
 	}
 	if ( start > 0 ) {
@@ -2792,9 +2807,9 @@ WORD TestEndDoLoop(PHEAD WORD *lhsbuf, WORD level)
 		 ( finish == start && value == finish ) ) {}
 	else level = lhsbuf[3];
 
-	if ( d->size < 20 ) {
+	if ( d->size < 32 ) {
 		if ( d->where && d->where != &(AM.dollarzero) ) M_free(d->where,"dollar contents");
-		d->size = 20;
+		d->size = 32;
 		d->where = (WORD *)Malloc1(d->size*sizeof(WORD),"dollar contents");
 	}
 	if ( value > 0 ) {
@@ -2924,6 +2939,7 @@ int DollarFactorize(PHEAD WORD numdollar)
 			StoreTerm(BHEAD term);
 			term = t;
 		}
+		AN.tryterm = 0; /* for now */
 		EndSort(BHEAD (WORD *)((void *)(&buf1)),2);
 		t = buf1; while ( *t ) t += *t;
 		insize = t - buf1;
@@ -2942,7 +2958,9 @@ int DollarFactorize(PHEAD WORD numdollar)
 */
 #ifdef STEP2
 	buf1content = TermMalloc("DollarContent");
+	AN.tryterm = -1;
 	if ( ( buf2 = TakeContent(BHEAD buf1,buf1content) ) == 0 ) {
+		AN.tryterm = 0;
 		TermFree(buf1content,"DollarContent");
 		M_free(buf1,"DollarFactorize-1");
 		AR.SortType = oldsorttype;
@@ -2954,6 +2972,7 @@ int DollarFactorize(PHEAD WORD numdollar)
 	}
 	else if ( ( buf1content[0] == 4 ) && ( buf1content[1] == 1 ) &&
 		      ( buf1content[2] == 1 ) && ( buf1content[3] == 3 ) ) { /* Nothing happened */
+		AN.tryterm = 0;
 		if ( buf2 != buf1 ) {
 			M_free(buf2,"DollarFactorize-2");
 			buf2 = buf1;
@@ -2964,6 +2983,7 @@ int DollarFactorize(PHEAD WORD numdollar)
 /*
 		The way we took out objects is rather brutish. We have to normalize
 */
+		AN.tryterm = 0;
 		if ( buf2 != buf1 ) M_free(buf1,"DollarFactorize-1");
 		buf1 = buf2;
 		t = buf1; while ( *t ) t += *t;
@@ -3058,6 +3078,7 @@ getout:
 			StoreTerm(BHEAD termextra);
 			t += *t;
 		}
+		AN.tryterm = 0; /* for now */
 		if ( EndSort(BHEAD (WORD *)((void *)(&buf2)),2) < 0 ) { goto getout; }
 		LowerSortLevel();
 		t = buf2; while ( *t > 0 ) t += *t;
@@ -3201,6 +3222,7 @@ getout2:			AR.SortType = oldsorttype;
 			}
 			term++;
 			AT.WorkPointer = oldworkpointer;
+			AN.tryterm = 0; /* for now */
 			EndSort(BHEAD (WORD *)((void *)(&(d->factors[i].where))),2);
 			LowerSortLevel();
 			d->factors[i].type = DOLTERMS;
@@ -3228,6 +3250,7 @@ getout2:			AR.SortType = oldsorttype;
 			}
 			term++;
 			AT.WorkPointer = oldworkpointer;
+			AN.tryterm = 0; /* for now */
 			EndSort(BHEAD (WORD *)((void *)(&(d->factors[i].where))),2);
 			d->factors[i].type = DOLTERMS;
 			t = d->factors[i].where;
@@ -3647,6 +3670,7 @@ WORD *MakeDollarInteger(PHEAD WORD *bufin,WORD **bufout)
 		r = rnext;
 	}
 	AT.WorkPointer = oldworkpointer;
+	AN.tryterm = 0; /* for now */
 	EndSort(BHEAD (WORD *)bufout,2);
 /*
 	Cleanup
@@ -3714,6 +3738,7 @@ WORD *MakeDollarMod(PHEAD WORD *buffer, WORD **bufout)
 		}
 	}
 	AT.WorkPointer = oldworkpointer;
+	AN.tryterm = 0; /* for now */
 	EndSort(BHEAD (WORD *)bufout,2);
 	return(factor);
 }

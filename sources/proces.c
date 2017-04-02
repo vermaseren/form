@@ -1040,12 +1040,12 @@ TooMuch:;
 						m += ARGHEAD;
 						i = t[FUNHEAD] - ARGHEAD;
 						while ( (t1 + i + 10) > C->Top )
-							t1 = DoubleCbuffer(AT.ebufnum,t1);
+							t1 = DoubleCbuffer(AT.ebufnum,t1,9);
 						while ( --i >= 0 ) *t1++ = *m++;
 					}
 					else {
 						if ( (t1 + 20) > C->Top )
-							t1 = DoubleCbuffer(AT.ebufnum,t1);
+							t1 = DoubleCbuffer(AT.ebufnum,t1,10);
 						ToGeneral(m,t1,1);
 						t1 += *t1;
 					}
@@ -1110,12 +1110,12 @@ Important: we may not have enough spots here
 							i = *r - ARGHEAD;
 							r += ARGHEAD;
 							while ( (m + i + 10) > C->Top )
-								m = DoubleCbuffer(AT.ebufnum,m);
+								m = DoubleCbuffer(AT.ebufnum,m,11);
 							while ( --i >= 0 ) *m++ = *r++;
 						}
 						else {
 							while ( (m + 20) > C->Top )
-								m = DoubleCbuffer(AT.ebufnum,m);
+								m = DoubleCbuffer(AT.ebufnum,m,12);
 							ToGeneral(r,m,1);
 							m += *m;
 						}
@@ -4583,8 +4583,8 @@ WORD PrepPoly(PHEAD WORD *term)
 	if ( AR.PolyFunType == 2 && AR.PolyFunExp != 2 ) {
 		WORD oldtype = AR.SortType;
 		AR.SortType = SORTHIGHFIRST;
-/*		if ( poly_ratfun_normalize(BHEAD term) != 0 ) Terminate(-1); */
-		if ( ReadPolyRatFun(BHEAD term) != 0 ) Terminate(-1);
+		if ( poly_ratfun_normalize(BHEAD term) != 0 ) Terminate(-1);
+/*		if ( ReadPolyRatFun(BHEAD term) != 0 ) Terminate(-1); */
 		oldworkpointer = AT.WorkPointer;
 		AR.SortType = oldtype;
 	}
@@ -4859,7 +4859,8 @@ WORD PrepPoly(PHEAD WORD *term)
 		v = m;
 		*v++ = AR.PolyFun;
 		*v++ = FUNHEAD + 2*(ARGHEAD+sizenum+sizeden+2);
-		*v++ = CLEANPRF;
+/*		*v++ = CLEANPRF; */
+		*v++ = 0;
 		FILLFUN3(v);
 		*v++ = ARGHEAD+2*sizenum+2;
 		*v++ = 0;
@@ -4888,10 +4889,15 @@ WORD PrepPoly(PHEAD WORD *term)
 		{
 			WORD oldtype = AR.SortType;
 			AR.SortType = SORTHIGHFIRST;
+/*
 			if ( count > 0 )
 				poly_ratfun_normalize(BHEAD term);
 			else
 				ReadPolyRatFun(BHEAD term);
+*/
+			poly_ratfun_normalize(BHEAD term);
+
+/*			oldworkpointer = AT.WorkPointer; */
 			AR.SortType = oldtype;
 		}
 		goto endofit;
@@ -5019,10 +5025,10 @@ ReStart:
 		t = term + 1; t1 = term + *term; t1 -= ABS(t1[-1]);
 		while ( t < t1 ) {
 			if ( *t == AR.PolyFun ) {
-			  if ( t[2] && dirty == 0 ) {
+			  if ( t[2] && dirty == 0 ) { /* Any dirty flag on? */
 				dirty = 1;
-				ReadPolyRatFun(BHEAD term);
-/*				poly_ratfun_normalize(BHEAD term); */
+/*				ReadPolyRatFun(BHEAD term); */
+				poly_ratfun_normalize(BHEAD term);
 				if ( term[0] == 0 ) return(0);
 				goto ReStart;
 			  }
@@ -5090,7 +5096,7 @@ ReStart:
 			if ( *term == 0 ) return(retval);
 			AR.SortType = oldtype;
 		}
-	
+
 		t = term + 1; t1 = term + *term; t1 -= ABS(t1[-1]);
 		while ( t < t1 ) {
 			if ( *t == AR.PolyFun ) {
@@ -5118,6 +5124,7 @@ ReStart:
 				else t += t[1];
 			}
 		}
+
 		w = term + *term;
 		if ( w > AT.WorkSpace && w < AT.WorkTop ) AT.WorkPointer = w;
 		return(retval);

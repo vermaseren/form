@@ -906,7 +906,7 @@ WORD MulLong(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 	}
 #endif
 /*
-  	#] GMP stuff : 
+  	#] GMP stuff :
 */
 	do { *ic++ = 0; } while ( --i > 0 );
 	do {
@@ -1092,7 +1092,7 @@ WORD DivLong(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c,
 		}
 #endif
 /*
- 		#] GMP stuff : 
+ 		#] GMP stuff :
 */
 		/* Start with normalization operation */
  
@@ -1330,10 +1330,33 @@ VOID RaisPowCached (PHEAD WORD x, WORD n, UWORD **c, WORD *nc) {
 	ID = x * AT.small_power_maxn + n;
 
 	if (AT.small_power[ID] == NULL) {
-		AT.small_power[ID] = NumberMalloc("RaisPowCached");
-		AT.small_power_n[ID] = 1;
-		AT.small_power[ID][0] = x;
-		RaisPow(BHEAD AT.small_power[ID],&AT.small_power_n[ID],n);
+#ifdef OLDRAISPOWCACHED
+        AT.small_power[ID] = NumberMalloc("RaisPowCached");
+        AT.small_power_n[ID] = 1;
+        AT.small_power[ID][0] = x;
+        RaisPow(BHEAD AT.small_power[ID],&AT.small_power_n[ID],n);
+#else
+        UWORD *c = NumberMalloc("RaisPowCached");
+        WORD i, k = 1;
+		c[0] = x;
+        RaisPow(BHEAD c,&k,n);
+/*
+        And now get the proper amount.
+*/
+        if ( AT.InNumMem < k ) {    /* We should start a new buffer */
+            AT.InNumMem = 5*AM.MaxTal;
+            AT.NumMem = (UWORD *)Malloc1(AT.InNumMem*sizeof(UWORD),"RaisPowCached");
+/*
+			MesPrint("  Got an extra %l UWORDS in RaisPowCached",AT.InNumMem);
+*/
+        }
+        for ( i = 0; i < k; i++ ) AT.NumMem[i] = c[i];
+        AT.small_power[ID] = AT.NumMem;
+        AT.small_power_n[ID] = k;
+        AT.NumMem += k;
+        AT.InNumMem -= k;
+        NumberFree(c,"RaisPowCached");
+#endif
 	}
 
 	/* return the result */
@@ -1783,6 +1806,8 @@ WORD GetLong(UBYTE *s, UWORD *a, WORD *na)
 	See Knuth, sec 4.5.2 algorithm L.
 
 	We assume that both numbers are positive
+
+	NOTE!!!!!. NumberMalloc gets called and it may not be freed
 */
 
 #ifdef EXTRAGCD
@@ -2384,7 +2409,7 @@ WORD GcdLong(PHEAD UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 		return(0);
 	}
 /*
-  	#] Easy cases : 
+  	#] Easy cases :
 */
 	GLscrat6 = NumberMalloc("GcdLong"); GLscrat7 = NumberMalloc("GcdLong");
 	GLscrat8 = NumberMalloc("GcdLong");
@@ -2429,7 +2454,7 @@ restart:;
 		}
 	}
 /*
-  	#] Easy cases : 
+  	#] Easy cases :
   	#[ Original code :
 */
 	else if ( na < GCDMAX || nb < GCDMAX || na != nb ) {
@@ -2479,7 +2504,7 @@ restart:;
 		NCOPY(c,x1,i);
 	}
 /*
-  	#] Original code : 
+  	#] Original code :
   	#[ New code :
 */
 	else {
@@ -2606,7 +2631,7 @@ newtrick:;
 		}
 		goto restart;
 /*
-  	#] New code : 
+  	#] New code :
 */
 	}
 normalend:

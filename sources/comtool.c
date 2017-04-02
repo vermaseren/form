@@ -54,15 +54,15 @@ int inicbufs(VOID)
 	if ( i >= num ) C = (CBUF *)FromList(&AC.cbufList);
 	else num = i;
 	C->BufferSize = 2000;
-	C->Buffer = (WORD *)Malloc1(C->BufferSize*sizeof(WORD),"compiler buffer");
+	C->Buffer = (WORD *)Malloc1(C->BufferSize*sizeof(WORD),"compiler buffer-1");
 	C->Pointer = C->Buffer;
 	C->Top = C->Buffer + C->BufferSize;
 	C->maxlhs = 10;
-	C->lhs = (WORD **)Malloc1(C->maxlhs*sizeof(WORD *),"compiler buffer");
+	C->lhs = (WORD **)Malloc1(C->maxlhs*sizeof(WORD *),"compiler buffer-2");
 	C->numlhs = 0;
 	C->mnumlhs = 0;
 	C->maxrhs = 25;
-	C->rhs = (WORD **)Malloc1(C->maxrhs*(sizeof(WORD *)+2*sizeof(LONG)+2*sizeof(WORD)),"compiler buffer");
+	C->rhs = (WORD **)Malloc1(C->maxrhs*(sizeof(WORD *)+2*sizeof(LONG)+2*sizeof(WORD)),"compiler buffer-3");
 	C->CanCommu = (LONG *)(C->rhs+C->maxrhs);
 	C->NumTerms = C->CanCommu+C->maxrhs;
 	C->numdum = (WORD *)(C->NumTerms+C->maxrhs);
@@ -89,9 +89,9 @@ int inicbufs(VOID)
 void finishcbuf(WORD num)
 {
 	CBUF *C = cbuf+num;
-	if ( C->Buffer ) M_free(C->Buffer,"compiler buffer");
-	if ( C->rhs ) M_free(C->rhs,"compiler buffer");
-	if ( C->lhs ) M_free(C->lhs,"compiler buffer");
+	if ( C->Buffer ) M_free(C->Buffer,"compiler buffer-1");
+	if ( C->rhs ) M_free(C->rhs,"compiler buffer-3");
+	if ( C->lhs ) M_free(C->lhs,"compiler buffer-2");
 	if ( C->boomlijst ) M_free(C->boomlijst,"boomlijst");
 	C->Top = C->Pointer = C->Buffer = 0;
 	C->rhs = C->lhs = 0;
@@ -140,13 +140,19 @@ void clearcbuf(WORD num)
  * @param  w    The pointer to the end (exclusive) of the current buffer. The
  *              contents in the range of [cbuf[num].Buffer,w) will be kept.
  */
-WORD *DoubleCbuffer(int num, WORD *w)
+WORD *DoubleCbuffer(int num, WORD *w,int par)
 {
 	CBUF *C = cbuf + num;
 	LONG newsize = C->BufferSize*2;
-	WORD *newbuffer = (WORD *)Malloc1(newsize*sizeof(WORD),"compiler buffer");
+	WORD *newbuffer = (WORD *)Malloc1(newsize*sizeof(WORD),"compiler buffer-4");
 	WORD *w1, *w2;
 	LONG offset, j, i;
+	DUMMYUSE(par)
+/*
+	MLOCK(ErrorMessageLock);
+		MesPrint(" doubleCbuffer: par = %d",par);
+	MUNLOCK(ErrorMessageLock);
+*/
 	w1 = C->Buffer; w2 = newbuffer;
 	i = w - w1;
 	j = i & 7;
@@ -287,7 +293,7 @@ int AddNtoL(int n, WORD *array)
 	MesPrint("LH: %a",n,array);
 #endif
 	AddLHS(AC.cbufnum);
-	while ( C->Pointer+n >= C->Top ) DoubleCbuffer(AC.cbufnum,C->Pointer);
+	while ( C->Pointer+n >= C->Top ) DoubleCbuffer(AC.cbufnum,C->Pointer,1);
 	for ( i = 0; i < n; i++ ) *(C->Pointer)++ = *array++;
 	return(0);
 }
@@ -308,7 +314,7 @@ int AddNtoL(int n, WORD *array)
  * @param  array   The data to be added.
  * @return         0 if succeeds.
  */
-int AddNtoC(int bufnum, int n, WORD *array)
+int AddNtoC(int bufnum, int n, WORD *array,int par)
 {
 	int i;
 	WORD *w;
@@ -316,7 +322,7 @@ int AddNtoC(int bufnum, int n, WORD *array)
 #ifdef COMPBUFDEBUG
 	MesPrint("RH: %a",n,array);
 #endif
-	while ( C->Pointer+n+1 >= C->Top ) DoubleCbuffer(bufnum,C->Pointer);
+	while ( C->Pointer+n+1 >= C->Top ) DoubleCbuffer(bufnum,C->Pointer,50+par);
 	w = C->Pointer;
 	for ( i = 0; i < n; i++ ) *w++ = *array++;
 	C->Pointer = w;

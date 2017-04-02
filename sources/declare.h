@@ -104,7 +104,7 @@
 #define CYCLE1(t,a,i) {t iX=*a; WORD jX; for(jX=1;jX<i;jX++)a[jX-1]=a[jX]; a[i-1]=iX;}
 
 #define AddToCB(c,wx) if(c->Pointer>=c->Top) \
-		DoubleCbuffer(c-cbuf,c->Pointer); \
+		DoubleCbuffer(c-cbuf,c->Pointer,21); \
 		*(c->Pointer)++ = wx;
 
 #define EXCHINOUT { FILEHANDLE *ffFi = AR.outfile; \
@@ -272,15 +272,19 @@ extern VOID TELLFILE(int,POSITION *);
 
 #define TermMalloc(x) ( (AT.TermMemTop <= 0 ) ? TermMallocAddMemory(BHEAD0), AT.TermMemHeap[--AT.TermMemTop]: AT.TermMemHeap[--AT.TermMemTop] )
 #define NumberMalloc(x) ( (AT.NumberMemTop <= 0 ) ? NumberMallocAddMemory(BHEAD0), AT.NumberMemHeap[--AT.NumberMemTop]: AT.NumberMemHeap[--AT.NumberMemTop] )
+#define CacheNumberMalloc(x) ( (AT.CacheNumberMemTop <= 0 ) ? CacheNumberMallocAddMemory(BHEAD0), AT.CacheNumberMemHeap[--AT.CacheNumberMemTop]: AT.CacheNumberMemHeap[--AT.CacheNumberMemTop] )
 #define TermFree(TermMem,x) AT.TermMemHeap[AT.TermMemTop++] = (WORD *)(TermMem)
 #define NumberFree(NumberMem,x) AT.NumberMemHeap[AT.NumberMemTop++] = (UWORD *)(NumberMem)
+#define CacheNumberFree(NumberMem,x) AT.CacheNumberMemHeap[AT.CacheNumberMemTop++] = (UWORD *)(NumberMem)
 
 #else
 
 #define TermMalloc(x) TermMalloc2(BHEAD (char *)(x))
 #define NumberMalloc(x) NumberMalloc2(BHEAD (char *)(x))
+#define CacheNumberMalloc(x) CacheNumberMalloc2(BHEAD (char *)(x))
 #define TermFree(x,y) TermFree2(BHEAD (WORD *)(x),(char *)(y))
 #define NumberFree(x,y) NumberFree2(BHEAD (UWORD *)(x),(char *)(y))
+#define CacheNumberFree(x,y) CacheNumberFree2(BHEAD (UWORD *)(x),(char *)(y))
 
 #endif
 
@@ -888,11 +892,11 @@ extern void   ResetVariables(int);
 extern void   AddToPreTypes(int);
 extern void   MessPreNesting(int);
 extern LONG   GetStreamPosition(STREAM *);
-extern WORD  *DoubleCbuffer(int,WORD *);
+extern WORD  *DoubleCbuffer(int,WORD *,int);
 extern WORD  *AddLHS(int);
 extern WORD  *AddRHS(int,int);
 extern int    AddNtoL(int,WORD *);
-extern int    AddNtoC(int,int,WORD *);
+extern int    AddNtoC(int,int,WORD *,int);
 extern VOID   DoubleIfBuffers(VOID);
 extern STREAM *CreateStream(UBYTE *);
 
@@ -1396,12 +1400,15 @@ extern int    DoRecovery(int *);
 extern void   DoCheckpoint(int);
 
 extern VOID NumberMallocAddMemory(PHEAD0);
+extern VOID CacheNumberMallocAddMemory(PHEAD0);
 extern VOID TermMallocAddMemory(PHEAD0);
 #ifndef MEMORYMACROS
 extern WORD *TermMalloc2(PHEAD char *text);
 extern VOID TermFree2(PHEAD WORD *term,char *text);
 extern UWORD *NumberMalloc2(PHEAD char *text);
+extern UWORD *CacheNumberMalloc2(PHEAD char *text);
 extern VOID NumberFree2(PHEAD UWORD *NumberMem,char *text);
+extern VOID CacheNumberFree2(PHEAD UWORD *NumberMem,char *text);
 #endif
 
 extern void ExprStatus(EXPRESSIONS);
@@ -1483,9 +1490,9 @@ extern int InvPoly(PHEAD WORD *,WORD,WORD);
 extern WORD TestDoLoop(PHEAD WORD *,WORD);
 extern WORD TestEndDoLoop(PHEAD WORD *,WORD);
 
-extern WORD  *poly_gcd(PHEAD WORD *, WORD *);
-extern WORD  *poly_div(PHEAD WORD *, WORD *);
-extern WORD  *poly_rem(PHEAD WORD *, WORD *);
+extern WORD  *poly_gcd(PHEAD WORD *, WORD *, WORD);
+extern WORD  *poly_div(PHEAD WORD *, WORD *, WORD);
+extern WORD  *poly_rem(PHEAD WORD *, WORD *, WORD);
 extern WORD  *poly_inverse(PHEAD WORD *, WORD *);
 extern WORD *poly_ratfun_add(PHEAD WORD *, WORD *);
 extern int   poly_ratfun_normalize(PHEAD WORD *);
@@ -1493,6 +1500,7 @@ extern int   poly_factorize_argument(PHEAD WORD *, WORD *);
 extern WORD *poly_factorize_dollar(PHEAD WORD *);
 extern int   poly_factorize_expression(EXPRESSIONS);
 extern int   poly_unfactorize_expression(EXPRESSIONS);
+extern void  poly_free_poly_vars(PHEAD const char *);
 
 extern VOID optimize_print_code (int);
 

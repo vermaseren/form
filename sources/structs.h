@@ -1951,13 +1951,16 @@ struct T_const {
     WORD    *previousEfactor;      /* () Cache for factors in expressions */
     WORD    **TermMemHeap;        /* For TermMalloc. Set zero in Checkpoint */
     UWORD    **NumberMemHeap;      /* For NumberMalloc. Set zero in Checkpoint */
+    UWORD    **CacheNumberMemHeap; /* For CacheNumberMalloc. Set zero in Checkpoint */
 	BRACKETINFO *bracketinfo;
     WORD    **ListPoly;
     WORD    *ListSymbols;
+    UWORD   *NumMem;
     LONG    sBer;                  /* (T) Size of the bernoullis buffer */
     LONG    pWorkPointer;          /* (R) Offset-pointer in pWorkSpace */
     LONG    lWorkPointer;          /* (R) Offset-pointer in lWorkSpace */
     LONG    posWorkPointer;        /* (R) Offset-pointer in posWorkSpace */
+    LONG    InNumMem;
     int     sfact;                 /* (T) size of the factorials buffer */
     int     mfac;                  /* (T) size of the pfac array. */
     int     ebufnum;               /* (R) extra compiler buffer */
@@ -1980,6 +1983,8 @@ struct T_const {
     int     TermMemTop;            /* For TermMalloc. Set zero in Checkpoint */
     int     NumberMemMax;          /* For NumberMalloc. Set zero in Checkpoint */
     int     NumberMemTop;          /* For NumberMalloc. Set zero in Checkpoint */
+    int     CacheNumberMemMax;     /* For CacheNumberMalloc. Set zero in Checkpoint */
+    int     CacheNumberMemTop;     /* For CacheNumberMalloc. Set zero in Checkpoint */
     int     bracketindexflag;      /* Are brackets going to be indexed? */
     int     optimtimes;            /* Number of the evaluation of the MCTS tree */
     int     ListSymbolsSize;
@@ -2014,12 +2019,12 @@ struct T_const {
     WORD    fromindex;             /* Tells the compare routine whether call from index */
 #ifdef WITHPTHREADS
 #ifdef WITHSORTBOTS
-	PADPOINTER(4,25,100+SUBEXPSIZE*4+FUNHEAD*2+ARGHEAD*2,0);
+	PADPOINTER(5,27,100+SUBEXPSIZE*4+FUNHEAD*2+ARGHEAD*2,0);
 #else
-	PADPOINTER(4,23,100+SUBEXPSIZE*4+FUNHEAD*2+ARGHEAD*2,0);
+	PADPOINTER(5,25,100+SUBEXPSIZE*4+FUNHEAD*2+ARGHEAD*2,0);
 #endif
 #else
-	PADPOINTER(4,21,100+SUBEXPSIZE*4+FUNHEAD*2+ARGHEAD*2,0);
+	PADPOINTER(5,23,100+SUBEXPSIZE*4+FUNHEAD*2+ARGHEAD*2,0);
 #endif
 };
 /*
@@ -2156,15 +2161,17 @@ struct N_const {
     WORD    WildEat;               /* (R) */
     WORD    PolyNormFlag;          /* (R) For polynomial arithmetic */
     WORD    PolyFunTodo;           /* deals with expansions and multiplications */
-	WORD	sizeselecttermundo;    /* () Used in pattern.c */
-	WORD	patternbuffersize;     /* () Used in pattern.c */
-	WORD	numlistinprint;        /* () Used in process.c */
+    WORD    sizeselecttermundo;    /* () Used in pattern.c */
+    WORD    patternbuffersize;     /* () Used in pattern.c */
+    WORD    numlistinprint;        /* () Used in process.c */
     WORD    ncmod;                 /* () used as some type of flag to disable */
-	WORD	ExpectedSign;          /** Used in pattern matching of antisymmetric functions */
-	WORD	SignCheck;             /** Used in pattern matching of antisymmetric functions */
-	WORD	IndDum;                /* Active dummy indices */
-	WORD    poly_num_vars;
+    WORD    ExpectedSign;          /** Used in pattern matching of antisymmetric functions */
+    WORD    SignCheck;             /** Used in pattern matching of antisymmetric functions */
+    WORD    IndDum;                /* Active dummy indices */
+    WORD    poly_num_vars;
     WORD    idfunctionflag;
+    WORD    poly_vars_type;        /* type of allocation. For free. */
+    WORD    tryterm;               /* For EndSort(...,2) */
 #ifdef WHICHSUBEXPRESSION
 	WORD	nbino;                 /* () Used in proces.c */
 	WORD	last1;                 /* () Used in proces.c */
@@ -2172,29 +2179,29 @@ struct N_const {
 #ifdef WITHPTHREADS
 #ifdef WHICHSUBEXPRESSION
 #ifdef WITHZLIB
-	PADPOSITION(55,11,23,26,sizeof(SHvariables));
+	PADPOSITION(55,11,23,28,sizeof(SHvariables));
 #else
-	PADPOSITION(53,11,23,26,sizeof(SHvariables));
+	PADPOSITION(53,11,23,28,sizeof(SHvariables));
 #endif
 #else
 #ifdef WITHZLIB
-	PADPOSITION(54,9,23,24,sizeof(SHvariables));
+	PADPOSITION(54,9,23,26,sizeof(SHvariables));
 #else
-	PADPOSITION(52,9,23,24,sizeof(SHvariables));
+	PADPOSITION(52,9,23,26,sizeof(SHvariables));
 #endif
 #endif
 #else
 #ifdef WHICHSUBEXPRESSION
 #ifdef WITHZLIB
-	PADPOSITION(53,9,23,26,sizeof(SHvariables));
+	PADPOSITION(53,9,23,28,sizeof(SHvariables));
 #else
-	PADPOSITION(51,9,23,26,sizeof(SHvariables));
+	PADPOSITION(51,9,23,28,sizeof(SHvariables));
 #endif
 #else
 #ifdef WITHZLIB
-	PADPOSITION(52,7,23,24,sizeof(SHvariables));
+	PADPOSITION(52,7,23,26,sizeof(SHvariables));
 #else
-	PADPOSITION(50,7,23,24,sizeof(SHvariables));
+	PADPOSITION(50,7,23,26,sizeof(SHvariables));
 #endif
 #endif
 #endif

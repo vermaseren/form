@@ -487,6 +487,7 @@ ALLPRIVATES *InitializeOneThread(int identity)
 		for ( i = 0; i <= AN.NumFunSorts; i++ ) AN.FunSorts[i] = 0;
 		AN.FunSorts[0] = AT.S0 = AT.SS;
 		AN.idfunctionflag = 0;
+		AN.tryterm = 0;
 
 		return(B);
 	}
@@ -594,6 +595,7 @@ ALLPRIVATES *InitializeOneThread(int identity)
 	AN.RepPoint = AT.RepCount;
 	AN.polysortflag = 0;
 	AN.subsubveto = 0;
+	AN.tryterm = 0;
 	AT.RepTop = AT.RepCount + AM.RepMax;
 
 	AT.WildArgTaken = (WORD *)Malloc1((LONG)AC.WildcardBufferSize*sizeof(WORD)/2

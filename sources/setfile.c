@@ -68,7 +68,8 @@ SETUPPARAMETERS setupparameters[] =
 	,{(UBYTE *)"insidefirst",               ONOFFVALUE, 0, (LONG)1}
 	,{(UBYTE *)"largepatches",          NUMERICALVALUE, 0, (LONG)MAXPATCHES}
 	,{(UBYTE *)"largesize",             NUMERICALVALUE, 0, (LONG)LARGEBUFFER}
-	,{(UBYTE *)"maxnumbersize",         NUMERICALVALUE, 0, (LONG)MAXNUMBERSIZE}
+	,{(UBYTE *)"maxnumbersize",         NUMERICALVALUE, 0, (LONG)0}
+/*	,{(UBYTE *)"maxnumbersize",         NUMERICALVALUE, 0, (LONG)MAXNUMBERSIZE} */
 	,{(UBYTE *)"maxtermsize",           NUMERICALVALUE, 0, (LONG)MAXTER}
 	,{(UBYTE *)"maxwildcards",          NUMERICALVALUE, 0, (LONG)MAXWILDC}
 	,{(UBYTE *)"nospacesinnumbers",         ONOFFVALUE, 0, (LONG)0}
@@ -397,10 +398,10 @@ int AllocSetups()
 {
 	SETUPPARAMETERS *sp;
 	LONG LargeSize, SmallSize, SmallEsize, TermsInSmall, IOsize;
-	int MaxPatches, MaxFpatches, error = 0, i;
+	int MaxPatches, MaxFpatches, error = 0, i, size;
 	UBYTE *s;
 #ifndef WITHPTHREADS
-	int j, size;
+	int j;
 #endif
 	sp = GetSetupPar((UBYTE *)"threads");
 	if ( sp->value > 0 ) AM.totalnumberofthreads = sp->value+1;
@@ -479,9 +480,17 @@ int AllocSetups()
 	It seems better to fix it at its maximum value. This way we only worry
 	about maxtermsize. This can be understood better by the 'innocent' user.
 */
-	AM.MaxTal = (AM.MaxTer/sizeof(WORD)-2)/2;
-
+	if ( sp->value == 0 ) {
+		AM.MaxTal = (AM.MaxTer/sizeof(WORD)-2)/2;
+	}
+	else {
+		size = ( sp->value + 11 ) & (-4);
+		AM.MaxTal = size - 2;
+		if ( (size_t)AM.MaxTal > (size_t)((AM.MaxTer/sizeof(WORD)-2)/2) )
+					AM.MaxTal = (AM.MaxTer/sizeof(WORD)-2)/2;
+	}
 	AM.MaxTal &= -sizeof(WORD)*2;
+
 	sp->value = AM.MaxTal;
 	AC.cmod = (UWORD *)Malloc1(AM.MaxTal*4*sizeof(UWORD),(char *)(sp->parameter));
 	AM.gcmod = AC.cmod + AM.MaxTal;
@@ -880,6 +889,9 @@ SORTING *AllocSort(LONG LargeSize, LONG SmallSize, LONG SmallEsize, LONG TermsIn
 		+2*sizeof(WORD *)*longer
 		+2*(longerp*(sizeof(WORD *)+sizeof(WORD)))
 		+(3*longerp+2)*sizeof(WORD)
+#ifdef WITHZLIB
+		+(2*longerp+4)*sizeof(WORD)
+#endif
 		+terms2insmall*sizeof(WORD *)
 		+terms2insmall*sizeof(WORD *)/2
 		+LargeSize
@@ -909,8 +921,8 @@ SORTING *AllocSort(LONG LargeSize, LONG SmallSize, LONG SmallEsize, LONG TermsIn
 	sort->used = sort->tree+longerp;
 #ifdef WITHZLIB
 	sort->fpcompressed = sort->used+longerp;
-	sort->fpincompressed = sort->fpcompressed+longerp;
-	sort->ktoi = sort->fpincompressed+longerp;
+	sort->fpincompressed = sort->fpcompressed+longerp+2;
+	sort->ktoi = sort->fpincompressed+longerp+2;
 	sort->zsparray = 0;
 #else
 	sort->ktoi = sort->used + longerp;

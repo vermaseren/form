@@ -866,6 +866,7 @@ MulIn:
 				if ( k > 0 ) { *((UWORD *)lnum) = k; nnum = 1; }
 				else { *((UWORD *)lnum) = -k; nnum = -1; }
 				goto MulIn;
+				break;
 			case MAKERATIONAL:
 				if ( t[FUNHEAD] == -SNUMBER && t[FUNHEAD+2] == -SNUMBER
 					&& t[1] == FUNHEAD+4 && t[FUNHEAD+3] > 1 ) {
@@ -1776,7 +1777,7 @@ gcdcalc:					if ( GcdLong(BHEAD (UWORD *)num1,size1,(UWORD *)num2,size2
 						LONG size = AT.WorkPointer - gcd;
 
 						ss = AddRHS(AT.ebufnum,1);
-						while ( (ss + size + 10) > C->Top ) ss = DoubleCbuffer(AT.ebufnum,ss);
+						while ( (ss + size + 10) > C->Top ) ss = DoubleCbuffer(AT.ebufnum,ss,13);
 						tt = gcd;
 						NCOPY(ss,tt,size);
 						C->rhs[C->numrhs+1] = ss;
@@ -3418,7 +3419,7 @@ regularratfun:;
 								tt = ma+2;
 								n = *tt - ARGHEAD;
 								tt += ARGHEAD;
-								while ( (ss + n + 10) > C->Top ) ss = DoubleCbuffer(AT.ebufnum,ss);
+								while ( (ss + n + 10) > C->Top ) ss = DoubleCbuffer(AT.ebufnum,ss,14);
 								while ( --n >= 0 ) *ss++ = *tt++;
 								*ss++ = 0;
 								C->rhs[C->numrhs+1] = ss;
@@ -3494,7 +3495,7 @@ regularratfun:;
 								n = *w - ARGHEAD;
 								w += ARGHEAD;
 								while ( (mm + n + 10) > C->Top )
-									mm = DoubleCbuffer(AT.ebufnum,mm);
+									mm = DoubleCbuffer(AT.ebufnum,mm,15);
 								while ( --n >= 0 ) *mm++ = *w++;
 								*mm++ = 0;
 								C->rhs[C->numrhs+1] = mm;
@@ -3504,7 +3505,7 @@ regularratfun:;
 								n = *w - ARGHEAD;
 								w += ARGHEAD;
 								while ( (mm + n + 13) > C->Top )
-									mm = DoubleCbuffer(AT.ebufnum,mm);
+									mm = DoubleCbuffer(AT.ebufnum,mm,16);
 								sstop = w + n;
 								while ( w < sstop ) {
 									tt = w + *w; ttstop = tt - ABS(tt[-1]);

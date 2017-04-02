@@ -731,7 +731,16 @@ LONG EndSort(PHEAD WORD *buffer, int par)
 			if ( par == 2 ) {
 				sSpace = 3;
 				while ( ( t = *ss++ ) != 0 ) { sSpace += *t; }
-				to = (WORD *)Malloc1(sSpace*sizeof(WORD),"$-sort space");
+				if ( AN.tryterm > 0 && ( (sSpace+1)*sizeof(WORD) < (size_t)(AM.MaxTer) ) ) {
+					to = TermMalloc("$-sort space");
+				}
+				else {
+					LONG allocsp = sSpace+1;
+					if ( allocsp < 20 ) allocsp = 20;
+					allocsp = ((allocsp+7)/8)*8;
+					to = (WORD *)Malloc1(allocsp*sizeof(WORD),"$-sort space");
+					if ( AN.tryterm > 0 ) AN.tryterm = 0;
+				}
 				*((WORD **)buffer) = to;
 				ss = S->sPointer;
 				while ( ( t = *ss++ ) != 0 ) {
@@ -910,6 +919,7 @@ LONG EndSort(PHEAD WORD *buffer, int par)
 						SeekFile(newout->handle,&zeropos,SEEK_SET);
 						to = (WORD *)Malloc1(BASEPOSITION(newout->filesize)+sizeof(WORD)*2
 								,"$-buffer reading");
+						if ( AN.tryterm > 0 ) AN.tryterm = 0;
 						if ( ( retval = ReadFile(newout->handle,(UBYTE *)to,BASEPOSITION(newout->filesize)) ) !=
 								BASEPOSITION(newout->filesize) ) {
 							MLOCK(ErrorMessageLock);
@@ -938,7 +948,16 @@ TooLarge:
 						t = newout->PObuffer;
 						if ( par == 2 ) {
 							jj = newout->POfill - t;
-							to = (WORD *)Malloc1((jj+2)*sizeof(WORD),"$-sort space");
+							if ( AN.tryterm > 0 && ( (jj+2)*sizeof(WORD) < (size_t)(AM.MaxTer) ) ) {
+								to = TermMalloc("$-sort space");
+							}
+							else {
+								LONG allocsp = jj+2;
+								if ( allocsp < 20 ) allocsp = 20;
+								allocsp = ((allocsp+7)/8)*8;
+								to = (WORD *)Malloc1(allocsp*sizeof(WORD),"$-sort space");
+								if ( AN.tryterm > 0 ) AN.tryterm = 0;
+							}
 							*((WORD **)buffer) = to;
 							NCOPY(to,t,jj);
 						}
@@ -1142,6 +1161,7 @@ RetRetval:
 				SeekFile(newout->handle,&zeropos,SEEK_SET);
 				to = (WORD *)Malloc1(BASEPOSITION(position)+sizeof(WORD)*3
 						,"$-buffer reading");
+				if ( AN.tryterm > 0 ) AN.tryterm = 0;
 				if ( ( retval = ReadFile(newout->handle,(UBYTE *)to,BASEPOSITION(position)) ) !=
 				BASEPOSITION(position) ) {
 					MLOCK(ErrorMessageLock);
@@ -1163,7 +1183,16 @@ RetRetval:
 				output resides in the cache buffer and the file was never opened
 */
 				LONG wsiz = newout->POfill - newout->PObuffer;
-				to = (WORD *)Malloc1((wsiz+2)*sizeof(WORD),"$-buffer reading");
+				if ( AN.tryterm > 0 && ( (wsiz+2)*sizeof(WORD) < (size_t)(AM.MaxTer) ) ) {
+					to = TermMalloc("$-sort space");
+				}
+				else {
+					LONG allocsp = wsiz+2;
+					if ( allocsp < 20 ) allocsp = 20;
+					allocsp = ((allocsp+7)/8)*8;
+					to = (WORD *)Malloc1(allocsp*sizeof(WORD),"$-buffer reading");
+					if ( AN.tryterm > 0 ) AN.tryterm = 0;
+				}
 				*((WORD **)buffer) = to; t = newout->PObuffer;
 				retval = wsiz;
 				NCOPY(to,t,wsiz);

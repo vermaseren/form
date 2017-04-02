@@ -1521,7 +1521,7 @@ void AddToCom(int n, WORD *array)
 #ifdef COMPBUFDEBUG
 	MesPrint("  %a",n,array);
 #endif
-	while ( C->Pointer+n >= C->Top ) DoubleCbuffer(AC.cbufnum,C->Pointer);
+	while ( C->Pointer+n >= C->Top ) DoubleCbuffer(AC.cbufnum,C->Pointer,18);
 	while ( --n >= 0 ) *(C->Pointer)++ = *array++;
 }
 
@@ -1551,7 +1551,7 @@ int AddComString(int n, WORD *array, UBYTE *thestring, int par)
 	}
 	AddLHS(AC.cbufnum);
 	size = numchars/sizeof(WORD)+1;
-	while ( C->Pointer+size+n+2 >= C->Top ) DoubleCbuffer(AC.cbufnum,C->Pointer);
+	while ( C->Pointer+size+n+1 >= C->Top ) DoubleCbuffer(AC.cbufnum,C->Pointer,19);
 #ifdef COMPBUFDEBUG
 	cc = C->Pointer;
 #endif
@@ -1602,7 +1602,7 @@ int Add2ComStrings(int n, WORD *array, UBYTE *string1, UBYTE *string2)
 		size2 = num2chars/sizeof(WORD)+1;
 	}
 	else size2 = 0;
-	while ( C->Pointer+size1+size2+n+3 >= C->Top ) DoubleCbuffer(AC.cbufnum,C->Pointer);
+	while ( C->Pointer+size1+size2+n+3 >= C->Top ) DoubleCbuffer(AC.cbufnum,C->Pointer,20);
 	*(C->Pointer)++ = array[0];
 	*(C->Pointer)++ = size1+size2+n+3;
 	for ( i = 1; i < n; i++ ) *(C->Pointer)++ = array[i];

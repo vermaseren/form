@@ -400,7 +400,11 @@ int SetupAllInputGZIP(SORTING *S)
 			MUNLOCK(ErrorMessageLock);
 			Terminate(-1);
 		}
-		AN.ziobuffers = (Bytef *)Malloc1(S->MaxFpatches*S->file.ziosize*sizeof(Bytef),"input raw buffers");
+/*
+		We add 128 bytes in the hope that if it can happen that it goes
+		outside the buffer during decompression, it does not do damage.
+*/
+		AN.ziobuffers = (Bytef *)Malloc1(S->MaxFpatches*(S->file.ziosize+128)*sizeof(Bytef),"input raw buffers");
 /*
 		This seems to be one of the really stupid errors:
 		We allocate way too much space. Way way way too much.
@@ -414,7 +418,7 @@ int SetupAllInputGZIP(SORTING *S)
 			Terminate(-1);
 		}
 		for ( i  = 0 ; i < S->MaxFpatches; i++ ) {
-			AN.ziobufnum[i] = AN.ziobuffers + i * S->file.ziosize;
+			AN.ziobufnum[i] = AN.ziobuffers + i * (S->file.ziosize+128);
 		}
 	}
 	for ( i = 0; i < S->inNum; i++ ) {
@@ -572,7 +576,7 @@ LONG FillInputGZIP(FILEHANDLE *f, POSITION *position, UBYTE *buffer, LONG buffer
 					}
 					MUNLOCK(ErrorMessageLock);
 #endif
-					if ( inflateEnd(zsp) == Z_OK ) return(readsize);
+					if ( ( zerror = inflateEnd(zsp) ) == Z_OK ) return(readsize);
 					break;
 */
 				}
@@ -673,7 +677,7 @@ LONG FillInputGZIP(FILEHANDLE *f, POSITION *position, UBYTE *buffer, LONG buffer
 		}
 
 		MLOCK(ErrorMessageLock);
-		MesPrint("%wFillInputGZIP: Error in gzip handling of input.");
+		MesPrint("%wFillInputGZIP: Error in gzip handling of input. zerror = %d",zerror);
 		MUNLOCK(ErrorMessageLock);
 		return(-1);
 	}
