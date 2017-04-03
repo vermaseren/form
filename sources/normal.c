@@ -32,7 +32,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */ 
+/* #] License : */
 /*
   	#[ Includes : normal.c
 */
@@ -40,7 +40,7 @@
 #include "form3.h"
 
 /*
-  	#] Includes : 
+  	#] Includes :
  	#[ Normalize :
  		#[ CompareFunctions :
 */
@@ -95,7 +95,7 @@ WORD CompareFunctions(WORD *fleft,WORD *fright)
 }
 
 /*
- 		#] CompareFunctions : 
+ 		#] CompareFunctions :
  		#[ Commute :
 
 	This function gets two adjacent function pointers and decides
@@ -174,7 +174,7 @@ WORD Commute(WORD *fleft, WORD *fright)
 }
 
 /*
- 		#] Commute : 
+ 		#] Commute :
  		#[ Normalize :
 
 	This is the big normalization routine. It has a great need
@@ -225,7 +225,7 @@ WORD Normalize(PHEAD WORD *term)
 	int termflag;
 */
 /*
-  	#] Declarations : 
+  	#] Declarations :
   	#[ Setup :
 PrintTerm(term,"Normalize");
 */
@@ -250,7 +250,7 @@ Restart:
 	termflag = 0;
 */
 /*
-  	#] Setup : 
+  	#] Setup :
   	#[ First scan :
 */
 	nsym = nvec = ndot = ndel = neps = nden = 
@@ -387,7 +387,7 @@ conscan:;
 				}
 				ncoef = INCLENG(ncoef);
 /*
-			#] TO SNUMBER : 
+			#] TO SNUMBER :
 */
 						t += 2;
 						goto NextSymbol;
@@ -2508,7 +2508,7 @@ TryAgain:;
 		goto conscan;
 	}
 /*
-  	#] First scan : 
+  	#] First scan :
   	#[ Easy denominators :
 
 	Easy denominators are denominators that can be replaced by
@@ -2657,7 +2657,7 @@ DropDen:
 		}
 	}
 /*
-  	#] Easy denominators : 
+  	#] Easy denominators :
   	#[ Index Contractions :
 */
 	if ( ndel ) {
@@ -2891,7 +2891,7 @@ HaveCon:
 		}
 	}
 /*
-  	#] Index Contractions : 
+  	#] Index Contractions :
   	#[ NonCommuting Functions :
 */
 	m = fillsetexp;
@@ -3046,7 +3046,7 @@ onegammamatrix:
 
 	}
 /*
-  	#] NonCommuting Functions : 
+  	#] NonCommuting Functions :
   	#[ Commuting Functions :
 */
 	if ( ncom ) {
@@ -3216,7 +3216,7 @@ NextI:;
 						k = *mm; NCOPY(tt,mm,k)
 					}
 					*t = AR.PolyFun;
-/*					t[2] |= CLEANPRF; */
+					t[2] |= CLEANPRF;
 					goto regularratfun;
 				}
 			}
@@ -3329,7 +3329,7 @@ regularratfun:;
 		}
 	}
 /*
-  	#] Commuting Functions : 
+  	#] Commuting Functions :
   	#[ Track Replace_ :
 */
 	if ( ReplaceVeto < 0 ) {
@@ -3600,7 +3600,7 @@ NoRep:
 		}
 	}
 /*
-  	#] Track Replace_ : 
+  	#] Track Replace_ :
   	#[ LeviCivita tensors :
 */
 	if ( neps ) {
@@ -3688,7 +3688,7 @@ NoRep:
 		}
 	}
 /*
-  	#] LeviCivita tensors : 
+  	#] LeviCivita tensors :
   	#[ Delta :
 */
 	if ( ndel ) {
@@ -3719,7 +3719,7 @@ NoRep:
 		NCOPY(m,t,i);
 	}
 /*
-  	#] Delta : 
+  	#] Delta :
   	#[ Loose Vectors/Indices :
 */
 	if ( nind ) {
@@ -3741,7 +3741,7 @@ NoRep:
 		NCOPY(m,t,i);
 	}
 /*
-  	#] Loose Vectors/Indices : 
+  	#] Loose Vectors/Indices :
   	#[ Vectors :
 */
 	if ( nvec ) {
@@ -3770,7 +3770,7 @@ NoRep:
 		NCOPY(m,t,i);
 	}
 /*
-  	#] Vectors : 
+  	#] Vectors :
   	#[ Dotproducts :
 */
 	if ( ndot ) {
@@ -3845,7 +3845,7 @@ NoRep:
 		}
 	}
 /*
-  	#] Dotproducts : 
+  	#] Dotproducts :
   	#[ Symbols :
 */
 	if ( nsym ) {
@@ -3900,7 +3900,7 @@ NoRep:
 		if ( *r <= 2 ) m = r-1;
 	}
 /*
-  	#] Symbols : 
+  	#] Symbols :
   	#[ Do Replace_ :
 */
     stop = (WORD *)(((UBYTE *)(termout)) + AM.MaxTer);
@@ -3965,7 +3965,7 @@ NoRep:
 		*m++ = ncoef;
 	}
 /*
-  	#] Do Replace_ : 
+  	#] Do Replace_ :
   	#[ Errors and Finish :
 */
 RegEnd:
@@ -4019,12 +4019,12 @@ FromNorm:
 	return(-1);
 
 /*
-  	#] Errors and Finish : 
+  	#] Errors and Finish :
 */
 }
 
 /*
- 		#] Normalize : 
+ 		#] Normalize :
  		#[ ExtraSymbol :
 */
 
@@ -4086,7 +4086,7 @@ WORD ExtraSymbol(WORD sym, WORD pow, WORD nsym, WORD *ppsym, WORD *ncoef)
 }
 
 /*
- 		#] ExtraSymbol : 
+ 		#] ExtraSymbol :
  		#[ DoTheta :
 */
 
@@ -4183,7 +4183,7 @@ WORD DoTheta(PHEAD WORD *t)
 }
 
 /*
- 		#] DoTheta : 
+ 		#] DoTheta :
  		#[ DoDelta :
 */
 
@@ -4250,7 +4250,7 @@ argnonzero:
 }
 
 /*
- 		#] DoDelta : 
+ 		#] DoDelta :
  		#[ DoRevert :
 */
 
@@ -4325,7 +4325,7 @@ void DoRevert(WORD *fun, WORD *tmp)
 }
 
 /*
- 		#] DoRevert : 
+ 		#] DoRevert :
  	#] Normalize :
   	#[ DetCommu :
 
@@ -4394,7 +4394,7 @@ WORD DetCommu(WORD *terms)
 }
 
 /*
-  	#] DetCommu : 
+  	#] DetCommu :
   	#[ DoesCommu :
 
 	Determines the number of noncommuting objects in a term.
@@ -4420,7 +4420,7 @@ WORD DoesCommu(WORD *term)
 }
 
 /*
-  	#] DoesCommu : 
+  	#] DoesCommu :
   	#[ PolyNormPoly :
 
 		Normalizes a polynomial
@@ -4457,7 +4457,7 @@ WORD *PolyNormPoly (PHEAD WORD *Poly) {
 #endif
 
 /*
-  	#] PolyNormPoly : 
+  	#] PolyNormPoly :
   	#[ EvaluateGcd :
 
 	Try to evaluate the GCDFUNCTION gcd_.
@@ -4782,7 +4782,7 @@ FromGCD:
 #endif
 
 /*
-  	#] EvaluateGcd : 
+  	#] EvaluateGcd :
   	#[ TreatPolyRatFun :
 
 	if ( AR.PolyFunExp == 1 ) we have to trim the contents of the polyratfun
@@ -4924,7 +4924,7 @@ int TreatPolyRatFun(PHEAD WORD *prf)
 }
 
 /*
-  	#] TreatPolyRatFun : 
+  	#] TreatPolyRatFun :
   	#[ DropCoefficient :
 */
 
@@ -4942,7 +4942,7 @@ void DropCoefficient(PHEAD WORD *term)
 }
 
 /*
-  	#] DropCoefficient : 
+  	#] DropCoefficient :
   	#[ DropSymbols :
 */
 
@@ -4965,7 +4965,7 @@ void DropSymbols(PHEAD WORD *term)
 }
 
 /*
-  	#] DropSymbols : 
+  	#] DropSymbols :
   	#[ SymbolNormalize :
 */
 /**
@@ -5065,7 +5065,7 @@ Nexti:;
 }
 
 /*
-  	#] SymbolNormalize : 
+  	#] SymbolNormalize :
   	#[ TestFunFlag :
 
 	Tests whether a function still has unsubstituted subexpressions
@@ -5099,7 +5099,7 @@ int TestFunFlag(PHEAD WORD *tfun)
 }
 
 /*
-  	#] TestFunFlag : 
+  	#] TestFunFlag :
   	#[ BracketNormalize :
 */
 
@@ -5258,5 +5258,5 @@ WORD BracketNormalize(PHEAD WORD *term)
 }
 
 /*
-  	#] BracketNormalize : 
+  	#] BracketNormalize :
 */

@@ -755,6 +755,7 @@ extern int    ConWord(UBYTE *,UBYTE *);
 extern int    StrLen(UBYTE *);
 extern UBYTE *GetPreVar(UBYTE *,int);
 extern void   ToGeneral(WORD *,WORD *,WORD);
+extern WORD   ToPolyFunGeneral(PHEAD WORD *);
 extern int    ToFast(WORD *,WORD *);
 extern SETUPPARAMETERS *GetSetupPar(UBYTE *);
 extern int    RecalcSetups(VOID);

@@ -3051,6 +3051,81 @@ int ToFast(WORD *r, WORD *m)
 
 /*
  		#] ToFast : 
+ 		#[ ToPolyFunGeneral :
+
+	Routine forces a polyratfun into general notation if needed.
+	If no action was needed, the return value is zero.
+	A positive return value indicates how many arguments were converted.
+	The new term overwrite the old.
+*/
+
+WORD ToPolyFunGeneral(PHEAD WORD *term)
+{
+	WORD *t = term+1, *tt, *to, *to1, *termout, *tstop, *tnext;
+	WORD numarg, i, change = 0;
+	tstop = term + *term; tstop -= ABS(tstop[-1]);
+	termout = to = AT.WorkPointer;
+	to++;
+	while ( t < tstop ) { /* go through the subterms */
+		if ( *t == AR.PolyFun ) {
+			tt = t+FUNHEAD; tnext = t + t[1];
+			numarg = 0;
+			while ( tt < tnext ) { numarg++; NEXTARG(tt); }
+			if ( numarg == 2 ) { /* this needs attention */
+				tt = t + FUNHEAD;
+				to1 = to;
+				i = FUNHEAD; NCOPY(to,t,i);
+				while ( tt < tnext ) { /* Do the arguments */
+					if ( *tt > 0 ) {
+						i = *tt; NCOPY(to,tt,i);
+					}
+					else if ( *tt == -SYMBOL ) {
+						to1[1] += 6+ARGHEAD; to1[2] |= CLEANPRF; change++;
+						*to++ = 8+ARGHEAD; *to++ = 0; FILLARG(to);
+						*to++ = 8; *to++ = SYMBOL; *to++ = 4; *to++ = tt[1];
+						*to++ = 1; *to++ = 1; *to++ = 1; *to++ = 3;
+						tt += 2;
+					}
+					else if ( *tt == -SNUMBER ) {
+						if ( tt[1] > 0 ) {
+							to1[1] += 2+ARGHEAD; to1[2] |= CLEANPRF; change++;
+							*to++ = 4+ARGHEAD; *to++ = 0; FILLARG(to);
+							*to++ = 4; *to++ = tt[1]; *to++ = 1; *to++ = 3;
+							tt += 2;
+						}
+						else if ( tt[1] < 0 ) {
+							to1[1] += 2+ARGHEAD; to1[2] |= CLEANPRF; change++;
+							*to++ = 4+ARGHEAD; *to++ = 0; FILLARG(to);
+							*to++ = 4; *to++ = -tt[1]; *to++ = 1; *to++ = -3;
+							tt += 2;
+						}
+						else {
+							MLOCK(ErrorMessageLock);
+							MesPrint("Internal error: Zero in PolyRatFun");
+							MUNLOCK(ErrorMessageLock);
+							Terminate(-1);
+						}
+					}
+				}
+				t = tnext;
+				continue;
+			}
+		}
+		i = t[1]; NCOPY(to,t,i)
+	}
+	if ( change ) {
+		tt = term + *term;
+        while ( t < tt ) *to++ = *t++;
+		*termout = to - termout;
+		t = term; i = *termout; tt = termout;
+		NCOPY(t,tt,i)
+		AT.WorkPointer = term + *term;
+	}
+	return(change);
+}
+
+/*
+ 		#] ToPolyFunGeneral : 
  		#[ IsLikeVector :
 
 		Routine determines whether a function argument is like a vector.
