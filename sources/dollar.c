@@ -130,8 +130,6 @@ int CatchDollar(int par)
 	else
 		goto onerror;
 	newsize = (w-dbuffer)+1;
-	if ( newsize < 32 ) newsize = 32;
-	newsize = ((newsize+7)/8)*8;
 #ifdef WITHMPI
 	}
 	if ( AC.RhsExprInModuleFlag )
@@ -139,6 +137,8 @@ int CatchDollar(int par)
 		if ( (error = PF_BroadcastPreDollar(&dbuffer, &newsize, &numterms)) != 0 )
 			goto onerror;
 #endif
+	if ( newsize < 32 ) newsize = 32;
+	newsize = ((newsize+7)/8)*8;
 	if ( numterms == 0 ) {
 		d->type = DOLZERO;
 		goto docopy;
