@@ -31,7 +31,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */ 
+/* #] License : */
  
 /**
  *	The next macros were introduced when TFORM was programmed. In the case of
@@ -613,11 +613,8 @@ typedef int (*TFUN1)();
 #define CLEANFLAG 0
 #define DIRTYFLAG 1
 #define DIRTYSYMFLAG 2
+#define MUSTCLEANPRF 4
 #define ALLDIRTY (DIRTYFLAG|DIRTYSYMFLAG)
-/*
-#define CLEANPRF 1
-*/
-#define CLEANPRF 4
 
 #define ARGHEAD 2
 #define FUNHEAD 3

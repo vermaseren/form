@@ -3080,7 +3080,7 @@ WORD ToPolyFunGeneral(PHEAD WORD *term)
 						i = *tt; NCOPY(to,tt,i);
 					}
 					else if ( *tt == -SYMBOL ) {
-						to1[1] += 6+ARGHEAD; to1[2] |= CLEANPRF; change++;
+						to1[1] += 6+ARGHEAD; to1[2] |= MUSTCLEANPRF; change++;
 						*to++ = 8+ARGHEAD; *to++ = 0; FILLARG(to);
 						*to++ = 8; *to++ = SYMBOL; *to++ = 4; *to++ = tt[1];
 						*to++ = 1; *to++ = 1; *to++ = 1; *to++ = 3;
@@ -3088,13 +3088,13 @@ WORD ToPolyFunGeneral(PHEAD WORD *term)
 					}
 					else if ( *tt == -SNUMBER ) {
 						if ( tt[1] > 0 ) {
-							to1[1] += 2+ARGHEAD; to1[2] |= CLEANPRF; change++;
+							to1[1] += 2+ARGHEAD; to1[2] |= MUSTCLEANPRF; change++;
 							*to++ = 4+ARGHEAD; *to++ = 0; FILLARG(to);
 							*to++ = 4; *to++ = tt[1]; *to++ = 1; *to++ = 3;
 							tt += 2;
 						}
 						else if ( tt[1] < 0 ) {
-							to1[1] += 2+ARGHEAD; to1[2] |= CLEANPRF; change++;
+							to1[1] += 2+ARGHEAD; to1[2] |= MUSTCLEANPRF; change++;
 							*to++ = 4+ARGHEAD; *to++ = 0; FILLARG(to);
 							*to++ = 4; *to++ = -tt[1]; *to++ = 1; *to++ = -3;
 							tt += 2;

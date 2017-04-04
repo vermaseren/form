@@ -1508,7 +1508,7 @@ WORD PutOut(PHEAD WORD *term, POSITION *position, FILEHANDLE *fi, WORD ncomp)
 					polystop += polystop[1];
 				}
 				if ( polystop < sa ) {
-					if ( AR.PolyFunType == 2 ) polystop[2] &= ~CLEANPRF;
+					if ( AR.PolyFunType == 2 ) polystop[2] &= ~MUSTCLEANPRF;
 					while ( i > 0 && j > 0 && *p == *r && p < polystop ) {
 						i--; j--; k--; p++; r++;
 					}
@@ -1567,7 +1567,7 @@ nocompress:
 					polystop += polystop[1];
 				}
 				if ( polystop < sa ) {
-					if ( AR.PolyFunType == 2 ) polystop[2] &= ~CLEANPRF;
+					if ( AR.PolyFunType == 2 ) polystop[2] &= ~MUSTCLEANPRF;
 					while ( i > 0 && j > 0 && *p == *r && p < polystop ) {
 						i--; j--; k--; p++; r++;
 					}
@@ -1589,7 +1589,7 @@ nocompress:
 				t = term+1;
 				while ( t < tstop ) {
 					if ( *t == AR.PolyFun ) {
-						t[2] &= ~CLEANPRF;
+						t[2] &= ~MUSTCLEANPRF;
 					}
 					t += t[1];
 				}

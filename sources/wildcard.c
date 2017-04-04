@@ -1090,7 +1090,7 @@ DEBUG(MesPrint("Thread %w(b): s[3] = %d, w=(%d,%d,%d,%d)",s[3],w[0],w[1],w[2],w[
 									if ( *t == s[2] && *s <= SYMTOSUB ) {
 										dirty = 1; v[2] |= DIRTYFLAG;
 										if ( AR.PolyFunType == 2 && v[0] == AR.PolyFun )
-											v[2] |= CLEANPRF;
+											v[2] |= MUSTCLEANPRF;
 										if ( *s == SYMTOSYM ) *m = s[3];
 										else if ( *s == SYMTONUM ) {
 											m[-1] = -SNUMBER;
@@ -1243,7 +1243,7 @@ ss10:							*m++ = *t++;
 							if ( adirt ) {
 								dirty = w[1] = 1; v[2] |= DIRTYFLAG;
 								if ( AR.PolyFunType == 2 && v[0] == AR.PolyFun )
-									v[2] |= CLEANPRF;
+									v[2] |= MUSTCLEANPRF;
 								AN.WildDirt = adirt;
 							}
 							else {

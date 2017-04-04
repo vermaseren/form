@@ -145,7 +145,7 @@ void PolyFunDirty(PHEAD WORD *term)
 	t = term+1;
 	while ( t < tstop ) {
 		if ( *t == AR.PolyFun ) {
-			if ( AR.PolyFunType == 2 ) t[2] |= CLEANPRF;
+			if ( AR.PolyFunType == 2 ) t[2] |= MUSTCLEANPRF;
 			endarg = t + t[1];
 			t[2] |= DIRTYFLAG;
 			t += FUNHEAD;
@@ -180,7 +180,7 @@ void PolyFunClean(PHEAD WORD *term)
 	t = term+1;
 	while ( t < tstop ) {
 		if ( *t == AR.PolyFun ) {
-			t[2] &= ~CLEANPRF;
+			t[2] &= ~MUSTCLEANPRF;
 		}
 		t += t[1];
 	}

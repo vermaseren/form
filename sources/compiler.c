@@ -1121,7 +1121,7 @@ doexpr:					s += 2;
 				}
 				v = t; *t++ = x1; *t++ = FUNHEAD; *t++ = DIRTYFLAG;
 				if ( x1 == AR.PolyFun && AR.PolyFunType == 2 )
-						t[-1] |= CLEANPRF;
+						t[-1] |= MUSTCLEANPRF;
 				FILLFUN3(t)
 				needarg = -1;
 				if ( !inset && functions[x3-FUNCTION].spec >= TENSORFUNCTION ) {

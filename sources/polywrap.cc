@@ -42,7 +42,6 @@
 #include <climits>
 
 //#define DEBUG
-#define CLEARPRF
 
 #ifdef DEBUG
 #include "mytime.h"
@@ -427,7 +426,7 @@ WORD *poly_rem(PHEAD WORD *a, WORD *b, WORD fit) {
  *   ===========
  *   This method reads a polyratfun starting at the pointer a. The
  *   resulting numerator and denominator are written in num and
- *   den. If not CLEANPRF, the result is normalized.
+ *   den. If MUSTCLEANPRF, the result is normalized.
  *
  *   Notes
  *   =====
@@ -445,11 +444,7 @@ void poly_ratfun_read (WORD *a, poly &num, poly &den) {
 	
 	WORD *astop = a+a[1];
 
-#ifdef CLEARPRF
-	bool clean = (a[2] & CLEANPRF) == 0;
-#else
-	bool clean = (a[2] & CLEANPRF) != 0;
-#endif
+	bool clean = (a[2] & MUSTCLEANPRF) == 0;
 		
 	a += FUNHEAD;
 	if (a >= astop) {
@@ -642,11 +637,7 @@ WORD *poly_ratfun_add (PHEAD WORD *t1, WORD *t2) {
 
 	*t++ = AR.PolyFun;                   // function 
 	*t++ = 0;                            // length (to be determined)
-#ifdef CLEARPRF
-	*t++ &= ~CLEANPRF;                     // clean polyratfun
-#else
-	*t++ = CLEANPRF;                     // clean polyratfun
-#endif
+	*t++ &= ~MUSTCLEANPRF;               // clean polyratfun
 	FILLFUN3(t);                         // header
 	poly::poly_to_argument(num,t, true); // argument 1 (numerator)
 	if (*t>0 && t[1]==DIRTYFLAG)          // to Form order
@@ -705,11 +696,7 @@ int poly_ratfun_normalize (PHEAD WORD *term) {
 	for (WORD *t=term+1; t<tstop; t+=t[1]) 
 		if (*t == AR.PolyFun) {
 			num_polyratfun++;
-#ifdef CLEARPRF
-			if ((t[2] & CLEANPRF) != 0)
-#else
-			if ((t[2] & CLEANPRF) == 0)
-#endif
+			if ((t[2] & MUSTCLEANPRF) != 0)
 				num_polyratfun = INT_MAX;
 			if (num_polyratfun > 1) break;
 		}
@@ -753,7 +740,7 @@ int poly_ratfun_normalize (PHEAD WORD *term) {
 			poly num2(BHEAD 0,modp,1);
 			poly den2(BHEAD 0,modp,1);
 			poly_ratfun_read(t,num2,den2);
-			if ((t[2] & CLEANPRF) != 0) { // first normalize
+			if ((t[2] & MUSTCLEANPRF) != 0) { // first normalize
 				poly gcd1(polygcd::gcd(num2,den2));
 				num2 = num2/gcd1;
 				den2 = den2/gcd1;
@@ -788,11 +775,7 @@ int poly_ratfun_normalize (PHEAD WORD *term) {
 	WORD *t = s;
 	*t++ = AR.PolyFun;                   // function
 	*t++ = 0;                            // size (to be determined)
-#ifdef CLEARPRF
-	*t++ &= ~CLEANPRF;                   // clean polyratfun
-#else
-	*t++ = CLEANPRF;                     // clean polyratfun
-#endif
+	*t++ &= ~MUSTCLEANPRF;                   // clean polyratfun
 	FILLFUN3(t);                         // header
 	poly::poly_to_argument(num1,t,true); // argument 1 (numerator)
 	if (*t>0 && t[1]==DIRTYFLAG)         // to Form order

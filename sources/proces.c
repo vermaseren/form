@@ -28,7 +28,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */
+/* #] License : */ 
 /*
 #define HIDEDEBUG
   	#[ Includes : proces.c
@@ -39,7 +39,7 @@
 WORD printscratch[2];
 
 /*
-  	#] Includes :
+  	#] Includes : 
 	#[ Processor :
  		#[ Processor :			WORD Processor()
 */
@@ -257,7 +257,7 @@ WORD Processor()
 			if ( AR.expchanged ) AR.expflags |= ISUNMODIFIED;
 			AR.GetFile = 0;
 /*
-			#] in memory :
+			#] in memory : 
 */
 		}
 		else {
@@ -651,7 +651,7 @@ ProcErr:
 	return(-1);
 }
 /*
- 		#] Processor :
+ 		#] Processor : 
  		#[ TestSub :			WORD TestSub(term,level)
 */
 /**
@@ -1178,7 +1178,7 @@ Important: we may not have enough spots here
 				}
 			}
 			if ( functions[funnum-FUNCTION].spec == 0
-				|| ( t[2] & (DIRTYFLAG|CLEANPRF) ) != 0 ) { funflag = 1; }
+				|| ( t[2] & (DIRTYFLAG|MUSTCLEANPRF) ) != 0 ) { funflag = 1; }
 			if ( *t <= MAXBUILTINFUNCTION ) {
 			  if ( *t <= DELTAP && *t >= THETA ) { /* Speeds up by 2 or 3 compares */
 			  if ( *t == THETA || *t == THETA2 ) {
@@ -1452,7 +1452,7 @@ redosize:
 								AN.subsubveto = 0;
 								t1[2] = 1;
 								if ( *t1 == AR.PolyFun && AR.PolyFunType == 2 )
-									t1[2] |= CLEANPRF;
+									t1[2] |= MUSTCLEANPRF;
 								AT.RecFlag--;
 								AT.NestPoin--;
 								AN.TeInFun++;
@@ -1526,8 +1526,7 @@ redosize:
 								if ( *t1 == AR.PolyFun && AR.PolyFunType == 2 ) {
 									AR.SortType = oldsorttype;
 									AR.CompareRoutine = oldcompareroutine;
-/*									t1[2] &= CLEANPRF; */
-									t1[2] |= CLEANPRF;
+									t1[2] |= MUSTCLEANPRF;
 								}
 								LowerSortLevel(); goto EndTest;
 							}
@@ -1539,8 +1538,7 @@ redosize:
 										if ( *t1 == AR.PolyFun && AR.PolyFunType == 2 ) {
 											AR.SortType = oldsorttype;
 											AR.CompareRoutine = oldcompareroutine;
-/*											t1[2] &= CLEANPRF; */
-											t1[2] |= CLEANPRF;
+											t1[2] |= MUSTCLEANPRF;
 										}
 										goto EndTest;
 									}
@@ -1554,8 +1552,7 @@ redosize:
 						if ( *t1 == AR.PolyFun && AR.PolyFunType == 2 ) {
 							AR.SortType = oldsorttype;
 							AR.CompareRoutine = oldcompareroutine;
-/*							t1[2] &= CLEANPRF; */
-							t1[2] |= CLEANPRF;
+							t1[2] |= MUSTCLEANPRF;
 						}
 						while ( *m ) m += *m;
 						i = WORDDIF(m,AT.WorkPointer);
@@ -1888,7 +1885,7 @@ EndTest2:;
 }
 
 /*
- 		#] TestSub :
+ 		#] TestSub : 
  		#[ InFunction :			WORD InFunction(term,termout)
 */
 /**
@@ -2426,7 +2423,7 @@ TooLarge:
 }
  		
 /*
- 		#] InFunction :
+ 		#] InFunction : 
  		#[ InsertTerm :			WORD InsertTerm(term,replac,extractbuff,position,termout)
 */
 /**
@@ -2564,7 +2561,7 @@ InsCall2:
 }
 
 /*
- 		#] InsertTerm :
+ 		#] InsertTerm : 
  		#[ PasteFile :			WORD PasteFile(num,acc,pos,accf,renum,freeze,nexpr)
 */
 /**
@@ -2680,7 +2677,7 @@ PasErr:
 }
  		
 /*
- 		#] PasteFile :
+ 		#] PasteFile : 
  		#[ PasteTerm :			WORD PasteTerm(number,accum,position,times,divby)
 */
 /**
@@ -2755,7 +2752,7 @@ WORD *PasteTerm(PHEAD WORD number, WORD *accum, WORD *position, WORD times, WORD
 }
 
 /*
- 		#] PasteTerm :
+ 		#] PasteTerm : 
  		#[ FiniTerm :			WORD FiniTerm(term,accum,termout,number)
 */
 /**
@@ -2934,7 +2931,7 @@ FiniCall:
 }
 
 /*
- 		#] FiniTerm :
+ 		#] FiniTerm : 
  		#[ Generator :			WORD Generator(BHEAD term,level)
 */
  
@@ -3610,7 +3607,7 @@ CommonEnd:
 				}
 				goto SkipCount;
 /*
-			#] Special action :
+			#] Special action : 
 */
 			}
 		} while ( ( i = TestMatch(BHEAD term,&level) ) == 0 );
@@ -4193,7 +4190,7 @@ OverWork:
 }
 
 /*
- 		#] Generator :
+ 		#] Generator : 
  		#[ DoOnePow :			WORD DoOnePow(term,power,nexp,accum,aa,level,freeze)
 */
 /**
@@ -4426,7 +4423,7 @@ PowCall2:;
 }
 
 /*
- 		#] DoOnePow :
+ 		#] DoOnePow : 
  		#[ Deferred :			WORD Deferred(term,level)
 */
 /**
@@ -4548,7 +4545,7 @@ DefCall:;
 }
 
 /*
- 		#] Deferred :
+ 		#] Deferred : 
  		#[ PrepPoly :			WORD PrepPoly(term)
 */
 /**
@@ -4677,7 +4674,7 @@ WORD PrepPoly(PHEAD WORD *term)
 			}
 		}
 /*
- 		#] Create a PolyFun :
+ 		#] Create a PolyFun : 
 */
 	}
 	else if ( AR.PolyFunType == 1 || (AR.PolyFunType == 2 && AR.PolyFunExp == 2) ) {
@@ -4828,7 +4825,7 @@ WORD PrepPoly(PHEAD WORD *term)
 		t = poly + poly[1];
 		while ( t < tstop ) *poly++ = *t++;
 /*
- 		#] One argument :
+ 		#] One argument : 
 */
 	}
 	else if ( AR.PolyFunType == 2 ) {
@@ -4862,7 +4859,7 @@ WORD PrepPoly(PHEAD WORD *term)
 		v = m;
 		*v++ = AR.PolyFun;
 		*v++ = FUNHEAD + 2*(ARGHEAD+sizenum+sizeden+2);
-/*		*v++ = CLEANPRF; */
+/*		*v++ = MUSTCLEANPRF; */
 		*v++ = 0;
 		FILLFUN3(v);
 		*v++ = ARGHEAD+2*sizenum+2;
@@ -4905,7 +4902,7 @@ WORD PrepPoly(PHEAD WORD *term)
 		}
 		goto endofit;
 /*
- 		#] Two arguments :
+ 		#] Two arguments : 
 */
 	}
 	else {
@@ -4926,7 +4923,7 @@ endofit:;
 }
 
 /*
- 		#] PrepPoly :
+ 		#] PrepPoly : 
  		#[ PolyFunMul :			WORD PolyFunMul(term)
 */
 /**
@@ -5042,7 +5039,7 @@ ReStart:
 			  while ( tt2 < t2 ) { count3++; NEXTARG(tt2); }
 			  if ( count3 == 2 ) {
 				count1++;
-				if ( ( t[2] & CLEANPRF ) != 0 ) {	/* Better civilize this guy */
+				if ( ( t[2] & MUSTCLEANPRF ) != 0 ) {	/* Better civilize this guy */
 					action++;
 					w = AT.WorkPointer;
 					AR.SortType = SORTHIGHFIRST;
@@ -5122,7 +5119,7 @@ ReStart:
 				if ( *t == AR.PolyFun ) {
 					t2 = t;
 					t = t + t[1];
-					t2[2] |= (DIRTYFLAG|CLEANPRF);
+					t2[2] |= (DIRTYFLAG|MUSTCLEANPRF);
 					t2 += FUNHEAD;
 					while ( t2 < t ) {
 						if ( *t2 > 0 ) t2[1] = DIRTYFLAG;
@@ -5376,6 +5373,6 @@ PolyCall2:;
 }
 
 /*
- 		#] PolyFunMul :
+ 		#] PolyFunMul : 
 	#] Processor :
 */

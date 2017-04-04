@@ -2260,7 +2260,7 @@ int ReadPolyRatFun(PHEAD WORD *term)
 	t = term+1;
 	while ( t < tstop ) {
 		if ( *t != AR.PolyFun ) { t += t[1]; continue; }
-		if ( ( t[2] & CLEANPRF ) == 0 ) { t += t[1]; continue; }
+		if ( ( t[2] & MUSTCLEANPRF ) == 0 ) { t += t[1]; continue; }
 		fun = t;
 		nextt = t + t[1];
 		if ( fun[1] > FUNHEAD && fun[FUNHEAD] == -SNUMBER && fun[FUNHEAD+1] == 0 )
