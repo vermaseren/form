@@ -1436,3 +1436,28 @@ P +s;
 assert succeeded?
 assert result("F") =~ expr("+ 3541369744012249598473/192*den(3)")
 *--#] Issue169 :
+*--#[ Issue180 :
+* Broken RAT
+S ep;
+CF rat,RAT;
+PolyRatFun rat,RAT;
+
+L F = 1;
+
+P "A1:%t";
+multiply RAT(1+ep,1);
+P "A2:%t";
+P;
+.sort
+
+P "B1:%t";
+multiply RAT(1+ep,1);
+P "B2:%t";
+P;
+.sort
+
+P;
+.end
+assert succeeded?
+assert result("F") =~ expr("rat(1,ep^2 + 2*ep + 1)")
+*--#] Issue180 :
