@@ -698,7 +698,6 @@ int poly_ratfun_normalize (PHEAD WORD *term) {
 	WORD *tstop = term + *term;
 	int ncoeff = tstop[-1];
 	tstop -= ABS(ncoeff);
-	int action = 0;
 
 	// if only one clean polyratfun, return immediately
 	int num_polyratfun = 0;
@@ -711,12 +710,11 @@ int poly_ratfun_normalize (PHEAD WORD *term) {
 #else
 			if ((t[2] & CLEANPRF) == 0)
 #endif
-//				num_polyratfun = INT_MAX;
-				action = 1;
-//			if (num_polyratfun > 1) break;
+				num_polyratfun = INT_MAX;
+			if (num_polyratfun > 1) break;
 		}
 		
-	if (num_polyratfun <= 1 && action == 0) return 0;
+	if (num_polyratfun <= 1) return 0;
 /*
 	When there are polyratfun's with only one variable: rename them
 	temporarily to TMPPOLYFUN.
@@ -755,6 +753,11 @@ int poly_ratfun_normalize (PHEAD WORD *term) {
 			poly num2(BHEAD 0,modp,1);
 			poly den2(BHEAD 0,modp,1);
 			poly_ratfun_read(t,num2,den2);
+			if ((t[2] & CLEANPRF) != 0) { // first normalize
+				poly gcd1(polygcd::gcd(num2,den2));
+				num2 = num2/gcd1;
+				den2 = den2/gcd1;
+			}
 			t += t[1];
 			poly gcd1(polygcd::gcd(num1,den2));
 			poly gcd2(polygcd::gcd(num2,den1));
@@ -767,13 +770,6 @@ int poly_ratfun_normalize (PHEAD WORD *term) {
 			if ( s != t ) {	NCOPY(s,t,i) }
 			else { t += i; s += i; }
 		}			
-	// Now make sure the result is properly normalized.
-	// Note that this is only done when there is a dirty flag
-	if ( action ) {
-		poly gcd1(polygcd::gcd(num1,den1));
-		num1 = num1/gcd1;
-		den1 = den1/gcd1;
-	}
 
 	// Fix sign
 	if (den1.sign() == -1) { num1*=poly(BHEAD -1); den1*=poly(BHEAD -1); }
