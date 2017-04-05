@@ -1027,6 +1027,8 @@ dovector:		if ( inset == 0 ) x1 += AM.OffsetVector;
 					if ( s[0] == TFUNOPEN && s[1] == TEXPRESSION ) {
 doexpr:					s += 2;
 						*t++ = x1; *t++ = FUNHEAD+2; *t++ = 0;
+						if ( x1 == AR.PolyFun && AR.PolyFunType == 2 && AR.Eside != LHSIDE )
+								t[-1] |= MUSTCLEANPRF;
 						FILLFUN3(t)
 						x2 = 0; while ( *s >= 0 ) { x2 = x2*128 + *s++; }
 						*t++ = -EXPRESSION; *t++ = x2;
@@ -1117,10 +1119,12 @@ doexpr:					s += 2;
 				if ( functions[x3-FUNCTION].commute ) cc = 1;
 				if ( *s != TFUNOPEN ) {
 					*t++ = x1; *t++ = FUNHEAD; *t++ = 0;
+					if ( x1 == AR.PolyFun && AR.PolyFunType == 2 && AR.Eside != LHSIDE )
+							t[-1] |= MUSTCLEANPRF;
 					FILLFUN3(t) sumlevel = 0; goto fin;
 				}
 				v = t; *t++ = x1; *t++ = FUNHEAD; *t++ = DIRTYFLAG;
-				if ( x1 == AR.PolyFun && AR.PolyFunType == 2 )
+				if ( x1 == AR.PolyFun && AR.PolyFunType == 2 && AR.Eside != LHSIDE )
 						t[-1] |= MUSTCLEANPRF;
 				FILLFUN3(t)
 				needarg = -1;
@@ -1428,6 +1432,8 @@ dofunction:			firstsumarg = 1;
 					x1 += FUNCTION;
 					cc = 1;
 					v = t; *t++ = x1; *t++ = FUNHEAD; *t++ = DIRTYFLAG;
+					if ( x1 == AR.PolyFun && AR.PolyFunType == 2 && AR.Eside != LHSIDE )
+							t[-1] |= MUSTCLEANPRF;
 					FILLFUN3(t)
 					needarg = -1; goto dofunction;
 				}

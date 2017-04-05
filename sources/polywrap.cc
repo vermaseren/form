@@ -637,7 +637,8 @@ WORD *poly_ratfun_add (PHEAD WORD *t1, WORD *t2) {
 
 	*t++ = AR.PolyFun;                   // function 
 	*t++ = 0;                            // length (to be determined)
-	*t++ &= ~MUSTCLEANPRF;               // clean polyratfun
+//	*t++ &= ~MUSTCLEANPRF;               // clean polyratfun
+	*t++ = 0;
 	FILLFUN3(t);                         // header
 	poly::poly_to_argument(num,t, true); // argument 1 (numerator)
 	if (*t>0 && t[1]==DIRTYFLAG)          // to Form order
@@ -702,6 +703,10 @@ int poly_ratfun_normalize (PHEAD WORD *term) {
 		}
 		
 	if (num_polyratfun <= 1) return 0;
+
+	WORD oldsorttype = AR.SortType;
+	AR.SortType = SORTHIGHFIRST;
+
 /*
 	When there are polyratfun's with only one variable: rename them
 	temporarily to TMPPOLYFUN.
@@ -804,6 +809,7 @@ int poly_ratfun_normalize (PHEAD WORD *term) {
 		if (*t == TMPPOLYFUN ) *t = AR.PolyFun;
 	}
 
+	AR.SortType = oldsorttype;
 	return 0;
 }
 
