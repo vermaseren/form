@@ -48,7 +48,7 @@ print;
 	assert succeeded?
 	assert result("expr1") =~ expr("f(1)*x + f(2)*x^2 + f(3)*x^3 + f(4)*x^4 + f(5)*x^5 + f(6)*x^6 + f(7)*x^7 + f(8)*x^8 + f(9)*x^9 + f(10)*x^10")
 	assert result("e10") =~ expr("f(10)")
-*--#] SparseTable1 :
+*--#] SparseTable1 : 
 *--#[ SymNonZero :
 * Bug reported 2005-09-27 by Aneesh Manohar
 * Symmetrize did not make expression y equal to zero
@@ -64,7 +64,7 @@ print;
 	assert succeeded?
 	assert result("x") =~ expr("0")
 	assert result("y") =~ expr("0")
-*--#] SymNonZero :
+*--#] SymNonZero : 
 *--#[ NegDimension :
 * Parser accepted negative numbers as arguments to Dimension, Tracen, ...
 * Fixed 2009-09-08
@@ -74,7 +74,7 @@ L f = d_(i,i);
 print;
 .end
 assert compile_error?
-*--#] NegDimension :
+*--#] NegDimension : 
 *--#[ Forum3t187 :
 * bug in argument environment? [function specified by a set]
 CF f1,f2,f3;
@@ -89,7 +89,7 @@ P;
 .end
 assert succeeded?
 assert result("F") =~ expr("f1(1)+f2(0)+f3(3)")
-*--#] Forum3t187 :
+*--#] Forum3t187 : 
 *--#[ Issue8 :
 * Bug with function replacement
 Symbols a, b;
@@ -101,7 +101,7 @@ Print;
 .end
 assert succeeded?
 assert result("expr") =~ expr("1")
-*--#] Issue8 :
+*--#] Issue8 : 
 *--#[ Issue21 :
 * Occurs() with two or more terms in function arguments may get freeze
 S x;
@@ -114,7 +114,7 @@ P;
 .end
 assert succeeded?
 assert result("F") =~ expr("1")
-*--#] Issue21 :
+*--#] Issue21 : 
 *--#[ Issue25 :
 * [tform] ZERO_ is always 1 when InParallel mode
 L F1 = 1;
@@ -126,7 +126,7 @@ ModuleOption inparallel;
 assert succeeded?
 assert stdout =~ /~~~ZERO_F1 = 0/
 assert stdout =~ /~~~ZERO_ = 0/
-*--#] Issue25 :
+*--#] Issue25 : 
 *--#[ Issue30_1 :
 * Substitutions just after putinside/antiputinside may fail
 S x;
@@ -146,7 +146,7 @@ P;
 assert succeeded?
 assert result("F1") =~ expr("0")
 assert result("F2") =~ expr("0")
-*--#] Issue30_1 :
+*--#] Issue30_1 : 
 *--#[ Issue30_2 :
 S x;
 CF f;
@@ -161,7 +161,7 @@ P;
 assert succeeded?
 assert result("F1") =~ expr("0")
 assert result("F2") =~ expr("0")
-*--#] Issue30_2 :
+*--#] Issue30_2 : 
 *--#[ Issue30_3:
 CF f;
 S x;
@@ -189,7 +189,7 @@ Print;
 .end
 assert succeeded?
 assert result("F") =~ expr("rat(1)")
-*--#] Issue37_1 :
+*--#] Issue37_1 : 
 *--#[ Issue37_2 :
 S ep;
 CF rat;
@@ -199,7 +199,7 @@ Print;
 .end
 assert succeeded?
 assert result("F") =~ expr("rat(1)")
-*--#] Issue37_2 :
+*--#] Issue37_2 : 
 *--#[ Issue38 :
 * Wrong normalization of PolyRatFun
 CF num,rat;
@@ -216,8 +216,8 @@ assert succeeded?
 assert result("F1") =~ expr("rat(n1,2)")
 assert result("F2") =~ expr("rat( - n1,2)")
 assert result("F3") =~ expr("0")
-assert result("F4") =~ expr("rat(x + x*ep,1)")
-*--#] Issue38 :
+assert result("F4") =~ expr("rat(x*ep + x,1)")
+*--#] Issue38 : 
 *--#[ Issue39 :
 * Freeze when PolyRatFun contains dot products
 V a;
@@ -229,7 +229,7 @@ P;
 # Runtime errors may freeze ParFORM.
 #pend_if mpi?
 assert runtime_error?
-*--#] Issue39 :
+*--#] Issue39 : 
 *--#[ Issue41 :
 * replace_ in #assign
 S n;
@@ -239,7 +239,7 @@ P;
 .end
 assert succeeded?
 assert result("F") =~ expr("1+n")
-*--#] Issue41 :
+*--#] Issue41 : 
 *--#[ Issue42_1 :
 * Factorize/FactDollar are much slower than FactArg
 CF num;
@@ -314,7 +314,7 @@ f = expr("""
 assert result("F1") =~ f
 assert result("F2") =~ f
 assert result("F3") =~ f
-*--#] Issue42_1 :
+*--#] Issue42_1 : 
 *--#[ Issue42_2 :
 S x;
 L F = gcd_(
@@ -326,7 +326,7 @@ P;
 .end
 assert succeeded?
 assert result("F") =~ expr("1+x")
-*--#] Issue42_2 :
+*--#] Issue42_2 : 
 *--#[ Issue42_3 :
 S n1,...,n4;
 L F1 = (1+n1)*(1+n2)*n1*n2*n3;
@@ -337,7 +337,7 @@ P F;
 .end
 assert succeeded?
 assert result("F") =~ expr("n1*n2*n3")
-*--#] Issue42_3 :
+*--#] Issue42_3 : 
 *--#[ Issue42_4 :
 #procedure PrintFactorizedDollar(name,dollar)
   #write " `name' = (%$)%", `dollar'[1]
@@ -358,7 +358,7 @@ S x,y;
 assert succeeded?
 assert result("F1") =~ expr("(-1)*(-1+x)*(1+y)")
 assert result("F2") =~ expr("(-1+y)*(-1+x)")
-*--#] Issue42_4 :
+*--#] Issue42_4 : 
 *--#[ Issue45 :
 * FactDollar still broken
 #procedure PrintFactorizedDollar(name,dollar)
@@ -384,7 +384,7 @@ assert succeeded?
 assert result("F1") =~ expr("(-1)*(-1+y-x)")
 assert result("F2") =~ expr("(-1+y-x)*(-2)")
 assert result("F3") =~ expr("(-1)*(-1+y-x)*(1+y+x)")
-*--#] Issue45 :
+*--#] Issue45 : 
 *--#[ Issue48 :
 * Memory error on dollar matching
 CFunction TOPO,topo;
@@ -414,7 +414,7 @@ assert result("Diagrams") =~ expr("2")
 assert result("Color") =~ expr("
       24*topo(M2)*cf^4 - 72*topo(M2)*ca*cf^3 + 66*topo(M2)*ca^2*cf^2 - 19*
       topo(M2)*ca^3*cf + 24*topo(M2)*cOlNA*cOlNR^-1*[d4RA/n]")
-*--#] Issue48 :
+*--#] Issue48 : 
 *--#[ Issue52 :
 * CopySpectator crashes when empty
 CreateSpectator TMP, "xTMP";
@@ -427,7 +427,7 @@ P;
 assert succeeded?
 assert result("F") =~ expr("1 + 2*x + x^2")
 assert result("G") =~ expr("0")
-*--#] Issue52 :
+*--#] Issue52 : 
 *--#[ Issue54_1 :
 * Transform,replace xarg_ acts only on symbols
 CF f;
@@ -438,7 +438,7 @@ P;
 .end
 assert succeeded?
 assert result("xx") =~ expr("f(2*a,2)")
-*--#] Issue54_1 :
+*--#] Issue54_1 : 
 *--#[ Issue54_2 :
 CF f;
 S a;
@@ -448,7 +448,7 @@ Print;
 .end
 assert succeeded?
 assert result("xx") =~ expr("f(2*a,2*a^2,3,4)")
-*--#] Issue54_2 :
+*--#] Issue54_2 : 
 *--#[ Issue56 :
 * PolyRatFun(expand) does not expand substituted expressions
 CF rat;
@@ -465,7 +465,7 @@ P;
 .end
 assert succeeded?
 assert result("H") =~ expr("rat(x^2)")
-*--#] Issue56 :
+*--#] Issue56 : 
 *--#[ Issue59_1 :
 * Crash when PolyRatFun(expand)
 CF num,rat;
@@ -484,7 +484,7 @@ assert result("F") =~ expr('
       103946485016901161789833595241629175725192946647040000000000*x -
       1536456092437457859275118833518144965878613654110208000000000*x^2)
 ')
-*--#] Issue59_1 :
+*--#] Issue59_1 : 
 *--#[ Issue59_2 :
 CF rat;
 S x;
@@ -502,7 +502,7 @@ assert result("F2") =~ expr('
       00000000000000000000000000000000*x + 10810000000000000000000000000000000\
       0000000000000000*x^2)
 ')
-*--#] Issue59_2 :
+*--#] Issue59_2 : 
 *--#[ Issue60 :
 * No error for skipped semicolon in Save statement
 Symbol x;
@@ -511,7 +511,7 @@ Global test = x;
 Save test.sav
 .end
 assert compile_error?
-*--#] Issue60 :
+*--#] Issue60 : 
 *--#[ Issue61 :
 * IntoHide + Bracket for expressions with bracket index
 S x,y;
@@ -526,7 +526,7 @@ P;
 .end
 assert succeeded?
 assert result("G") =~ expr("1")
-*--#] Issue61 :
+*--#] Issue61 : 
 *--#[ Issue69 :
 * No warnings/errors for the same labels
 On allwarning;
@@ -541,7 +541,7 @@ label 1;
 P;
 .end
 assert compile_error?
-*--#] Issue69 :
+*--#] Issue69 : 
 *--#[ Issue73 :
 * "PolyRatFun cannot have zero arguments" when used in function
 S ep;
@@ -552,7 +552,7 @@ P;
 .end
 assert succeeded?
 assert result("F") =~ expr("K(rat(1 + ep,1))*rat(1,1) + K(rat(1,1))*rat(1,1)")
-*--#] Issue73 :
+*--#] Issue73 : 
 *--#[ Issue74 :
 * occurs() freezes with tensors #74
 CF a,acc;
@@ -657,7 +657,7 @@ assert result("F37") =~ expr("a(2,3)")
 assert result("F38") =~ expr("a(2,3)")
 assert result("F39") =~ expr("a(1,2,3,4,5)")
 assert result("F40") =~ expr("a(2,3)")
-*--#] Issue74 :
+*--#] Issue74 : 
 *--#[ Issue77_1 :
 * Freeze when pattern matchings with powers of dollar variables ($x^n?)
 S x,n;
@@ -668,7 +668,7 @@ P;
 .end
 assert succeeded?
 assert result("F") =~ expr("1")
-*--#] Issue77_1 :
+*--#] Issue77_1 : 
 *--#[ Issue77_2 :
 S x,y,z,n;
 V p,q;
@@ -679,7 +679,7 @@ P;
 .end
 assert succeeded?
 assert result("F") =~ expr("p.q^3*y^2*z^3")
-*--#] Issue77_2 :
+*--#] Issue77_2 : 
 *--#[ Issue78_1 :
 * Minus sign is ignored in set restriction
 V p,p1;
@@ -697,7 +697,7 @@ Print;
 assert succeeded?
 assert result("F1") =~ expr("vx(-p1)")
 assert result("F2") =~ expr("vx(-p1)")
-*--#] Issue78_1 :
+*--#] Issue78_1 : 
 *--#[ Issue78_2 :
 V Q;
 CF vx;
@@ -714,7 +714,7 @@ Print;
 assert succeeded?
 assert result("F1") =~ expr("1")
 assert result("F2") =~ expr("1")
-*--#] Issue78_2 :
+*--#] Issue78_2 : 
 *--#[ Issue82 :
 * Minus sign matching bug in latest version
 V p1,p2;
@@ -725,7 +725,7 @@ Print;
 .end
 assert succeeded?
 assert result("F") =~ expr("1")
-*--#] Issue82 :
+*--#] Issue82 : 
 *--#[ Issue88 :
 * Strange error in 'also once' in combination with 'replace_'
 cf ABB;
@@ -737,7 +737,7 @@ P;
 .end
 assert succeeded?
 assert result("test") =~ expr("1")
-*--#] Issue88 :
+*--#] Issue88 : 
 *--#[ Issue90_1 :
 * Errors in symbol powers
 CFunction SP;
@@ -755,7 +755,7 @@ assert succeeded?
 assert result("testExpr0") =~ expr("+shat")
 assert result("testExpr1") =~ expr("+shat^-1")
 assert result("testExpr4") =~ expr("+SP(k2,k3)*shat^-1")
-*--#] Issue90_1 :
+*--#] Issue90_1 : 
 *--#[ Issue90_2:
 Symbol i,x,y,n;
 
@@ -792,7 +792,7 @@ L F7 = f(10000*g5_);
 # Runtime errors may freeze ParFORM.
 #pend_if mpi?
 assert runtime_error?
-*--#] Issue94 :
+*--#] Issue94 : 
 *--#[ Issue97_1 :
 * "Program terminating" with oldFactArg and dot products
 V e1, e2, k1, k2;
@@ -808,7 +808,7 @@ P;
 assert succeeded?
 assert result("testbad") =~ expr("dotM(e1.k1,e2.k1,1)")
 assert result("testok") =~ expr("dotM(a,b,1)")
-*--#] Issue97_1 :
+*--#] Issue97_1 : 
 *--#[ Issue97_2 :
 On OldFactArg;
 V p1,p2,p3,p4;
@@ -827,7 +827,7 @@ assert result("OK1") =~ expr("f(t(p1),x,1)")
 assert result("OK2") =~ expr("f(t(p1,p2),x,1)")
 assert result("OK3") =~ expr("f(t(p1,p2,p3),x,1)")
 assert result("BAD") =~ expr("f(t(p1,p2,p3,p4),x,1)")
-*--#] Issue97_2 :
+*--#] Issue97_2 : 
 *--#[ Issue104 :
 * Leading zeroes in rational numbers not handled consistently
 Local test1 = 0001;
@@ -841,7 +841,7 @@ assert result("test1") =~ expr("+ 1")
 assert result("test2") =~ expr("+ 1")
 assert result("test3") =~ expr("+ 10")
 assert result("test4") =~ expr("+ 11")
-*--#] Issue104 :
+*--#] Issue104 : 
 *--#[ Issue105 :
 * Crash by replace_(x,0)
 S x;
@@ -857,7 +857,7 @@ P;
 assert succeeded?
 assert result("F") =~ expr("f(p.p)")
 assert result("G") =~ expr("f(0)")
-*--#] Issue105 :
+*--#] Issue105 : 
 *--#[ Issue106 :
 * Crash with replace_ and nested functions
 cfunction prop, mom;
@@ -884,7 +884,7 @@ assert result("test") =~ expr("+ prop(mom(- k1 + p))")
 assert result("F1") =~ expr("f(f(0))")
 assert result("F2") =~ expr("f(f(f(0)))")
 assert result("F3") =~ expr("f(f(f(f(0)+g(0))+g(0)))")
-*--#] Issue106 :
+*--#] Issue106 : 
 *--#[ Issue111 :
 * PolyRatFun(expand) doesn't expand numeric coefficients in one go
 S x;
@@ -920,7 +920,7 @@ assert result("F6") =~ expr("rat(2/3 + 2/3*x + 2/3*x^2 + 2/3*x^3)")
 assert result("F7") =~ expr("rat(2/3 - 2/3*x - 4/3*x^2)")
 assert result("F8") =~ expr("rat(2/3 + 4/3*x + 4/3*x^2 + 4/3*x^3)")
 assert result("F9") =~ expr("rat(2/3 + 2/3*x + 2*x^2 + 10/3*x^3)")
-*--#] Issue111 :
+*--#] Issue111 : 
 *--#[ Issue113 :
 * ?a crashes the program if used only on the rhs
 CF f;
@@ -930,7 +930,7 @@ id f = f(?a);
 Print;
 .end
 assert compile_error?
-*--#] Issue113 :
+*--#] Issue113 : 
 *--#[ Issue114 :
 * Crash on PolyRatFun(expand) when the result is zero
 CF rat;
@@ -943,7 +943,7 @@ P;
 .end
 assert succeeded?
 assert result("F") =~ expr("rat(x^10 + x^11 + x^12 + x^13 + x^14 + x^15)")
-*--#] Issue114 :
+*--#] Issue114 : 
 *--#[ Issue117_1 :
 * Id not matching when using ?a and symmetric function
 S n1,n2;
@@ -954,14 +954,14 @@ Print;
 .end
 assert succeeded?
 assert result("F") =~ expr("1")
-*--#] Issue117_1 :
+*--#] Issue117_1 : 
 *--#[ Issue117_2 :
 S n1,n2;
 CF f(s),g(s);
 id f(n1?,n2?,?a)*g(n1?,n2?) = 1;
 .end
 assert compile_error?
-*--#] Issue117_2 :
+*--#] Issue117_2 : 
 *--#[ Issue117_3 :
 S n1,n2;
 S x1,x2,x3;
@@ -980,7 +980,7 @@ assert result("F2") =~ expr("1")
 assert result("F3") =~ expr("1")
 assert result("F4") =~ expr("1")
 assert result("F5") =~ expr("1")
-*--#] Issue117_3 :
+*--#] Issue117_3 : 
 *--#[ Issue121 :
 * repeat ignored in some output terms of dd_
 V p1,p2,p3,p4;
@@ -995,7 +995,7 @@ assert result("F") =~ expr("
        + p1.p3*p2.p4*p3.p4
        + p1.p4*p2.p3*p3.p4
 ")
-*--#] Issue121 :
+*--#] Issue121 : 
 *--#[ Issue125_1 :
 * Form compiler allows lone ? on rhs
 CF f;
@@ -1003,7 +1003,7 @@ L F = f;
 id f = f(?);
 .end
 assert compile_error?
-*--#] Issue125_1 :
+*--#] Issue125_1 : 
 *--#[ Issue125_2 :
 V p;
 I mu;
@@ -1014,7 +1014,7 @@ P;
 .end
 assert succeeded?
 assert result("F") =~ expr("f(mu)")
-*--#] Issue125_2 :
+*--#] Issue125_2 : 
 *--#[ Issue126 :
 * Print rejects local-to be unhidden expressions
 L F = 1;
@@ -1026,7 +1026,7 @@ P F;
 .end
 assert succeeded?
 assert result("F") =~ expr("1")
-*--#] Issue126 :
+*--#] Issue126 : 
 *--#[ Issue129_1 :
 * Redefining a hidden expression #129
 L F = 1;
@@ -1054,7 +1054,7 @@ assert stdout =~ exact_pattern(<<'EOF')
  Expressions to be printed
    F
 EOF
-*--#] Issue129_1 :
+*--#] Issue129_1 : 
 *--#[ Issue129_2:
 L F = 1;
 .sort
@@ -1224,7 +1224,7 @@ assert result("F64m5") =~ expr("f(-18446744073709551615)")
 assert result("F64m6") =~ expr("f(-18446744073709551616)")
 assert result("F64m7") =~ expr("f(-18446744073709551617)")
 assert result("F64m8") =~ expr("f(-18446744073709551618)")
-*--#] Issue139 :
+*--#] Issue139 : 
 *--#[ Issue149_1 :
 * Index matches to -1 but crashes in output
 Index mu;
@@ -1237,7 +1237,7 @@ P;
 assert succeeded?
 assert result("F1") =~ expr("f(-1)")
 assert result("F2") =~ expr("8256 + f(-2) + f(-1) + f(129) + f(130)")
-*--#] Issue149_1 :
+*--#] Issue149_1 : 
 *--#[ Issue149_2 :
 Index mu;
 CF f1(s),f2(a),f3(c),f4(r);
@@ -1253,7 +1253,7 @@ assert result("F1") =~ expr("8256 + f1(-2) + f1(-1) + f1(129) + f1(130)")
 assert result("F2") =~ expr("8256 + f2(-2) + f2(-1) + f2(129) + f2(130)")
 assert result("F3") =~ expr("8256 + f3(-2) + f3(-1) + f3(129) + f3(130)")
 assert result("F4") =~ expr("8256 + f4(-2) + f4(-1) + f4(129) + f4(130)")
-*--#] Issue149_2 :
+*--#] Issue149_2 : 
 *--#[ Issue151 :
 * Compiler crashes with Print
 #do i=1,200
@@ -1262,7 +1262,7 @@ assert result("F4") =~ expr("8256 + f4(-2) + f4(-1) + f4(129) + f4(130)")
 #enddo
 .end
 assert succeeded?
-*--#] Issue151 :
+*--#] Issue151 : 
 *--#[ Issue153_1 :
 * Pattern with index and set restriction matches to number
 I mu1,...,mu9;
@@ -1278,7 +1278,7 @@ P;
 assert succeeded?
 assert result("F1") =~ expr("f(132)")
 assert result("F2") =~ expr("f(126) + f(129) + f(130) + f(131) + f(132)")
-*--#] Issue153_1 :
+*--#] Issue153_1 : 
 *--#[ Issue153_2 :
 I mu1,...,mu9;
 CF f1(s),f2(a),f3(c),f4(r);
@@ -1297,7 +1297,7 @@ assert result("F1") =~ expr("f1(126) + f1(129) + f1(130) + f1(131) + f1(132)")
 assert result("F2") =~ expr("f2(126) + f2(129) + f2(130) + f2(131) + f2(132)")
 assert result("F3") =~ expr("f3(126) + f3(129) + f3(130) + f3(131) + f3(132)")
 assert result("F4") =~ expr("f4(126) + f4(129) + f4(130) + f4(131) + f4(132)")
-*--#] Issue153_2 :
+*--#] Issue153_2 : 
 *--#[ Issue154 :
 * CompressSize insufficient while the compression is off, when Keep Brackets
 Off compress;
@@ -1316,7 +1316,7 @@ P;
 #pend_if travis? && (!linux? || valgrind? || mpi?)
 assert succeeded?
 assert result("F1") =~ expr("2027025")
-*--#] Issue154 :
+*--#] Issue154 : 
 *--#[ Issue162 :
 * Missing Expr[x] with B+ for functions
 #define N "5"
@@ -1362,7 +1362,7 @@ endif;
 #endif
 .end
 assert succeeded?
-*--#] Issue162 :
+*--#] Issue162 : 
 *--#[ Issue163 :
 * Normalize statement doesn't work for "MINVECTOR"
 CF f1,f2;
@@ -1376,7 +1376,7 @@ P;
 assert succeeded?
 assert result("F1") =~ expr("-f1(p)")
 assert result("F2") =~ expr("f2(p)")
-*--#] Issue163 :
+*--#] Issue163 : 
 *--#[ Issue165 :
 * [tform] reading a bracket may crash with B+ when the expression doesn't fit in the scratch buffer
 #:MaxTermSize 200
@@ -1403,7 +1403,7 @@ P;
 #pend_if mpi?
 assert succeeded?
 assert result("F") =~ expr("2550250000")
-*--#] Issue165 :
+*--#] Issue165 : 
 *--#[ Issue167 :
 * Mystery of count_ in functions
 S x;
@@ -1421,7 +1421,7 @@ P;
 assert succeeded?
 assert result("F") =~ expr("f(0) + f(0)*x + f(0)*x^2")
 assert result("G") =~ expr("f(0) + f(1)*x + f(2)*x^2")
-*--#] Issue167 :
+*--#] Issue167 : 
 *--#[ Issue169 :
 * Crash from multiply replace_ in large expression
 S x;
@@ -1435,7 +1435,7 @@ P +s;
 .end
 assert succeeded?
 assert result("F") =~ expr("+ 3541369744012249598473/192*den(3)")
-*--#] Issue169 :
+*--#] Issue169 : 
 *--#[ Issue180 :
 * Broken RAT
 S ep;
@@ -1460,4 +1460,4 @@ P;
 .end
 assert succeeded?
 assert result("F") =~ expr("rat(1,ep^2 + 2*ep + 1)")
-*--#] Issue180 :
+*--#] Issue180 : 
