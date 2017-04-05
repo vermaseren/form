@@ -1436,6 +1436,28 @@ P +s;
 assert succeeded?
 assert result("F") =~ expr("+ 3541369744012249598473/192*den(3)")
 *--#] Issue169 : 
+*--#[ Issue178 :
+* PolyRatFun performance regression
+* Josh's example:
+Symbol a,b,c,ep;
+CFunction redprf,epprf;
+
+Local test1 =
+       + epprf(-1, - 1 + ep)*redprf(1,1)
+       + epprf(-1,1 - 3*ep + 2*ep^2)*redprf(-1,1)
+      ;
+.sort
+
+PolyRatFun redprf;
+Identify redprf(a?,b?) = redprf(a*c,b*c);
+Identify epprf(a?,b?) = redprf(a,b);
+.sort
+
+Print;
+.end
+assert succeeded?
+assert result("test1") =~ expr("redprf(-2,2*ep - 1)")
+*--#] Issue178 :
 *--#[ Issue180 :
 * Broken RAT
 S ep;
