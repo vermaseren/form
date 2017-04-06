@@ -5230,7 +5230,9 @@ int CoPolyRatFun(UBYTE *s)
 	AR.PolyFunType = AC.lPolyFunType = 2;
 	AC.PolyRatFunChanged = 1;
 	if ( c == 0 ) return(0);
-	*t = c; while ( *t == ',' || *t == ' ' || *t == '\t' ) t++;
+	*t = c;
+	if ( *t == '-' ) { AC.PolyRatFunChanged = 0; t++; }
+	while ( *t == ',' || *t == ' ' || *t == '\t' ) t++;
 	if ( *t == 0 ) return(0);
 	if ( *t != '(' ) {
 		s = t;
@@ -5248,7 +5250,9 @@ int CoPolyRatFun(UBYTE *s)
 		}
 		AR.PolyFunInv = AC.lPolyFunInv = numfun+FUNCTION;
 		if ( c == 0 ) return(0);
-		*t = c; while ( *t == ',' || *t == ' ' || *t == '\t' ) t++;
+		*t = c;
+		if ( *t == '-' ) { AC.PolyRatFunChanged = 0; t++; }
+		while ( *t == ',' || *t == ' ' || *t == '\t' ) t++;
 		if ( *t == 0 ) return(0);
 	}
 	if ( *t == '(' ) {
