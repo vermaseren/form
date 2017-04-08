@@ -116,6 +116,7 @@
 \input{@srcdir@/setup}
 \input{@srcdir@/parallel}
 \input{@srcdir@/external}
+\input{@srcdir@/spectators}
 
 \printindex
 

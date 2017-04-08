@@ -15,6 +15,7 @@ TEXSRC = \
 	prepro.tex \
 	setup.tex \
 	sorting.tex \
+	spectators.tex \
 	startup.tex \
 	statements.tex \
 	tablebas.tex \
