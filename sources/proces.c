@@ -1378,7 +1378,15 @@ Important: we may not have enough spots here
 					AR.TePos = -1;
 					return(1);
 				}
-              }
+			  }
+			  else if ( *t == PERMUTATIONS && ( ( t[1] >= FUNHEAD+1
+				&& t[FUNHEAD] <= -FUNCTION ) || ( t[1] >= FUNHEAD+3
+				&& t[FUNHEAD] == -SNUMBER && t[FUNHEAD+2] <= -FUNCTION ) ) ) {
+				AN.TeInFun = -12;
+				AN.TeSuOut = 0;
+				AR.TePos = -1;
+				return(1);
+			  }
 			}
 		}
 		t += t[1];
@@ -3669,6 +3677,9 @@ AutoGen:	i = *AT.TMout;
 					break;
 				case -11:
 					if ( DIVfunction(BHEAD term,level,2) < 0 ) goto GenCall;
+					break;
+				case -12:
+					if ( DoPermutations(BHEAD term,level) ) goto GenCall;
 					break;
 			}
 		}

@@ -1013,6 +1013,18 @@ typedef struct PeRmUtE {
 } PERM;
 
 /**
+ *  Like struct PERM but works with pointers.
+ */
+
+typedef struct PeRmUtEp {
+    WORD **objects;
+    WORD sign;
+    WORD n;
+    WORD cycle[MAXMATCH];
+    PADPOINTER(0,0,MAXMATCH+2,0);
+} PERMP;
+
+/**
  *  The struct DISTRIBUTE is used to help the pattern
  *  matcher when matching antisymmetric tensors.
  */

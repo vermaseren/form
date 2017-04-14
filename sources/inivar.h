@@ -228,6 +228,7 @@ static struct fixedfun {
 	,{"inverse_"    ,0 ,0             ,0               ,0} /* INVERSEFUNCTION */
 	,{"id_"         ,1 ,0             ,0               ,0} /* IDFUNCTION */
 	,{"putfirst_"   ,1 ,0             ,0               ,0} /* PUTFIRST */
+	,{"perm_"       ,1 ,0             ,0               ,0} /* PERMUTATIONS */
 };
 
 FIXEDSET fixedsets[] = {

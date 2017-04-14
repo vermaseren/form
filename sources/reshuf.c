@@ -1578,6 +1578,81 @@ nextk:;
 /*
  		#] DoDelta3 : 
   	#] Distribute : 
+  	#[ DoPermutations :
+
+	Routine replaces the function perm_(f,args) by occurrences of f with
+	all permutations of the args. This should always fit!
+*/
+
+WORD DoPermutations(PHEAD WORD *term, WORD level)
+{
+	PERMP perm;
+	WORD *oldworkpointer = AT.WorkPointer, *termout = AT.WorkPointer;
+	WORD *t, *tstop, *tt, *ttstop, odd = 0;
+	WORD *args[MAXMATCH], nargs, i, first, skip, *to, *from;
+/*
+	Find function and count arguments. Check for odd/even
+*/
+	tstop = term+*term; tstop -= ABS(tstop[-1]);
+	t = term+1;
+	while ( t < tstop ) {
+		if ( *t == PERMUTATIONS ) {
+			if ( t[1] >= FUNHEAD+1 && t[FUNHEAD] <= -FUNCTION ) {
+				odd = 0; skip = 1;
+			}
+			else if ( t[1] >= FUNHEAD+3 && t[FUNHEAD] == -SNUMBER && t[FUNHEAD+2] <= -FUNCTION ) {
+				if ( t[FUNHEAD+1] % 2 == 1 ) odd = -1;
+				else odd = 0;
+				skip = 3;
+			}
+			else { t += t[1]; continue; }
+			tt = t+FUNHEAD+skip; ttstop = t + t[1];
+			nargs = 0;
+			while ( tt < ttstop ) { NEXTARG(tt); nargs++; }
+			tt = t+FUNHEAD+skip;
+			if ( nargs > MAXMATCH ) {
+				MLOCK(ErrorMessageLock);
+				MesPrint("Too many arguments in function perm_. %d! is way too big",(WORD)MAXMATCH);
+				MUNLOCK(ErrorMessageLock);
+				SETERROR(-1)
+			}
+			i = 0;
+			while ( tt < ttstop ) { args[i++] = tt; NEXTARG(tt); }
+			perm.n = nargs;
+			perm.sign = 0;
+			perm.objects = args;
+			first = 1;
+			while ( (first = PermuteP(&perm,first) ) == 0 ) {
+/*
+				Compose the output term
+*/
+				to = termout; from = term;
+				while ( from < t ) *to++ = *from++;
+				*to++ = -t[FUNHEAD+skip-1];
+				*to++ = t[1] - skip;
+				for ( i = 2; i < FUNHEAD; i++ ) *to++ = t[i];
+				for ( i = 0; i < nargs; i++ ) {
+					from = args[i];
+					COPY1ARG(to,from);
+				}
+				from = t+t[1];
+				tstop = term + *term;
+				while ( from < tstop ) *to++ = *from++;
+				if ( odd && ( ( perm.sign & 1 ) != 0 ) ) to[-1] = -to[-1];
+				*termout = to - termout;
+				AT.WorkPointer = to;
+				if ( Generator(BHEAD termout,level) ) Terminate(-1);
+				AT.WorkPointer = oldworkpointer;
+			}
+			return(0);
+		}
+		t += t[1];
+	}
+	return(0);
+}
+
+/*
+  	#] DoPermutations : 
   	#[ DoShuffle :
 
 	Merges the arguments of all occurrences of function fun into a

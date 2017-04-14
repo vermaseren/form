@@ -469,6 +469,40 @@ WORD Permute(PERM *perm, WORD first)
 
 /*
   	#] Permute : 
+  	#[ PermuteP :				WORD PermuteP(perm,first)
+
+	Like Permute, but works on an array of pointers
+*/
+
+WORD PermuteP(PERMP *perm, WORD first)
+{
+	WORD **s, *c, i, j;
+	if ( first ) {
+		perm->sign = ( perm->sign <= 1 ) ? 0: 1;
+		for ( i = 0; i < perm->n; i++ ) perm->cycle[i] = 0;
+		return(0);
+	}
+	i = perm->n;
+	while ( --i > 0 ) {
+		s = perm->objects;
+		c = s[0];
+		j = i;
+		while ( --j >= 0 ) { *s = s[1]; s++; }
+		*s = c;
+		if ( ( i & 1 ) != 0 ) perm->sign ^= 1;
+		if ( perm->cycle[i] < i ) {
+			(perm->cycle[i])++;
+			return(0);
+		}
+		else {
+			perm->cycle[i] = 0;
+		}
+	}
+	return(1);
+}
+
+/*
+  	#] PermuteP : 
   	#[ Distribute :
 */
 
