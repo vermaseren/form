@@ -975,6 +975,22 @@ assert result("F") =~ expr("
       assert result("F", 1) =~ expr("12345678")
     end
 *--#] Fun_makerational_1 :
+*--#[ Fun_perm_1 :
+    CFunction f;
+    Symbols x1,...,x3;
+    Local F = perm_(f,x1,x2,x3);
+    Print +s;
+    .end
+    assert succeeded?
+    assert result("F") =~ expr("""
+       + f(x1,x2,x3)
+       + f(x1,x3,x2)
+       + f(x2,x1,x3)
+       + f(x2,x3,x1)
+       + f(x3,x1,x2)
+       + f(x3,x2,x1)
+    """)
+*--#] Fun_perm_1 :
 *--#[ Fun_prime_1 :
     Symbols x1,x2,x3,x4;
     ON highfirst;
