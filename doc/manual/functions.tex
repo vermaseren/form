@@ -754,6 +754,42 @@ variable has not been factorized, the function returns zero.
 \noindent Currently not active. Replaced automatically by 1.
 
 %--#] pattern_ : 
+%--#[ perm_ :
+
+\section{perm\_}\index{perm\_}\index{function!perm\_}
+\label{funperm}
+\noindent Generates all permutations of the arguments, with exception 
+of the first argument which should be the name of a function. This function 
+will then have the permuted arguments as in:
+\begin{verbatim}
+    CFunction f;
+    Symbols x1,...,x3;
+    Local F = perm_(f,x1,x2,x3);
+    Print +s;
+    .end
+
+   F =
+       + f(x1,x2,x3)
+       + f(x1,x3,x2)
+       + f(x2,x1,x3)
+       + f(x2,x3,x1)
+       + f(x3,x1,x2)
+       + f(x3,x2,x1)
+       ;
+\end{verbatim}
+The permutations are generated with an algorithm that takes subsequent 
+cyclic permutations. If one puts a nonzero integer before the function 
+argument the output terms will be multiplied by -1 when the permutation is 
+negative.
+
+When the function name is the only argument the answer will be just this 
+function without arguments. One could argue that technically the answer 
+should be zero, but this way the attention of the user may be attracted to 
+the occurrence which might not be the case when the term 'just vanishes'. 
+It is however rather simple to add a statement that makes such a function 
+zero.
+
+%--#] perm_ : 
 %--#[ poly_ :
 
 \section{poly\_}\index{poly\_}\index{function!poly\_}
