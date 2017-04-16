@@ -5901,7 +5901,9 @@ Instead of ``tointegralnotation'' one may also use the word
 \rightvitem{13cm}{permute(1,3,5)(2,6) will permute the arguments 
 according to the cycles indicated. The cycles are executed in order and may 
 overlap. Their number is not restricted. In the above example
-f(a1,a2,a3,a4,a5,a6,a7) $\rightarrow$ f(a3,a6,a5,a4,a1,a2,a7)}
+f(a1,a2,a3,a4,a5,a6,a7) $\rightarrow$ f(a3,a6,a5,a4,a1,a2,a7).
+It is allowed to use \$-variables in the cycles, including \$-variables 
+that are obtained by matching argument field wildcards.}
 
 \leftvitem{3.2cm}{reverse\index{transform!reverse}\index{reverse}}
 \rightvitem{13cm}{reverse(r1,r2) reverses the order of the arguments in 
@@ -6014,7 +6016,7 @@ it is faster by more than a factor 100.
 
 \vspace{10mm}
 
-%--#] transform : 
+%--#] transform :
 %--#[ tryreplace :
 
 \section{tryreplace}

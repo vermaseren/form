@@ -390,21 +390,37 @@ illsize:					MesPrint("&Illegal value for base in encode/decode transformation")
 			do {
 			  wstart = wp; wp++;
 			  do {
-				x = 0; in++;
-				while ( FG.cTable[*in] == 1 ) {
+				in++;
+				if ( *in == '$' ) {
+					WORD number; UBYTE *t;
+					in++; t = in;
+					while ( FG.cTable[*in] < 2 ) in++;
+					c = *in; *in = 0;
+					if ( ( number = GetDollar(t) ) < 0 ) {
+						MesPrint("&Undefined variable $%s",t);
+						if ( !error ) error = 1;
+						number = AddDollar(t,0,0,0);
+					}
+					*in = c;
+					*wp++ = -number-1;
+				}
+				else {
+				  x = 0;
+				  while ( FG.cTable[*in] == 1 ) {
 					x = 10*x + *in++ - '0';
 					if ( x > MAXPOSITIVE4 ) {
 						MesPrint("&value in permute transformation too large");
 						if ( error == 0 ) error = 1;
 						return(error);
 					}
-				}
-				if ( x == 0 ) {
+				  }
+				  if ( x == 0 ) {
 					MesPrint("&value 0 in permute transformation not allowed");
 					if ( error == 0 ) error = 1;
 					return(error);
+				  }
+				  *wp++ = (WORD)x-1;
 				}
-				*wp++ = (WORD)x-1;
 			  } while ( *in == ',' );
 			  if ( *in != ')' ) {
 				MesPrint("&Illegal syntax in permute transformation");
@@ -445,7 +461,7 @@ illsize:					MesPrint("&Illegal value for base in encode/decode transformation")
 		}
 /*
  		#] reverse : 
-		#[ dedup :
+ 		#[ dedup :
 */
 		else if ( StrICmp(s,(UBYTE *)"dedup") == 0 ) {
 			type = DEDUPARG;
@@ -463,7 +479,7 @@ illsize:					MesPrint("&Illegal value for base in encode/decode transformation")
 			s = in;
 		}
 /*
-		#] dedup :
+ 		#] dedup : 
  		#[ cycle :
 */
 		else if ( StrICmp(s,(UBYTE *)"cycle") == 0 ) {
@@ -2056,6 +2072,8 @@ OverWork:;
 WORD RunPermute(PHEAD WORD *fun, WORD *args, WORD *info)
 {
 	WORD *tt, totarg, *tstop, arg1, arg2, n, num, i, *f, *f1, *f2, *infostop;
+	WORD *in, *iw, withdollar;
+	DOLLARS d;
 	if ( *args != ARGRANGE ) {
 		MLOCK(ErrorMessageLock);
 		MesPrint("Illegal range encountered in RunPermute");
@@ -2087,6 +2105,92 @@ WORD RunPermute(PHEAD WORD *fun, WORD *args, WORD *info)
 		infostop = info + *info;
 		info++;
 		if ( *info > totarg ) return(0);
+/*
+		Now we have a look whether there are dollar variables to be expanded
+		We also sift out all values that are out of range.
+*/
+		withdollar = 0;  in = info;
+		while ( in < infostop ) {
+			if ( *in < 0 ) { /* Dollar variable -(number+1) */
+				d = Dollars - *in - 1;
+				if ( ( d->type == DOLNUMBER || d->type == DOLTERMS )
+				 && d->where[0] == 4 && d->where[4] == 0 ) {
+					if ( d->where[3] < 0 || d->where[2] != 1 || d->where[1] > totarg ) return(0);
+				}
+				else if ( d->type == DOLWILDARGS ) {
+					iw = d->where+1;
+					while ( *iw ) {
+						if ( *iw == -SNUMBER ) {
+							if ( iw[1] <= 0 || iw[1] > totarg ) return(0);
+						}
+						else goto IllType;
+						iw += 2;
+					}
+				}
+				else {
+IllType:
+                    MLOCK(ErrorMessageLock);
+					MesPrint("Illegal type of $-variable in RunPermute");
+					MUNLOCK(ErrorMessageLock);
+					Terminate(-1);
+				}
+				withdollar++;
+			}
+			else if ( *in > totarg ) return(0);
+			in++;
+		}
+		if ( withdollar ) { /* We need some space for a copy */
+			WORD *incopy, *tocopy;
+			incopy = TermMalloc("RunPermute");
+			tocopy = incopy+1; in = info;
+			while ( in < infostop ) {
+				if ( *in < 0 ) {
+					d = Dollars - *in - 1;
+					if ( d->type == DOLNUMBER || d->type == DOLTERMS ) {
+						*tocopy++ = d->where[1] - 1;
+					}
+					else if ( d->type == DOLWILDARGS ) {
+						iw = d->where+1;
+						while ( *iw ) {
+							*tocopy++ = iw[1] - 1;
+							iw += 2;
+						}
+					}
+					in++;
+				}
+				else *tocopy++ = *in++;
+			}
+			*tocopy = 0;
+			*incopy = tocopy - incopy;
+			in = incopy+1;
+			tt = AT.pWorkSpace[AT.pWorkPointer+*in];
+			in++;
+			while ( in < tocopy ) {
+				if ( *in > totarg ) return(0);
+				AT.pWorkSpace[AT.pWorkPointer+in[-1]] = AT.pWorkSpace[AT.pWorkPointer+*in];
+				in++;
+			}
+			AT.pWorkSpace[AT.pWorkPointer+in[-1]] = tt;
+			TermFree(incopy,"RunPermute");
+			info = infostop;
+		}
+		else {
+			tt = AT.pWorkSpace[AT.pWorkPointer+*info];
+			info++;
+			while ( info < infostop ) {
+				if ( *info > totarg ) return(0);
+				AT.pWorkSpace[AT.pWorkPointer+info[-1]] = AT.pWorkSpace[AT.pWorkPointer+*info];
+				info++;
+			}
+			AT.pWorkSpace[AT.pWorkPointer+info[-1]] = tt;
+		}
+	  }
+/*
+	  info++;
+	  while ( *info ) {
+		infostop = info + *info;
+		info++;
+		if ( *info > totarg ) return(0);
 		tt = AT.pWorkSpace[AT.pWorkPointer+*info];
 		info++;
 		while ( info < infostop ) {
@@ -2096,6 +2200,7 @@ WORD RunPermute(PHEAD WORD *fun, WORD *args, WORD *info)
 		}
 		AT.pWorkSpace[AT.pWorkPointer+info[-1]] = tt;
 	  }
+*/
 /*
 	  And the final cleanup
 */
