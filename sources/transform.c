@@ -2113,6 +2113,25 @@ WORD RunPermute(PHEAD WORD *fun, WORD *args, WORD *info)
 		while ( in < infostop ) {
 			if ( *in < 0 ) { /* Dollar variable -(number+1) */
 				d = Dollars - *in - 1;
+#ifdef WITHPTHREADS
+				{
+					int nummodopt, dtype = -1, numdollar = -*in-1;
+					if ( AS.MultiThreaded && ( AC.mparallelflag == PARALLELFLAG ) ) {
+						for ( nummodopt = 0; nummodopt < NumModOptdollars; nummodopt++ ) {
+							if ( numdollar == ModOptdollars[nummodopt].number ) break;
+						}
+						if ( nummodopt < NumModOptdollars ) {
+							dtype = ModOptdollars[nummodopt].type;
+							if ( dtype == MODLOCAL ) {
+								d = ModOptdollars[nummodopt].dstruct+AT.identity;
+							}
+							else {
+								LOCK(d->pthreadslockread);
+							}
+						}
+					}
+				}
+#endif
 				if ( ( d->type == DOLNUMBER || d->type == DOLTERMS )
 				 && d->where[0] == 4 && d->where[4] == 0 ) {
 					if ( d->where[3] < 0 || d->where[2] != 1 || d->where[1] > totarg ) return(0);
@@ -2146,6 +2165,25 @@ IllType:
 			while ( in < infostop ) {
 				if ( *in < 0 ) {
 					d = Dollars - *in - 1;
+#ifdef WITHPTHREADS
+				{
+					int nummodopt, dtype = -1, numdollar = -*in-1;
+					if ( AS.MultiThreaded && ( AC.mparallelflag == PARALLELFLAG ) ) {
+						for ( nummodopt = 0; nummodopt < NumModOptdollars; nummodopt++ ) {
+							if ( numdollar == ModOptdollars[nummodopt].number ) break;
+						}
+						if ( nummodopt < NumModOptdollars ) {
+							dtype = ModOptdollars[nummodopt].type;
+							if ( dtype == MODLOCAL ) {
+								d = ModOptdollars[nummodopt].dstruct+AT.identity;
+							}
+							else {
+								LOCK(d->pthreadslockread);
+							}
+						}
+					}
+				}
+#endif
 					if ( d->type == DOLNUMBER || d->type == DOLTERMS ) {
 						*tocopy++ = d->where[1] - 1;
 					}
