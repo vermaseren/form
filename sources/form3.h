@@ -268,7 +268,7 @@ STATIC_ASSERT(sizeof(INT128) == 16);
 #endif
 
 typedef void VOID;
-typedef char SBYTE;
+typedef signed char SBYTE;
 typedef unsigned char UBYTE;
 typedef unsigned int UINT;
 typedef ULONG RLONG;  /* Used in reken.c. */
