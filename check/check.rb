@@ -389,6 +389,19 @@ module FormTest
       stdout.shift
     end
 
+    if !FormTest.cfg.valgrind.nil?
+      # The exit status may be in the middle of the output (sometimes annoyingly
+      # happened on Travis CI).
+      if @finished && !stdout.empty? && !stdout[-1].start_with?("exit_status=")
+        i = stdout.map { |x| x.start_with?("exit_status") }.rindex(true)
+        if !i.nil?
+          s = stdout[i]
+          stdout.delete_at(i)
+          stdout << s
+        end
+      end
+    end
+
     if @finished && !stdout.empty? && stdout[-1] =~ /exit_status=([0-9]+)/
       @exit_status = $1.to_i
       stdout.pop
@@ -716,10 +729,8 @@ class TestCases
               warn("unmatched fold '#{fold}', which should be '#{foldname}'", inname, lineno)
             end
 
-            if skipping
-              line = ""
-            else
-              line = ""
+            line = ""
+            if !skipping
               if fileno == 0
                 # no .end
                 blockno.times do
@@ -971,9 +982,9 @@ class FormConfig
       frmname = File.join(tmpdir, "ver.frm")
       open(frmname, "w") do |f|
         f.write(<<-'EOF')
-#-
-Off finalstats;
-.end
+  #-
+  Off finalstats;
+  .end
   EOF
       end
       @head = `#{@form_bin} #{frmname} 2>/dev/null`.split("\n").first
