@@ -1441,11 +1441,13 @@ doall:;			if ( AP.eat < 0 ) {
 		if ( s >= AC.iStop ) {
 			if ( !AP.iBufError ) {
 				LONG position = s - AC.iBuffer;
+				LONG position2 = AC.iPointer - AC.iBuffer;
 				UBYTE **ppp = &(AC.iBuffer); /* to avoid a compiler warning */
 				if ( DoubleLList((VOID ***)ppp,&AC.iBufferSize
 				,sizeof(UBYTE),"statement buffer") ) {
 					*s = 0; retval = -1; AP.iBufError = 1;
 				}
+				AC.iPointer = AC.iBuffer + position2;
 				AC.iStop = AC.iBuffer + AC.iBufferSize-2;
 				s = AC.iBuffer + position;
 			}
@@ -1611,11 +1613,13 @@ int ExpandTripleDots(int par)
 				LONG position = s - Buffer;
 				UBYTE **ppp;
 				if ( par == 0 ) {
+					LONG position2 = AC.iPointer - AC.iBuffer;
 					ppp = &(AC.iBuffer); /* to avoid a compiler warning */
 					if ( DoubleLList((VOID ***)ppp,&AC.iBufferSize
 						,sizeof(UBYTE),"statement buffer") ) {
 							Terminate(-1);
 					}
+					AC.iPointer = AC.iBuffer + position2;
 					AC.iStop = AC.iBuffer + AC.iBufferSize-2;
 					Buffer = AC.iBuffer+AP.PreAssignStack[AP.PreAssignLevel]; Stop = AC.iStop;
 				}
@@ -1828,12 +1832,14 @@ theend:			M_free(nums,"Expand ...");
 				LONG nnn3;
 				while ( AC.iBuffer+AP.PreAssignStack[AP.PreAssignLevel] + x2 >= AC.iStop ) {
 					LONG position = s-Buffer;
+					LONG position2 = AC.iPointer - AC.iBuffer;
 					UBYTE **ppp;
 					ppp = &(AC.iBuffer); /* to avoid a compiler warning */
 					if ( DoubleLList((VOID ***)ppp,&AC.iBufferSize
 						,sizeof(UBYTE),"statement buffer") ) {
 							Terminate(-1);
 					}
+					AC.iPointer = AC.iBuffer + position2;
 					AC.iStop = AC.iBuffer + AC.iBufferSize-2;
 					Buffer = AC.iBuffer+AP.PreAssignStack[AP.PreAssignLevel]; Stop = AC.iStop;
 					s  = Buffer + position;

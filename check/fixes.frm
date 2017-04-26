@@ -1256,6 +1256,17 @@ assert result("F64m6") =~ expr("f(-18446744073709551616)")
 assert result("F64m7") =~ expr("f(-18446744073709551617)")
 assert result("F64m8") =~ expr("f(-18446744073709551618)")
 *--#] Issue139 : 
+*--#[ Issue146 :
+* Memory bug via expanding the triple dot operator
+Auto S x;
+L F = x1+...+x123;
+#$n = 1;
+.sort
+L G = x1+...+x1000;
+#$m = F;
+.end
+assert succeeded?
+*--#] Issue146 : 
 *--#[ Issue149_1 :
 * Index matches to -1 but crashes in output
 Index mu;

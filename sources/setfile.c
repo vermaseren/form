@@ -408,7 +408,7 @@ int AllocSetups()
 
 	AM.OutBuffer = (UBYTE *)Malloc1(AM.OutBufSize+1,"OutputBuffer");
 	AP.PreAssignStack =(LONG *)Malloc1(AP.MaxPreAssignLevel*sizeof(LONG *),"PreAssignStack");
-	for ( i = 0; i < AP.MaxPreAssignLevel; i++ ) AP.PreAssignStack[0] = 0;
+	for ( i = 0; i < AP.MaxPreAssignLevel; i++ ) AP.PreAssignStack[i] = 0;
 	AC.iBuffer = (UBYTE *)Malloc1(AC.iBufferSize+1,"statement buffer");
 	AC.iStop = AC.iBuffer + AC.iBufferSize-2;
 	AP.preStart = (UBYTE *)Malloc1(AP.pSize,"instruction buffer");
