@@ -4,582 +4,147 @@ language: cpp
 git:
   depth: 10000
 
-my_recipes:
-  - &linux_gcc_form
-    os: linux
-    compiler: gcc
-    env: TEST=form
-    addons:
-      apt:
-        packages:
-          - libgmp-dev
-          - zlib1g-dev
-    script:
-      - autoreconf -iv
-      - ./configure --enable-scalar --disable-threaded --disable-parform
-      - MAKEFLAGS='-j 4' make
-      - make check TEST_OPTS=--stat
+env:
+  global:
+    MAKEFLAGS='-j 4'
 
-  - &linux_gcc_tform
-    os: linux
-    compiler: gcc
-    env: TEST=tform
-    addons:
-      apt:
-        packages:
-          - libgmp-dev
-          - zlib1g-dev
-    script:
-      - autoreconf -iv
-      - ./configure --disable-scalar --enable-threaded --disable-parform
-      - MAKEFLAGS='-j 4' make
-      - make check TEST_OPTS=--stat
+# NOTE: the following combinations give many false positives:
+# - openmpi-bin + valgrind on precise
+# - mpich-3.2 + valgrind-3.12.0 on xcode7.3
 
-  - &linux_gcc_parform
-    os: linux
-    compiler: gcc
-    env: TEST=parform
-    addons:
-      apt:
-        packages:
-          - libgmp-dev
-          - libopenmpi-dev
-          - openmpi-bin
-          - zlib1g-dev
-    script:
-      - autoreconf -iv
-      - ./configure --disable-scalar --disable-threaded --enable-parform
-      - MAKEFLAGS='-j 4' make
-      - make check TEST_OPTS=--stat
+addons:
+  apt:
+    packages:
+      - libgmp-dev
+      - libopenmpi-dev
+      - openmpi-bin
+      - valgrind
+      - zlib1g-dev
 
-  - &linux_clang_form
-    <<: *linux_gcc_form
-    compiler: clang
+# NOTE: It is best to cache ./texlive for doc-release:
+#   cache:
+#     directories:
+#       - texlive
+before_install:
+  - |
+    if [ "x$TRAVIS_OS_NAME" = xlinux ]; then
+      case $CI_TARGET in
+        *doc*)
+          if [ ! -e ./texlive/bin/`uname -m`-linux/tlmgr ]; then
+            wget http://mirror.ctan.org/systems/texlive/tlnet/install-tl-unx.tar.gz -O - | tar -x --gzip
+            echo "
+            selected_scheme scheme-minimal
+            TEXDIR ./texlive
+            TEXMFCONFIG ~/.texlive2016/texmf-config
+            TEXMFHOME ~/texmf
+            TEXMFLOCAL ./texlive/texmf-local
+            TEXMFSYSCONFIG ./texlive/texmf-config
+            TEXMFSYSVAR ./texlive/texmf-var
+            TEXMFVAR ~/.texlive2016/texmf-var
+            collection-fontsrecommended 1
+            collection-latex 1
+            option_doc 0
+            option_src 0
+            " | sed -e 's/^ *//' >texlive.profile
+            ./install-tl-20*/install-tl --profile texlive.profile
+          fi
+          export PATH=`pwd`/texlive/bin/`uname -m`-linux:$PATH
+          ;;
+      esac
+    fi
+    if [ "x$TRAVIS_OS_NAME" = xosx ]; then
+      case $CI_TARGET in
+        *parform*|*parvorm*)
+          brew update
+          brew install mpich
+          ;;
+      esac
+      case $CI_TARGET in
+        *valgrind*)
+          brew update
+          # valgrind 3.11.0
+          brew install https://raw.githubusercontent.com/Homebrew/homebrew-core/7a4dabfc1a2acd9f01a1670fde4f0094c4fb6ffa/Formula/valgrind.rb
+          ;;
+      esac
+    fi
 
-  - &linux_clang_tform
-    <<: *linux_gcc_tform
-    compiler: clang
-
-  - &linux_clang_parform
-    <<: *linux_gcc_parform
-    compiler: clang
-
-  - &linux_gcc5_form
-    os: linux
-    compiler: gcc-5
-    env: TEST=form
-    addons:
-      apt:
-        sources:
-          - ubuntu-toolchain-r-test
-        packages:
-          - gcc-5
-          - g++-5
-          - libgmp-dev
-          - zlib1g-dev
-    script:
-      - autoreconf -iv
-      - ./configure --enable-scalar --disable-threaded --disable-parform CC=gcc-5 CXX=g++-5
-      - MAKEFLAGS='-j 4' make
-      - make check TEST_OPTS=--stat
-
-  - &linux_gcc5_tform
-    os: linux
-    compiler: gcc-5
-    env: TEST=tform
-    addons:
-      apt:
-        sources:
-          - ubuntu-toolchain-r-test
-        packages:
-          - gcc-5
-          - g++-5
-          - libgmp-dev
-          - zlib1g-dev
-    script:
-      - autoreconf -iv
-      - ./configure --disable-scalar --enable-threaded --disable-parform CC=gcc-5 CXX=g++-5
-      - MAKEFLAGS='-j 4' make
-      - make check TEST_OPTS=--stat
-
-  - &linux_gcc5_parform
-    os: linux
-    compiler: gcc-5
-    env: TEST=parform
-    addons:
-      apt:
-        sources:
-          - ubuntu-toolchain-r-test
-        packages:
-          - gcc-5
-          - g++-5
-          - libgmp-dev
-          - libopenmpi-dev
-          - openmpi-bin
-          - zlib1g-dev
-    script:
-      - autoreconf -iv
-      - ./configure --disable-scalar --disable-threaded --enable-parform CC=gcc-5 CXX=g++-5
-      - MAKEFLAGS='-j 4' make
-      - make check TEST_OPTS=--stat
-
-  - &linux_gcc6_form
-    os: linux
-    compiler: gcc-6
-    env: TEST=form
-    addons:
-      apt:
-        sources:
-          - ubuntu-toolchain-r-test
-        packages:
-          - gcc-6
-          - g++-6
-          - libgmp-dev
-          - zlib1g-dev
-    script:
-      - autoreconf -iv
-      - ./configure --enable-scalar --disable-threaded --disable-parform CC=gcc-6 CXX=g++-6
-      - MAKEFLAGS='-j 4' make
-      - make check TEST_OPTS=--stat
-
-  - &linux_gcc6_tform
-    os: linux
-    compiler: gcc-6
-    env: TEST=tform
-    addons:
-      apt:
-        sources:
-          - ubuntu-toolchain-r-test
-        packages:
-          - gcc-6
-          - g++-6
-          - libgmp-dev
-          - zlib1g-dev
-    script:
-      - autoreconf -iv
-      - ./configure --disable-scalar --enable-threaded --disable-parform CC=gcc-6 CXX=g++-6
-      - MAKEFLAGS='-j 4' make
-      - make check TEST_OPTS=--stat
-
-  - &linux_gcc6_parform
-    os: linux
-    compiler: gcc-6
-    env: TEST=parform
-    addons:
-      apt:
-        sources:
-          - ubuntu-toolchain-r-test
-        packages:
-          - gcc-6
-          - g++-6
-          - libgmp-dev
-          - libopenmpi-dev
-          - openmpi-bin
-          - zlib1g-dev
-    script:
-      - autoreconf -iv
-      - ./configure --disable-scalar --disable-threaded --enable-parform CC=gcc-6 CXX=g++-6
-      - MAKEFLAGS='-j 4' make
-      - make check TEST_OPTS=--stat
-
-  - &linux_gcc_noextlib
-    os: linux
-    compiler: gcc
-    env: TEST=noextlib
-    script:
-      - autoreconf -iv
-      - ./configure --without-gmp --without-zlib
-      - MAKEFLAGS='-j 4' make
-      - make check TEST_OPTS=--stat
-
-  - &linux_gcc_m32
-    os: linux
-    compiler: gcc
-    env: TEST=m32
-    addons:
-      apt:
-        packages:
-          - gcc-multilib
-          - g++-multilib
-          - libgmp-dev:i386
-          - zlib1g-dev:i386
-    script:
-      - autoreconf -iv
-      - ./configure CFLAGS=-m32 CXXFLAGS=-m32
-      - MAKEFLAGS='-j 4' make
-      - make check TEST_OPTS=--stat
-
-  - &linux_gcc_m32_noextlib
-    os: linux
-    compiler: gcc
-    env: TEST=m32-noextlib
-    addons:
-      apt:
-        packages:
-          - gcc-multilib
-          - g++-multilib
-    script:
-      - autoreconf -iv
-      - ./configure CFLAGS=-m32 CXXFLAGS=-m32 --without-gmp --without-zlib
-      - MAKEFLAGS='-j 4' make
-      - make check TEST_OPTS=--stat
-
-  - &linux_gcc_distcheck
-    os: linux
-    compiler: gcc
-    env: TEST=distcheck
-    addons:
-      apt:
-        packages:
-          - libgmp-dev
-          - zlib1g-dev
-    script:
-      - autoreconf -iv
-      - ./configure
-      - MAKEFLAGS='-j 4' make distcheck
-
-  - &linux_gcc_rvm_ruby_head
-    os: linux
-    compiler: gcc
-    env: TEST=rvm-ruby-head
-    addons:
-      apt:
-        packages:
-          - libgmp-dev
-          - zlib1g-dev
-    before_install:
-      - rvm install ruby-head
-    script:
-      - autoreconf -iv
-      - ./configure
-      - MAKEFLAGS='-j 4' make
-      - make check TEST_OPTS=--stat
-
-  - &linux_gcc_rvm_18
-    <<: *linux_gcc_rvm_ruby_head
-    env: TEST=rvm-1.8
-    before_install:
-      - rvm install 1.8
-
-  - &linux_gcc_rvm_19
-    <<: *linux_gcc_rvm_ruby_head
-    env: TEST=rvm-1.9
-    before_install:
-      - rvm install 1.9
-
-  - &linux_gcc_rvm_20
-    <<: *linux_gcc_rvm_ruby_head
-    env: TEST=rvm-2.0
-    before_install:
-      - rvm install 2.0
-
-  - &linux_gcc_rvm_21
-    <<: *linux_gcc_rvm_ruby_head
-    env: TEST=rvm-2.1
-    before_install:
-      - rvm install 2.1
-
-  - &linux_gcc_rvm_22
-    <<: *linux_gcc_rvm_ruby_head
-    env: TEST=rvm-2.2
-    before_install:
-      - rvm install 2.2
-
-  - &linux_gcc_rvm_230
-    <<: *linux_gcc_rvm_ruby_head
-    env: TEST=rvm-2.3.0
-    before_install:
-      - rvm install 2.3.0
-
-  - &linux_gcc_src_release
-    os: linux
-    compiler: gcc
-    env: TEST=src-release
-    script:
-      - autoreconf -iv
-      - ./configure
-      - distname=form-`./scripts/git-version-gen.sh -v`-`./scripts/git-version-gen.sh --date-format '%Y%m%d' | sed -n 3p`
-      - distdir=$distname
-      - make distdir=$distdir dist
-
-  - &linux_gcc_doc_release
-    os: linux
-    compiler: gcc
-    env: TEST=doc-release
-    cache:
-      directories:
-        - texlive
-    before_install:
-      - |
-        if [ ! -e ./texlive/bin/x86_64-linux/tlmgr ]; then
-          wget http://mirror.ctan.org/systems/texlive/tlnet/install-tl-unx.tar.gz -O - | tar -x --gzip
-          echo "
-          selected_scheme scheme-minimal
-          TEXDIR ./texlive
-          TEXMFCONFIG ~/.texlive2016/texmf-config
-          TEXMFHOME ~/texmf
-          TEXMFLOCAL ./texlive/texmf-local
-          TEXMFSYSCONFIG ./texlive/texmf-config
-          TEXMFSYSVAR ./texlive/texmf-var
-          TEXMFVAR ~/.texlive2016/texmf-var
-          collection-fontsrecommended 1
-          collection-latex 1
-          option_doc 0
-          option_src 0
-          " | sed -e 's/^ *//' >texlive.profile
-          ./install-tl-20*/install-tl --profile texlive.profile
-        fi
-      - export PATH=$(pwd)/texlive/bin/x86_64-linux:$PATH
-    script:
-      - autoreconf -iv
-      - ./configure
-      - make pdf
-      - distname=form-`./scripts/git-version-gen.sh -v`-`./scripts/git-version-gen.sh --date-format '%Y%m%d' | sed -n 3p`
-      - cp doc/manual/manual.pdf $distname.pdf
-
-  - &linux_gcc_release
-    os: linux
-    compiler: gcc
-    env: TEST=release
-    addons:
-      apt:
-        packages:
-          - libgmp-dev
-          - zlib1g-dev
-    script:
-      - autoreconf -iv
-      - ./configure --enable-static-link --disable-native
-      - MAKEFLAGS='-j 4' make
-      - distname=form-`./scripts/git-version-gen.sh -v`-`./scripts/git-version-gen.sh --date-format '%Y%m%d' | sed -n 3p`
-      - distdir=$distname-x86_64-linux
-      - mkdir $distdir
-      - cp sources/form sources/tform $distdir
-      - tar c $distdir/* | gzip -c -9 > $distdir.tar.gz
-
-  - &linux_gcc_valgrind_vorm
-    os: linux
-    compiler: gcc
-    env: TEST=valgrind-vorm
-    addons:
-      apt:
-        packages:
-          - libgmp-dev
-          - valgrind
-          - zlib1g-dev
-    script:
-      - autoreconf -iv
-      - ./configure --enable-scalar --disable-threaded --disable-parform --enable-debug
-      - MAKEFLAGS='-j 4' make -C sources vorm
-      - make -C check check TEST_BINS=vorm TEST_OPTS='valgrind --stat'
-
-  - &linux_gcc_valgrind_tvorm
-    os: linux
-    compiler: gcc
-    env: TEST=valgrind-tvorm
-    addons:
-      apt:
-        packages:
-          - libgmp-dev
-          - valgrind
-          - zlib1g-dev
-    script:
-      - autoreconf -iv
-      - ./configure --disable-scalar --enable-threaded --disable-parform --enable-debug
-      - MAKEFLAGS='-j 4' make -C sources tvorm
-      - make -C check check TEST_BINS=tvorm TEST_OPTS='valgrind --stat'
-
-  - &linux_gcc_valgrind_parvorm
-    os: linux
-    compiler: gcc
-    env: TEST=valgrind-parvorm
-    addons:
-      apt:
-        packages:
-          - libgmp-dev
-          - libopenmpi-dev
-          - openmpi-bin
-          - valgrind
-          - zlib1g-dev
-    script:
-      - autoreconf -iv
-      - ./configure --disable-scalar --disable-threaded --enable-parform --enable-debug
-      - MAKEFLAGS='-j 4' make -C sources parvorm
-      - make -C check check TEST_BINS=parvorm TEST_OPTS='valgrind --stat'
-
-  - &linux_gcc_noextlib_valgrind
-    os: linux
-    compiler: gcc
-    env: TEST=noextlib-valgrind
-    addons:
-      apt:
-        packages:
-          - valgrind
-    script:
-      - autoreconf -iv
-      - ./configure --without-gmp --without-zlib --enable-debug
-      - MAKEFLAGS='-j 4' make -C sources vorm tvorm
-      - make -C check check TEST_BINS='vorm tvorm' TEST_OPTS='valgrind --stat'
-
-  - &linux_gcc_m32_valgrind
-    os: linux
-    compiler: gcc
-    env: TEST=m32-valgrind
-    addons:
-      apt:
-        packages:
-          - gcc-multilib
-          - g++-multilib
-          - libgmp-dev:i386
-          - valgrind:i386
-          - zlib1g-dev:i386
-    script:
-      - autoreconf -iv
-      - ./configure CFLAGS=-m32 CXXFLAGS=-m32 --enable-debug
-      - MAKEFLAGS='-j 4' make -C sources vorm tvorm
-      - make -C check check TEST_BINS='vorm tvorm' TEST_OPTS='valgrind --stat'
-
-  - &linux_gcc_m32_noextlib_valgrind
-    os: linux
-    compiler: gcc
-    env: TEST=m32-noextlib-valgrind
-    addons:
-      apt:
-        packages:
-          - gcc-multilib
-          - g++-multilib
-          - valgrind:i386
-    script:
-      - autoreconf -iv
-      - ./configure CFLAGS=-m32 CXXFLAGS=-m32 --without-gmp --without-zlib --enable-debug
-      - MAKEFLAGS='-j 4' make -C sources vorm tvorm
-      - make -C check check TEST_BINS='vorm tvorm' TEST_OPTS='valgrind --stat'
-
-  - &osx_gcc_form
-    os: osx
-    compiler: gcc
-    env: TEST=form
-    script:
-      - autoreconf -iv
-      - ./configure --enable-scalar --disable-threaded --disable-parform
-      - MAKEFLAGS='-j 4' make
-      - make check TEST_OPTS=--stat
-
-  - &osx_gcc_tform
-    os: osx
-    compiler: gcc
-    env: TEST=tform
-    script:
-      - autoreconf -iv
-      - ./configure --disable-scalar --enable-threaded --disable-parform
-      - MAKEFLAGS='-j 4' make
-      - make check TEST_OPTS=--stat
-
-  - &osx_gcc_parform
-    os: osx
-    compiler: gcc
-    env: TEST=parform
-    before_install:
-      - brew update
-      - brew install mpich
-    script:
-      - autoreconf -iv
-      - ./configure --disable-scalar --disable-threaded --enable-parform
-      - MAKEFLAGS='-j 4' make
-      - make check TEST_OPTS=--stat
-
-  - &osx_gcc_distcheck
-    os: osx
-    compiler: gcc
-    env: TEST=distcheck
-    script:
-      - autoreconf -iv
-      - ./configure
-      - MAKEFLAGS='-j 4' make distcheck
-
-  - &osx_gcc_valgrind_vorm
-    os: osx
-    compiler: gcc
-    env: TEST=valgrind-vorm
-    before_install:
-      - brew update
-      - brew install valgrind
-      - gem install test-unit
-    script:
-      - autoreconf -iv
-      - ./configure --enable-scalar --disable-threaded --disable-parform --enable-debug
-      - MAKEFLAGS='-j 4' make -C sources vorm
-      - make -C check check TEST_BINS=vorm TEST_OPTS='valgrind --stat'
-
-  - &osx_gcc_valgrind_tvorm
-    os: osx
-    compiler: gcc
-    env: TEST=valgrind-tvorm
-    before_install:
-      - brew update
-      - brew install valgrind
-      - gem install test-unit
-    script:
-      - autoreconf -iv
-      - ./configure --disable-scalar --enable-threaded --disable-parform --enable-debug
-      - MAKEFLAGS='-j 4' make -C sources tvorm
-      - make -C check check TEST_BINS=tvorm TEST_OPTS='valgrind --stat'
-
-  - &osx_gcc_valgrind_parvorm
-    os: osx
-    compiler: gcc
-    env: TEST=valgrind-parvorm
-    before_install:
-      - brew update
-      - brew install mpich
-      - brew install https://raw.githubusercontent.com/Homebrew/homebrew-core/7a4dabfc1a2acd9f01a1670fde4f0094c4fb6ffa/Formula/valgrind.rb
-      - gem install test-unit
-    script:
-      - autoreconf -iv
-      - ./configure --disable-scalar --disable-threaded --enable-parform --enable-debug
-      - MAKEFLAGS='-j 4' make -C sources parvorm
-      - make -C check check TEST_BINS=parvorm TEST_OPTS='valgrind --stat'
+script:
+  - ./scripts/travis-script.sh
 
 matrix:
   include:
-    - *linux_gcc_form
-    - *linux_gcc_tform
-    - *linux_gcc_parform
-#    - *linux_clang_form
-#    - *linux_clang_tform
-#    - *linux_clang_parform
-#    - *linux_gcc5_form
-#    - *linux_gcc5_tform
-#    - *linux_gcc5_parform
-#    - *linux_gcc6_form
-#    - *linux_gcc6_tform
-#    - *linux_gcc6_parform
-#    - *linux_gcc_noextlib
-#    - *linux_gcc_m32
-#    - *linux_gcc_m32_noextlib
-#    - *linux_gcc_distcheck
-#    - *linux_gcc_rvm_18
-#    - *linux_gcc_rvm_19
-#    - *linux_gcc_rvm_20
-#    - *linux_gcc_rvm_21
-#    - *linux_gcc_rvm_22
-#    - *linux_gcc_rvm_230
-#    - *linux_gcc_rvm_ruby_head
-#    - *linux_gcc_src_release
-#    - *linux_gcc_doc_release
-#    - *linux_gcc_release
-    - *osx_gcc_form
-    - *osx_gcc_tform
-    - *osx_gcc_parform
-#    - *osx_gcc_distcheck
-    - *linux_gcc_valgrind_vorm
-    - *linux_gcc_valgrind_tvorm
-#    - *linux_gcc_valgrind_parvorm
-#    - *linux_gcc_noextlib_valgrind
-#    - *linux_gcc_m32_valgrind
-#    - *linux_gcc_m32_noextlib_valgrind
-#    - *osx_gcc_valgrind_vorm
-#    - *osx_gcc_valgrind_tvorm
-    - *osx_gcc_valgrind_parvorm
+    - os: linux
+      compiler: gcc
+      env: CI_TARGET=form
+    - os: linux
+      compiler: gcc
+      env: CI_TARGET=tform
+    - os: linux
+      compiler: gcc
+      env: CI_TARGET=parform
+    - os: osx
+      compiler: clang
+      env: CI_TARGET=form
+    - os: osx
+      compiler: clang
+      env: CI_TARGET=tform
+    - os: osx
+      compiler: clang
+      env: CI_TARGET=parform
+    - os: linux
+      compiler: gcc
+      env: CI_TARGET=valgrind-vorm TEST=examples.frm
+    - os: linux
+      compiler: gcc
+      env: CI_TARGET=valgrind-vorm TEST=features.frm
+    - os: linux
+      compiler: gcc
+      env: CI_TARGET=valgrind-vorm TEST=fixes.frm
+    - os: linux
+      compiler: gcc
+      env: CI_TARGET=valgrind-tvorm TEST=examples.frm
+    - os: linux
+      compiler: gcc
+      env: CI_TARGET=valgrind-tvorm TEST=features.frm
+    - os: linux
+      compiler: gcc
+      env: CI_TARGET=valgrind-tvorm TEST=fixes.frm
+    - os: osx
+      compiler: gcc
+      env: CI_TARGET=valgrind-parvorm TEST=examples.frm
+    - os: osx
+      compiler: gcc
+      env: CI_TARGET=valgrind-parvorm TEST=features.frm
+    - os: osx
+      compiler: gcc
+      env: CI_TARGET=valgrind-parvorm TEST=fixes.frm
+    - os: linux
+      env: CI_TARGET=src-release
+    - os: linux
+      env: CI_TARGET=doc-release
+      cache:
+        directories:
+          - texlive
+    - os: linux
+      compiler: gcc
+      env: CI_TARGET=bin-release
+    - os: osx
+      compiler: clang
+      env: CI_TARGET=bin-release
+
+# NOTE: $GITHUB_TOKEN is given as an encrypted environment variable.
+deploy:
+  provider: releases
+  api_key: "$GITHUB_TOKEN"
+  file_glob: true
+  file:
+    - "form-*.tar.gz"
+    - "form-*.pdf"
+  skip_cleanup: true
+  overwrite: true
+  on:
+    tags: true
+    condition: "( $TRAVIS_SECURE_ENV_VARS == true ) && ( $CI_TARGET == *release )"
 
 notifications:
   email: false
