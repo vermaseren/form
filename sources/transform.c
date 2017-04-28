@@ -2710,7 +2710,8 @@ WORD RunAddArg(PHEAD WORD *fun, WORD *args)
 WORD RunMulArg(PHEAD WORD *fun, WORD *args)
 {
 	WORD *t, totarg, *tstop, arg1, arg2, n, *f, nb, *m, i, *w;
-	WORD *scratch, argbuf[20], argsize, *where, *oldcpointer, *newterm;
+	WORD *scratch, argbuf[20], argsize, *where, *newterm;
+	LONG oldcpointer_pos;
 	CBUF *C = cbuf + AT.ebufnum;
 	if ( *args != ARGRANGE ) {
 		MLOCK(ErrorMessageLock);
@@ -2748,7 +2749,8 @@ WORD RunMulArg(PHEAD WORD *fun, WORD *args)
 	}
 	scratch = AT.WorkPointer;
 	w = scratch+1;
-	nb = C->numrhs; oldcpointer = C->Pointer;
+	oldcpointer_pos = C->Pointer-C->Buffer;
+	nb = C->numrhs;
 	while ( n <= arg2 ) {
 		if ( *t > 0 ) {
 			argsize = *t - ARGHEAD; where = t + ARGHEAD; t += *t;
@@ -2818,7 +2820,7 @@ WORD RunMulArg(PHEAD WORD *fun, WORD *args)
 	Generator(BHEAD scratch,AR.Cnumlhs);
 	newterm = AT.WorkPointer;
 	EndSort(BHEAD newterm+ARGHEAD,0);
-	C->Pointer = oldcpointer;
+	C->Pointer = C->Buffer+oldcpointer_pos;
 	C->numrhs = nb;
 	w = newterm+ARGHEAD; while ( *w ) w += *w;
 	*newterm = w-newterm; newterm[1] = 0;

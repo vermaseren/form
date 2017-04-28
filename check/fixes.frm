@@ -75,6 +75,30 @@ print;
 .end
 assert compile_error?
 *--#] NegDimension : 
+*--#[ Transform-mulargs_1 :
+CF f;
+Auto S x;
+L F = f(<x1+x2+x3>,...,<x7+x8+x9>);
+
+* Consume ebuf.
+#do i=1,10
+  id f(?a,x1?,x2?,?c) = f(?a,x1,x2,?c);
+#enddo
+
+* This extends ebuf.
+transform f,mulargs(1,last);
+
+* Crashed here.
+id f(?a) = f(?a);
+
+* Check a "hash", just in case.
+multiply replace_(<x1,1>,...,<x9,1>);
+id f(x?) = x;
+P;
+.end
+assert succeeded?
+assert result("F") =~ expr("2187")
+*--#] Transform-mulargs_1 : 
 *--#[ Forum3t187 :
 * bug in argument environment? [function specified by a set]
 CF f1,f2,f3;
