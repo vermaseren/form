@@ -1134,26 +1134,33 @@ WORD DoDistrib(PHEAD WORD *term, WORD level)
 		&& t[FUNHEAD+2] == -SNUMBER
 		&& t[FUNHEAD+4] <= -FUNCTION
 		&& t[FUNHEAD+5] <= -FUNCTION ) {
-			fun1 = -t[FUNHEAD+4];
-			fun2 = -t[FUNHEAD+5];
-			typ1 = functions[fun1-FUNCTION].spec;
-			typ2 = functions[fun2-FUNCTION].spec;
-			if ( typ1 > 0 || typ2 > 0 ) {
-				m = t + FUNHEAD+6;
-				r = t + t[1];
-				while ( m < r ) {
-					if ( *m != -INDEX && *m != -VECTOR && *m != -MINVECTOR )
-						break;
-					m += 2;
+            WORD *ttt = t+FUNHEAD+6, *tttstop = t+t[1];
+            while ( ttt < tttstop ) {
+                if ( *ttt == -DOLLAREXPRESSION ) break;
+                NEXTARG(ttt);
+            }
+			if ( ttt >= tttstop ) {
+				fun1 = -t[FUNHEAD+4];
+				fun2 = -t[FUNHEAD+5];
+				typ1 = functions[fun1-FUNCTION].spec;
+				typ2 = functions[fun2-FUNCTION].spec;
+				if ( typ1 > 0 || typ2 > 0 ) {
+					m = t + FUNHEAD+6;
+					r = t + t[1];
+					while ( m < r ) {
+						if ( *m != -INDEX && *m != -VECTOR && *m != -MINVECTOR )
+							break;
+						m += 2;
+					}
+					if ( m < r ) {
+						MLOCK(ErrorMessageLock);
+						MesPrint("Incompatible function types and arguments in distrib_");
+						MUNLOCK(ErrorMessageLock);
+						SETERROR(-1)
+					}
 				}
-				if ( m < r ) {
-					MLOCK(ErrorMessageLock);
-					MesPrint("Incompatible function types and arguments in distrib_");
-					MUNLOCK(ErrorMessageLock);
-					SETERROR(-1)
-				}
+				break;
 			}
-			break;
 		}
 		t = r;
 	}

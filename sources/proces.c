@@ -1230,10 +1230,17 @@ Important: we may not have enough spots here
 			  && t[FUNHEAD+2] == -SNUMBER
 			  && t[FUNHEAD+4] <= -FUNCTION
 			  && t[FUNHEAD+5] <= -FUNCTION ) {
-				AN.TeInFun = -1;
-				AN.TeSuOut = 0;
-				AR.TePos = -1;
-				return(1);
+				WORD *ttt = t+FUNHEAD+6, *tttstop = t+t[1];
+				while ( ttt < tttstop ) {
+					if ( *ttt == -DOLLAREXPRESSION ) break;
+					NEXTARG(ttt);
+				}
+				if ( ttt >= tttstop ) {
+					AN.TeInFun = -1;
+					AN.TeSuOut = 0;
+					AR.TePos = -1;
+					return(1);
+				}
 			  }
 			  else if ( *t == DELTA3 && ((t[1]-FUNHEAD) & 1 ) == 0 ) {
 				AN.TeInFun = -2;
