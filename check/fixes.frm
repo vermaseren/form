@@ -1549,3 +1549,15 @@ P;
 assert succeeded?
 assert result("F") =~ expr("rat(1,ep^2 + 2*ep + 1)")
 *--#] Issue180 : 
+*--#[ Issue186 :
+* $args not expanded for distrib_
+S x1,...,x4;
+CF f;
+L F = f(x1,...,x4);
+id f(?a$a) = 1;
+multiply distrib_(1,1,f,dummy_,$a);
+P;
+.end
+assert succeeded?
+assert result("F") =~ expr("f(x1) + f(x2) + f(x3) + f(x4)")
+*--#] Issue186 : 

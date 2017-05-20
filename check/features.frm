@@ -638,3 +638,36 @@ assert succeeded?
 assert result("[F1(1,1,1,1)]") =~ expr("1 + F1(1,1,1,1)")
 assert result("[F2(-1,1,1,1)]") =~ expr("1 + F2(-1,1,1,1)")
 *--#] Issue175_4 :
+*--#[ Issue187 :
+* What is the fastest equivalent of Foreach in FORM?
+
+* distrib_ generates combinations in lexicographical order (in the given
+* arguments.)
+
+S x1,...,x5;
+CF f;
+L F = f(x2,x5,x3,x1,x4);
+#$counter = 0;
+id f(?a$a) = 1;
+term;
+  multiply distrib_(1,3,f,dummy_,$a);
+  $counter = $counter + 1;
+  id f(?a) = f($counter,?a);
+endterm;
+P +s;
+ModuleOption noparallel;
+.end
+assert succeeded?
+assert result("F") =~ expr("
+       + f(1,x2,x5,x3)
+       + f(2,x2,x5,x1)
+       + f(3,x2,x5,x4)
+       + f(4,x2,x3,x1)
+       + f(5,x2,x3,x4)
+       + f(6,x2,x1,x4)
+       + f(7,x5,x3,x1)
+       + f(8,x5,x3,x4)
+       + f(9,x5,x1,x4)
+       + f(10,x3,x1,x4)
+")
+*--#] Issue187 : 
