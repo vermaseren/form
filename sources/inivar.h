@@ -229,6 +229,7 @@ static struct fixedfun {
 	,{"id_"         ,1 ,0             ,0               ,0} /* IDFUNCTION */
 	,{"putfirst_"   ,1 ,0             ,0               ,0} /* PUTFIRST */
 	,{"perm_"       ,1 ,0             ,0               ,0} /* PERMUTATIONS */
+	,{"partitions_" ,1 ,0             ,0               ,0} /* PARTITIONS */
 };
 
 FIXEDSET fixedsets[] = {

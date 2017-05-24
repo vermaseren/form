@@ -1042,6 +1042,22 @@ typedef struct DiStRiBuTe {
 } DISTRIBUTE;
 
 /**
+ *  The struct PARTI is used to help determining whether a partition_
+ *  function can be replaced.
+ */
+
+typedef struct PaRtI {
+	WORD *psize;  /* the sizes of the partitions */
+	WORD *args;   /* the offsets of the arguments to be partitioned */
+	WORD *nargs;  /* argument numbers (different number = different argument) */
+	WORD nfun;    /* the function into which the partitions go */
+	WORD numargs; /* the number of arguments to be partitioned */
+	WORD numpart; /* the number of partitions */
+	WORD where;   /* offset of the function in the term */
+    PADPOINTER(0,0,4,0);
+} PARTI;
+
+/**
  *  The struct SORTING is used to control a sort operation.
  *  It includes a small and a large buffer and arrays for keeping track
  *  of various stages of the (merge) sorts.
@@ -1968,6 +1984,7 @@ struct T_const {
     WORD    **ListPoly;
     WORD    *ListSymbols;
     UWORD   *NumMem;
+    PARTI   partitions;
     LONG    sBer;                  /* (T) Size of the bernoullis buffer */
     LONG    pWorkPointer;          /* (R) Offset-pointer in pWorkSpace */
     LONG    lWorkPointer;          /* (R) Offset-pointer in lWorkSpace */

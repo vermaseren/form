@@ -1394,6 +1394,15 @@ Important: we may not have enough spots here
 				AR.TePos = -1;
 				return(1);
 			  }
+			  else if ( *t == PARTITIONS ) {
+				if ( TestPartitions(BHEAD t,&(AT.partitions)) ) {
+					AT.partitions.where = t-term;
+					AN.TeInFun = -13;
+					AN.TeSuOut = 0;
+					AR.TePos = -1;
+					return(1);
+				}
+			  }
 			}
 		}
 		t += t[1];
@@ -3687,6 +3696,9 @@ AutoGen:	i = *AT.TMout;
 					break;
 				case -12:
 					if ( DoPermutations(BHEAD term,level) ) goto GenCall;
+					break;
+				case -13:
+					if ( DoPartitions(BHEAD term,level) ) goto GenCall;
 					break;
 			}
 		}
