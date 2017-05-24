@@ -1598,6 +1598,7 @@ WORD TestPartitions(PHEAD WORD *tfun, PARTI *parti)
 	WORD *tnext = tfun + tfun[1];
 	WORD *t, *tt;
 	WORD argcount = 0, sum = 0, i;
+	WORD tensorflag = 0;
 	tt = t = tfun + FUNHEAD;
 	while ( tt < tnext ) { argcount++; NEXTARG(tt); }
 	if ( argcount < 1 ) goto No;
@@ -1605,6 +1606,7 @@ WORD TestPartitions(PHEAD WORD *tfun, PARTI *parti)
 	parti->psize = parti->args = parti->nargs = 0;
 	parti->numargs = parti->numpart = parti->where = 0;
 	parti->nfun = -t[0]; t++;
+	if ( functions[parti->nfun-FUNCTION].spec > 0 ) tensorflag = 1;
 	if ( argcount == 1 ) return(1);
 	if ( t[0] != -SNUMBER ) goto No;
 	if ( t[1] < 1 || t[1] > argcount-2 ) goto No;
@@ -1632,6 +1634,7 @@ WORD TestPartitions(PHEAD WORD *tfun, PARTI *parti)
 */
 	for ( i = 0; i < parti->numargs; i++ ) {
 		parti->args[i] = t - tfun;
+		if ( tensorflag && ( *t != -VECTOR && *t != -INDEX ) ) goto WhatAPity;
 		NEXTARG(t);
 	}
 	return(1);
@@ -1653,7 +1656,7 @@ No:
 
 WORD DoPartitions(PHEAD WORD *term, WORD level)
 {
-	WORD x, i, j, im, *fun, ndiff, siz;
+	WORD x, i, j, im, *fun, ndiff, siz, tensorflag = 0;
 	PARTI part = AT.partitions;
 	WORD *array, **j3, **j3fill, **j3where;
 	WORD a, pfill, *j2, *j2fill, j3size, ncoeff, ncoeffnum, nfac, ncoeff2, ncoeff3, n;
@@ -1665,6 +1668,7 @@ WORD DoPartitions(PHEAD WORD *term, WORD level)
 	Start with bubble sorting the list of arguments. And the list of partitions.
 */
 	fun = term + part.where;
+	if ( functions[*fun-FUNCTION].spec ) tensorflag = 1;
 	for ( i = 1; i < part.numargs; i++ ) {
 		for ( j = i-1; j >= 0; j-- ) {
 			if ( CompArg(fun+part.args[j+1],fun+part.args[j]) >= 0 ) break;
@@ -1821,7 +1825,8 @@ WORD DoPartitions(PHEAD WORD *term, WORD level)
 					}
 					targ = part.args[jj]+twhere;
 					if ( *targ < 0 ) {
-						if ( *targ > -FUNCTION ) *to++ = *targ++;
+						if ( tensorflag ) targ++;
+						else if ( *targ > -FUNCTION ) *to++ = *targ++;
 						*to++ = *targ++;
 					}
 					else { jj = *targ; NCOPY(to,targ,jj); }
@@ -1889,7 +1894,7 @@ div2:						if ( Factorial(BHEAD n, cfac, &nfac) ) Terminate(-1);
 			if ( Generator(BHEAD termout,level) ) Terminate(-1);
 			AT.WorkPointer = termout;
 /*
-			#] Solution :
+			#] Solution : 
 
 			Now we can pop all a with the lowest value and one more.
 */
@@ -1923,8 +1928,8 @@ Done:
 
 
 /*
- 		#] DoPartitions :
-  	#] Distribute :
+ 		#] DoPartitions : 
+  	#] Distribute : 
   	#[ DoPermutations :
 
 	Routine replaces the function perm_(f,args) by occurrences of f with
