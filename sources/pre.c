@@ -5878,7 +5878,6 @@ int writeToChannel(int wtype, UBYTE *s, HANDLERS *h)
 			fstring++;
 			if ( *fstring == 'd' ) {
 				int sign,dig;
-				LONG x;
 				number = -1;
 donumber:
 				while ( *s == ',' || *s == ' ' || *s == '\t' ) s++;
@@ -5888,7 +5887,7 @@ donumber:
 					s++;
 				}
 				dig = 0; ss = s; if ( sign < 0 ) { ss--; *ss = '-'; dig++; }
-				while ( *s >= '0' && *s <= '9' ) { x = 10*x+(*s++-'0'); dig++; }
+				while ( *s >= '0' && *s <= '9' ) { s++; dig++; }
 				if ( number < 0 ) {
 					while ( ss < s ) {
 						if ( to >= stopper ) {
