@@ -1887,6 +1887,7 @@ div2:						if ( Factorial(BHEAD n, cfac, &nfac) ) Terminate(-1);
 			*termout = to-termout;
 			AT.WorkPointer = to;
 			if ( Generator(BHEAD termout,level) ) Terminate(-1);
+			AT.WorkPointer = termout;
 /*
 			#] Solution :
 
