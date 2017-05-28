@@ -948,6 +948,7 @@ int simp2token(SBYTE *s)
 						|| n == (DIVFUNCTION-FUNCTION)
 						|| n == (REMFUNCTION-FUNCTION)
 						|| n == (INVERSEFUNCTION-FUNCTION)
+						|| n == (MULFUNCTION-FUNCTION)
 						|| n == (FACTORIN-FUNCTION)
 						|| n == (FIRSTTERM-FUNCTION)
 						|| n == (CONTENTTERM-FUNCTION) )
@@ -1090,7 +1091,8 @@ tcommon:				v++; while ( *v >= 0 ) v++;
 						if ( n == GCDFUNCTION-FUNCTION
 						|| n == DIVFUNCTION-FUNCTION
 						|| n == REMFUNCTION-FUNCTION
-						|| n == INVERSEFUNCTION-FUNCTION ) {
+						|| n == INVERSEFUNCTION-FUNCTION
+						|| n == MULFUNCTION-FUNCTION ) {
 							*t = TEMPTY; s++;
 						}
 						else *fill++ = *s++;

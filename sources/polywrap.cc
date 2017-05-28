@@ -1752,6 +1752,45 @@ WORD *poly_inverse(PHEAD WORD *arga, WORD *argb) {
 
 /*
   	#] poly_inverse : 
+  	#[ poly_mul :
+*/
+
+WORD *poly_mul(PHEAD WORD *a, WORD *b) {
+
+#ifdef DEBUG
+	cout << "*** [" << thetime() << "]  CALL : poly_mul" << endl;
+#endif
+
+	// Extract variables
+	vector<WORD *> e;
+	e.push_back(a);
+	e.push_back(b);
+	poly::get_variables(BHEAD e, false, false);  // TODO: any performance effect by sort_vars=true?
+
+	// Convert to polynomials
+	poly pa(poly::argument_to_poly(BHEAD a, false, true));
+	poly pb(poly::argument_to_poly(BHEAD b, false, true));
+
+	// Check for modulus calculus
+	WORD modp = poly_determine_modulus(BHEAD true, true, "polynomial multiplication");
+	pa.setmod(modp, 1);
+
+	// multiplication
+	pa *= pb;
+
+	// convert to Form notation
+	WORD *res = (WORD *)Malloc1((pa.size_of_form_notation() + 1) * sizeof(WORD), "poly_mul");
+	poly::poly_to_argument(pa, res, false);
+
+	// clean up and reset modulo calculation
+	poly_free_poly_vars(BHEAD "AN.poly_vars_mul");
+	AN.ncmod = AC.ncmod;
+
+	return res;
+}
+
+/*
+  	#] poly_mul : 
   	#[ poly_free_poly_vars :
 */
 

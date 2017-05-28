@@ -184,6 +184,22 @@ assert result("F6") == result("F61")
 assert result("F71") =~ expr("f(nosquare,q2)*functions(p1,p2,q2,N1_?,N1_?)")
 assert result("F72") =~ expr("f(N1_?,q2)*functions(p1,p2,q2,N1_?)*nosquare.nosquare")
 *--#] CoToTensor :
+*--#[ Issue49 :
+* Add mul_ function for polynomial multiplications
+Symbols x,y,z;
+#$p = (1+x+y+z)^4;
+#$q = $p+1;
+#$r = mul_($p,$q);
+L r1 = $r;
+L r2 = $p^2 + $p;
+.sort
+Drop;
+L Zero = r1 - r2;
+P;
+.end
+assert succeeded?
+assert result("Zero") =~ expr("0")
+*--#] Issue49 : 
 *--#[ Issue72 :
 * "Setups: PATHVALUE not yet implemented"
 #:incdir foo

@@ -1368,7 +1368,8 @@ Important: we may not have enough spots here
 					return(1);
 				}
               }
-              else if ( *t == DIVFUNCTION || *t == REMFUNCTION || *t == INVERSEFUNCTION ) {
+              else if ( *t == DIVFUNCTION || *t == REMFUNCTION
+                        || *t == INVERSEFUNCTION || *t == MULFUNCTION ) {
                 WORD *tf;
 				int todo = 1, numargs = 0;
                 tf = t + FUNHEAD;
@@ -1381,6 +1382,7 @@ Important: we may not have enough spots here
 					if ( *t == DIVFUNCTION ) AN.TeInFun = -9;
 					else if ( *t == REMFUNCTION ) AN.TeInFun = -10;
 					else if ( *t == INVERSEFUNCTION ) AN.TeInFun = -11;
+					else if ( *t == MULFUNCTION ) AN.TeInFun = -14;
 					AN.TeSuOut = 0;
 					AR.TePos = -1;
 					return(1);
@@ -3699,6 +3701,9 @@ AutoGen:	i = *AT.TMout;
 					break;
 				case -13:
 					if ( DoPartitions(BHEAD term,level) ) goto GenCall;
+					break;
+				case -14:
+					if ( DIVfunction(BHEAD term,level,3) < 0 ) goto GenCall;
 					break;
 			}
 		}
