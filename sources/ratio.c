@@ -2760,9 +2760,11 @@ WORD *PolyDiv(PHEAD WORD *a,WORD *b,char *text)
 	Note that the output can be just a number or many terms.
 	In case par == 0 the output is [arg1/arg2]
 	In case par == 1 the output is [arg1%arg2]
+	In case par == 2 the output is [inverse of arg1 modulus arg2]
+	In case par == 3 the output is [arg1*arg2]
 */
 
-WORD divrem[3] = { DIVFUNCTION, REMFUNCTION, INVERSEFUNCTION };
+WORD divrem[4] = { DIVFUNCTION, REMFUNCTION, INVERSEFUNCTION, MULFUNCTION };
 
 int DIVfunction(PHEAD WORD *term,WORD level,int par)
 {
@@ -2772,7 +2774,7 @@ int DIVfunction(PHEAD WORD *term,WORD level,int par)
 	WORD *proper1, *proper2, *proper3 = 0;
 	int numargs = 0, type1, type2, actionflag1, actionflag2;
 	WORD startebuf = cbuf[AT.ebufnum].numrhs;
-	if ( par < 0 || par > 2 ) {
+	if ( par < 0 || par > 3 ) {
 		MLOCK(ErrorMessageLock);
 		MesPrint("Internal error. Illegal parameter %d in DIVfunction.",par);
 		MUNLOCK(ErrorMessageLock);
@@ -2862,6 +2864,7 @@ divzero:;
 	if ( par == 0 )      proper3 = poly_div(BHEAD proper1, proper2,0);
 	else if ( par == 1 ) proper3 = poly_rem(BHEAD proper1, proper2,0);
 	else if ( par == 2 ) proper3 = poly_inverse(BHEAD proper1, proper2);
+	else if ( par == 3 ) proper3 = poly_mul(BHEAD proper1, proper2);
 	if ( proper3 == 0 ) goto CalledFrom;
 	if ( actionflag1 || actionflag2 ) {
 		if ( ( arg3 = TakeExtraSymbols(BHEAD proper3,startebuf) ) == 0 ) goto CalledFrom;
