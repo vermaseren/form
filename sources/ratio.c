@@ -1044,17 +1044,23 @@ oneterm:;
 		}
 	}
 /*
-  	#] Expand $ and expr :
+  	#] Expand $ and expr : 
   	#[ Multiterm subexpressions :
 */
-	gcdout = abuf[0].buffer;
-	for ( i = 1; i < numargs; i++ ) {
+	ii = 0;
+	gcdout = abuf[ii].buffer;
+	for ( i = 0; i < numargs; i++ ) {
+		if ( abuf[i].buffer[0] ) { gcdout = abuf[i].buffer; ii = i; i++; argsdone++; break; }
+	}
+	for ( ; i < numargs; i++ ) {
+	  if ( abuf[i].buffer[0] ) {
 		g = GCDfunction3(BHEAD gcdout,abuf[i].buffer);
 		argsdone++;
-		if ( gcdout != abuf[0].buffer ) M_free(gcdout,"gcdout");
+		if ( gcdout != abuf[ii].buffer ) M_free(gcdout,"gcdout");
 		gcdout = g;
 		if ( gcdout[*gcdout] == 0 && gcdout[0] == 4 && gcdout[1] == 1
 		&& gcdout[2] == 1 && gcdout[3] == 3 ) break;
+	  }
 	}
 	mm = gcdout;
 multiterms:;
@@ -1077,7 +1083,7 @@ multiterms:;
 		if ( argsdone && Generator(BHEAD termout,level) < 0 ) goto CalledFrom;
 		mm = mnext; /* next term */
 	}
-	if ( action && ( gcdout != abuf[0].buffer ) ) M_free(gcdout,"gcdout");
+	if ( action && ( gcdout != abuf[ii].buffer ) ) M_free(gcdout,"gcdout");
 /*
   	#] Multiterm subexpressions :
   	#[ Cleanup :
