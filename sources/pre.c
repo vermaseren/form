@@ -2253,21 +2253,26 @@ int Include(UBYTE *s, int type)
 		while ( *s == ' ' || *s == '\t' ) s++;
 		name = s;
 	}
-	if ( *s == '"' ) {
-		while ( *s && *s != '"' ) {
-			if ( *s == '\\' ) s++;
-			s++;
-		}
-		t = s++;
-	}
-	else {
-		while ( *s && *s != ' ' && *s != '\t' ) {
-			if ( *s == '\\' ) s++;
-			s++;
-		}
-		t = s;
-	}
-	while ( *s == ' ' || *s == '\t' ) s++;
+
+    t = s;
+    if ( *name != '#' ) {
+      if ( *s == '"' ) {
+        while ( *s && *s != '"' ) {
+          if ( *s == '\\' ) s++;
+          s++;
+        }
+        t = s++;
+      }
+      else {
+        while ( *s && *s != ' ' && *s != '\t' ) {
+          if ( *s == '\\' ) s++;
+          s++;
+        }
+        t = s;
+      }
+      while ( *s == ' ' || *s == '\t' ) s++;
+    }
+
 	if ( *s == '#' ) {
 		*t = 0;
 		s++;
@@ -2305,6 +2310,9 @@ continue_fold:
 /*
 	We have the name of the file in 'name' and the fold in 'fold' (or NULL)
 */
+        if ( *name == 0) {
+          name = AM.InputFileName;
+        }
 	if ( OpenStream(name,type,0,PRENOACTION) == 0 ) {
 		if ( fold ) { M_free(fold,"foldname"); fold = 0; }
 		return(-1);
