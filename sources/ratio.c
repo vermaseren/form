@@ -915,6 +915,7 @@ oneterm:;
 */
 			mh[mh[0]] = 0;
 			mm = mh;
+			ii = 0;
 			goto multiterms;
 		}
 	}
@@ -940,6 +941,7 @@ oneterm:;
 			NCOPY(m,mm,i);
 			AT.WorkPointer = m;
 			istart = 1;
+			argsdone++;
 			goto oneterm;
 		}
 	}
@@ -1085,7 +1087,7 @@ multiterms:;
 	}
 	if ( action && ( gcdout != abuf[ii].buffer ) ) M_free(gcdout,"gcdout");
 /*
-  	#] Multiterm subexpressions :
+  	#] Multiterm subexpressions : 
   	#[ Cleanup :
 */
 cleanup:;
@@ -1117,7 +1119,7 @@ CalledFrom:
 }
 
 /*
- 		#] GCDfunction :
+ 		#] GCDfunction : 
  		#[ GCDfunction3 :
 
 	Finds the GCD of the two arguments which are buffers with terms.
