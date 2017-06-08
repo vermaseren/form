@@ -612,7 +612,7 @@ int GCDfunction(PHEAD WORD *term,WORD level)
 	WORD *t, *tstop, *tf, *termout, *tin, *tout, *m, *mnext, *mstop, *mm;
 	int todo, i, ii, j, istart, sign = 1, action = 0;
 	WORD firstshort = 0, firstvalue = 0, gcdisone = 0, mlength, tlength, newlength;
-	WORD totargs = 0, numargs, *mh, oldval1, *g, *gcdout = 0;
+	WORD totargs = 0, numargs, argsdone = 0, *mh, oldval1, *g, *gcdout = 0;
 	WORD *arg1, *arg2;
 	UWORD x1,x2,x3;
 	LONG args;
@@ -675,24 +675,24 @@ int GCDfunction(PHEAD WORD *term,WORD level)
 			if ( *tf <= -FUNCTION ) { firstvalue = -(*tf); }
 			else                    { firstvalue = tf[1]; }
 			NEXTARG(tf);
+			argsdone++;
 			continue;
 		}
 		else if ( *tf != firstshort ) {
-			if ( *tf != -INDEX && *tf != -VECTOR && *t != -MINVECTOR ) {
-				gcdisone = 1; break;
+			if ( *tf != -INDEX && *tf != -VECTOR && *tf != -MINVECTOR ) {
+				argsdone++; gcdisone = 1; break;
 			}
 			if ( firstshort != -INDEX && firstshort != -VECTOR && firstshort != -MINVECTOR ) {
-				gcdisone = 1; break;
+				argsdone++; gcdisone = 1; break;
 			}
 			if ( tf[1] != firstvalue ) {
-				gcdisone = 1; break;
+				argsdone++; gcdisone = 1; break;
 			}
 			if ( *t == -MINVECTOR ) { firstshort = -VECTOR; }
 			if ( firstshort == -MINVECTOR ) { firstshort = -VECTOR; }
 		}
 		else if ( *tf > -FUNCTION && *tf != -SNUMBER && tf[1] != firstvalue ) {
-			gcdisone = 1;
-			break;
+			argsdone++; gcdisone = 1; break;
 		}
 		if ( *tf == -SNUMBER && firstvalue != tf[1] ) {
 /*
@@ -707,6 +707,7 @@ int GCDfunction(PHEAD WORD *term,WORD level)
 			}
 			while ( ( x3 = x1%x2 ) != 0 ) { x1 = x2; x2 = x3; }
 			firstvalue = ((WORD)x2)*sign;
+			argsdone++;
 			if ( firstvalue == 1 ) { gcdisone = 1; break; }
 		}
 		NEXTARG(tf);
@@ -735,7 +736,7 @@ gcdone:
 		*termout = tout - termout;
 		if ( sign < 0 ) tout[-1] = -tout[-1];
 		AT.WorkPointer = tout;
-		if ( Generator(BHEAD termout,level) < 0 ) goto CalledFrom;
+		if ( argsdone && Generator(BHEAD termout,level) < 0 ) goto CalledFrom;
 		AT.WorkPointer = termout;
 		AT.pWorkPointer = args;
 		return(0);
@@ -867,6 +868,7 @@ oneterm:;
 					m = d->where;
 					while ( *m ) {
 						GCDterms(BHEAD mh,m,mh); m += *m;
+						argsdone++;
 						if ( mh[0] == 4 && mh[1] == 1 && mh[2] == 1 && mh[3] == 3 ) {
 							gcdisone = 1; sign = 1;
 							if ( d->factors ) M_free(d->factors,"Dollar factors");
@@ -882,6 +884,7 @@ oneterm:;
 				m = mm;
 				while ( *m ) {
 					GCDterms(BHEAD mh,m,mh); m += *m;
+					argsdone++;
 					if ( mh[0] == 4 && mh[1] == 1 && mh[2] == 1 && mh[3] == 3 ) {
 						gcdisone = 1; sign = 1; M_free(mm,"CreateExpression"); goto gcdone;
 					}
@@ -970,13 +973,17 @@ oneterm:;
 			abuf[i].buffer = d->where;
 			abuf[i].type = 1;
 			abuf[i].dollar = d;
-			m = abuf[i].buffer; while ( *m ) m+= *m;
+			m = abuf[i].buffer;
+			if ( *m ) argsdone++;
+			while ( *m ) m+= *m;
 			abuf[i].size = m-abuf[i].buffer;
 		}
 		else if ( *arg1 == -EXPRESSION ) {
 			abuf[i].buffer = CreateExpression(BHEAD arg1[1]);
 			abuf[i].type = 2;
-			m = abuf[i].buffer; while ( *m ) m+= *m;
+			m = abuf[i].buffer;
+			if ( *m ) argsdone++;
+			while ( *m ) m+= *m;
 			abuf[i].size = m-abuf[i].buffer;
 		}
 		else {
@@ -988,7 +995,8 @@ oneterm:;
 	}
 	for ( i = 0; i < numargs; i++ ) {
 		arg1 = abuf[i].buffer;
-		if ( arg1[*arg1] == 0 ) {
+		if ( *arg1 == 0 ) {}
+		else if ( arg1[*arg1] == 0 ) {
 /*
 			After expansion there is an argument with a single term
 */
@@ -998,6 +1006,7 @@ oneterm:;
 				m = abuf[j].buffer;
 				while ( *m ) {
 					GCDterms(BHEAD mh,m,mh); m += *m;
+					argsdone++;
 					if ( mh[0] == 4 && mh[1] == 1 && mh[2] == 1 && mh[3] == 3 ) {
 						gcdisone = 1; sign = 1; break;
 					}
@@ -1019,7 +1028,7 @@ oneterm:;
 			tout[-1] = mlength*sign;
 			*termout = tout - termout;
 			AT.WorkPointer = tout;
-			if ( Generator(BHEAD termout,level) < 0 ) goto CalledFrom;
+			if ( argsdone && Generator(BHEAD termout,level) < 0 ) goto CalledFrom;
 			goto cleanup;
 		}
 	}
@@ -1040,6 +1049,7 @@ oneterm:;
 	gcdout = abuf[0].buffer;
 	for ( i = 1; i < numargs; i++ ) {
 		g = GCDfunction3(BHEAD gcdout,abuf[i].buffer);
+		argsdone++;
 		if ( gcdout != abuf[0].buffer ) M_free(gcdout,"gcdout");
 		gcdout = g;
 		if ( gcdout[*gcdout] == 0 && gcdout[0] == 4 && gcdout[1] == 1
@@ -1063,7 +1073,7 @@ multiterms:;
 		tout[-1] = mlength;
 		*termout = tout - termout;
 		AT.WorkPointer = tout;
-		if ( Generator(BHEAD termout,level) < 0 ) goto CalledFrom;
+		if ( argsdone && Generator(BHEAD termout,level) < 0 ) goto CalledFrom;
 		mm = mnext; /* next term */
 	}
 	if ( action && ( gcdout != abuf[0].buffer ) ) M_free(gcdout,"gcdout");
