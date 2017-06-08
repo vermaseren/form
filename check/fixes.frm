@@ -1567,75 +1567,96 @@ assert result("F") =~ expr("f(x1) + f(x2) + f(x3) + f(x4)")
 S x;
 
 * immediate values
-L F1 = gcd_(0,0);
-L F2 = gcd_(0,10);
-L F3 = gcd_(0,x);
-L F4 = gcd_(0,1+x);
-L F5 = gcd_(10,0);
-L F6 = gcd_(x,0);
-L F7 = gcd_(1+x,0);
-L F8 = gcd_(0,1+x,0,0);
+#define a1 "10"
+#define a2 "-20"
+#define a3 "100000000000000000000"
+#define a4 "-200000000000000000000"
+#define a5 "x"
+#define a6 "-x"
+#define a7 "1+x"
+L F0  = gcd_(0,0);
+#do i=1,7
+  L Fa`i' = gcd_(0,`a`i'');
+  L Fb`i' = gcd_(`a`i'',0);
+#enddo
+L Fc1 = gcd_(0,1+x,0,0,0);
+L Fc2 = gcd_(0,1+x,0,-x,0,0);
+L Fc3 = gcd_(0,1+x,0,1-x^2,0,0);
 P;
 .sort
 Drop;
 
 * subexpressions
-L p0 = 0;
-L p1 = 0;
-L p2 = 10;
-L p3 = x;
-L p4 = 1+x;
-L G1 = gcd_(p0,p1);
-L G2 = gcd_(p0,p2);
-L G3 = gcd_(p0,p3);
-L G4 = gcd_(p0,p4);
-L G5 = gcd_(p2,p0);
-L G6 = gcd_(p3,p0);
-L G7 = gcd_(p4,p0);
-L G8 = gcd_(0,p4,p0,p1);
+L a0 = 0;
+L a00 = 0;
+L a1 = 10;
+L a2 = -20;
+L a3 = 100000000000000000000;
+L a4 = -200000000000000000000;
+L a5 = x;
+L a6 = -x;
+L a7 = 1+x;
+L G0 = gcd_(a0,a00);
+#do i=1,7
+  L Ga`i' = gcd_(a0,a`i');
+  L Gb`i' = gcd_(a`i',a0);
+#enddo
+L Gc1 = gcd_(0,a7,0,0,a0);
+L Gc2 = gcd_(0,a7,0,a3,0,a0);
+L Gc3 = gcd_(0,a7,0,1-x^2,0,a0);
 P;
 .sort
 Drop;
 
 * $-variables
-#$p0 = 0;
-#$p1 = 0;
-#$p2 = 10;
-#$p3 = x;
-#$p4 = 1+x;
-L H1 = gcd_($p0,$p1);
-L H2 = gcd_($p0,$p2);
-L H3 = gcd_($p0,$p3);
-L H4 = gcd_($p0,$p4);
-L H5 = gcd_($p2,$p0);
-L H6 = gcd_($p3,$p0);
-L H7 = gcd_($p4,$p0);
-L H8 = gcd_(0,$p4,$p0,$p1);
+#$a0 = 0;
+#$a00 = 0;
+#$a1 = 10;
+#$a2 = -20;
+#$a3 = 100000000000000000000;
+#$a4 = -200000000000000000000;
+#$a5 = x;
+#$a6 = -x;
+#$a7 = 1+x;
+L H0 = gcd_($a0,$a00);
+#do i=1,7
+  L Ha`i' = gcd_($a0,$a`i');
+  L Hb`i' = gcd_($a`i',$a0);
+#enddo
+L Hc1 = gcd_(0,$a7,0,0,$a0);
+L Hc2 = gcd_(0,$a7,0,$a3,0,$a0);
+L Hc3 = gcd_(0,$a7,0,1-x^2,0,$a0);
 P;
 .end
 assert succeeded?
-assert result("F1") =~ expr("0")
-assert result("F2") =~ expr("10")
-assert result("F3") =~ expr("x")
-assert result("F4") =~ expr("1+x")
-assert result("F5") =~ expr("10")
-assert result("F6") =~ expr("x")
-assert result("F7") =~ expr("1+x")
-assert result("F8") =~ expr("1+x")
-assert result("G1") =~ expr("0")
-assert result("G2") =~ expr("10")
-assert result("G3") =~ expr("x")
-assert result("G4") =~ expr("1+x")
-assert result("G5") =~ expr("10")
-assert result("G6") =~ expr("x")
-assert result("G7") =~ expr("1+x")
-assert result("G8") =~ expr("1+x")
-assert result("H1") =~ expr("0")
-assert result("H2") =~ expr("10")
-assert result("H3") =~ expr("x")
-assert result("H4") =~ expr("1+x")
-assert result("H5") =~ expr("10")
-assert result("H6") =~ expr("x")
-assert result("H7") =~ expr("1+x")
-assert result("H8") =~ expr("1+x")
+assert result("F0") =~ expr("0")
+assert result("Fa1") =~ expr("10")
+assert result("Fa2") =~ expr("-20")
+assert result("Fa3") =~ expr("100000000000000000000")
+assert result("Fa4") =~ expr("-200000000000000000000")
+assert result("Fa5") =~ expr("x")
+assert result("Fa6") =~ expr("-x")
+assert result("Fa7") =~ expr("1+x")
+for i in 1..7
+  assert result("Fb#{i}") == result("Fa#{i}")
+end
+assert result("Fc1") =~ expr("1+x")
+assert result("Fc2") =~ expr("1")
+assert result("Fc3") =~ expr("1+x")
+assert result("G0") =~ expr("0")
+for i in 1..7
+  assert result("Ga#{i}") == result("Fa#{i}")
+  assert result("Gb#{i}") == result("Fa#{i}")
+end
+for i in 1..3
+  assert result("Gc#{i}") == result("Fc#{i}")
+end
+assert result("H0") =~ expr("0")
+for i in 1..7
+  assert result("Ha#{i}") == result("Fa#{i}")
+  assert result("Hb#{i}") == result("Fa#{i}")
+end
+for i in 1..3
+  assert result("Hc#{i}") == result("Fc#{i}")
+end
 *--#] Issue191 : 
