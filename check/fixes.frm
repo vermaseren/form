@@ -1561,3 +1561,81 @@ P;
 assert succeeded?
 assert result("F") =~ expr("f(x1) + f(x2) + f(x3) + f(x4)")
 *--#] Issue186 : 
+*--#[ Issue191 :
+* gcd_ crashes for zero $-variables
+
+S x;
+
+* immediate values
+L F1 = gcd_(0,0);
+L F2 = gcd_(0,10);
+L F3 = gcd_(0,x);
+L F4 = gcd_(0,1+x);
+L F5 = gcd_(10,0);
+L F6 = gcd_(x,0);
+L F7 = gcd_(1+x,0);
+L F8 = gcd_(0,1+x,0,0);
+P;
+.sort
+Drop;
+
+* subexpressions
+L p0 = 0;
+L p1 = 0;
+L p2 = 10;
+L p3 = x;
+L p4 = 1+x;
+L G1 = gcd_(p0,p1);
+L G2 = gcd_(p0,p2);
+L G3 = gcd_(p0,p3);
+L G4 = gcd_(p0,p4);
+L G5 = gcd_(p2,p0);
+L G6 = gcd_(p3,p0);
+L G7 = gcd_(p4,p0);
+L G8 = gcd_(0,p4,p0,p1);
+P;
+.sort
+Drop;
+
+* $-variables
+#$p0 = 0;
+#$p1 = 0;
+#$p2 = 10;
+#$p3 = x;
+#$p4 = 1+x;
+L H1 = gcd_($p0,$p1);
+L H2 = gcd_($p0,$p2);
+L H3 = gcd_($p0,$p3);
+L H4 = gcd_($p0,$p4);
+L H5 = gcd_($p2,$p0);
+L H6 = gcd_($p3,$p0);
+L H7 = gcd_($p4,$p0);
+L H8 = gcd_(0,$p4,$p0,$p1);
+P;
+.end
+assert succeeded?
+assert result("F1") =~ expr("0")
+assert result("F2") =~ expr("10")
+assert result("F3") =~ expr("x")
+assert result("F4") =~ expr("1+x")
+assert result("F5") =~ expr("10")
+assert result("F6") =~ expr("x")
+assert result("F7") =~ expr("1+x")
+assert result("F8") =~ expr("1+x")
+assert result("G1") =~ expr("0")
+assert result("G2") =~ expr("10")
+assert result("G3") =~ expr("x")
+assert result("G4") =~ expr("1+x")
+assert result("G5") =~ expr("10")
+assert result("G6") =~ expr("x")
+assert result("G7") =~ expr("1+x")
+assert result("G8") =~ expr("1+x")
+assert result("H1") =~ expr("0")
+assert result("H2") =~ expr("10")
+assert result("H3") =~ expr("x")
+assert result("H4") =~ expr("1+x")
+assert result("H5") =~ expr("10")
+assert result("H6") =~ expr("x")
+assert result("H7") =~ expr("1+x")
+assert result("H8") =~ expr("1+x")
+*--#] Issue191 : 
