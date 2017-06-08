@@ -965,6 +965,7 @@ oneterm:;
 			mm = arg1+ARGHEAD;
 			j = *arg1-ARGHEAD;
 			abuf[i].size = j;
+			if ( j ) argsdone++;
 			NCOPY(m,mm,j);
 			*m = 0;
 		}
@@ -1043,7 +1044,7 @@ oneterm:;
 		}
 	}
 /*
-  	#] Expand $ and expr : 
+  	#] Expand $ and expr :
   	#[ Multiterm subexpressions :
 */
 	gcdout = abuf[0].buffer;
@@ -1078,7 +1079,7 @@ multiterms:;
 	}
 	if ( action && ( gcdout != abuf[0].buffer ) ) M_free(gcdout,"gcdout");
 /*
-  	#] Multiterm subexpressions : 
+  	#] Multiterm subexpressions :
   	#[ Cleanup :
 */
 cleanup:;
@@ -1110,7 +1111,7 @@ CalledFrom:
 }
 
 /*
- 		#] GCDfunction : 
+ 		#] GCDfunction :
  		#[ GCDfunction3 :
 
 	Finds the GCD of the two arguments which are buffers with terms.
