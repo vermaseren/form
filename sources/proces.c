@@ -1353,25 +1353,54 @@ Important: we may not have enough spots here
 					return(1);
 				}
 			  }
-              else if ( *t == GCDFUNCTION ) {
-                WORD *tf;
-				int todo = 1;
-                tf = t + FUNHEAD;
-                while ( tf < t + t[1] ) {
-					if ( *tf > 0 && tf[1] != 0 ) todo = 0;
-                    NEXTARG(tf);
-                }
-				if ( todo ) {
-					AN.TeInFun = -8;
-					AN.TeSuOut = 0;
-					AR.TePos = -1;
-					return(1);
-				}
-              }
               else if ( *t == DIVFUNCTION || *t == REMFUNCTION
-                        || *t == INVERSEFUNCTION || *t == MULFUNCTION ) {
+                        || *t == INVERSEFUNCTION || *t == MULFUNCTION
+						|| *t == GCDFUNCTION ) {
                 WORD *tf;
 				int todo = 1, numargs = 0;
+                tf = t + FUNHEAD;
+                while ( tf < t + t[1] ) {
+					DOLLARS d;
+					if ( *tf == -DOLLAREXPRESSION ) {
+						d = Dollars + tf[1];
+						if ( d->type == DOLWILDARGS ) {
+							WORD *tterm = AT.WorkPointer, *tw;
+							WORD *ta = term, *tb = tterm, *tc, *td = term + *term;
+							while ( ta < t ) *tb++ = *ta++;
+							tc = tb;
+							while ( ta < tf ) *tb++ = *ta++;
+							tw = d->where+1;
+							while ( *tw ) {
+								if ( *tw < 0 ) {
+									if ( *tw > -FUNCTION ) *tb++ = *tw++;
+									*tb++ = *tw++;
+								}
+								else {
+									int ia;
+									for ( ia = 0; ia < *tw; ia++ ) *tb++ = *tw++;
+								}
+							}
+							NEXTARG(ta)
+							while ( ta < t+t[1] ) *tb++ = *ta++;
+							tc[1] = tb-tc;
+							while ( ta < td ) *tb++ = *ta++;
+							*tterm = tb - tterm;
+							{
+								int ia, na = *tterm;
+								ta = tterm; tb  = term;
+								for ( ia = 0; ia < na; ia++ ) *tb++ = *ta++;
+							}
+							if ( tb > AT.WorkTop ) {
+								MLOCK(ErrorMessageLock);
+								MesWork();
+								goto EndTest2;
+							}
+							AT.WorkPointer = tb;
+							goto ReStart;
+						}
+					}
+                    NEXTARG(tf);
+                }
                 tf = t + FUNHEAD;
                 while ( tf < t + t[1] ) {
 					numargs++;
@@ -1383,6 +1412,13 @@ Important: we may not have enough spots here
 					else if ( *t == REMFUNCTION ) AN.TeInFun = -10;
 					else if ( *t == INVERSEFUNCTION ) AN.TeInFun = -11;
 					else if ( *t == MULFUNCTION ) AN.TeInFun = -14;
+					else if ( *t == GCDFUNCTION ) AN.TeInFun = -8;
+					AN.TeSuOut = 0;
+					AR.TePos = -1;
+					return(1);
+				}
+				else if ( todo && *t == GCDFUNCTION ) {
+					AN.TeInFun = -8;
 					AN.TeSuOut = 0;
 					AR.TePos = -1;
 					return(1);
@@ -1911,7 +1947,7 @@ EndTest2:;
 }
 
 /*
- 		#] TestSub : 
+ 		#] TestSub :
  		#[ InFunction :			WORD InFunction(term,termout)
 */
 /**
