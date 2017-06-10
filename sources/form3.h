@@ -153,6 +153,19 @@
 #endif
 
 /*
+ * Translate our dialect "DEBUGGING" to the standard "NDEBUG".
+ */
+#ifdef DEBUGGING
+#ifdef NDEBUG
+#undef NDEBUG
+#endif
+#else
+#ifndef NDEBUG
+#define NDEBUG
+#endif
+#endif
+
+/*
  * STATIC_ASSERT(condition) will fail to be compiled if the given
  * condition is false.
  */

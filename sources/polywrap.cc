@@ -40,6 +40,7 @@
 #include <vector>
 #include <map>
 #include <climits>
+#include <cassert>
 
 //#define DEBUG
 
@@ -289,7 +290,9 @@ WORD *poly_divmod(PHEAD WORD *a, WORD *b, int divmod, WORD fit) {
 
 	poly pres(divmod==0 ? pa/pb : pa%pb);
 
-	// convert to Form notation	
+	// convert to Form notation
+	// NOTE: this part can be rewritten with poly::size_of_form_notation_with_den()
+	// and poly::poly_to_argument_with_den().
 	WORD *res;
 
 	// special case: a=0
@@ -1768,19 +1771,39 @@ WORD *poly_mul(PHEAD WORD *a, WORD *b) {
 	poly::get_variables(BHEAD e, false, false);  // TODO: any performance effect by sort_vars=true?
 
 	// Convert to polynomials
-	poly pa(poly::argument_to_poly(BHEAD a, false, true));
-	poly pb(poly::argument_to_poly(BHEAD b, false, true));
+	poly dena(BHEAD 0);
+	poly denb(BHEAD 0);
+	poly pa(poly::argument_to_poly(BHEAD a, false, true, &dena));
+	poly pb(poly::argument_to_poly(BHEAD b, false, true, &denb));
 
 	// Check for modulus calculus
 	WORD modp = poly_determine_modulus(BHEAD true, true, "polynomial multiplication");
 	pa.setmod(modp, 1);
 
+	// NOTE: mul_ is currently implemented by translating negative powers of
+	// symbols to extra symbols. For future improvement, it may be better to
+	// compute
+	//   (content(a) * content(b)) * (a/content(a)) * (b/content(b))
+	// to avoid introducing extra symbols for "mixed" cases, e.g.,
+	// (1+x) * (1/x) -> (1+x) * (1+Z1_).
+	assert(dena.is_integer());
+	assert(denb.is_integer());
+	assert(modp == 0 || dena.is_one());
+	assert(modp == 0 || denb.is_one());
+
 	// multiplication
 	pa *= pb;
 
 	// convert to Form notation
-	WORD *res = (WORD *)Malloc1((pa.size_of_form_notation() + 1) * sizeof(WORD), "poly_mul");
-	poly::poly_to_argument(pa, res, false);
+	WORD *res;
+	if (dena.is_one() && denb.is_one()) {
+		res = (WORD *)Malloc1((pa.size_of_form_notation() + 1) * sizeof(WORD), "poly_mul");
+		poly::poly_to_argument(pa, res, false);
+	} else {
+		dena *= denb;
+		res = (WORD *)Malloc1((pa.size_of_form_notation_with_den(dena[dena[1]]) + 1) * sizeof(WORD), "poly_mul");
+		poly::poly_to_argument_with_den(pa, dena[dena[1]], (const UWORD *)&dena[2+AN.poly_num_vars], res, false);
+	}
 
 	// clean up and reset modulo calculation
 	poly_free_poly_vars(BHEAD "AN.poly_vars_mul");

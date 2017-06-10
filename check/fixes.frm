@@ -1660,3 +1660,29 @@ for i in 1..3
   assert result("Hc#{i}") == result("Fc#{i}")
 end
 *--#] Issue191 : 
+*--#[ Issue197 :
+* mul_ ignores denominator factors
+S x,y,z;
+L F1 = mul_(2/3,5/7);
+L F2 = mul_(1/2+x/3,1/5+x/7);
+P;
+.sort
+Drop;
+L A1 = (5000000029/7+3/2*x-5/11*x/y+7/8*y*z+z-x*z)^5;
+L A2 = (3/4-1/9*x+9/5000000039*x*y+5/12*y*z+2/z*z^3)^5;
+.sort
+Drop;
+L G1 = A1 * A2;
+L G2 = mul_(A1,A2);
+.sort
+Drop;
+L Nterms = termsin_(G1);
+L Zero = G1 - G2;
+P;
+.end
+assert succeeded?
+assert result("F1") =~ expr("10/21")
+assert result("F2") =~ expr("1/10 + 29/210*x + 1/21*x^2")
+assert result("Nterms") =~ expr("1351")
+assert result("Zero") =~ expr("0")
+*--#] Issue197 : 

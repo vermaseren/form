@@ -2633,11 +2633,95 @@ void poly::poly_to_argument (const poly &a, WORD *res, bool with_arghead) {
 
 /*
   	#] poly_to_argument : 
+  	#[ poly_to_argument_with_den :
+*/
+
+// converts a polynomial class "poly" divided by a number (nden, den) to a form expression
+// cf. poly::poly_to_argument()
+void poly::poly_to_argument_with_den (const poly &a, WORD nden, const UWORD *den, WORD *res, bool with_arghead) {
+
+	POLY_GETIDENTITY(a);
+
+	// special case: a=0
+	if (a[0]==1) {
+		if (with_arghead) {
+			res[0] = -SNUMBER;
+			res[1] = 0;
+		}
+		else {
+			res[0] = 0;
+		}
+		return;
+	}
+
+	if (with_arghead) {
+		res[1] = AN.poly_num_vars>1 ? DIRTYFLAG : 0; // dirty flag
+		for (int i=2; i<ARGHEAD; i++)
+			res[i] = 0;                                // remainder of arghead
+	}
+
+	WORD nden1;
+	UWORD *den1 = (UWORD *)NumberMalloc("poly_to_argument_with_den");
+
+	int L = with_arghead ? ARGHEAD : 0;
+
+	for (int i=1; i!=a[0]; i+=a[i]) {
+
+		res[L]=1; // length
+
+		bool first=true;
+
+		for (int j=0; j<AN.poly_num_vars; j++)
+			if (a[i+1+j] > 0) {
+				if (first) {
+					first=false;
+					res[L+1] = 1; // symbols
+					res[L+2] = 2; // length
+				}
+				res[L+1+res[L+2]++] = AN.poly_vars[j]; // symbol
+				res[L+1+res[L+2]++] = a[i+1+j];  // power
+			}
+
+		if (!first)	res[L] += res[L+2]; // fix length
+
+		// numerator
+		WORD nc = a[i+a[i]-1];
+		WCOPY(&res[L+res[L]], &a[i+a[i]-1-ABS(nc)], ABS(nc));
+
+		// denominator
+		nden1 = nden;
+		WCOPY(den1, den, ABS(nden));
+
+		if (nden != 1 || den[0] != 1) {
+			// remove gcd(num,den)
+			Simplify(BHEAD (UWORD *)&res[L+res[L]], &nc, den1, &nden1);
+		}
+
+		Pack((UWORD *)&res[L+res[L]], &nc, den1, nden1);  // format
+		res[L] += 2*ABS(nc)+1;                            // fix length
+		res[L+res[L]-1] = SGN(nc)*(2*ABS(nc)+1);          // length of coefficient
+		L += res[L];                                      // fix length
+	}
+
+	NumberFree(den1, "poly_to_argument_with_den");
+
+	if (with_arghead) {
+		res[0] = L;
+		// convert to fast notation if possible
+		ToFast(res,res);
+	}
+	else {
+		res[L] = 0;
+	}
+}
+
+/*
+  	#] poly_to_argument_with_den : 
   	#[ size_of_form_notation :
 */
 
 // the size of the polynomial in form notation (without argheads and fast notation)
-int poly::size_of_form_notation () {
+int poly::size_of_form_notation () const {
 	
 	POLY_GETIDENTITY(*this);
 
@@ -2660,6 +2744,36 @@ int poly::size_of_form_notation () {
 
 /*
   	#] size_of_form_notation : 
+  	#[ size_of_form_notation_with_den :
+*/
+
+// the size of the polynomial divided by a number (its size is given by nden)
+// in form notation (without argheads and fast notation)
+// cf. poly::size_of_form_notation()
+int poly::size_of_form_notation_with_den (WORD nden) const {
+
+	POLY_GETIDENTITY(*this);
+
+	// special case: a=0
+	if (terms[0]==1) return 0;
+
+	nden = ABS(nden);
+	int len = 0;
+
+	for (int i=1; i!=terms[0]; i+=terms[i]) {
+		len++;
+		int npow = 0;
+		for (int j=0; j<AN.poly_num_vars; j++)
+			if (terms[i+1+j] > 0) npow++;
+		if (npow > 0) len += 2*npow + 2;
+		len += 2 * MaX(ABS(terms[i+terms[i]-1]), nden) + 1;
+	}
+
+	return len;
+}
+
+/*
+  	#] size_of_form_notation_with_den : 
   	#[ to_coefficient_list :
 */
 
