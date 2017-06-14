@@ -1050,11 +1050,11 @@ typedef struct PaRtI {
 	WORD *psize;  /* the sizes of the partitions */
 	WORD *args;   /* the offsets of the arguments to be partitioned */
 	WORD *nargs;  /* argument numbers (different number = different argument) */
-	WORD nfun;    /* the function into which the partitions go */
+	WORD *nfun;   /* the functions into which the partitions go */
 	WORD numargs; /* the number of arguments to be partitioned */
 	WORD numpart; /* the number of partitions */
 	WORD where;   /* offset of the function in the term */
-    PADPOINTER(0,0,4,0);
+    PADPOINTER(0,0,3,0);
 } PARTI;
 
 /**

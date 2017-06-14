@@ -1591,46 +1591,110 @@ nextk:;
 		inside the struct parti.
 		This test is not entirely trivial because there are many restrictions
 		w.r.t. the arguments.
+		Syntax (still to be implemented)
+		partitions_(number_of_partition_entries,[function,number,]^nope,arguments)
+		[function,number,]: can be
+			f,3     for a partition of 3 arguments
+			f,0		for the remaining arguments (should be last)
+			num1,f,num2 with num1 effectively a number of partitions but this
+					counts as num1 entries.
+			0,f,num2: all partitions have num2 arguments. No number of partition
+					entries needed. If num2 does not divide the number of
+					arguments there will be no action.
 */
 
 WORD TestPartitions(PHEAD WORD *tfun, PARTI *parti)
 {
 	WORD *tnext = tfun + tfun[1];
 	WORD *t, *tt;
-	WORD argcount = 0, sum = 0, i;
+	WORD argcount = 0, sum = 0, i, ipart, argremain;
 	WORD tensorflag = 0;
-	tt = t = tfun + FUNHEAD;
-	while ( tt < tnext ) { argcount++; NEXTARG(tt); }
-	if ( argcount < 1 ) goto No;
-	if ( t[0] >= -FUNCTION ) goto No;
-	parti->psize = parti->args = parti->nargs = 0;
+	parti->psize = parti->nfun = parti->args = parti->nargs = 0;
 	parti->numargs = parti->numpart = parti->where = 0;
-	parti->nfun = -t[0]; t++;
-	if ( functions[parti->nfun-FUNCTION].spec > 0 ) tensorflag = 1;
-	if ( argcount == 1 ) return(1);
-	if ( t[0] != -SNUMBER ) goto No;
-	if ( t[1] < 1 || t[1] > argcount-2 ) goto No;
-	parti->numargs = t[1];
-	parti->numpart = argcount - parti->numargs - 2;
-	if ( parti->numpart < 1 || parti->numpart > parti->numargs ) goto No;
-	t += 2;
-/*
-	Now there should be parti->numpart arguments, each of type -SNUMBER,
-	all positive and they must add up to parti->numargs.
-*/
-	parti->psize = (WORD *)Malloc1((parti->numpart+2*parti->numargs+1)*sizeof(WORD),"partitions");
-	parti->args = parti->psize + parti->numpart;
-	parti->nargs = parti->args + parti->numargs;
-	for ( i = 0; i < parti->numpart; i++ ) {
-		if ( t[0] != -SNUMBER || t[1] < 1 ) goto WhatAPity;
-		parti->psize[i] = t[1];
-		sum += t[1];
-		if ( sum > parti->numargs ) goto WhatAPity;
+	tt = t = tfun + FUNHEAD;
+	while ( t < tnext ) { argcount++; NEXTARG(t); }
+	if ( argcount < 1 ) goto No;
+	t = tt;
+	if ( *t != -SNUMBER ) goto No;
+	if ( t[1] == 0 ) {
 		t += 2;
+		if ( *t <= -FUNCTION && t[1] == -SNUMBER && t[2] > 0 ) {
+			if ( functions[-*t-FUNCTION].spec > 0 ) tensorflag = 1;
+			if ( argcount-3 < 0 ) goto No;
+			if ( ( (argcount-3) % t[2] ) != 0 ) goto No;
+		}
+		else goto No;
+		parti->numpart = (argcount-3)/t[2];
+		parti->numargs = argcount - 3;
+		parti->psize = (WORD *)Malloc1((parti->numpart*2+parti->numargs*2+2)
+							*sizeof(WORD),"partitions");
+		parti->nfun = parti->psize + parti->numpart;
+		parti->args = parti->nfun + parti->numpart;
+		parti->nargs = parti->args + parti->numargs;
+		for ( i = 0; i < parti->numpart; i++ ) {
+			parti->psize[i] =  t[2];
+			parti->nfun[i]  = -t[0];
+		}
+		t += 3;
 	}
-	if ( sum != parti->numargs ) goto WhatAPity;
+	else if ( t[1] > 0 ) { /* Number of partitions */
 /*
-	This should be working out. Now load the offsets of the arguments
+		We can have sequences of function,number for one partition
+		or number1,function,number2 for number1 partitions of size number2.
+		The last partition can have number=0. It must be a single partition
+		and it will take all remaining arguments.
+		If any of the functions is a tensor, all arguments must be either
+		vector or index.
+*/
+		parti->numpart = t[1]; t += 2;
+		ipart = sum = 0; argremain = argcount - 1;
+/*
+		At this point is seems better to make an allocation already that
+		may be too big. The alternative is having to pass this code twice.
+*/
+		parti->psize = (WORD *)Malloc1((argcount*4+2)*sizeof(WORD),"partitions");
+		parti->nfun = parti->psize+argcount;
+		parti->args = parti->nfun+argcount;
+		parti->nargs = parti->args+argcount;
+		while ( ipart < parti->numpart ) {
+			if ( *t <= -FUNCTION && t[1] == -SNUMBER && t[2] >= 0 ) {
+				if ( functions[-*t-FUNCTION].spec > 0 ) tensorflag = 1;
+				if ( t[2] == 0 ) {
+					if ( ipart+1 != parti->numpart ) goto WhatAPity;
+					argremain -= 2;
+					parti->nfun[ipart] = -*t;
+					parti->psize[ipart++] = argremain-sum;
+					ipart++;
+					sum = argremain;
+				}
+				else {
+					parti->nfun[ipart] = -*t;
+					parti->psize[ipart++] = t[2];
+					argremain -= 2;
+					sum += t[2];
+				}
+				t += 3;
+			}
+			else if ( *t == -SNUMBER && t[1] > 0 && ipart+t[1] <= parti->numpart
+			&& t[2] <= -FUNCTION && t[3] == -SNUMBER && t[4] > 0 ) {
+				if ( functions[-t[2]-FUNCTION].spec > 0 ) tensorflag = 1;
+				argremain -= 3;
+				for ( i = 0; i < t[1]; i++ ) {
+					parti->nfun[ipart] = -t[2];
+					parti->psize[ipart++] = t[4];
+					sum += t[4];
+				}
+				if ( sum > argremain ) goto WhatAPity;
+				t += 5;
+			}
+			else goto WhatAPity;
+		}
+		if ( sum != argremain ) goto WhatAPity;
+		parti->numargs = argremain;
+	}
+	else goto No;
+/*
+	Now load the offsets of the arguments and check if needed whether OK with tensor
 */
 	for ( i = 0; i < parti->numargs; i++ ) {
 		parti->args[i] = t - tfun;
@@ -1640,14 +1704,14 @@ WORD TestPartitions(PHEAD WORD *tfun, PARTI *parti)
 	return(1);
 WhatAPity:
 	M_free(parti->psize,"partitions");
-	parti->psize = parti->args = parti->nargs = 0;
-	parti->nfun = parti->numargs = parti->numpart = parti->where = 0;
+	parti->psize = parti->nfun = parti->args = parti->nargs = 0;
+	parti->numargs = parti->numpart = parti->where = 0;
 No:
 	return(0);
 }
 
 /*
- 		#] TestPartitions : 
+ 		#] TestPartitions :
  		#[ DoPartitions :
 
 	As we have only one AT.partitions we need to copy it locally
@@ -1662,8 +1726,8 @@ WORD DoPartitions(PHEAD WORD *term, WORD level)
 	WORD a, pfill, *j2, *j2fill, j3size, ncoeff, ncoeffnum, nfac, ncoeff2, ncoeff3, n;
 	UWORD *coeff, *coeffnum, *cfac, *coeff2, *coeff3, *c;
 	/* Make AT.partitions ready for future use (if there is another function) */
-	AT.partitions.psize = AT.partitions.args = AT.partitions.nargs = 0;
-	AT.partitions.nfun = AT.partitions.numargs = AT.partitions.numpart = AT.partitions.where = 0;
+	AT.partitions.psize = AT.partitions.nfun = AT.partitions.args = AT.partitions.nargs = 0;
+	AT.partitions.numargs = AT.partitions.numpart = AT.partitions.where = 0;
 /*
 	Start with bubble sorting the list of arguments. And the list of partitions.
 */
@@ -1677,8 +1741,10 @@ WORD DoPartitions(PHEAD WORD *term, WORD level)
 	}
 	for ( i = 1; i < part.numpart; i++ ) {
 		for ( j = i-1; j >= 0; j-- ) {
-			if ( part.psize[j+1] <= part.psize[j] ) break;
+			if ( part.psize[j+1] < part.psize[j] ) break;
+			if ( part.psize[j+1] == part.psize[j] && part.nfun[j+1] <= part.nfun[j] ) break;
 			x = part.psize[j+1]; part.psize[j+1] = part.psize[j]; part.psize[j] = x;
+			x = part.nfun[j+1]; part.nfun[j+1] = part.nfun[j]; part.nfun[j] = x;
 		}
 	}
 /*
@@ -1778,7 +1844,8 @@ WORD DoPartitions(PHEAD WORD *term, WORD level)
 /*
 		Now test whether this is allowed.
 */
-		if ( pfill > 0 && part.psize[pfill] == part.psize[pfill-1] ) { /* First check whether allowed */
+		if ( pfill > 0 && part.psize[pfill] == part.psize[pfill-1]
+			 && part.nfun[pfill] == part.nfun[pfill-1] ) { /* First check whether allowed */
 			for ( im = 0; im < siz; im++ ) {
 				if ( j3[pfill-1][im] < j3[pfill][im] ) break;
 				if ( j3[pfill-1][im] > j3[pfill][im] ) im = siz;
@@ -1817,7 +1884,7 @@ WORD DoPartitions(PHEAD WORD *term, WORD level)
 */
 			for ( i = 0; i < part.numpart; i++ ) {
 				tfun = to;
-				*to++ = part.nfun; to++; FILLFUN(to);
+				*to++ = part.nfun[i]; to++; FILLFUN(to);
 				for ( j = 1; j <= part.psize[i]; j++ ) {
 					num = j3[i][siz-j]; /* now we need an argument with this number */
 					for ( jj = num-1; jj < part.numargs; jj++ ) {
@@ -1840,6 +1907,7 @@ WORD DoPartitions(PHEAD WORD *term, WORD level)
 			j = 1; n = 1;
 			while ( j < part.numpart ) {
 				for ( im = 0; im < siz; im++ ) {
+					if ( part.nfun[j-1] != part.nfun[j] ) break;
 					if ( j3[j-1][im] < j3[j][im] ) break;
 					if ( j3[j-1][im] > j3[j][im] ) im = 2*siz+2;
 				} 
@@ -1894,7 +1962,7 @@ div2:						if ( Factorial(BHEAD n, cfac, &nfac) ) Terminate(-1);
 			if ( Generator(BHEAD termout,level) ) Terminate(-1);
 			AT.WorkPointer = termout;
 /*
-			#] Solution : 
+			#] Solution :
 
 			Now we can pop all a with the lowest value and one more.
 */
@@ -1921,15 +1989,14 @@ Done:
 	NumberFree(coeff,"partitions");
 	NumberFree(coeffnum,"partitionsn");
 	M_free(part.psize,"partitions");
-	part.psize = part.args = part.nargs = 0;
-	part.nfun = part.numargs = part.numpart = part.where = 0;
+	part.psize = part.nfun = part.args = part.nargs = 0;
+	part.numargs = part.numpart = part.where = 0;
 	return(0);
 }
 
-
 /*
- 		#] DoPartitions : 
-  	#] Distribute : 
+ 		#] DoPartitions :
+  	#] Distribute :
   	#[ DoPermutations :
 
 	Routine replaces the function perm_(f,args) by occurrences of f with
