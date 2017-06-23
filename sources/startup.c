@@ -1509,7 +1509,7 @@ VOID setSignalHandlers()
 	setNewSig(SIGHUP,onErrSig);
 	setNewSig(SIGALRM,onErrSig);
 	setNewSig(SIGVTALRM,onErrSig);
-	setNewSig(SIGPROF,onErrSig);
+/*	setNewSig(SIGPROF,onErrSig); */  /* Why did Tentukov forbid profilers?? */
 }
 
 #endif

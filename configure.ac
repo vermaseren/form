@@ -331,7 +331,7 @@ AC_ARG_ENABLE([parform],
 	[enable_parform=no])
 AC_ARG_ENABLE([debug],
 	[AS_HELP_STRING([--enable-debug],
-		[build debugging versions (form/tvorm/parvorm) @<:@default=no@:>@])],
+		[build debugging versions (vorm/tvorm/parvorm) @<:@default=no@:>@])],
 	[AS_IF([test "x$enableval" != xno], [enable_debug=yes])],
 	[enable_debug=no])
 
@@ -617,7 +617,7 @@ STATIC_LDFLAGS=
 MPI_STATIC_LDFLAGS=
 AC_ARG_ENABLE([static-link],
 	[AS_HELP_STRING([--enable-static-link],
-		[link with static libraries @<:@default=no@:>@])],
+		[link with static libraries (release versions) @<:@default=no@:>@])],
 	[AS_IF([test "x$enableval" != xno && test "x$enableval" != xcheck], [enable_static_link=yes])],
 	[enable_static_link=no])
 AS_IF([test "x$enable_static_link" != xno],
@@ -679,10 +679,26 @@ AC_SUBST([MPI_STATIC_LDFLAGS])
 # Check for native/universal build
 AC_ARG_ENABLE([native],
 	[AS_HELP_STRING([--enable-native],
-		[tune for the compiling machine @<:@default=check@:>@])],
+		[tune for the compiling machine (release versions) @<:@default=check@:>@])],
 	[AS_IF([test "x$enableval" = xno || test "x$cross_compiling" = xyes],
 		[enable_native=no], [enable_native=yes])],
 	[enable_native=yes])
+
+# Check for profiling option
+AC_ARG_ENABLE([profile],
+	[AS_HELP_STRING([--enable-profile],
+		[build with profiling (release versions) @<:@default=no@:>@])],
+	[AS_IF([test "x$enableval" = xyes],
+		[enable_profile=yes], [enable_profile=no])],
+	[enable_profile=no])
+
+# Check for coverage option
+AC_ARG_ENABLE([coverage],
+	[AS_HELP_STRING([--enable-coverage],
+		[generate coverage files (debugging versions) @<:@default=no@:>@])],
+	[AS_IF([test "x$enableval" = xyes && test "x$enable_debug" = xyes],
+		[enable_coverage=yes], [enable_coverage=no])],
+	[enable_coverage=no])
 
 # Optimization/debugging flags
 AC_ARG_VAR([COMPILEFLAGS], [Compiler flags for release versions])
@@ -694,7 +710,11 @@ my_test_COMPILEFLAGS=${COMPILEFLAGS+set}
 if test "$my_test_COMPILEFLAGS" != set; then
 	if test "x$vendor" = xgnu; then
 		# We don't use -pedantic option because of horrible warnings.
-		COMPILEFLAGS="-Wall -Wextra -Wpadded -O3 -fomit-frame-pointer"
+		COMPILEFLAGS="-Wall -Wextra -Wpadded -O3"
+		if test "x$enable_profile" != xyes; then
+			# -pg conflicts with -fomit-frame-pointer.
+			COMPILEFLAGS="$COMPILEFLAGS -fomit-frame-pointer"
+		fi
 		if test "x$enable_native" = xyes; then
 			# Check for -march=native.
 			AC_MSG_CHECKING([whether compiler accepts -march=native])
@@ -717,6 +737,10 @@ if test "$my_test_COMPILEFLAGS" != set; then
 				fi
 			fi
 		fi
+		# Profiling option.
+		if test "x$enable_profile" = xyes; then
+			COMPILEFLAGS="$COMPILEFLAGS -g -pg"
+		fi
 	elif test "x$vendor" = xintel; then
 		# NOTE: -fast option includes -static and may cause an error in linking.
 		COMPILEFLAGS="-Wall -ipo -O3 -no-prec-div"
@@ -733,6 +757,9 @@ if test "$my_test_LINKFLAGS" != set; then
 		# On OS X Mavericks, -s option has a funny effect: though the linker
 		# warns the option is obsolete and being ignored, it causes an internal
 		# error "atom not found in symbolIndex...".
+		LINKFLAGS=
+	elif test "x$vendor" = xgnu && test "x$enable_profile" = xyes; then
+		# gprof doesn't work with -s.
 		LINKFLAGS=
 	else
 		LINKFLAGS=-s
@@ -755,6 +782,10 @@ if test "$my_test_DEBUGCOMPILEFLAGS" != set; then
 		else
 			DEBUGCOMPILEFLAGS="$DEBUGCOMPILEFLAGS -O0"
 		fi
+		# Coverage option.
+		if test "x$enable_coverage" = xyes; then
+			DEBUGCOMPILEFLAGS="$DEBUGCOMPILEFLAGS -coverage"
+		fi
 	elif test "x$vendor" = xintel; then
 		DEBUGCOMPILEFLAGS='-g3 -Wall -O0'
 	else
@@ -764,6 +795,12 @@ fi
 my_test_DEBUGLINKFLAGS=${DEBUGLINKFLAGS+set}
 if test "$my_test_DEBUGLINKFLAGS" != set; then
 	DEBUGLINKFLAGS=
+	if test "x$vendor" = xgnu; then
+		# Coverage option.
+		if test "x$enable_coverage" = xyes; then
+			DEBUGLINKFLAGS="$DEBUGLINKFLAGS -coverage"
+		fi
+	fi
 fi
 
 # Check for doxygen
@@ -848,27 +885,123 @@ echo
 echo "The following executables can be compiled:"
 atleastone=no
 if test "x$build_form" = xyes; then
-	echo "    form       scalar version"
+	opts=
+	if test "x$enable_native" = xyes; then
+		if test "x$opts" != x; then
+			opts="${opts}, "
+		fi
+		opts="${opts}native"
+	fi
+	if test "x$STATIC_LDFLAGS" != x; then
+		if test "x$opts" != x; then
+			opts="${opts}, "
+		fi
+		opts="${opts}statically linked"
+	fi
+	if test "x$enable_profile" = xyes; then
+		if test "x$opts" != x; then
+			opts="${opts}, "
+		fi
+		opts="${opts}gprof"
+	fi
+	if test "x$opts" != x; then
+		opts=" (${opts})"
+	fi
+	echo "    form       scalar version$opts"
 	atleastone=yes
 fi
 if test "x$build_vorm" = xyes; then
-	echo "    vorm       debugging version"
+	opts=
+	if test "x$enable_coverage" = xyes; then
+		if test "x$opts" != x; then
+			opts="${opts}, "
+		fi
+		opts="${opts}gcov"
+	fi
+	if test "x$opts" != x; then
+		opts=" (${opts})"
+	fi
+	echo "    vorm       debugging version$opts"
 	atleastone=yes
 fi
 if test "x$build_tform" = xyes; then
-	echo "    tform      multi-threaded version"
+	opts=
+	if test "x$enable_native" = xyes; then
+		if test "x$opts" != x; then
+			opts="${opts}, "
+		fi
+		opts="${opts}native"
+	fi
+	if test "x$STATIC_LDFLAGS" != x; then
+		if test "x$opts" != x; then
+			opts="${opts}, "
+		fi
+		opts="${opts}statically linked"
+	fi
+	if test "x$enable_profile" = xyes; then
+		if test "x$opts" != x; then
+			opts="${opts}, "
+		fi
+		opts="${opts}gprof"
+	fi
+	if test "x$opts" != x; then
+		opts=" (${opts})"
+	fi
+	echo "    tform      multi-threaded version$opts"
 	atleastone=yes
 fi
 if test "x$build_tvorm" = xyes; then
-	echo "    tvorm      multi-threaded debugging version"
+	opts=
+	if test "x$enable_coverage" = xyes; then
+		if test "x$opts" != x; then
+			opts="${opts}, "
+		fi
+		opts="${opts}gcov"
+	fi
+	if test "x$opts" != x; then
+		opts=" (${opts})"
+	fi
+	echo "    tvorm      multi-threaded debugging version$opts"
 	atleastone=yes
 fi
 if test "x$build_parform" = xyes; then
-	echo "    parform    parallel version using MPI"
+	opts=
+	if test "x$enable_native" = xyes; then
+		if test "x$opts" != x; then
+			opts="${opts}, "
+		fi
+		opts="${opts}native"
+	fi
+	if test "x$MPI_STATIC_LDFLAGS" != x; then
+		if test "x$opts" != x; then
+			opts="${opts}, "
+		fi
+		opts="${opts}statically linked"
+	fi
+	if test "x$enable_profile" = xyes; then
+		if test "x$opts" != x; then
+			opts="${opts}, "
+		fi
+		opts="${opts}gprof"
+	fi
+	if test "x$opts" != x; then
+		opts=" (${opts})"
+	fi
+	echo "    parform    parallel version using MPI$opts"
 	atleastone=yes
 fi
 if test "x$build_parvorm" = xyes; then
-	echo "    parvorm    parallel debugging version using MPI"
+	opts=
+	if test "x$enable_coverage" = xyes; then
+		if test "x$opts" != x; then
+			opts="${opts}, "
+		fi
+		opts="${opts}gcov"
+	fi
+	if test "x$opts" != x; then
+		opts=" (${opts})"
+	fi
+	echo "    parvorm    parallel debugging version using MPI$opts"
 	atleastone=yes
 fi
 if test $atleastone = no; then
@@ -898,8 +1031,10 @@ fi
 echo
 echo "Type 'make <executable name>' in the source directory to"
 echo "build a specific version. Type 'make' to build all."
+echo
 echo "Type 'make install' to install the executables in"
-echo "$outputdir."
+echo "    $outputdir"
+echo
 if test "x$with_ruby_test" = xyes; then
 	echo "Type 'make check' to run automatic tests."
 else

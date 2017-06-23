@@ -87,7 +87,7 @@ SRCPARALLEL = \
 
 # Automatic versioning.
 
-CLEANFILES = version.h
+CLEANFILES = version.h *.gcno *.gcda *.gcov gmon.out
 
 form-startup.$(OBJEXT): version.h
 tform-startup.$(OBJEXT): version.h
