@@ -51,6 +51,7 @@ case $CI_TARGET in
     ls -l $distdir.tar.gz && file $distdir.tar.gz
     ;;
   doc-release)
+    export PATH=`pwd`/texlive/bin/`uname -m`-linux:$PATH
     distname=form-`./scripts/git-version-gen.sh -r | sed '2q;d' | sed 's/^v//'`
     autoreconf -iv
     ./configure --disable-dependency-tracking
