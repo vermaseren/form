@@ -16,9 +16,6 @@ addons:
   apt:
     packages:
       - libgmp-dev
-      - libopenmpi-dev
-      - openmpi-bin
-      - valgrind
       - zlib1g-dev
 
 # NOTE: It is best to cache ./texlive for doc-release:
@@ -82,6 +79,7 @@ matrix:
     - os: linux
       compiler: gcc
       env: CI_TARGET=parform
+      addons: { apt: { packages: [ libgmp-dev, libopenmpi-dev, openmpi-bin, zlib1g-dev ] } }
     - os: osx
       compiler: clang
       env: CI_TARGET=form
@@ -94,21 +92,27 @@ matrix:
     - os: linux
       compiler: gcc
       env: CI_TARGET=valgrind-vorm TEST=examples.frm
+      addons: { apt: { packages: [ libgmp-dev, valgrind, zlib1g-dev ] } }
     - os: linux
       compiler: gcc
       env: CI_TARGET=valgrind-vorm TEST=features.frm
+      addons: { apt: { packages: [ libgmp-dev, valgrind, zlib1g-dev ] } }
     - os: linux
       compiler: gcc
       env: CI_TARGET=valgrind-vorm TEST=fixes.frm
+      addons: { apt: { packages: [ libgmp-dev, valgrind, zlib1g-dev ] } }
     - os: linux
       compiler: gcc
       env: CI_TARGET=valgrind-tvorm TEST=examples.frm
+      addons: { apt: { packages: [ libgmp-dev, valgrind, zlib1g-dev ] } }
     - os: linux
       compiler: gcc
       env: CI_TARGET=valgrind-tvorm TEST=features.frm
+      addons: { apt: { packages: [ libgmp-dev, valgrind, zlib1g-dev ] } }
     - os: linux
       compiler: gcc
       env: CI_TARGET=valgrind-tvorm TEST=fixes.frm
+      addons: { apt: { packages: [ libgmp-dev, valgrind, zlib1g-dev ] } }
     - os: osx
       compiler: gcc
       env: CI_TARGET=valgrind-parvorm TEST=examples.frm
@@ -122,9 +126,8 @@ matrix:
       env: CI_TARGET=src-release
     - os: linux
       env: CI_TARGET=doc-release
-      cache:
-        directories:
-          - texlive
+      addons: { apt: { packages: [] } }
+      cache: { directories: [ texlive ] }
     - os: linux
       compiler: gcc
       env: CI_TARGET=bin-release
