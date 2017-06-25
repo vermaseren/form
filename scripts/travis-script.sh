@@ -50,7 +50,7 @@ case $CI_TARGET in
     make distdir=$distdir distcheck
     ls -l $distdir.tar.gz && file $distdir.tar.gz
     ;;
-  doc-release)
+  doc-pdf-release)
     export PATH=`pwd`/texlive/bin/`uname -m`-linux:$PATH
     distname=form-`./scripts/git-version-gen.sh -r | sed '2q;d' | sed 's/^v//'`
     autoreconf -iv
@@ -58,6 +58,21 @@ case $CI_TARGET in
     make pdf
     cp doc/manual/manual.pdf $distname.pdf
     ls -l $distname.pdf && file $distname.pdf
+    ;;
+  doc-html-release)
+    export PATH=`pwd`/texlive/bin/`uname -m`-linux:$PATH
+    distname=form-`./scripts/git-version-gen.sh -r | sed '2q;d' | sed 's/^v//'`
+    distdir=$distname-html
+    autoreconf -iv
+    ./configure --disable-dependency-tracking
+    make -C doc/manual latex2html
+    (
+      cd doc/manual/manual
+      rm -f images.aux images.idx images.log images.pl images.tex internals.pl labels.pl WARNINGS
+    )
+    cp -r doc/manual/manual $distdir
+    tar c $distdir/* | gzip -c -9 > $distdir.tar.gz
+    ls -l $distdir.tar.gz && file $distdir.tar.gz
     ;;
   bin-release)
     distname=form-`./scripts/git-version-gen.sh -r | sed '2q;d' | sed 's/^v//'`

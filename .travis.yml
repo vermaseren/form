@@ -26,7 +26,7 @@ script:
 #   - mpich-3.2 + valgrind-3.12.0 on xcode7.3.
 #   Here our strategy for the valgrind check of parform is to use
 #   mpich + valgrind-3.11.0 on osx.
-# - It is best to cache ./texlive for doc-release:
+# - It is best to cache ./texlive for doc-*-release:
 #     cache: { directories: [ texlive ] }
 matrix:
   include:
@@ -85,7 +85,11 @@ matrix:
     - os: linux
       env: CI_TARGET=src-release
     - os: linux
-      env: CI_TARGET=doc-release
+      env: CI_TARGET=doc-pdf-release
+      addons: { apt: { packages: [] } }
+      cache: { directories: [ texlive ] }
+    - os: linux
+      env: CI_TARGET=doc-html-release
       addons: { apt: { packages: [] } }
       cache: { directories: [ texlive ] }
     - os: linux

@@ -24,8 +24,26 @@ if [ "x$TRAVIS_OS_NAME" = xlinux ]; then
         " | sed -e 's/^ *//' >texlive.profile
         ./install-tl-20*/install-tl --profile texlive.profile
       fi
-      # NOTE: the "script" step needs to update the PATH.
-      # export PATH=`pwd`/texlive/bin/`uname -m`-linux:$PATH
+      export PATH=`pwd`/texlive/bin/`uname -m`-linux:$PATH
+      ;;
+  esac
+  case $CI_TARGET in
+    *doc-html*)
+      # Install LaTeX2HTML to the TeX Live directory.
+      if [ ! -e ./texlive/bin/`uname -m`-linux/latex2html ]; then
+        wget http://mirrors.ctan.org/support/latex2html/latex2html-2017.2.tar.gz -O - | tar -x --gzip
+        (
+          cd latex2html-*
+          ./configure --prefix=$TRAVIS_BUILD_DIR/texlive/texmf-local/latex2html
+          make install
+        )
+        (
+          cd texlive/bin/`uname -m`-linux
+          ln -s ../../texmf-local/latex2html/bin/latex2html
+          ln -s ../../texmf-local/latex2html/bin/pstoimg
+          ln -s ../../texmf-local/latex2html/bin/texexpand
+        )
+      fi
       ;;
   esac
 fi
