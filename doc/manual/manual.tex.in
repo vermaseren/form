@@ -2,7 +2,9 @@
 \def\formmajorversion{\repomajorversion}
 \def\formminorversion{\repominorversion}
 \def\formdate{\repodate}
+%begin{latexonly}  % To avoid latex2html/latex2html#37
 \providecommand{\repodate}{\today}
+%end{latexonly}
 
 
 \documentclass[11pt]{report}
