@@ -1561,6 +1561,28 @@ P;
 assert succeeded?
 assert result("F") =~ expr("f(x1) + f(x2) + f(x3) + f(x4)")
 *--#] Issue186 : 
+*--#[ Issue190 :
+* Polyratfun coming from function argument does not add properly
+Auto S x1,x2,ep;
+CF f,rat;
+Polyratfun rat;
+
+* x1 and x2 should have coefficient -1
+L F =
+      +f((rat(1-ep,1)*x1-2*x2)*rat(1,1+ep))
+      +f((rat(1-ep,1)*x2-2*x1)*rat(1,1+ep))
+;
+
+id f(x1?) = x1;
+
+Print +s;
+.end
+assert succeeded?
+assert result("F") =~ expr("
+       + x2*rat(-1,1)
+       + x1*rat(-1,1)
+")
+*--#] Issue190 : 
 *--#[ Issue191 :
 * gcd_ crashes for zero $-variables
 
