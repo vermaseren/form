@@ -575,7 +575,7 @@ L F =  K(rat(ep+1,1)) + K(rat(1,1));
 P;
 .end
 assert succeeded?
-assert result("F") =~ expr("K(rat(1 + ep,1))*rat(1,1) + K(rat(1,1))*rat(1,1)")
+assert result("F") =~ expr("K(rat(ep + 1,1))*rat(1,1) + K(rat(1,1))*rat(1,1)")
 *--#] Issue73 : 
 *--#[ Issue74 :
 * occurs() freezes with tensors #74
