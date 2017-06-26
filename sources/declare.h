@@ -554,7 +554,7 @@ extern WORD   Permute(PERM *,WORD);
 extern WORD   PermuteP(PERMP *,WORD);
 extern WORD   PolyFunMul(PHEAD WORD *);
 extern WORD   PopVariables(VOID);
-extern WORD   PrepPoly(PHEAD WORD *);
+extern WORD   PrepPoly(PHEAD WORD *,WORD);
 extern WORD   Processor(VOID);
 extern WORD   Product(UWORD *,WORD *,WORD);
 extern VOID   PrtLong(UWORD *,WORD,UBYTE *);

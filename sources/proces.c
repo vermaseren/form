@@ -1606,6 +1606,9 @@ redosize:
 									}
 								}
 							}
+							if ( AR.PolyFun > 0 ) {
+								if ( PrepPoly(BHEAD r,1) != 0 ) goto EndTest;
+							}
 							if ( *r ) StoreTerm(BHEAD r);
 							AT.WorkPointer = r;
 						}
@@ -1947,7 +1950,7 @@ EndTest2:;
 }
 
 /*
- 		#] TestSub :
+ 		#] TestSub : 
  		#[ InFunction :			WORD InFunction(term,termout)
 */
 /**
@@ -2031,7 +2034,9 @@ WORD InFunction(PHEAD WORD *term, WORD *termout)
 						AR.CompareRoutine = &CompareSymbols;
 						AR.SortType = SORTHIGHFIRST;
 					}
+/*
 					AR.PolyFun = 0;
+*/
 					while ( t < v ) {
 						i = *t;
 						NCOPY(m,t,i);
@@ -3123,7 +3128,10 @@ SkipCount:	level++;
 					if ( olddummies > AR.MaxDum ) AR.MaxDum = olddummies;
 				}
 				if ( AR.PolyFun > 0 && ( AR.sLevel <= 0 || AN.FunSorts[AR.sLevel]->PolyFlag > 0 ) ) {
-					if ( PrepPoly(BHEAD term) != 0 ) goto Return0;
+					if ( PrepPoly(BHEAD term,0) != 0 ) goto Return0;
+				}
+				else if ( AR.PolyFun > 0 ) {
+					if ( PrepPoly(BHEAD term,1) != 0 ) goto Return0;
 				}
 				if ( AR.sLevel <= 0 && AR.BracketOn ) {
 					if ( AT.WorkPointer < term + *term ) AT.WorkPointer = term + *term;
@@ -3669,7 +3677,7 @@ CommonEnd:
 				}
 				goto SkipCount;
 /*
-			#] Special action : 
+			#] Special action :
 */
 			}
 		} while ( ( i = TestMatch(BHEAD term,&level) ) == 0 );
@@ -4617,7 +4625,7 @@ DefCall:;
 
 /*
  		#] Deferred : 
- 		#[ PrepPoly :			WORD PrepPoly(term)
+ 		#[ PrepPoly :			WORD PrepPoly(term,par)
 */
 /**
  *		Routine checks whether the count of function AR.PolyFun is zero
@@ -4636,9 +4644,12 @@ DefCall:;
  *		The compression should then stop at the PolyFun. It doesn't
  *		really have to stop when writing the final result but this may
  *		be too complicated.
+ *
+ *		The parameter par tells whether we are at groundlevel or
+ *		inside a function or dollar variable.
  */
 
-WORD PrepPoly(PHEAD WORD *term)
+WORD PrepPoly(PHEAD WORD *term,WORD par)
 {
 	GETBIDENTITY
 	WORD count = 0, i, jcoef, ncoef;
@@ -4673,7 +4684,16 @@ WORD PrepPoly(PHEAD WORD *term)
 	}
 	r = m = term + *term;
 	i = ABS(m[-1]);
-	if ( count == 0 ) {
+	if ( par > 0 ) {
+		if ( count == 0 ) return(0);
+		else if ( AR.PolyFunType == 1 || (AR.PolyFunType == 2 && AR.PolyFunExp == 2) )
+			goto DoOne;
+		else if ( AR.PolyFunType == 2 )
+			goto DoTwo;
+		else
+			goto DoError;
+	}
+	else if ( count == 0 ) {
 /*
  		#[ Create a PolyFun :
 */
@@ -4749,6 +4769,7 @@ WORD PrepPoly(PHEAD WORD *term)
 */
 	}
 	else if ( AR.PolyFunType == 1 || (AR.PolyFunType == 2 && AR.PolyFunExp == 2) ) {
+		DoOne:;
 /*
  		#[ One argument :
 */
@@ -4900,6 +4921,7 @@ WORD PrepPoly(PHEAD WORD *term)
 */
 	}
 	else if ( AR.PolyFunType == 2 ) {
+		DoTwo:;
 /*
  		#[ Two arguments :
 */
@@ -4977,6 +4999,7 @@ WORD PrepPoly(PHEAD WORD *term)
 */
 	}
 	else {
+		DoError:;
 		MLOCK(ErrorMessageLock);
 		MesPrint("Illegal value for PolyFunType in PrepPoly");
 		MUNLOCK(ErrorMessageLock);
