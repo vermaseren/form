@@ -2,6 +2,12 @@
 set -eu
 set -o pipefail
 
+case $CI_TARGET in
+  *coverage*)
+    pip install --user cpp-coveralls
+    ;;
+esac
+
 if [ "x$TRAVIS_OS_NAME" = xlinux ]; then
   case $CI_TARGET in
     *doc*)

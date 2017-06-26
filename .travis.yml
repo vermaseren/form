@@ -20,12 +20,19 @@ install:
 script:
   - ./scripts/travis-script.sh
 
+after_success:
+  - ./scripts/travis-after_success.sh
+
 # NOTE:
-# - The following combinations give many false positives:
+# - The following combinations give many false positives on the valgrind check:
 #   - openmpi-bin + valgrind on precise,
 #   - mpich-3.2 + valgrind-3.12.0 on xcode7.3.
+#   The ATP whitelist request for mpich seems to be continuously ignored,
+#   travis-ci/apt-package-whitelist#406, so on linux we need to build/brew it.
 #   Here our strategy for the valgrind check of parform is to use
 #   mpich + valgrind-3.11.0 on osx.
+# - openmpi + gcov on precise occasionally crashes on precise. We measure
+#   the code coverage of parform with mpich on osx.
 # - It is best to cache ./texlive for doc-*-release:
 #     cache: { directories: [ texlive ] }
 matrix:
@@ -49,6 +56,15 @@ matrix:
     - os: osx
       compiler: clang
       env: CI_TARGET=parform
+    - os: linux
+      compiler: gcc
+      env: CI_TARGET=coverage-vorm
+    - os: linux
+      compiler: gcc
+      env: CI_TARGET=coverage-tvorm
+    - os: osx
+      compiler: gcc
+      env: CI_TARGET=coverage-parvorm
     - os: linux
       compiler: gcc
       env: CI_TARGET=valgrind-vorm TEST=examples.frm

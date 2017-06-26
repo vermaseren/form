@@ -24,6 +24,24 @@ case $CI_TARGET in
     make
     make check TEST_OPTS=--stat
     ;;
+  coverage-vorm)
+    autoreconf -iv
+    ./configure --disable-dependency-tracking --enable-scalar --disable-threaded --disable-parform --enable-debug --enable-coverage --with-gmp --with-zlib
+    make -C sources vorm
+    make -C check check TEST_BINS=vorm TEST_OPTS='--stat --timeout 30'
+    ;;
+  coverage-tvorm)
+    autoreconf -iv
+    ./configure --disable-dependency-tracking --disable-scalar --enable-threaded --disable-parform --enable-debug --enable-coverage --with-gmp --with-zlib
+    make -C sources tvorm
+    make -C check check TEST_BINS=tvorm TEST_OPTS='--stat --timeout 30'
+    ;;
+  coverage-parvorm)
+    autoreconf -iv
+    ./configure --disable-dependency-tracking --disable-scalar --disable-threaded --enable-parform --enable-debug --enable-coverage --with-gmp --with-zlib
+    make -C sources parvorm
+    make -C check check TEST_BINS=parvorm TEST_OPTS='--stat --timeout 30'
+    ;;
   valgrind-vorm)
     autoreconf -iv
     ./configure --disable-dependency-tracking --enable-scalar --disable-threaded --disable-parform --enable-debug --with-gmp --with-zlib
