@@ -2,13 +2,12 @@
 set -eu
 set -o pipefail
 
-case $CI_TARGET in
-  *coverage*)
-    pip install --user cpp-coveralls
-    ;;
-esac
-
 if [ "x$TRAVIS_OS_NAME" = xlinux ]; then
+  case $CI_TARGET in
+    *coverage*)
+      pip install --user cpp-coveralls
+      ;;
+  esac
   case $CI_TARGET in
     *doc*)
       # Install TeX Live to "./texlive".
@@ -66,6 +65,21 @@ if [ "x$TRAVIS_OS_NAME" = xosx ]; then
       brew update
       # valgrind 3.11.0
       brew install https://raw.githubusercontent.com/Homebrew/homebrew-core/7a4dabfc1a2acd9f01a1670fde4f0094c4fb6ffa/Formula/valgrind.rb
+      ;;
+  esac
+  case $CI_TARGET in
+    *coverage*)
+      # NOTE: Python needs a manual setup on osx: travis-ci/travis-ci#2312.
+      if type pyenv >/dev/null 2>&1; then :;else
+        brew update
+        brew install pyenv
+      fi
+      eval "$(pyenv init -)"
+      pyenv install 2.7.12
+      pyenv global 2.7.12
+      pyenv rehash
+      pip install cpp-coveralls
+      pyenv rehash
       ;;
   esac
 fi
