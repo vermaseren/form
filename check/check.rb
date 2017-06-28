@@ -297,6 +297,15 @@ module FormTest
       end
       raise e
     else
+      if FormTest.cfg.verbose
+        STDERR.puts
+        STDERR.puts("=" * 79)
+        STDERR.puts("#{info.desc} SUCCEEDED")
+        STDERR.puts("=" * 79)
+        STDERR.puts(@stdout)
+        STDERR.puts("=" * 79)
+        STDERR.puts
+      end
       info.status = "OK"
     end
   end
@@ -915,7 +924,7 @@ end
 
 # FORM configuration.
 class FormConfig
-  def initialize(form, mpirun, valgrind, ncpu, timeout, stat, full)
+  def initialize(form, mpirun, valgrind, ncpu, timeout, stat, full, verbose)
     @form     = form
     @mpirun   = mpirun
     @valgrind = valgrind
@@ -923,6 +932,7 @@ class FormConfig
     @timeout  = timeout
     @stat     = stat
     @full     = full
+    @verbose  = verbose
 
     @form_bin      = nil
     @mpirun_bin    = nil
@@ -937,7 +947,7 @@ class FormConfig
     @form_cmd    = nil
   end
 
-  attr_reader :form, :mpirun, :valgrind, :ncpu, :timeout, :stat, :full
+  attr_reader :form, :mpirun, :valgrind, :ncpu, :timeout, :stat, :full, :verbose
   attr_reader :form_bin, :mpirun_bin, :valgrind_bin, :valgrind_supp
   attr_reader :head, :wordsize, :form_cmd
 
@@ -1118,6 +1128,7 @@ def main
   opts.name_patterns = []
   opts.exclude_patterns = []
   opts.files = []
+  opts.verbose = false
 
   parser = OptionParser.new
   parser.banner = "Usage: #{File.basename($0)} [options] [--] [binname] [files|tests..]"
@@ -1132,10 +1143,11 @@ def main
   parser.on("--full",                "Full test, ignoring pending")       { opts.full = true }
   parser.on("--enable-valgrind",     "Enable Valgrind")                   { opts.enable_valgrind = true }
   parser.on("--valgrind BIN",        "Use BIN as Valgrind executable")    { |bin| opts.enable_valgrind = true; opts.valgrind = bin }
-  parser.on("-C", "--directory DIR", "Directory for test cases")          { |dir|  opts.dir = search_dir(dir, opts) }
-  parser.on("-n", "--name NAME",     "Run tests matching NAME")           { |pat|  opts.name_patterns << pat }
-  parser.on("-x", "--exclude NAME",  "Do not run tests matching NAME")    { |pat|  opts.exclude_patterns << pat }
-  parser.on("-D TEST=NAME",          "Alternative way to run tests NAME") { |pat|  opts.name_patterns << parse_def(pat) }
+  parser.on("-C", "--directory DIR", "Directory for test cases")          { |dir| opts.dir = search_dir(dir, opts) }
+  parser.on("-n", "--name NAME",     "Run tests matching NAME")           { |pat| opts.name_patterns << pat }
+  parser.on("-x", "--exclude NAME",  "Do not run tests matching NAME")    { |pat| opts.exclude_patterns << pat }
+  parser.on("-v", "--verbose",       "Do not suppress the test output")   { opts.verbose = true }
+  parser.on("-D TEST=NAME",          "Alternative way to run tests NAME") { |pat| opts.name_patterns << parse_def(pat) }
   begin
     parser.parse!(ARGV)
   rescue OptionParser::ParseError => e
@@ -1216,7 +1228,8 @@ def main
                                 opts.ncpu,
                                 opts.timeout > 1 ? opts.timeout : 1,
                                 opts.stat,
-                                opts.full)
+                                opts.full,
+                                opts.verbose)
   FormTest.cfg.check
   puts("Check #{FormTest.cfg.form_bin}")
   puts(FormTest.cfg.head)
