@@ -782,7 +782,33 @@ WORD DoExecute(WORD par, WORD skip)
 			/* The user switched off the parallel execution explicitly. */
 		}
 		else if ( AC.mparallelflag & NOPARALLEL_DOLLAR ) {
-			HighWarning("This module is forced to run in sequential mode due to $-variables");
+			if ( AC.WarnFlag >= 2 ) {  /* HighWarning */
+				int i, j, k, n;
+				UBYTE *s, *s1;
+				s = strDup1((UBYTE *)"","NOPARALLEL_DOLLAR s");
+				n = 0;
+				j = NumPotModdollars;
+				for ( i = 0; i < j; i++ ) {
+					for ( k = 0; k < NumModOptdollars; k++ )
+						if ( ModOptdollars[k].number == PotModdollars[i] ) break;
+					if ( k >= NumModOptdollars ) {
+						/* global $-variable */
+						if ( n > 0 )
+							s = AddToString(s,(UBYTE *)", ",0);
+						s = AddToString(s,(UBYTE *)"$",0);
+						s = AddToString(s,DOLLARNAME(Dollars,PotModdollars[i]),0);
+						n++;
+					}
+				}
+				s1 = strDup1((UBYTE *)"This module is forced to run in sequential mode due to $-variable","NOPARALLEL_DOLLAR s1");
+				if ( n != 1 )
+					s1 = AddToString(s1,(UBYTE *)"s",0);
+				s1 = AddToString(s1,(UBYTE *)": ",0);
+				s1 = AddToString(s1,s,0);
+				HighWarning((char *)s1);
+				M_free(s,"NOPARALLEL_DOLLAR s");
+				M_free(s1,"NOPARALLEL_DOLLAR s1");
+			}
 		}
 		else if ( AC.mparallelflag & NOPARALLEL_RHS ) {
 			HighWarning("This module is forced to run in sequential mode due to RHS expression names");
