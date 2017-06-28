@@ -10,55 +10,55 @@ case $CI_TARGET in
     autoreconf -iv
     ./configure --disable-dependency-tracking --enable-scalar --disable-threaded --disable-parform --with-gmp --with-zlib
     make
-    make check TEST_OPTS=--stat
+    ./check/check.rb ./sources/form --stat
     ;;
   tform)
     autoreconf -iv
     ./configure --disable-dependency-tracking --disable-scalar --enable-threaded --disable-parform --with-gmp --with-zlib
     make
-    make check TEST_OPTS=--stat
+    ./check/check.rb ./sources/tform --stat
     ;;
   parform)
     autoreconf -iv
     ./configure --disable-dependency-tracking --disable-scalar --disable-threaded --enable-parform --with-gmp --with-zlib
     make
-    make check TEST_OPTS=--stat
+    ./check/check.rb ./sources/parform --stat
     ;;
   coverage-vorm)
     autoreconf -iv
     ./configure --disable-dependency-tracking --enable-scalar --disable-threaded --disable-parform --enable-debug --enable-coverage --with-gmp --with-zlib
     make -C sources vorm
-    make -C check check TEST_BINS=vorm TEST_OPTS='--stat --timeout 30'
+    ./check/check.rb ./sources/vorm --stat --timeout 30
     ;;
   coverage-tvorm)
     autoreconf -iv
     ./configure --disable-dependency-tracking --disable-scalar --enable-threaded --disable-parform --enable-debug --enable-coverage --with-gmp --with-zlib
     make -C sources tvorm
-    make -C check check TEST_BINS=tvorm TEST_OPTS='--stat --timeout 30'
+    ./check/check.rb ./sources/tvorm --stat --timeout 30
     ;;
   coverage-parvorm)
     autoreconf -iv
     ./configure --disable-dependency-tracking --disable-scalar --disable-threaded --enable-parform --enable-debug --enable-coverage --with-gmp --with-zlib
     make -C sources parvorm
-    make -C check check TEST_BINS=parvorm TEST_OPTS='--stat --timeout 30'
+    ./check/check.rb ./sources/parvorm --stat --timeout 30
     ;;
   valgrind-vorm)
     autoreconf -iv
     ./configure --disable-dependency-tracking --enable-scalar --disable-threaded --disable-parform --enable-debug --with-gmp --with-zlib
     make -C sources vorm
-    make -C check check TEST_BINS=vorm TEST_OPTS="valgrind --stat $TEST"
+    ./check/check.rb valgrind ./sources/vorm --stat $TEST
     ;;
   valgrind-tvorm)
     autoreconf -iv
     ./configure --disable-dependency-tracking --disable-scalar --enable-threaded --disable-parform --enable-debug --with-gmp --with-zlib
     make -C sources tvorm
-    make -C check check TEST_BINS=tvorm TEST_OPTS="valgrind --stat $TEST"
+    ./check/check.rb valgrind ./sources/tvorm --stat $TEST
     ;;
   valgrind-parvorm)
     autoreconf -iv
     ./configure --disable-dependency-tracking --disable-scalar --disable-threaded --enable-parform --enable-debug --with-gmp --with-zlib
     make -C sources parvorm
-    make -C check check TEST_BINS=parvorm TEST_OPTS="valgrind --stat $TEST"
+    ./check/check.rb valgrind ./sources/parvorm --stat $TEST
     ;;
   src-release)
     distname=form-`./scripts/git-version-gen.sh -r | sed '2q;d' | sed 's/^v//'`

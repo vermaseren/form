@@ -2,6 +2,9 @@
 set -eu
 set -o pipefail
 
+# Print all executed commands to the log.
+set -x
+
 if [ "x$TRAVIS_OS_NAME" = xlinux ]; then
   case $CI_TARGET in
     *coverage*)
