@@ -15,11 +15,22 @@ TESTS =
 if CONFIG_RUBY
 TESTS_ENVIRONMENT = \
 	RUBY="$(RUBY)" \
-	CHECK_RB="$(srcdir)/check.rb" \
 	TEST_BINS="$(TEST_BINS)" \
 	TEST_OPTS="$(TEST_OPTS)" \
 	$(SHELL)
 TESTS += check-help.sh
+else
+TESTS_ENVIRONMENT = \
+	TEST_BINS="$(TEST_BINS)" \
+	$(SHELL)
 endif
+TESTS += benchmark-fu.sh
 
-EXTRA_DIST = check-help.sh check.rb examples.frm features.frm fixes.frm
+EXTRA_DIST = \
+	check-help.sh \
+	benchmark-fu.sh \
+	check.rb \
+	examples.frm \
+	features.frm \
+	fixes.frm \
+	formunit/fu.frm
