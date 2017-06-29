@@ -356,6 +356,21 @@ be positioned at the end. The next \#write\index{\#write} instruction will
 add to it.
 
 %--#] append : 
+%--#[ appendpath :
+ 
+\section{\#appendpath}
+\label{preappendpath}
+
+\noindent Syntax:
+
+\#appendpath pathname
+
+\noindent See also prependpath~(\ref{preprependpath})
+
+\noindent Appends the given path relative to the current file to the end of
+the FORM path\index{path}.
+
+%--#] appendpath : 
 %--#[ break :
 
 \section{\#break}
@@ -1435,6 +1450,21 @@ Time =       0.00 sec    Generated terms =         10
 \end{verbatim}
 
 %--#] preout : 
+%--#[ prependpath :
+ 
+\section{\#prependpath}
+\label{preprependpath}
+
+\noindent Syntax:
+
+\#prependpath pathname
+
+\noindent See also appendpath~(\ref{preappendpath})
+
+\noindent Prepends the given path relative to the current file to the beginning
+of the FORM path\index{path}.
+
+%--#] prependpath : 
 %--#[ printtimes :
  
 \section{\#printtimes}
