@@ -23,6 +23,9 @@ script:
 after_success:
   - ./scripts/travis-after_success.sh
 
+after_script:
+  - sleep 1  # avoids the bug of travis-ci/travis-ci#6018
+
 # NOTE:
 # - The following combinations give many false positives on the valgrind check:
 #   - openmpi-bin + valgrind on precise,
@@ -31,8 +34,8 @@ after_success:
 #   travis-ci/apt-package-whitelist#406, so on linux we need to build/brew it.
 #   Here our strategy for the valgrind check of parform is to use
 #   mpich + valgrind-3.11.0 on osx.
-# - openmpi + gcov on precise occasionally crashes on precise. We measure
-#   the code coverage of parform with mpich on osx.
+# - openmpi + gcov on precise occasionally crashes. We measure the code
+#   coverage of parform with mpich on osx.
 # - It is best to cache ./texlive for doc-*-release:
 #     cache: { directories: [ texlive ] }
 matrix:
