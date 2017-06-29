@@ -719,6 +719,22 @@ function is left untouched.
 $+[(p+1)/2]$.
 
 %--#] mod2_ : 
+%--#[ mul_ :
+
+\section{mul\_}\index{mul\_}\index{function!mul\_}
+\label{funmul}
+\noindent \verb|mul_(x,y)| is replaced by \verb|x*y|, but internally
+the multiplication is performed via polynomial routines introduced in
+\FORM{} version 4. This can be faster than the normal way of multiplications
+for big polynomials: e.g., \verb|mul_($x,$y)| where the \$-variables \verb|$x|
+and \verb|$y| store big polynomials.
+
+A drawback is, because the polynomial routines accept only symbols, all
+non-symbolic objects in the operands are temporarily translated to (commuting)
+extra symbols. This process breaks the ordering of non-commutative objects
+in the result.
+
+%--#] mul_ : 
 %--#[ nargs_ :
 
 \section{nargs\_}\index{nargs\_}\index{function!nargs\_}
