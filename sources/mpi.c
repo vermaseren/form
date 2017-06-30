@@ -55,7 +55,7 @@
 	changing are marked by "[12oct2005 mt]"
 */
 
-#define PF_PACKSIZE 1000
+#define PF_PACKSIZE 1600
 
 /*
 	Size in bytes, will be initialized soon as
