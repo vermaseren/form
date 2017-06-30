@@ -1612,7 +1612,8 @@ redosize:
 							if ( *r ) StoreTerm(BHEAD r);
 							AT.WorkPointer = r;
 						}
-						if ( EndSort(BHEAD AT.WorkPointer+ARGHEAD,0) < 0 ) goto EndTest;
+/* the next call had parameter 0. That was wrong!!!!!) */
+						if ( EndSort(BHEAD AT.WorkPointer+ARGHEAD,1) < 0 ) goto EndTest;
 						m = AT.WorkPointer+ARGHEAD;
 						if ( *t1 == AR.PolyFun && AR.PolyFunType == 2 ) {
 							AR.SortType = oldsorttype;
