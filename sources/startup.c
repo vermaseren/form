@@ -1820,14 +1820,18 @@ LONG GetRunningTime()
 #if defined(WITHPTHREADS) && (defined(WITHPOSIXCLOCK) || defined(WINDOWS))
 	LONG mastertime;
 	if ( AB[0] != 0 ) {
+/* 
 #if ( defined(APPLE64) || defined(APPLE32) )
 		mastertime = AM.SumTime + TimeCPU(1);
 		return(mastertime);
 #else
+*/
 		LONG workertime = GetWorkerTimes();
 		mastertime = AM.SumTime + TimeCPU(1);
 		return(mastertime+workertime);
+/*
 #endif
+*/
 	}
 	else {
 		return(AM.SumTime + TimeCPU(1));

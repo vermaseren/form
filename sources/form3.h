@@ -88,6 +88,7 @@
 #define LP64
 #define WITHZLIB
 #define WITHGMP
+#define WITHPOSIXCLOCK
 #endif
 
 #ifdef CYGWIN32
