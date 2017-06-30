@@ -1001,10 +1001,10 @@ int PF_Broadcast(void)
 	In parallel.c, they are used for the communication from slaves to the
 	master. In this case, this problem does not occur because the master always
 	has enough buffer.
-	The maximum size that PF_LongMultiBroadcast can broadcast is limited
-	around 125kB because the current implementation tries to pack all
+	The maximum size that PF_LongMultiBroadcast can broadcast is limited to
+	around 320kB because the current implementation tries to pack all
 	information of chained buffers into one buffer, whose size is PF_packsize
-	= 1000B.
+	= 1600B.
 
  		#] Explanations : 
  		#[ Variables :
