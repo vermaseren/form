@@ -86,3 +86,14 @@ if [ "x$TRAVIS_OS_NAME" = xosx ]; then
       ;;
   esac
 fi
+
+case $CI_TARGET in
+  form|tform)
+    # Install Forcer to "./formlib".
+    mkdir -p formlib
+    wget https://github.com/benruijl/forcer/archive/v1.0.0.tar.gz -O - | tar -x --gzip
+    mv forcer-1.0.0/forcer.h formlib
+    mv forcer-1.0.0/forcer formlib
+    rm -rf forcer-1.0.0
+    ;;
+esac

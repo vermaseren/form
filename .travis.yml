@@ -24,7 +24,7 @@ after_success:
   - ./scripts/travis-after_success.sh
 
 after_script:
-  - sleep 1  # avoids the bug of travis-ci/travis-ci#6018
+  - sleep 2  # avoids the bug of travis-ci/travis-ci#6018
 
 # NOTE:
 # - The following combinations give many false positives on the valgrind check:

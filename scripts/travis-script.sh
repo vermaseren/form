@@ -7,16 +7,20 @@ set -x
 
 case $CI_TARGET in
   form)
+    export FORMPATH=`pwd`/formlib
     autoreconf -iv
     ./configure --disable-dependency-tracking --enable-scalar --disable-threaded --disable-parform --with-gmp --with-zlib
     make
     ./check/check.rb ./sources/form --stat
+    ./check/check.rb ./sources/form --stat -C forcer --timeout 60
     ;;
   tform)
+    export FORMPATH=`pwd`/formlib
     autoreconf -iv
     ./configure --disable-dependency-tracking --disable-scalar --enable-threaded --disable-parform --with-gmp --with-zlib
     make
     ./check/check.rb ./sources/tform --stat
+    ./check/check.rb ./sources/tform --stat -C forcer --timeout 60
     ;;
   parform)
     autoreconf -iv
