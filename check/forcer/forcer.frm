@@ -35,8 +35,30 @@ assert result("F") =~ expr("
 * timeout = 60 seconds.
 #include- forcer.h
 CF f,f1,f2,f3;
-Table randomsign(n1?);  * Gives 1 or -1. n1 not used.
+V p2,p3;
+S x3;
+
+* Give 1 or -1. n1 is not used.
+Table randomsign(n1?);
 Fill randomsign() = random_(2)*2-3;
+
+* Zip two functions as:
+*   zip(f1,f2(p1,...,pN),f3(q1,...,qN)) -> f1(p1,q1,...,pN,qN),
+* for N >= 1.
+Table zip(f1?(?a1),f2?(p2?,?a2),f3?(p3?,?a3));
+Fill zip() =
+  + thetap_(nargs_(?a2,?a3)) * zip(f1(?a1,p2,p3),f2(?a2),f3(?a3))
+  + delta_(nargs_(?a2,?a3))  * f1(?a1,p2,p3)
+;
+
+* Element-wise multiplication as:
+*   emul(f1,f2(p1,...,pN),f3(a1,...,aN)) -> f1(p1*a1,...,pN*aN)
+* for N >= 1.
+Table emul(f1?(?a1),f2?(p2?,?a2),f3?(x3?,?a3));
+Fill emul() =
+  + thetap_(nargs_(?a2,?a3)) * emul(f1(?a1,p2*x3),f2(?a2),f3(?a3))
+  + delta_(nargs_(?a2,?a3))  * f1(?a1,p2*x3)
+;
 
 L F1 =
   #do i=1,3
@@ -106,12 +128,12 @@ id Zno3(n1?,...,n14?) =
 multiply f1(p1,...,p11);
 multiply ranperm_(f2,p1,...,p11);
 multiply f3(<randomsign(1)>,...,<randomsign(11)>);
-multiply f;
-repeat id f(?a)*f2(p1?,?b)*f3(n1?,?c) = f(?a,p1*n1)*f2(?b)*f3(?c);
-id f(?a)*f2*f3 = f2(?a);
-multiply f;
-repeat id f(?a)*f1(p1?,?b)*f2(p2?,?c) = f(?a,p1,p2)*f1(?b)*f2(?c);
-id f(?a)*f1*f2 = replace_(?a);
+id f2(?a)*f3(?b) = emul(f2,f2(?a),f3(?b));
+id f1(?a)*f2(?b) = zip(f1,f1(?a),f2(?b));
+id f1(?a) = replace_(?a);
+
+ModuleOption noparallel;
+.sort:input;
 
 #call Forcer(msbarexpand=4)
 B ep;
@@ -136,12 +158,34 @@ assert result("F2") =~ expr("
          z3 - 3705/8*z3^2
 ")
 *--#] Forcer_1 : 
-*--#[ Forcer_2 :
+*--#[ Forcer_1-expand :
 * timeout = 60 seconds.
 #include- forcer.h
 CF f,f1,f2,f3;
-Table randomsign(n1?);  * Gives 1 or -1. n1 not used.
+V p2,p3;
+S x3;
+
+* Give 1 or -1. n1 is not used.
+Table randomsign(n1?);
 Fill randomsign() = random_(2)*2-3;
+
+* Zip two functions as:
+*   zip(f1,f2(p1,...,pN),f3(q1,...,qN)) -> f1(p1,q1,...,pN,qN),
+* for N >= 1.
+Table zip(f1?(?a1),f2?(p2?,?a2),f3?(p3?,?a3));
+Fill zip() =
+  + thetap_(nargs_(?a2,?a3)) * zip(f1(?a1,p2,p3),f2(?a2),f3(?a3))
+  + delta_(nargs_(?a2,?a3))  * f1(?a1,p2,p3)
+;
+
+* Element-wise multiplication as:
+*   emul(f1,f2(p1,...,pN),f3(a1,...,aN)) -> f1(p1*a1,...,pN*aN)
+* for N >= 1.
+Table emul(f1?(?a1),f2?(p2?,?a2),f3?(x3?,?a3));
+Fill emul() =
+  + thetap_(nargs_(?a2,?a3)) * emul(f1(?a1,p2*x3),f2(?a2),f3(?a3))
+  + delta_(nargs_(?a2,?a3))  * f1(?a1,p2*x3)
+;
 
 L F1 =
   #do i=1,3
@@ -211,14 +255,14 @@ id Zno3(n1?,...,n14?) =
 multiply f1(p1,...,p11);
 multiply ranperm_(f2,p1,...,p11);
 multiply f3(<randomsign(1)>,...,<randomsign(11)>);
-multiply f;
-repeat id f(?a)*f2(p1?,?b)*f3(n1?,?c) = f(?a,p1*n1)*f2(?b)*f3(?c);
-id f(?a)*f2*f3 = f2(?a);
-multiply f;
-repeat id f(?a)*f1(p1?,?b)*f2(p2?,?c) = f(?a,p1,p2)*f1(?b)*f2(?c);
-id f(?a)*f1*f2 = replace_(?a);
+id f2(?a)*f3(?b) = emul(f2,f2(?a),f3(?b));
+id f1(?a)*f2(?b) = zip(f1,f1(?a),f2(?b));
+id f1(?a) = replace_(?a);
 
-#call Forcer(msbarexpand=4,polyratfunexpand=20)
+ModuleOption noparallel;
+.sort:input;
+
+#call Forcer(msbarexpand=4,polyratfunexpand=15)
 B ep;
 P;
 .end
@@ -240,4 +284,4 @@ assert result("F2") =~ expr("
        - 2183/12 + 441/2*z7 - 6225/16*z6 - 57155/48*z5 - 2169/2*z4 - 17198/9*
          z3 - 3705/8*z3^2
 ")
-*--#] Forcer_2 : 
+*--#] Forcer_1-expand : 
