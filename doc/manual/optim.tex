@@ -5,16 +5,25 @@
 One of the uses of symbolic programs is to prepare formulas for further 
 numerical processing\index{numerical processing}. Technically speaking such 
 processing is not part of computer algebra, although some packages may 
-provide facilities for this. In \FORM\ such facilities, like for instance 
+provide facilities for this. In \FORM\ such facilities, such as
 Monte Carlo integration, do not exist at the moment, but, starting with 
 version 4.1, \FORM\ does provide statements to construct outputs in C or 
 Fortran that are highly optimized with respect to the number of arithmetic 
 operations\index{arithmetic operations} that are needed for their 
-evaluation. The algorithms used for this are described in the paper "Code 
-Optimization in FORM" which can be found in the \FORM\ pages under 
-documentation. There are also some example programs. Here the precise 
-format of the commands that concern the optimizations will be described.
+evaluation. The algorithms used for this are described in the papers
+\begin{itemize}
+  \item Code Optimization in FORM - \url{https://arxiv.org/abs/1310.7007}
+  \item Improving multivariate Horner schemes with Monte Carlo tree search - \url{https://arxiv.org/abs/1207.7079}
+  \item Combining Simulated Annealing and Monte Carlo Tree Search for Expression Simplification - \url{https://arxiv.org/abs/1312.0841}
+  \item Why Local Search Excels in Expression Simplification - \url{https://arxiv.org/abs/1409.5223}
+\end{itemize}
+In short, an optimal Horner scheme is constructed after
+which common subexpressions are eliminated. The methods for finding the
+optimal scheme can use a simple heuristic, Monte Carlo Tree Search,
+or a Stochastic Local Search approach such as Simulated Annealing
 
+In this section the precise 
+format of the commands that concern the optimizations will be described.
 In optimized output \FORM\ needs temporary variables\index{temporary 
 variables}. In order to avoid conflicts with user defined objects \FORM\ 
 uses the extra symbols \ref{substaextrasymbols}\index{extra symbols} for 
@@ -131,8 +140,46 @@ code optimization. The easiest to use are the following:
 \item[O3] Activates the highest level of optimization using MCTS. It can be
   rather slow, but usually gives even better results.
 
-\item[O4] Activates the highest level of optimization using Local Stochastic Search. It is usually much faster than MCTS and may give better results.
+\item[O4] Activates the highest level of optimization using Local Stochastic Search. 
+It is usually much faster than MCTS and may give better results.
 \end{description}
+
+Below we show how to use O4 and how it compares to O2:
+\begin{verbatim}
+  #-
+  S   a,b,c,d,e,f,g,h,i,j,k,l,m,n;
+  L   G = (4*a^4+b+c+d + i^4 + g*n^3)^10 + 
+          (a*h + e + f*i*j + g + h)^8 + (i + j + k + l + m + n)^12;
+  L   H = G;
+  Format O2;
+  .sort
+  #optimize G
+  #write "Optimized with O2:"
+  #write "Optimized with Horner scheme: `optimscheme_'"
+  #write "Number of operations in output: `optimvalue_'"
+  #clearoptimize
+  .sort
+  Format O4,saIter=1000; * use 1000 iterations for optimization
+  #optimize H
+  #write "Optimized with O4:"
+  #write "Optimized with Horner scheme: `optimscheme_'"
+  #write "Number of operations in output: `optimvalue_'"
+  .end
+\end{verbatim}
+which gives the output:
+\begin{verbatim}
+Optimized with O2:
+Optimized with Horner scheme: i,n,j,m,l,k,g,a,d,c,b,h,f,e
+Number of operations in output: 2578
+
+Optimized with O4:
+Optimized with Horner scheme: m,h,k,a,l,e,n,g,j,c,f,b,i,d
+Number of operations in output: 1937
+\end{verbatim}
+
+The preprocessor variable optimscheme\_ \index{optimscheme\_} gives the best Horner scheme that the
+program found and the preprocessor optimvalue\_ \index{optimvalue\_} gives the number of
+arithmetic operations in the resulting expression.
 
 These levels of optimization refer to some default settings of all
 controlling parameters. These default values are in
@@ -206,7 +253,8 @@ the more exploration occurs. The default value is 2000.
 \item[saMinT=$<$\emph{value}$>$] Minimum temperature used in Simulated Annealing. The lower the temperature,
 the more exploitation occurs. The default value is 1.
 \end{description}
-The cooling rate from saMaxT to saMinT is exponential in saIter. More can be read in the following paper: \url{https://arxiv.org/pdf/1409.5223.pdf}.
+The cooling rate from saMaxT to saMinT is exponential in saIter. More information can be
+found in the research papers.
 
 The Horner methods generate a number of Horner schemes: one or two in
 the case of occurrence order schemes, depending of the direction
