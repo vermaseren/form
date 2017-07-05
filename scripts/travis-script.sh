@@ -75,6 +75,7 @@ case $CI_TARGET in
   doc-pdf-release)
     export PATH=`pwd`/texlive/bin/`uname -m`-linux:$PATH
     distname=form-`./scripts/git-version-gen.sh -r | sed '2q;d' | sed 's/^v//'`
+    distname=$distname-manual
     autoreconf -iv
     ./configure --disable-dependency-tracking
     make pdf
@@ -84,7 +85,7 @@ case $CI_TARGET in
   doc-html-release)
     export PATH=`pwd`/texlive/bin/`uname -m`-linux:$PATH
     distname=form-`./scripts/git-version-gen.sh -r | sed '2q;d' | sed 's/^v//'`
-    distdir=$distname-html
+    distdir=$distname-manual-html
     autoreconf -iv
     ./configure --disable-dependency-tracking
     make -C doc/manual latex2html
