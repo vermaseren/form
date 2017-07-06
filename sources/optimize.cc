@@ -1774,8 +1774,8 @@ inline static void next_MCTS_scheme (PHEAD vector<WORD> *porder, vector<WORD> *p
 		select->sum_results+=mcts_expr_score;
 
 //-------------------------------------------------------------------
-				switch ( AO.Optimize.experiments ) {
-					case 1:  // This is what Ben suggested
+				switch ( AO.Optimize.mctsdecaymode ) {
+					case 1:  // Based on http://arxiv.org/abs/arXiv:1312.0841
 						slide_down_factor = 1.0-(1.0*AT.optimtimes)/(1.0*AO.Optimize.mctsnumexpand);
 						break;
 					case 2:  // This gives a bit more cleanup time at the end.
@@ -1787,7 +1787,7 @@ inline static void next_MCTS_scheme (PHEAD vector<WORD> *porder, vector<WORD> *p
 							slide_down_factor = 0.0001;
 						}
 						break;
-					case 3:  // depth dependent factor combined with Ben's method
+					case 3:  // depth dependent factor combined with case 1
 						float dd = 1.0-(1.0*depth)/(1.0*nchild0);
 						slide_down_factor = 1.0-(1.0*AT.optimtimes)/(1.0*AO.Optimize.mctsnumexpand);
 						if ( dd <= 0.000001 ) slide_down_factor = 1.0;

@@ -692,7 +692,7 @@ int CoFormat(UBYTE *s)
 			AO.Optimize.printstats = 0;
 			AO.Optimize.debugflags = 0;
 			AO.Optimize.schemeflags = 0;
-			AO.Optimize.experiments = 0;
+			AO.Optimize.mctsdecaymode = 1; // default is decreasing C_p with iteration number
 			if ( AO.inscheme ) {
 				M_free(AO.inscheme,"Horner input scheme");
 				AO.inscheme = 0; AO.schemenum = 0;
@@ -762,7 +762,7 @@ int CoFormat(UBYTE *s)
 			AO.Optimize.printstats = 0;
 			AO.Optimize.debugflags = 0;
 			AO.Optimize.schemeflags = 0;
-			AO.Optimize.experiments = 0;
+			AO.Optimize.mctsdecaymode = 1;
 			if ( AO.inscheme ) {
 				M_free(AO.inscheme,"Horner input scheme");
 				AO.inscheme = 0; AO.schemenum = 0;
@@ -6788,22 +6788,22 @@ GotTheNumber:
 				}
 			}
 		}
-		else if ( StrICmp(name,(UBYTE *)"experiments") == 0 ) {
+		else if ( StrICmp(name,(UBYTE *)"mctsdecaymode") == 0 ) {
 			x = 0;
 			u = value;
 			if ( FG.cTable[*u] == 1 ) {
 				while ( *u >= '0' && *u <= '9' ) x = 10*x + *u++ - '0';
 				if ( *u != 0 ) {
-					MesPrint("&Numerical value for DebugFlag in Format,Optimize statement should be a nonnegative number: %s",value);
-					AO.Optimize.experiments = 0;
+					MesPrint("&Option MCTSDecayMode in Format,Optimize statement should be a nonnegative integer: %s",value);
+					AO.Optimize.mctsdecaymode = 0;
 					error = 1;
 				}
 				else {
-					AO.Optimize.experiments = x;
+					AO.Optimize.mctsdecaymode = x;
 				}
 			}
 			else {
-				AO.Optimize.experiments = 0;
+				AO.Optimize.mctsdecaymode = 0;
 				MesPrint("&Unrecognized option value in Format,Optimize statement: %s=%s",name,value);
 				error = 1;
 			}

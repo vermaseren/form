@@ -1257,7 +1257,7 @@ typedef struct {
     int   printstats;
     int   debugflags;
     int   schemeflags;
-    int   experiments;
+    int   mctsdecaymode;
     int   saIter; /* Simulated annealing updates */
     union {
         float fval;

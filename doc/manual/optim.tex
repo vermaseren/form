@@ -243,6 +243,25 @@ various parameters that can control the search process:
   MCTSNumRepeat=$<$\emph{value1}$>$, MCTSNumExpand=$<$\emph{value2}$>$.
 \item[MCTSTimeLimit=$<$\emph{value}$>$] The maximum time in seconds
   that is used when searching through the tree.
+\item[MCTSDecayMode=$<$\emph{value}$>$] Determines how the $C_P$ parameter
+in the UCT formula decreases:
+
+\begin{center}
+\begin{tabular}{|c|l|}
+\hline
+value & effect\\
+\hline
+0 & no decay\\
+1 & linear decay with iteration number\\
+2 & faster decay for the final iterations\\
+3 & decrease with iteration number and with node depth\\
+\hline
+\end{tabular}
+\end{center}
+% 0 means there
+%is no decay, 1 means a linear decay with iteration number, 2 a more
+%agressive decay for the final iterations, and MCTSDecayMode=3 .
+%The default value is 1.
 \end{description}
 
 For Stochastic Local Search the following parameters can be set:
@@ -349,6 +368,7 @@ MCTSNumExpand   &    ---      &     ---     &  1000   &     ---     \\
 MCTSNumKeep     &    ---      &     ---     &   10    &     ---     \\
 MCTSNumRepeat   &    ---      &     ---     &    1    &     ---     \\
 MCTSTimeLimit   &    ---      &     ---     &    0    &     ---     \\
+MCTSDecayMode   &    ---      &     ---     &    1    &     ---     \\
 saIter          &    ---      &     ---     &   ---   &     1000    \\
 saMinT          &    ---      &     ---     &   ---   &      1      \\
 saMaxT          &    ---      &     ---     &   ---   &     2000    \\
