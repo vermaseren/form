@@ -33,4 +33,5 @@ EXTRA_DIST = \
 	examples.frm \
 	features.frm \
 	fixes.frm \
+	forcer/forcer.frm \
 	formunit/fu.frm

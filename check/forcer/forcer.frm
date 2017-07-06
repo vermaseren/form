@@ -1,3 +1,4 @@
+* Requires the Forcer library: https://github.com/benruijl/forcer.
 #ifndef `TEST'
   #message Use -D TEST=XXX
   #terminate
