@@ -1,0 +1,123 @@
+.TH FORM 1 "2017-07-06"
+.SH NAME
+FORM \- Symbolic manipulation system
+.SH SYNOPSIS
+.B form
+.RB [
+.IR options 
+]
+.IR inputfile
+.SH DESCRIPTION
+.PP
+FORM is a symbolic manipulation system. The \fBform\fR command reads a text file
+(which should have a name that ends with the extention \fB.frm\fR) containing
+definitions of mathematical expressions as well as statements that tell it how
+to manipulate these expressions. It is widely used in the theoretical particle
+physics community, but it is not restricted to applications in this specific
+field.
+.PP
+\fBtform\fR is the threaded version using POSIX Threads.
+.PP
+\fBparform\fR is the multiprocessing version using MPI.
+.SH OPTIONS
+.TP
+.BR "-c"
+Error checking only. Notice that this will not work properly if there are conditionals in the
+preprocessor phase that depend on results obtained at earlier stages of the program.
+.TP
+.BR "-d, -D"
+Next argument/option is the name of a preprocessor variable that will be defined before the
+run starts. A specific value can be assigned with the syntax
+\fB-d\fR\ \fIVARIABLENAME\fR=\fIVALUE\fR.
+The
+default value is 1.
+.TP
+.BR "-f"
+Output goes only to log file.
+.TP
+.BR "-F"
+Output only to log file. Further like \fB-L\fR or \fB-ll\fR.
+.TP
+.BR "-h"
+Wait for some key to be touched before finishing the run. Basically only for some old window
+based systems.
+.TP
+.BR "-I"
+Next argument/option is the path of a directory for include, procedure and subroutine files.
+.TP
+.BR "-l"
+Make a regular log file.
+.TP
+.BR "-ll, -L"
+Make a log file without intermediate statistics.
+.TP
+.BR "-M"
+Put the PID (process identifier) in the name of the temporary files. This makes for longer
+names, but gives a better guarantee of uniqueness. If a file with the created name exists
+already it will be overwritten. This option is for when several instances of FORM are started
+at nearly the same time as can happen from minos or make (with the make -j option).
+.TP
+.BR "-p"
+Next argument/option is the path of a directory for input, include, procedure and subroutine
+files.
+.TP
+.BR "-pipe"
+Indicates that FORM is started up as the receiving end of a pipe. Action will be taken to
+set up the proper communication channels.
+.TP
+.BR "-q, -si"
+Quiet option. Only output expressions are printed.
+.TP
+.BR "-R"
+Recover from a crash.
+.TP
+.BR "-s"
+Next argument/option is the path of a directory for a setup file.
+.TP
+.BR "-S"
+Next argument/option is the name of a setup file.
+.TP
+.BR "-t"
+Next argument/option is the path of a directory for temporary files.
+.TP
+.BR "-ts"
+Next argument/option is the path of a directory for temporary sort files.
+.TP
+.BR "-T"
+Puts FORM in a mode in which the maximum totalsize is measured and printed at the end of
+the program.
+.TP
+.BR "-v"
+Only the version will be printed. The program terminates immediately after it.
+.TP
+.BR "-w"
+This should be followed immediately by a number without any space. The number
+indicates the number of worker threads for \fBtform\fR. All other versions of
+FORM ignore this parameter.
+.TP
+.BR "-W"
+Turn on the wall-clock time mode in the statistics.
+.TP
+.BR "-y"
+Run only the preprocessor and dump its output.
+.SH ENVIRONMENT
+.TP
+\fBFORMPATH\fR
+The directory in which FORM will look for procedures and header files, assuming it cannot
+find them in the current directory.
+.TP
+\fBFORMTMP\fR
+The directory in which FORM will make its temporary files.
+.TP
+\fBFORMTMPSORT\fR
+The directory in which FORM will make its temporary sort files.
+.TP
+\fBFORMSETUP\fR
+The full path and name of a setup file.
+.SH SEE ALSO
+.TP
+\fBhttps://www.nikhef.nl/~form/\fR
+The FORM home site.
+.TP
+\fBhttps://github.com/vermaseren/form/\fR
+The repository on GitHub.

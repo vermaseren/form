@@ -864,6 +864,8 @@ echo "##################### CONFIGURATION #####################"
 echo
 outputdir=$(eval "echo $bindir")
 outputdir=$(eval "echo $outputdir")
+manoutputdir=$(eval "echo $mandir")
+manoutputdir=$(eval "echo $manoutputdir")
 echo "FORM $VERSION"
 echo
 echo "Compiling for: $print_cpu $print_os ($print_data_model $print_api)"
@@ -1034,6 +1036,8 @@ echo "build a specific version. Type 'make' to build all."
 echo
 echo "Type 'make install' to install the executables in"
 echo "    $outputdir"
+echo "and the man page in"
+echo "    $manoutputdir"
 echo
 if test "x$with_ruby_test" = xyes; then
 	echo "Type 'make check' to run automatic tests."
