@@ -4718,7 +4718,18 @@ WORD PrepPoly(PHEAD WORD *term,WORD par)
 				*m++ = 1;
 			}
 		}
+		else if ( i == 3 && AR.PolyFunType == 2 &&
+		(m[-2]&MAXPOSITIVE) == m[-2] && (m[-3]&MAXPOSITIVE) == m[-3] ) {
+			WORD mx1 = m[-3], mx2 = m[-2], xm3 = m[-1];
+			*m++ = AR.PolyFun;
+			*m++ = FUNHEAD+4;
+			FILLFUN(m)
+			if ( xm3 < 0 ) mx1 = -mx1;
+			*m++ = -SNUMBER; *m++ = mx1;
+			*m++ = -SNUMBER; *m++ = mx2;
+		}
 		else {
+			WORD *vm;
 			r = tstop;
 			if ( AR.PolyFunType == 1 || (AR.PolyFunType == 2 && AR.PolyFunExp == 2) ) {
 				*m++ = AR.PolyFun;
@@ -4740,8 +4751,9 @@ WORD PrepPoly(PHEAD WORD *term,WORD par)
 				v = m;
 				AT.PolyAct = WORDDIF(v,term);
 				*v++ = AR.PolyFun;
-				*v++ = FUNHEAD + 2*(ARGHEAD+sizenum+sizeden+2);
+				v++;
 				FILLFUN(v);
+				vm = v;
 				*v++ = ARGHEAD+2*sizenum+2;
 				*v++ = 0;
 				FILLARG(v);
@@ -4750,6 +4762,8 @@ WORD PrepPoly(PHEAD WORD *term,WORD par)
 				*v++ = 1;
 				for ( i = 1; i < sizenum; i++ ) *v++ = 0;
 				*v++ = sign*(2*sizenum+1);
+				if ( ToFast(vm,vm) ) v = vm+2;
+				vm = v;
 				*v++ = ARGHEAD+2*sizeden+2;
 				*v++ = 0;
 				FILLARG(v);
@@ -4758,8 +4772,10 @@ WORD PrepPoly(PHEAD WORD *term,WORD par)
 				*v++ = 1;
 				for ( i = 1; i < sizeden; i++ ) *v++ = 0;
 				*v++ = 2*sizeden+1;
+				if ( ToFast(vm,vm) ) v = vm+2;
+				i = v-m;
+				m[1] = i;
 				w = num;
-				i = v - m;
 				NCOPY(w,m,i);
 				*w++ = 1; *w++ = 1; *w++ = 3; *term = w - term;
 				return(0);
