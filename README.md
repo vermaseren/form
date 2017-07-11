@@ -36,8 +36,9 @@ Additional Information
 Information about copying and licencing of this software can be found in the
 file "[COPYING](COPYING)".
 
-More background information, the latest version and a collection of FORM
-programs can be found on the official FORM website: http://www.nikhef.nl/~form.
+More background information a collection of FORM
+programs a number of courses and an online version of the manual can be 
+found on the official FORM website: http://www.nikhef.nl/~form.
 
 
 Bugs and remarks
@@ -45,5 +46,6 @@ Bugs and remarks
 Bugs can be reported via the
 [Issue Tracker](https://github.com/vermaseren/form/issues) of Github.
 
-In case of more question or remarks, please visit the official
-FORM [forum](http://www.nikhef.nl/~form/forum/).
+The issue tracker can also be used for questions, remarks and suggestions. 
+In the past the FORM [forum](http://www.nikhef.nl/~form/forum/) was used 
+for this but we will be discontinue the forum in the future.
