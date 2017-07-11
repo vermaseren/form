@@ -1603,7 +1603,7 @@ nextk:;
 					arguments there will be no action.
 */
 
-WORD TestPartitions(PHEAD WORD *tfun, PARTI *parti)
+WORD TestPartitions(WORD *tfun, PARTI *parti)
 {
 	WORD *tnext = tfun + tfun[1];
 	WORD *t, *tt;
@@ -1711,7 +1711,7 @@ No:
 }
 
 /*
- 		#] TestPartitions :
+ 		#] TestPartitions : 
  		#[ DoPartitions :
 
 	As we have only one AT.partitions we need to copy it locally
@@ -1962,7 +1962,7 @@ div2:						if ( Factorial(BHEAD n, cfac, &nfac) ) Terminate(-1);
 			if ( Generator(BHEAD termout,level) ) Terminate(-1);
 			AT.WorkPointer = termout;
 /*
-			#] Solution :
+			#] Solution : 
 
 			Now we can pop all a with the lowest value and one more.
 */
@@ -1995,8 +1995,8 @@ Done:
 }
 
 /*
- 		#] DoPartitions :
-  	#] Distribute :
+ 		#] DoPartitions : 
+  	#] Distribute : 
   	#[ DoPermutations :
 
 	Routine replaces the function perm_(f,args) by occurrences of f with

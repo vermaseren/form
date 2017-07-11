@@ -1433,7 +1433,7 @@ Important: we may not have enough spots here
 				return(1);
 			  }
 			  else if ( *t == PARTITIONS ) {
-				if ( TestPartitions(BHEAD t,&(AT.partitions)) ) {
+				if ( TestPartitions(t,&(AT.partitions)) ) {
 					AT.partitions.where = t-term;
 					AN.TeInFun = -13;
 					AN.TeSuOut = 0;
@@ -3678,7 +3678,7 @@ CommonEnd:
 				}
 				goto SkipCount;
 /*
-			#] Special action :
+			#] Special action : 
 */
 			}
 		} while ( ( i = TestMatch(BHEAD term,&level) ) == 0 );

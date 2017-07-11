@@ -448,7 +448,7 @@ extern WORD   DivRat(PHEAD UWORD *,WORD,UWORD *,WORD,UWORD *,WORD *);
 extern WORD   Divvy(PHEAD UWORD *,WORD *,UWORD *,WORD);
 extern WORD   DoDelta(WORD *);
 extern WORD   DoDelta3(PHEAD WORD *,WORD);
-extern WORD   TestPartitions(PHEAD WORD *, PARTI *);
+extern WORD   TestPartitions(WORD *, PARTI *);
 extern WORD   DoPartitions(PHEAD WORD *,WORD);
 extern WORD   DoTableExpansion(WORD *,WORD);
 extern WORD   DoDistrib(PHEAD WORD *,WORD);
