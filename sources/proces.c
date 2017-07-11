@@ -4718,16 +4718,6 @@ WORD PrepPoly(PHEAD WORD *term,WORD par)
 				*m++ = 1;
 			}
 		}
-		else if ( i == 3 && AR.PolyFunType == 2 &&
-		(m[-2]&MAXPOSITIVE) == m[-2] && (m[-3]&MAXPOSITIVE) == m[-3] ) {
-			WORD mx1 = m[-3], mx2 = m[-2], xm3 = m[-1];
-			*m++ = AR.PolyFun;
-			*m++ = FUNHEAD+4;
-			FILLFUN(m)
-			if ( xm3 < 0 ) mx1 = -mx1;
-			*m++ = -SNUMBER; *m++ = mx1;
-			*m++ = -SNUMBER; *m++ = mx2;
-		}
 		else {
 			WORD *vm;
 			r = tstop;
