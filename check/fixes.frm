@@ -473,6 +473,53 @@ Print;
 assert succeeded?
 assert result("xx") =~ expr("f(2*a,2*a^2,3,4)")
 *--#] Issue54_2 : 
+*--#[ Issue55_1 :
+* Pattern matching with sets, and (ex-)PolyRatFun CFunction
+CFunction coeff,coeff2;
+Symbol x,y,z;
+Symbol ca,cf,zeta2;
+
+Local test1 = + dum_( - 7117/81 - 64/9*zeta2)*ca^2*cf;
+Local test2 = + dum_(1 + 576/7117*zeta2)*coeff(- 7117,81)*ca^2*cf;
+.sort
+
+Identify coeff(x?neg_,y?) = -coeff(-x,y);
+Identify dum_(z?)*coeff(x?,y?) = dum_(z * x/y);
+Print +s;
+.sort
+
+PolyRatFun coeff;
+Normalize dum_;
+Print +s;
+.sort
+PolyRatFun;
+.sort
+
+Identify coeff(x?neg_,y?) = -coeff(-x,y);
+*Identify coeff(x?,y?) = coeff2(x,y);
+*Identify coeff2(x?neg_,y?) = -coeff2(-x,y);
+
+Print +s;
+.end
+assert succeeded?
+assert result("test1") =~ expr("- (1 + 576/7117*zeta2)*coeff(7117,81)*ca^2*cf")
+assert result("test2") =~ expr("- (1 + 576/7117*zeta2)*coeff(7117,81)*ca^2*cf")
+*--#] Issue55_1 : 
+*--#[ Issue55_2 :
+* Pattern matching with sets, and (ex-)PolyRatFun CFunction
+CF frac;
+S x,y;
+L F = - 2/3*x;
+P;
+.sort(PolyRatFun=frac);
+*.sort;  * putting .sort is useless for this bug
+*argument frac,1;endargument;  * workaround
+id frac(x?neg_,y?) = - frac(-x,y);  * doesn't match
+P;
+.end
+assert succeeded?
+assert result("F") =~ expr("- frac(2,3)*x")
+*--#] Issue55_2 : 
 *--#[ Issue56 :
 * PolyRatFun(expand) does not expand substituted expressions
 CF rat;
