@@ -48,4 +48,4 @@ Bugs can be reported via the
 
 The issue tracker can also be used for questions, remarks and suggestions. 
 In the past the FORM [forum](http://www.nikhef.nl/~form/forum/) was used 
-for this but we will be discontinue the forum in the future.
+for this but we will discontinue the forum in the future.
