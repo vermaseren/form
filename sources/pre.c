@@ -4906,6 +4906,14 @@ UBYTE *PreCalc()
 	s = buff;
 	if ( answer < 0 ) { *s++ = '-'; answer = -answer; }
 	n = 0;
+	if ( answer < 0 ) { /* must be exceptional case */
+		answer += 10;
+		answer = -answer;
+		*--t = ( answer % 10 ) + '0';
+		answer /= 10;
+		n++;
+		answer += 1;
+	}
 	do {
 		*--t = ( answer % 10 ) + '0';
 		answer /= 10;
