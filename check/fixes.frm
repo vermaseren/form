@@ -80,7 +80,7 @@ CF f;
 Auto S x;
 L F = f(<x1+x2+x3>,...,<x7+x8+x9>);
 
-* Consume ebuf.
+* Consume ebuf. (Assume the default setup parameters on 64-bit systems.)
 #do i=1,10
   id f(?a,x1?,x2?,?c) = f(?a,x1,x2,?c);
 #enddo
@@ -96,6 +96,8 @@ multiply replace_(<x1,1>,...,<x9,1>);
 id f(x?) = x;
 P;
 .end
+# Only for 64-bit systems. Otherwise "Sorted function argument too long".
+#require wordsize == 4
 assert succeeded?
 assert result("F") =~ expr("2187")
 *--#] Transform-mulargs_1 : 
@@ -1731,14 +1733,21 @@ end
 *--#] Issue191 : 
 *--#[ Issue197 :
 * mul_ ignores denominator factors
+#if "{2^32}" == "0"
+* LONG has 4 bytes, which indicates WORD has 2 bytes.
+* Avoid the "polynomials too large" error.
+  #define n "3"
+#else
+  #define n "5"
+#endif
 S x,y,z;
 L F1 = mul_(2/3,5/7);
 L F2 = mul_(1/2+x/3,1/5+x/7);
 P;
 .sort
 Drop;
-L A1 = (5000000029/7+3/2*x-5/11*x/y+7/8*y*z+z-x*z)^5;
-L A2 = (3/4-1/9*x+9/5000000039*x*y+5/12*y*z+2/z*z^3)^5;
+L A1 = (5000000029/7+3/2*x-5/11*x/y+7/8*y*z+z-x*z)^`n';
+L A2 = (3/4-1/9*x+9/5000000039*x*y+5/12*y*z+2/z*z^3)^`n';
 .sort
 Drop;
 L G1 = A1 * A2;
@@ -1752,6 +1761,10 @@ P;
 assert succeeded?
 assert result("F1") =~ expr("10/21")
 assert result("F2") =~ expr("1/10 + 29/210*x + 1/21*x^2")
-assert result("Nterms") =~ expr("1351")
+if wordsize == 2
+  assert result("Nterms") =~ expr("333")
+else
+  assert result("Nterms") =~ expr("1351")
+end
 assert result("Zero") =~ expr("0")
 *--#] Issue197 : 
