@@ -719,7 +719,7 @@ UBYTE *WriteDollarFactorToBuffer(WORD numdollar, WORD numfac, WORD par)
 	if ( numfac == 0 ) {	/* write the number d->nfactors */
 		n[0] = 4; n[1] = d->nfactors; n[2] = 1; n[3] = 3; n[4] = 0; t = n;
 	}
-	else if ( numfac ==  1 ) {	/* Here d->factors is zero and d->where is fine */
+	else if ( numfac ==  1 && d->factors == 0 ) {	/* Here d->factors is zero and d->where is fine */
 		t = d->where;
 	}
 	else if ( d->factors[numfac-1].where == 0 ) {	/* write the value */
