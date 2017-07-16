@@ -1768,3 +1768,32 @@ else
 end
 assert result("Zero") =~ expr("0")
 *--#] Issue197 : 
+*--#[ Issue219 :
+* Corrupted characters in {-9223372036854775808}
+#$n32  = -2^31;
+#$n64  = -2^63;
+#$n128 = -2^127;
+L F32  = {`$n32'};
+L F64  = {`$n64'};
+L F128 = {`$n128'};
+* In previous versions, "(" was returned from the preprocessor calculator
+* on systems using two's complement for signed numbers, leading to an
+* "Unmatched ()" error. Note that overflow/underflow doesn't give any errors in
+* the preprocessor calculator (e.g., for F128), just gives a strange number
+* (though in a strict sense it is an undefined behaviour and can cause a crash;
+* let's hope compilers will take a little more time to become so insidious).
+P;
+.end
+assert succeeded?
+*--#] Issue219 : 
+*--#[ Issue222 :
+* accessing #factdollar factors causes program termination
+Symbol x;
+#$a = 1;  * Error
+*#$a = x;  * Fine
+#factdollar $a;
+#write "Number of factors in `$a' is `$a[0]'"
+#write "Factor 1 is `$a[1]'"
+.end
+assert succeeded?
+*--#] Issue222 : 
