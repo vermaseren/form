@@ -4859,6 +4859,7 @@ UBYTE *PreCalc()
 	UBYTE *buff, *s = 0, *t, *newb, c;
 	int size, i, n, parlevel = 0, bralevel = 0;
 	LONG answer;
+	ULONG uanswer;
 	size = n = 0;
 	buff = 0; c = '{';
 	for (;;) {
@@ -4904,21 +4905,14 @@ UBYTE *PreCalc()
 	if ( PreEval(buff+1,&answer) == 0 ) goto setstring;
 	t = buff + size;
 	s = buff;
-	if ( answer < 0 ) { *s++ = '-'; answer = -answer; }
+	if ( answer < 0 ) { *s++ = '-'; }
+	uanswer = LongAbs(answer);
 	n = 0;
-	if ( answer < 0 ) { /* must be exceptional case */
-		answer += 10;
-		answer = -answer;
-		*--t = ( answer % 10 ) + '0';
-		answer /= 10;
-		n++;
-		answer += 1;
-	}
 	do {
-		*--t = ( answer % 10 ) + '0';
-		answer /= 10;
+		*--t = ( uanswer % 10 ) + '0';
+		uanswer /= 10;
 		n++;
-	} while ( answer > 0 );
+	} while ( uanswer > 0 );
 	NCOPYB(s,t,n);
 	*s = 0;
 setstring:;

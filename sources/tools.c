@@ -1908,12 +1908,9 @@ UBYTE *NumCopy(WORD y, UBYTE *to)
 	WORD i = 0, j;
 	UWORD x;
 	if ( y < 0 ) {
-		x = (UWORD)(-y);
 		*to++ = '-';
 	}
-	else {
-		x = (UWORD)y;
-	}
+	x = WordAbs(y);
 	s = to;
 	do { *s++ = (UBYTE)((x % 10)+'0'); i++; } while ( ( x /= 10 ) != 0 );
 	*s-- = '\0';
@@ -1938,12 +1935,9 @@ char *LongCopy(LONG y, char *to)
 	WORD i = 0, j;
 	ULONG x;
 	if ( y < 0 ) {
-		x = (ULONG)(-y);
 		*to++ = '-';
 	}
-	else {
-		x = (ULONG)y;
-	}
+	x = LongAbs(y);
 	s = to;
 	do { *s++ = (x % 10)+'0'; i++; } while ( ( x /= 10 ) != 0 );
 	*s-- = '\0';

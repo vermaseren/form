@@ -332,6 +332,38 @@ TP=T+1;while(TP<TT){if(*TP==AR.PolyFun){TP[2]|=(DIRTYFLAG|MUSTCLEANPRF);}TP+=TP[
 	MesPrint("P-level popped to %d with %d",AP.PreAssignLevel,(WORD)(AC.iPointer - AC.iBuffer));
 
   	#] Macro's : 
+  	#[ Inline functions :
+*/
+
+/*
+ * The following two functions give the unsigned absolute value of a signed
+ * integer even for the most negative integer. This is beyond the scope of
+ * the standard abs() function and its family, whose return-values are signed.
+ * In short, we should not use the unary minus operator with signed numbers
+ * unless we are sure that there are no integer overflows. Instead, we rely on
+ * two well-defined operations: (i) signed-to-unsigned conversion and
+ * (ii) unary minus of unsigned operands.
+ *
+ * See also:
+ *   https://stackoverflow.com/a/4536188   (Unary minus and signed-to-unsigned conversion)
+ *   https://stackoverflow.com/q/8026694   (C: unary minus operator behavior with unsigned operands)
+ *   https://stackoverflow.com/q/1610947   (Why does stdlib.h's abs() family of functions return a signed value?)
+ *   https://blog.regehr.org/archives/226  (A Guide to Undefined Behavior in C and C++, Part 2)
+ */
+static inline UWORD WordAbs(WORD x)
+{
+	if ( x >= 0 ) return x;
+	return(-((UWORD)x));
+}
+
+static inline ULONG LongAbs(LONG x)
+{
+	if ( x >= 0 ) return x;
+	return(-((ULONG)x));
+}
+
+/*
+  	#] Inline functions : 
   	#[ Thread objects :
 */
 
