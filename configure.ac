@@ -765,7 +765,7 @@ if test "$my_test_LINKFLAGS" != set; then
 		LINKFLAGS=-s
 	fi
 fi
-my_test_DEBUGCOMPILEFLAGS=${DEUBUGCOMPILEFLAGS+set}
+my_test_DEBUGCOMPILEFLAGS=${DEBUGCOMPILEFLAGS+set}
 if test "$my_test_DEBUGCOMPILEFLAGS" != set; then
 	if test "x$vendor" = xgnu; then
 		DEBUGCOMPILEFLAGS='-g3 -Wall -Wextra -Wpadded'
