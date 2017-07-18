@@ -700,6 +700,14 @@ AC_ARG_ENABLE([coverage],
 		[enable_coverage=yes], [enable_coverage=no])],
 	[enable_coverage=no])
 
+# Check for sanitizers
+AC_ARG_ENABLE([sanitize],
+	[AS_HELP_STRING([--enable-sanitize@<:@=CHECKS@:>@],
+		[enable sanitizers (debugging versions) @<:@default=no@:>@])],
+	[AS_IF([test "x$enable_debug" != xyes],
+		[enable_sanitize=no])],
+	[enable_sanitize=no])
+
 # Optimization/debugging flags
 AC_ARG_VAR([COMPILEFLAGS], [Compiler flags for release versions])
 AC_ARG_VAR([LINKFLAGS], [Linker flags for release versions])
@@ -747,8 +755,10 @@ if test "$my_test_COMPILEFLAGS" != set; then
 		if test "x$enable_native" = xyes; then
 			COMPILEFLAGS="$COMPILEFLAGS -xHost"
 		fi
+		enable_profile=false
 	else
 		COMPILEFLAGS=-O2
+		enable_profile=false
 	fi
 fi
 my_test_LINKFLAGS=${LINKFLAGS+set}
@@ -766,9 +776,13 @@ if test "$my_test_LINKFLAGS" != set; then
 	fi
 fi
 my_test_DEBUGCOMPILEFLAGS=${DEBUGCOMPILEFLAGS+set}
-if test "$my_test_DEBUGCOMPILEFLAGS" != set; then
+if test "$my_test_DEBUGCOMPILEFLAGS" != set && test "x$enable_debug" = xyes; then
 	if test "x$vendor" = xgnu; then
-		DEBUGCOMPILEFLAGS='-g3 -Wall -Wextra -Wpadded'
+		DEBUGCOMPILEFLAGS='-g3 -Wall -Wextra'
+		if test "x$enable_sanitize" = xno; then
+			# UBSan puts many paddings (at least in gcc 5.3).
+			DEBUGCOMPILEFLAGS="$DEBUGCOMPILEFLAGS -Wpadded"
+		fi
 		# Check for -Og.
 		AC_MSG_CHECKING([whether compiler accepts -Og])
 		ok=no
@@ -786,19 +800,68 @@ if test "$my_test_DEBUGCOMPILEFLAGS" != set; then
 		if test "x$enable_coverage" = xyes; then
 			DEBUGCOMPILEFLAGS="$DEBUGCOMPILEFLAGS -coverage"
 		fi
+		# Sanitizer option.
+		if test "x$enable_sanitize" = xyes; then
+			enable_sanitize=
+			for san in address undefined; do
+				if test "x$enable_sanitize" = x; then
+					tmp_sanitize=$san
+				else
+					tmp_sanitize=$enable_sanitize,$san
+				fi
+				AC_MSG_CHECKING([whether compiler accepts -fsanitize=$tmp_sanitize])
+				ok=no
+				save_CFLAGS=$CFLAGS
+				CFLAGS="$CFLAGS -fsanitize=$tmp_sanitize"
+				AC_COMPILE_IFELSE([AC_LANG_PROGRAM()], [ok=yes])
+				CFLAGS=$save_CFLAGS
+				AC_MSG_RESULT($ok)
+				if test "x$ok" = xyes; then
+					enable_sanitize=$tmp_sanitize
+				fi
+			done
+			if test "x$enable_sanitize" = x; then
+				enable_sanitize=failed
+			fi
+		elif test "x$enable_sanitize" != xno; then
+			AC_MSG_CHECKING([whether compiler accepts -fsanitize=$enable_sanitize])
+			ok=no
+			save_CFLAGS=$CFLAGS
+			CFLAGS="$CFLAGS -fsanitize=$enable_sanitize"
+			AC_COMPILE_IFELSE([AC_LANG_PROGRAM()], [ok=yes])
+			CFLAGS=$save_CFLAGS
+			AC_MSG_RESULT($ok)
+			if test "x$ok" != xyes; then
+				enable_sanitize=failed
+			fi
+		fi
+		if test "x$enable_sanitize" = xfailed; then
+			AC_MSG_FAILURE([test for sanitizer failed. Give --disable-sanitize if you want to compile without sanitizer])
+		fi
+		if test "x$enable_sanitize" != xno; then
+			DEBUGCOMPILEFLAGS="$DEBUGCOMPILEFLAGS -fsanitize=$enable_sanitize"
+		fi
 	elif test "x$vendor" = xintel; then
 		DEBUGCOMPILEFLAGS='-g3 -Wall -O0'
+		enable_coverage=no
+		enable_sanitize=no
 	else
 		DEBUGCOMPILEFLAGS=-g
+		enable_coverage=no
+		enable_sanitize=no
 	fi
 fi
 my_test_DEBUGLINKFLAGS=${DEBUGLINKFLAGS+set}
-if test "$my_test_DEBUGLINKFLAGS" != set; then
+if test "$my_test_DEBUGLINKFLAGS" != set && test "x$enable_debug" = xyes; then
 	DEBUGLINKFLAGS=
 	if test "x$vendor" = xgnu; then
 		# Coverage option.
 		if test "x$enable_coverage" = xyes; then
 			DEBUGLINKFLAGS="$DEBUGLINKFLAGS -coverage"
+		fi
+		# Sanitizer option.
+		if test "x$enable_sanitize" != xno; then
+			DEBUGLINKFLAGS="$DEBUGLINKFLAGS -fsanitize=$enable_sanitize"
 		fi
 	fi
 fi
@@ -920,6 +983,12 @@ if test "x$build_vorm" = xyes; then
 		fi
 		opts="${opts}gcov"
 	fi
+	if test "x$enable_sanitize" != xno; then
+		if test "x$opts" != x; then
+			opts="${opts}, "
+		fi
+		opts="${opts}sanitize=$enable_sanitize"
+	fi
 	if test "x$opts" != x; then
 		opts=" (${opts})"
 	fi
@@ -960,6 +1029,12 @@ if test "x$build_tvorm" = xyes; then
 		fi
 		opts="${opts}gcov"
 	fi
+	if test "x$enable_sanitize" != xno; then
+		if test "x$opts" != x; then
+			opts="${opts}, "
+		fi
+		opts="${opts}sanitize=$enable_sanitize"
+	fi
 	if test "x$opts" != x; then
 		opts=" (${opts})"
 	fi
@@ -999,6 +1074,12 @@ if test "x$build_parvorm" = xyes; then
 			opts="${opts}, "
 		fi
 		opts="${opts}gcov"
+	fi
+	if test "x$enable_sanitize" != xno; then
+		if test "x$opts" != x; then
+			opts="${opts}, "
+		fi
+		opts="${opts}sanitize=$enable_sanitize"
 	fi
 	if test "x$opts" != x; then
 		opts=" (${opts})"
@@ -1084,11 +1165,12 @@ if test "x$LATEX" != x || test "x$PDFLATEX" != x; then
 fi
 if test $atleastone = no; then
 	echo "    <NONE>"
+else
+	echo
+	echo "Type 'make <format>' in the directories doc/manual or"
+	echo "doc/doxygen to generate the respective documentation with"
+	echo "the specified format."
 fi
-echo
-echo "Type 'make <format>' in the directories doc/manual or"
-echo "doc/doxygen to generate the respective documentation with"
-echo "the specified format."
 echo
 echo "#########################################################"
 echo
