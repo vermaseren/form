@@ -81,6 +81,8 @@ if [ "x$TRAVIS_OS_NAME" = xosx ]; then
       pyenv install 2.7.12
       pyenv global 2.7.12
       pyenv rehash
+      brew install openssl
+      LDFLAGS="-L$(brew --prefix openssl)/lib" CFLAGS="-I$(brew --prefix openssl)/include" pip install cryptography  # pyca/cryptography#3367
       pip install cpp-coveralls
       pyenv rehash
       ;;

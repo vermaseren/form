@@ -1,3 +1,4 @@
+dist: trusty
 sudo: false
 language: cpp
 
@@ -109,7 +110,7 @@ matrix:
       cache: { directories: [ texlive ] }
     - os: linux
       env: CI_TARGET=doc-html-release
-      addons: { apt: { packages: [] } }
+      addons: { apt: { packages: [ ghostscript, netpbm ] } }
       cache: { directories: [ texlive ] }
     - os: linux
       compiler: gcc
