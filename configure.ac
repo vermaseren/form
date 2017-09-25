@@ -22,8 +22,8 @@ m4_define([FORM_VERSION], m4_esyscmd_s([
 				echo "$major_version.$minor_version" >.version
 				echo "#define REPO_MAJOR_VERSION $major_version"  >sources/version.h.in
 				echo "#define REPO_MINOR_VERSION $minor_version" >>sources/version.h.in
-				echo "\\def\\repomajorversion{$major_version}"  >doc/manual/version.tex.in
-				echo "\\def\\repominorversion{$minor_version}" >>doc/manual/version.tex.in
+				echo '\\def\\repomajorversion'"{$major_version}"  >doc/manual/version.tex.in
+				echo '\\def\\repominorversion'"{$minor_version}" >>doc/manual/version.tex.in
 				cp doc/manual/version.tex.in doc/devref/version.tex.in
 			fi
 			cat <<END >&2
