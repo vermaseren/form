@@ -359,12 +359,10 @@ module FormTest
       err = Thread.new do
         while (line = stderrstream.gets)
           stderr << line
-          if !FormTest.cfg.valgrind.nil?
-            # We print both stdout and stderr when the test fails under
-            # Valgrind, by copying stderr into stdout. Unfortunately,
-            # their orders are not preserved.
-            stdout << line
-          end
+          # We print both stdout and stderr when a test fails. An easy way to
+          # implement this is to copy messages in stderr to those in stdout.
+          # Unfortunately their orders are not preserved.
+          stdout << line
         end
       end
       begin

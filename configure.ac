@@ -861,7 +861,21 @@ if test "$my_test_DEBUGLINKFLAGS" != set && test "x$enable_debug" = xyes; then
 		fi
 		# Sanitizer option.
 		if test "x$enable_sanitize" != xno; then
-			DEBUGLINKFLAGS="$DEBUGLINKFLAGS -fsanitize=$enable_sanitize"
+			# Workaround for https://bugs.launchpad.net/ubuntu/+source/gcc-defaults/+bug/1650186
+			ok=no
+			save_CFLAGS=$CFLAGS
+			save_LDFLAGS=$LDFLAGS
+			CFLAGS="$CFLAGS -fsanitize=$enable_sanitize"
+			AC_LINK_IFELSE([AC_LANG_PROGRAM()], [ok=yes])
+			if test "x$ok" != xyes; then
+				LDFLAGS="$LDFLAGS -fuse-ld=gold"
+				AC_LINK_IFELSE([AC_LANG_PROGRAM()], [ok=yes])
+				if test "x$ok" = xyes; then
+					DEBUGLINKFLAGS="$DEBUGLINKFLAGS -fuse-ld=gold"
+				fi
+			fi
+			CFLAGS=$save_CFLAGS
+			LDFLAGS=$save_LDFLAGS
 		fi
 	fi
 fi

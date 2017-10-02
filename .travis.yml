@@ -15,6 +15,9 @@ addons:
       - libgmp-dev
       - zlib1g-dev
 
+before_install:
+  - eval "$MATRIX_EVAL"
+
 install:
   - ./scripts/travis-install.sh
 
@@ -74,6 +77,14 @@ matrix:
       addons: { apt: { packages: [] } }
       sudo: required
       services: [ docker ]
+    - os: linux
+      compiler: gcc
+      env: CI_TARGET=sanitize-vorm MATRIX_EVAL='CC=gcc-7 && CXX=g++-7'
+      addons: { apt: { sources: [ ubuntu-toolchain-r-test ], packages: [ g++-7, libgmp-dev, zlib1g-dev ] } }
+    - os: linux
+      compiler: gcc
+      env: CI_TARGET=sanitize-tvorm MATRIX_EVAL='CC=gcc-7 && CXX=g++-7'
+      addons: { apt: { sources: [ ubuntu-toolchain-r-test ], packages: [ g++-7, libgmp-dev, zlib1g-dev ] } }
     - os: linux
       compiler: gcc
       env: CI_TARGET=coverage-vorm
