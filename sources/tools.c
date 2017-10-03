@@ -2933,22 +2933,23 @@ void ExpandBuffer(void **buffer, LONG *oldsize, int type)
 LONG iexp(LONG x, int p)
 {
 	int sign;
-	LONG y;
+	ULONG y;
+	ULONG ux;
 	if ( x == 0 ) return(0);
 	if ( p == 0 ) return(1);
-	if ( x < 0 ) { sign = -1; x = -x; }
-	else sign = 1;
+	sign = x < 0 ? -1 : 1;
 	if ( sign < 0 && ( p & 1 ) == 0 ) sign = 1;
-	if ( x == 1 ) return(sign);
+	ux = LongAbs(x);
+	if ( ux == 1 ) return(sign);
 	if ( p < 0 ) return(0);
 	y = 1;
 	while ( p ) {
-		if ( ( p & 1 ) != 0 ) y *= x;
+		if ( ( p & 1 ) != 0 ) y *= ux;
 		p >>= 1;
-		x = x*x;
+		ux = ux*ux;
 	}
 	if ( sign < 0 ) y = -y;
-	return(y);
+	return ULongToLong(y);
 }
 
 /*

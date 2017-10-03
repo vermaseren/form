@@ -3782,7 +3782,7 @@ void iniwranf(PHEAD0)
 	for ( i = 0; i <= (ULONG)(imax); i++ ) {
 		ii = (AR.wranfnpair1*i)%AR.wranfnpair2;
 		AR.wranfia[ii] = k;
-		k = j - k;
+		k = ULongToLong((ULONG)j - (ULONG)k);
 		if ( k < 0 ) k += (LONG)1 << (2*BITSINWORD-2);
 		j = AR.wranfia[ii];
 	}

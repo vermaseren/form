@@ -1235,6 +1235,7 @@ dotensor:
 				else {
 dofunction:			firstsumarg = 1;
 					do {
+						unsigned int ux2;
 						s++;
 						c = *s++;
 						if ( c == TMINUS && ( *s == TVECTOR || *s == TNUMBER
@@ -1243,7 +1244,8 @@ dofunction:			firstsumarg = 1;
 						}
 						else minus = 0;
 						base = ( c == TNUMBER ) ? 100: 128;
-						x2 = 0; while ( *s >= 0 ) { x2 = base*x2 + *s++; }
+						ux2 = 0; while ( *s >= 0 ) { ux2 = base*ux2 + *s++; }
+						x2 = ux2;  /* may cause an implementation-defined behaviour */
 /*
 		!!!!!!!!  What if it does not fit?
 */
@@ -1399,7 +1401,7 @@ dofunction:			firstsumarg = 1;
 								break;
 							case TNUMBER:
 							case TNUMBER1:
-								if ( minus ) x2 = -x2;
+								if ( minus ) x2 = UnsignedToInt(-IntAbs(x2));
 								*t++ = -SNUMBER;
 								*t++ = x2;
 								break;

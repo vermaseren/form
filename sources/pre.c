@@ -4953,7 +4953,9 @@ UBYTE *PreEval(UBYTE *s, LONG *x)
 		for(;;){
 			while ( *s == ' ' || *s == '\t' ) s++;
 			if ( *s <= '9' && *s >= '0' ) {
-				ParseNumber(y,s)
+				ULONG uy;
+				ParseNumber(uy,s)
+				y = uy;  /* may cause an implementation-defined behaviour */
 			}
 			else if ( *s == '(' || *s == '{' ) {
 				if ( ( t = PreEval(s+1,&y) ) == 0 ) return(0);
@@ -5059,8 +5061,12 @@ UBYTE *PreEval(UBYTE *s, LONG *x)
 			else if ( *s == '&' ) tobemultiplied = 3;
 			else if ( *s == '|' ) tobemultiplied = 4;
 			else {
-				if ( tobeadded >= 0 ) *x += a;
-				else *x -= a;
+				ULONG ux, ua;
+				ux = *x;
+				ua = a;
+				if ( tobeadded >= 0 ) ux += ua;
+				else ux -= ua;
+				*x = ULongToLong(ux);
 				if ( *s == ')' || *s == '}' ) return(s+1);
 				else if ( *s == '-' || *s == '+' ) { tobeadded = 1; break; }
 				else return(0);

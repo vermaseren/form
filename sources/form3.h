@@ -236,6 +236,11 @@ typedef unsigned long ULONG;
 #error INT64 is not available!
 #endif
 
+#define WORD_MIN_VALUE SHRT_MIN
+#define WORD_MAX_VALUE SHRT_MAX
+#define LONG_MIN_VALUE LONG_MIN
+#define LONG_MAX_VALUE LONG_MAX
+
 #elif defined(LLP64)
 
 typedef int WORD;
@@ -249,6 +254,11 @@ typedef unsigned long long ULONG;
 #define INT64 long long
 #undef INT128
 
+#define WORD_MIN_VALUE INT_MIN
+#define WORD_MAX_VALUE INT_MAX
+#define LONG_MIN_VALUE LLONG_MIN
+#define LONG_MAX_VALUE LLONG_MAX
+
 #elif defined(LP64)
 
 typedef int WORD;
@@ -261,6 +271,11 @@ typedef unsigned long ULONG;
 #define INT32 int
 #define INT64 long
 #undef INT128
+
+#define WORD_MIN_VALUE INT_MIN
+#define WORD_MAX_VALUE INT_MAX
+#define LONG_MIN_VALUE LONG_MIN
+#define LONG_MAX_VALUE LONG_MAX
 
 #else
 #error ILP32 or LLP64 or LP64 must be defined!
@@ -403,6 +418,7 @@ template<typename T> struct calc {
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <limits.h>
 #ifdef ANSI
 #include <stdarg.h>
 #include <time.h>

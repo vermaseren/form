@@ -980,14 +980,14 @@ int simp2token(SBYTE *s)
 						}
 						else {
 							if ( *v == TNUMBER || *v == TNUMBER1 ) {
-							  if ( BITSINWORD == 16 ) { LONG x; WORD base;
+							  if ( BITSINWORD == 16 ) { ULONG x; WORD base;
 								base = ( *v == TNUMBER ) ? 100: 128;
 								vv = v+1; x = 0; while ( *vv >= 0 ) { x = x*base + *vv++; }
 								if ( ( vv != t ) || ( ( vv - v ) > 4 ) || ( x > (MAXPOSITIVE+1) ) )
 									*fill++ = *s++;
 								else { *t = TEMPTY; s++; break; }
 							  }
-							  else if ( BITSINWORD == 32 ) { LONG x; WORD base;
+							  else if ( BITSINWORD == 32 ) { ULONG x; WORD base;
 								base = ( *v == TNUMBER ) ? 100: 128;
 								vv = v+1; x = 0; while ( *vv >= 0 ) { x = x*base + *vv++; }
 								if ( ( vv != t ) || ( ( vv - v ) > 6 ) || ( x > (MAXPOSITIVE+1) ) )
@@ -1039,14 +1039,14 @@ tcommon:				v++; while ( *v >= 0 ) v++;
 						break;
 					case TNUMBER:
 					case TNUMBER1:
-						if ( BITSINWORD == 16 ) { LONG x; WORD base;
+						if ( BITSINWORD == 16 ) { ULONG x; WORD base;
 							base = ( *v == TNUMBER ) ? 100: 128;
 							vv = v+1; x = 0; while ( *vv >= 0 ) { x = x*base + *vv++; }
 							if ( ( vv != t ) || ( ( vv - v ) > 4 ) || ( x > MAXPOSITIVE ) )
 								*fill++ = *s++;
 							else { *t = TEMPTY; s++; break; }
 						}
-						else if ( BITSINWORD == 32 ) { LONG x; WORD base;
+						else if ( BITSINWORD == 32 ) { ULONG x; WORD base;
 							base = ( *v == TNUMBER ) ? 100: 128;
 							vv = v+1; x = 0; while ( *vv >= 0 ) { x = x*base + *vv++; }
 							if ( ( vv != t ) || ( ( vv - v ) > 6 ) || ( x > MAXPOSITIVE ) )
