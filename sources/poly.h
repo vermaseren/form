@@ -30,8 +30,12 @@ extern "C" {
 #include "form3.h"
 }
 
+#include <iostream>
 #include <string>
 #include <vector>
+
+// for debugging
+// #define POLY_MOVE_DEBUG
 
 // macros for tform
 #ifndef WITHPTHREADS
@@ -83,6 +87,12 @@ public:
 	poly& operator= (const poly &);
 	WORD& operator[] (int);
 	const WORD& operator[] (int) const;
+
+#if __cplusplus >= 201103L
+	// support move semantics
+	poly (poly &&, WORD=-1, WORD=1) noexcept;
+	poly& operator= (poly &&) noexcept;
+#endif
 
 	// memory management
 	void termscopy (const WORD *, int, int);
@@ -187,6 +197,44 @@ std::ostream& operator<< (std::ostream &, const poly &);
 
 // inline function definitions
 
+#if __cplusplus >= 201103L
+
+inline poly::poly (poly &&a, WORD modp, WORD modn) noexcept {
+#ifdef POLY_MOVE_DEBUG
+	std::cout << "poly move ctor" << std::endl;
+#endif
+	POLY_GETIDENTITY(a);
+	POLY_STOREIDENTITY;
+	terms = a.terms;
+	size_of_terms = a.size_of_terms;
+	this->modp = a.modp;
+	this->modn = a.modn;
+	if (modp != -1) {
+		setmod(modp,modn);
+	}
+	a.terms = nullptr;
+	a.size_of_terms = -1;
+}
+
+inline poly& poly::operator= (poly &&a) noexcept {
+#ifdef POLY_MOVE_DEBUG
+	std::cout << "poly move assign" << std::endl;
+#endif
+	if (this != &a) {
+		WORD *old_terms = terms;
+		LONG old_size_of_terms = size_of_terms;
+		terms = a.terms;
+		size_of_terms = a.size_of_terms;
+		modp = a.modp;
+		modn = a.modn;
+		a.terms = old_terms;
+		a.size_of_terms = old_size_of_terms;
+	}
+	return *this;
+}
+
+#endif
+
 /*   Checks whether the terms array is large enough to add another
  *   term (of size AM.MaxTal) to the polynomials. In case not, it is
  *   expanded.
@@ -210,5 +258,8 @@ inline const WORD& poly::operator[] (int i) const {
  *   current polynomial at index "dest"
  */
 inline void poly::termscopy (const WORD *source, int dest, int num) {
+#ifdef POLY_MOVE_DEBUG
+	std::cout << "poly termscopy: num=" << num << std::endl;
+#endif
 	memcpy (terms+dest, source, num*sizeof(WORD));
 }
