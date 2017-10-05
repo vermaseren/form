@@ -110,6 +110,9 @@ poly::poly (PHEAD const UWORD *a, WORD na, WORD modp, WORD modn):
 poly::poly (const poly &a, WORD modp, WORD modn):
 	size_of_terms(AM.MaxTer/(LONG)sizeof(WORD))	
 {
+#ifdef POLY_MOVE_DEBUG
+	std::cout << "poly copy ctor" << std::endl;
+#endif
 	POLY_GETIDENTITY(a);
 	POLY_STOREIDENTITY;
 	
@@ -1933,7 +1936,9 @@ void poly::mod (const poly &a, const poly &b, poly &c) {
 
 // copy operator
 poly & poly::operator= (const poly &a) {
-
+#ifdef POLY_MOVE_DEBUG
+	std::cout << "poly copy assign" << std::endl;
+#endif
 	if (&a != this) {
 		modp = a.modp;
 		modn = a.modn;
