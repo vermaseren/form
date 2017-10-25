@@ -1479,11 +1479,12 @@ struct M_const {
     WORD    zerorhs;
     WORD    onerhs;
     WORD    havesortdir;
+    WORD    vectorzero;            /* p0_ */
     WORD    BracketFactors[8];
 #ifdef WITHPTHREADS
-	PADPOSITION(17,25,61,81,sizeof(pthread_rwlock_t)+sizeof(pthread_mutex_t)*2);
+	PADPOSITION(17,25,61,82,sizeof(pthread_rwlock_t)+sizeof(pthread_mutex_t)*2);
 #else
-	PADPOSITION(17,23,61,81,0);
+	PADPOSITION(17,23,61,82,0);
 #endif
 };
 /*
@@ -1984,6 +1985,8 @@ struct T_const {
     WORD    **ListPoly;
     WORD    *ListSymbols;
     UWORD   *NumMem;
+    WORD    *TopologiesTerm;
+    WORD    *TopologiesStart;
     PARTI   partitions;
     LONG    sBer;                  /* (T) Size of the bernoullis buffer */
     LONG    pWorkPointer;          /* (R) Offset-pointer in pWorkSpace */
@@ -2046,14 +2049,18 @@ struct T_const {
 	WORD    inprimelist;
 	WORD    sizeprimelist;
     WORD    fromindex;             /* Tells the compare routine whether call from index */
+    WORD    setinterntopo;         /* Set of internal momenta for topogen */
+    WORD    setexterntopo;         /* Set of external momenta for topogen */
+    WORD    TopologiesLevel;
+    WORD    TopologiesOptions[2];
 #ifdef WITHPTHREADS
 #ifdef WITHSORTBOTS
-	PADPOINTER(5,27,100+SUBEXPSIZE*4+FUNHEAD*2+ARGHEAD*2,0);
+	PADPOINTER(5,27,105+SUBEXPSIZE*4+FUNHEAD*2+ARGHEAD*2,0);
 #else
-	PADPOINTER(5,25,100+SUBEXPSIZE*4+FUNHEAD*2+ARGHEAD*2,0);
+	PADPOINTER(5,25,105+SUBEXPSIZE*4+FUNHEAD*2+ARGHEAD*2,0);
 #endif
 #else
-	PADPOINTER(5,23,100+SUBEXPSIZE*4+FUNHEAD*2+ARGHEAD*2,0);
+	PADPOINTER(5,23,105+SUBEXPSIZE*4+FUNHEAD*2+ARGHEAD*2,0);
 #endif
 };
 /*

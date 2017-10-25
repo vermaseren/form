@@ -1478,6 +1478,9 @@ VOID WriteArgument(WORD *t)
 	else if ( *t == -EXPRESSION ) {
 		StrCopy(EXPRNAME(t[1]),Out);
 	}
+	else if ( *t == -SETSET ) {
+		StrCopy(VARNAME(Sets,t[1]),Out);
+	}
 	else if ( *t <= -FUNCTION ) {
 		StrCopy(FindFunction(-*t),Out);
 /*		StrCopy(VARNAME(functions,-*t-FUNCTION),Out); */

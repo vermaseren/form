@@ -462,6 +462,7 @@ NextSymbol:;
 			case VECTOR :
 				t += 2;
 				do {
+					if ( t[0] == AM.vectorzero ) goto NormZero;
 					if ( t[1] == FUNNYVEC ) {
 						pind[nind++] = *t;
 						t += 2;
@@ -469,7 +470,8 @@ NextSymbol:;
 					else if ( t[1] < 0 ) {
 						if ( *t == NOINDEX && t[1] == NOINDEX ) t += 2;
 						else {
-						*ppdot++ = *t++; *ppdot++ = *t++; *ppdot++ = 1; ndot++; 
+							if ( t[1] == AM.vectorzero ) goto NormZero;
+							*ppdot++ = *t++; *ppdot++ = *t++; *ppdot++ = 1; ndot++; 
 						}
 					}
 					else { *ppvec++ = *t++; *ppvec++ = *t++; nvec += 2; }
@@ -484,6 +486,10 @@ NextSymbol:;
 						ppdot[-1] += t[2];
 						t += 3;
 						if ( ppdot[-1] == 0 ) { ppdot -= 3; ndot--; }
+					}
+					else if ( t[0] == AM.vectorzero || t[1] == AM.vectorzero ) {
+						if ( t[2] > 0 ) goto NormZero;
+						goto NormInf;
 					}
 					else {
 						*ppdot++ = *t++; *ppdot++ = *t++;
@@ -714,7 +720,7 @@ IllDollarExp:
 								k = -t[1]-NMIN4SHIFT;
 								k = ExtraSymbol(k,1,nsym,ppsym,&ncoef);
 								nsym += k;
-								ppsym += (k << 1);
+								ppsym += (k * 2);
 							}
 							else if ( t[1] == 0 ) goto NormZero;
 							else {
@@ -1742,7 +1748,7 @@ gcdcalc:					if ( GcdLong(BHEAD (UWORD *)num1,size1,(UWORD *)num2,size2
 							for ( iii = 2; iii < t1[1]; iii += 2 ) {
 								change = ExtraSymbol(t1[iii],t1[iii+1],nsym,ppsym,&ncoef);
 								nsym += change;
-								ppsym += change << 1;
+								ppsym += change * 2;
 							}
 						}
 						t1 = gcd + *gcd;
@@ -2046,7 +2052,7 @@ ScanCont:		while ( t < r ) {
 			case INDEX :
 				t += 2;
 				do {
-					if ( *t == 0 ) goto NormZero;
+					if ( *t == 0 || *t == AM.vectorzero ) goto NormZero;
 					if ( *t > 0 && *t < AM.OffsetIndex ) {
 						lnum[0] = *t++;
 						nnum = 1;
@@ -2455,6 +2461,7 @@ doflags:
 					if ( *t >= GAMMA && *t <= GAMMASEVEN ) t++;
 					t += FUNHEAD;
 					while ( t < r ) {
+						if ( *t == AM.vectorzero ) goto NormZero;
 						if ( *t >= AM.OffsetIndex && ( *t >= AM.DumInd
 						|| ( *t < AM.WilInd && indices[*t-AM.OffsetIndex].dimension ) ) ) {
 							pcon[ncon++] = t;
@@ -2571,7 +2578,7 @@ TryAgain:;
 				t += FUNHEAD+1;
 				change = ExtraSymbol(*t,-1,nsym,ppsym,&ncoef);
 				nsym += change;
-				ppsym += change << 1;
+				ppsym += change * 2;
 				goto DropDen;
 			}
 			else if ( t[FUNHEAD] == -SNUMBER ) {
@@ -2621,7 +2628,7 @@ TryAgain:;
 								WORD change;
 								change = ExtraSymbol(*t,-t[1],nsym,ppsym,&ncoef);
 								nsym += change;
-								ppsym += change << 1;
+								ppsym += change * 2;
 								t += 2;
 							}
 						}
@@ -2694,7 +2701,7 @@ WithFix:				shortnum = k;
 						WORD change;
 						change = ExtraSymbol((WORD)(-k),(WORD)1,nsym,ppsym,&ncoef);
 						nsym += change;
-						ppsym += change << 1;
+						ppsym += change * 2;
 	   				}
 					t[1] = pdel[ndel-1];
 					t[0] = pdel[ndel-2];
@@ -5102,9 +5109,6 @@ int TestFunFlag(PHEAD WORD *tfun)
   	#] TestFunFlag : 
   	#[ BracketNormalize :
 */
-
-#define EXCHN(t1,t2,n) { WORD a,i; for(i=0;i<n;i++){x=t1[i];t1[i]=t2[i];t2[i]=a;}
-#define EXCH(x,y) { WORD a = (x); (x) = (y); (y) = a; }
 
 WORD BracketNormalize(PHEAD WORD *term)
 {

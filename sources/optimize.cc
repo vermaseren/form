@@ -38,13 +38,6 @@
 //#define DEBUG_MCTS
 //#define DEBUG_GREEDY
 
-#ifdef HAVE_CONFIG_H
-#ifndef CONFIG_H_INCLUDED
-#define CONFIG_H_INCLUDED
-#include <config.h>
-#endif
-#endif
-
 #include <vector>
 #include <stack>
 #include <algorithm>
@@ -55,6 +48,13 @@
 #include <string>
 #include <algorithm>
 #include <iostream>
+
+#ifdef HAVE_CONFIG_H
+#ifndef CONFIG_H_INCLUDED
+#define CONFIG_H_INCLUDED
+#include <config.h>
+#endif
+#endif
 
 #ifdef HAVE_UNORDERED_MAP
 	#include <unordered_map>

@@ -41,11 +41,14 @@
 #define MiN(x,y) ((x) < (y) ? (x): (y))
 #define ABS(x) ( (x) < 0 ? -(x): (x) )
 #define SGN(x) ( (x) > 0 ? 1 : (x) < 0 ? -1 : 0 )
-#define REDLENG(x) ((((x)<0)?((x)+1):((x)-1))>>1)
-#define INCLENG(x) (((x)<0)?(((x)<<1)-1):(((x)<<1)+1))
+#define REDLENG(x) ((((x)<0)?((x)+1):((x)-1))/2)
+#define INCLENG(x) (((x)<0)?(((x)*2)-1):(((x)*2)+1))
 #define GETCOEF(x,y) x += *x;y = x[-1];x -= ABS(y);y=REDLENG(y)
 #define GETSTOP(x,y) y=x+(*x)-1;y -= ABS(*y)-1
 #define StuffAdd(x,y)  (((x)<0?-1:1)*(y)+((y)<0?-1:1)*(x))
+ 
+#define EXCHN(t1,t2,n) { WORD a,i; for(i=0;i<n;i++){a=t1[i];t1[i]=t2[i];t2[i]=a;} }
+#define EXCH(x,y) { WORD a = (x); (x) = (y); (y) = a; }
  
 #define TOKENTOLINE(x,y) if ( AC.OutputSpaces == NOSPACEFORMAT ) { \
 		TokenToLine((UBYTE *)(y)); } else { TokenToLine((UBYTE *)(x)); }
@@ -482,6 +485,13 @@ extern WORD   DoDelta(WORD *);
 extern WORD   DoDelta3(PHEAD WORD *,WORD);
 extern WORD   TestPartitions(WORD *, PARTI *);
 extern WORD   DoPartitions(PHEAD WORD *,WORD);
+extern int    CoCanonicalize(UBYTE *);
+extern int    DoCanonicalize(PHEAD WORD *, WORD *);
+extern WORD   GenTopologies(PHEAD WORD *,WORD);
+extern WORD   GenDiagrams(PHEAD WORD *,WORD);
+extern int    DoTopologyCanonicalize(PHEAD WORD *,WORD,WORD,WORD *);
+extern int    DoShattering(PHEAD WORD *,WORD *,WORD *,WORD);
+extern WORD   GenerateTopologies(PHEAD WORD,WORD,WORD,WORD);
 extern WORD   DoTableExpansion(WORD *,WORD);
 extern WORD   DoDistrib(PHEAD WORD *,WORD);
 extern WORD   DoShuffle(PHEAD WORD *,WORD,WORD,WORD);
@@ -715,6 +725,8 @@ extern VOID   Terminate(int);
 extern NAMENODE *GetNode(NAMETREE *,UBYTE *);
 extern int    AddName(NAMETREE *,UBYTE *,WORD,WORD,int *);
 extern int    GetName(NAMETREE *,UBYTE *,WORD *,int);
+extern UBYTE  *GetFunction(UBYTE *,WORD *);
+extern UBYTE  *GetNumber(UBYTE *,WORD *);
 extern int    GetLastExprName(UBYTE *,WORD *);
 extern int    GetAutoName(UBYTE *,WORD *);
 extern int    GetVar(UBYTE *,WORD *,WORD *,int,int);
@@ -787,6 +799,7 @@ extern int    StrCmp(UBYTE *,UBYTE *);
 extern int    StrICmp(UBYTE *,UBYTE *);
 extern int    StrHICmp(UBYTE *,UBYTE *);
 extern int    StrICont(UBYTE *,UBYTE *);
+extern int    CmpArray(WORD *,WORD *,WORD);
 extern int    ConWord(UBYTE *,UBYTE *);
 extern int    StrLen(UBYTE *);
 extern UBYTE *GetPreVar(UBYTE *,int);
@@ -1151,6 +1164,7 @@ extern int    AssignDollar(PHEAD WORD *,WORD);
 extern UBYTE *WriteDollarToBuffer(WORD,WORD);
 extern UBYTE *WriteDollarFactorToBuffer(WORD,WORD,WORD);
 extern void   AddToDollarBuffer(UBYTE *);
+extern int    PutTermInDollar(WORD *,WORD);
 extern void   TermAssign(WORD *);
 extern void   WildDollars(PHEAD WORD *);
 extern LONG   numcommute(WORD *,LONG *);

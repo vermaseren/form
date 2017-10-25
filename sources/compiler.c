@@ -111,6 +111,7 @@ static KEYWORD com2commands[] = {
 	,{"assign",         (TFUN)CoAssign,           STATEMENT,    PARTEST}
 	,{"auto",           (TFUN)CoAuto,             DECLARATION,  PARTEST}
 	,{"autodeclare",    (TFUN)CoAuto,             DECLARATION,  PARTEST}
+	,{"canonicalize",   (TFUN)CoCanonicalize,     STATEMENT,    PARTEST}
 	,{"chainin",        (TFUN)CoChainin,          STATEMENT,    PARTEST}
 	,{"chainout",       (TFUN)CoChainout,         STATEMENT,    PARTEST}
 	,{"chisholm",       (TFUN)CoChisholm,         STATEMENT,    PARTEST}
@@ -1338,6 +1339,10 @@ dofunction:			firstsumarg = 1;
 								*t++ = -SYMBOL; *t++ = x2; break;
 							case TFUNCTION:
 								*t++ = -x2-FUNCTION;
+								break;
+							case TSET:
+								*t++ = -SETSET;
+								*t++ = x2;
 								break;
 							case TWILDARG:
 								*t++ = -ARGWILD; *t++ = x2; break;

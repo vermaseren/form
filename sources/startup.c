@@ -1041,6 +1041,7 @@ VOID StartVariables()
 
 	AddIndex((UBYTE *)"iarg_",4,0);
 	AddVector((UBYTE *)"parg_",VARTYPENONE,0);
+	AM.vectorzero = AddVector((UBYTE *)"p0_",0,0)+AM.OffsetVector;
 
 	AM.NumFixedFunctions = sizeof(fixedfunctions)/sizeof(struct fixedfun);
 	for ( i = 0; i < AM.NumFixedFunctions; i++ ) {

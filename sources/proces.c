@@ -1177,6 +1177,31 @@ Important: we may not have enough spots here
 					}
 				}
 			}
+			else if ( *t == TOPOLOGIES ) {
+/*
+				Syntax:
+				topologies_(nloops,nlegs,setvertexsizes,setext,setint[,options])
+*/
+				t1 = t+FUNHEAD; t2 = t+t[1];
+				if ( *t1 == -SNUMBER && t1[1] >= 0 &&
+					t1[2] == -SNUMBER && t1[3] >= 0 &&
+					t1[4] == -SETSET && Sets[t1[5]].type == CNUMBER &&
+					t1[6] == -SETSET && Sets[t1[7]].type == CVECTOR &&
+					t1[8] == -SETSET && Sets[t1[9]].type == CVECTOR &&
+					t1+10 <= t2 ) {
+					if ( t1+10 == t2 || ( t1+12 <= t2 && ( t1[10] == -SNUMBER ||
+						( t1[10] == -SETSET &&
+							Sets[t1[5]].last-Sets[t1[5]].first ==
+							Sets[t1[11]].last-Sets[t1[11]].first ) ) ) ) {
+						AN.TeInFun = -15;
+						AN.TeSuOut = 0;
+						AR.TePos = -1;
+						return(1);
+					}
+				}
+			}
+			else if ( *t == DIAGRAMS ) {
+			}
 			if ( functions[funnum-FUNCTION].spec == 0
 				|| ( t[2] & (DIRTYFLAG|MUSTCLEANPRF) ) != 0 ) { funflag = 1; }
 			if ( *t <= MAXBUILTINFUNCTION ) {
@@ -2580,7 +2605,7 @@ ComAct:		if ( t < u ) do { *m++ = *t++; } while ( t < u );
 				if ( MulRat(BHEAD (UWORD *)u,REDLENG(l1),(UWORD *)r,REDLENG(l2),
 				(UWORD *)m,&l1) ) goto InsCall;
 				l2 = l1;
-				l2 <<= 1;
+				l2 *= 2;
 				if ( l2 < 0 ) {
 					m -= l2;
 					*m++ = l2-1;
@@ -2804,7 +2829,7 @@ WORD *PasteTerm(PHEAD WORD number, WORD *accum, WORD *position, WORD times, WORD
 			return(0);
 		}
 		x = l1;
-		x <<= 1;
+		x *= 2;
 		if ( x < 0 ) { accum -= x; *accum++ = x - 1; }
 		else		 { accum += x; *accum++ = x + 1; }
 		*u = WORDDIF(accum,u);
@@ -2976,7 +3001,7 @@ Nextr:;
 			}
 
 			i = ABS(l2);
-			i <<= 1;
+			i *= 2;
 			i++;
 			l2 = ( l2 >= 0 ) ? i: -i;
 			r = coef;
@@ -3675,6 +3700,12 @@ CommonEnd:
 				  case TYPETOSPECTATOR:
 					if ( PutInSpectator(term,C->lhs[level][2]) < 0 ) goto GenCall;
 					goto Return0;
+				  case TYPECANONICALIZE:
+					AT.WorkPointer = term + *term;
+					if ( DoCanonicalize(BHEAD term,C->lhs[level]) ) goto GenCall;
+					AT.WorkPointer = term + *term;
+					if ( *term == 0 ) goto Return0;
+					break;
 				}
 				goto SkipCount;
 /*
@@ -3749,6 +3780,12 @@ AutoGen:	i = *AT.TMout;
 					break;
 				case -14:
 					if ( DIVfunction(BHEAD term,level,3) < 0 ) goto GenCall;
+					break;
+				case -15:
+					if ( GenTopologies(BHEAD term,level) < 0 ) goto GenCall;
+					break;
+				case -16:
+					if ( GenDiagrams(BHEAD term,level) < 0 ) goto GenCall;
 					break;
 			}
 		}
@@ -4897,7 +4934,7 @@ WORD PrepPoly(PHEAD WORD *term,WORD par)
 				while ( t < vv ) *m++ = *t++;
 				if ( MulRat(BHEAD (UWORD *)vv,ncoef,(UWORD *)tstop,jcoef,
 					(UWORD *)m,&ncoef) ) Terminate(-1);
-				ncoef <<= 1;
+				ncoef *= 2;
 				m += ABS(ncoef);
 				if ( ncoef < 0 ) ncoef--;
 				else ncoef++;

@@ -328,6 +328,102 @@ NotFound:;
 
 /*
   	#] GetName : 
+  	#[ GetFunction :
+
+	Gets either a function or a $ that should expand into a function
+	during runtime. In the case of the $ the value in funnum is -dolnum-1.
+	The return value is the position after the name of the function or the $.
+*/
+ 
+static WORD one = 1;
+
+UBYTE *GetFunction(UBYTE *s,WORD *funnum)
+{
+	int type;
+	WORD numfun;
+	UBYTE *t1, c;
+	if ( *s == '$' ) {
+		t1 = s+1; while ( FG.cTable[*t1] < 2 ) t1++;
+		c = *t1; *t1 = 0;
+		if ( ( type = GetName(AC.dollarnames,s+1,&numfun,NOAUTO) ) == CDOLLAR ) {
+			*funnum = -numfun-2;
+		}
+		else {
+			MesPrint("&%s is undefined",s);
+			numfun = AddDollar(s+1,DOLINDEX,&one,1);
+			*funnum = 0;
+		}
+	}
+	else {
+		t1 = SkipAName(s);
+		c = *t1; *t1 = 0;
+		if ( ( ( type = GetName(AC.varnames,s,&numfun,WITHAUTO) ) != CFUNCTION )
+			|| ( functions[numfun].spec != 0 ) ) {
+			MesPrint("&%s should be a regular function",s);
+			*funnum = 0;
+			if ( type < 0 ) {
+				if ( GetName(AC.exprnames,s,&numfun,NOAUTO) == NAMENOTFOUND )
+				AddFunction(s,0,0,0,0,0,-1,-1);
+			}
+			*t1 = c;
+			return(t1);
+		}
+		*funnum = numfun+FUNCTION;
+	}
+	*t1 = c;
+	return(t1);
+}
+
+/*
+  	#] GetFunction : 
+  	#[ GetNumber :
+
+	Gets either a number or a $ that should expand into a number
+	during runtime. In the case of the $ the value in num is -dolnum-2.
+	The return value is the position after the number or the $.
+*/
+
+UBYTE *GetNumber(UBYTE *s,WORD *num)
+{
+	int type;
+	WORD numfun;
+	UBYTE *t1, c;
+	while ( *s == '+' ) s++;
+	if ( *s == '$' ) {
+		t1 = s+1; while ( FG.cTable[*t1] < 2 ) t1++;
+		c = *t1; *t1 = 0;
+		if ( ( type = GetName(AC.dollarnames,s+1,&numfun,NOAUTO) ) == CDOLLAR ) {
+			*num = -numfun-2;
+		}
+		else {
+			MesPrint("&%s is undefined",s);
+			numfun = AddDollar(s+1,DOLINDEX,&one,1);
+			*num = -1;
+		}
+	}
+	else if ( *s >= '0' && *s <= '9' ) {
+		ULONG x = *s++ - '0';
+		while ( *s >= '0' && *s <= '9' ) { x = 10*x + (*s++-'0'); }
+		t1 = s;
+		if ( x >= MAXPOSITIVE ) goto illegal;
+		*num = (WORD)x;
+		return(t1);
+	}
+	else {
+		if ( *s == '-' ) { s++; }
+		if ( *s >= '0' && *s <= '9' ) { while ( *s >= '0' && *s <= '9' ) s++; t1 = s; }
+		else { t1 = SkipAName(s); }
+illegal:
+		*num = -1;
+		MesPrint("&Illegal option in Canonicalize statement. Should be a nonnegative number or $ variable.");
+		return(t1);
+	}
+	*t1 = c;
+	return(t1);
+}
+
+/*
+  	#] GetNumber : 
   	#[ GetLastExprName :
 
 	When AutoDeclare is an active statement.

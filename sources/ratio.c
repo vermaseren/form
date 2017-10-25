@@ -489,7 +489,7 @@ WORD Glue(PHEAD WORD *term1, WORD *term2, WORD *sub, WORD insert)
 		TermFree(coef,"Glue");
 		SETERROR(-1)
 	}
-	i = (ABS(nc3))<<1;
+	i = (ABS(nc3))*2;
 	t += i++;
 	*t++ = (nc3 >= 0)?i:-i;
 	*term1 = WORDDIF(t,term1);

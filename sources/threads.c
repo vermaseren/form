@@ -3660,7 +3660,7 @@ int MasterMerge()
 */
 	for ( i = 1; i < lpat; i++ ) { S->tree[i] = -1; }
 	for ( i = 1; i <= k; i++ ) {
-		im = ( i << 1 ) - 1;
+		im = ( i * 2 ) - 1;
 		poin[im] = AB[i]->T.SB.MasterStart[AB[i]->T.SB.MasterBlock];
 		poin2[im] = poin[im] + *(poin[im]);
 		S->used[i] = im;
@@ -3668,7 +3668,7 @@ int MasterMerge()
 		S->tree[mpat+i] = 0;
 		poin[im-1] = poin2[im-1] = 0;
 	}
-	for ( i = (k<<1)+1; i <= lpat; i++ ) {
+	for ( i = (k*2)+1; i <= lpat; i++ ) {
 		S->used[i-k] = i;
 		S->ktoi[i] = i-k-1;
 		poin[i] = AB[i-k]->T.SB.MasterStart[AB[i-k]->T.SB.MasterBlock];
@@ -3809,11 +3809,11 @@ OneTerm:
 							for ( ii = 1; ii < r3; ii++ ) coef[r3+ii] = 0;
 						}
 					}
-					r3 <<= 1;
+					r3 *= 2;
 					r33 = ( r3 > 0 ) ? ( r3 + 1 ) : ( r3 - 1 );
 					if ( r3 < 0 ) r3 = -r3;
 					if ( r1 < 0 ) r1 = -r1;
-					r1 <<= 1;
+					r1 *= 2;
 					r31 = r3 - r1;
 					if ( !r3 ) {		/* Terms cancel */
 cancelled:
@@ -4363,11 +4363,11 @@ next2:		im = *term2;
 					}
 				}
 				if ( !r3 ) { goto cancelled; }
-				r3 <<= 1;
+				r3 *= 2;
 				r33 = ( r3 > 0 ) ? ( r3 + 1 ) : ( r3 - 1 );
 				if ( r3 < 0 ) r3 = -r3;
 				if ( r1 < 0 ) r1 = -r1;
-				r1 <<= 1;
+				r1 *= 2;
 				r31 = r3 - r1;
 				if ( !r31 ) {		/* copy coef into term1 */
 					m2 = (WORD *)coef; im = r3;

@@ -458,8 +458,12 @@ typedef int (*TFUN1)();
 #define PERMUTATIONS 103
 #define PARTITIONS 104
 #define MULFUNCTION 105
+#define TOPOLOGIES 106
+#define DIAGRAMS 107
+#define VERTEX 108
+#define EDGE 109
 
-#define MAXBUILTINFUNCTION 105
+#define MAXBUILTINFUNCTION 109
 #define FIRSTUSERFUNCTION 150
 
 /*
@@ -566,6 +570,7 @@ typedef int (*TFUN1)();
 #define TYPEPUTINSIDE 77
 #define TYPETOSPECTATOR 78
 #define TYPEARGTOEXTRASYMBOL 79
+#define TYPECANONICALIZE 80
 /*
 	The codes for the 'operations' that are part of TYPEOPERATION.
 */

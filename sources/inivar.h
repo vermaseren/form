@@ -231,6 +231,10 @@ static struct fixedfun {
 	,{"perm_"       ,1 ,0             ,0               ,0} /* PERMUTATIONS */
 	,{"partitions_" ,1 ,0             ,0               ,0} /* PARTITIONS */
 	,{"mul_"        ,0 ,0             ,0               ,0} /* MULFUNCTION */
+	,{"topologies_" ,0 ,0             ,0               ,0} /* TOPOLOGIES */
+	,{"diagrams_"   ,0 ,0             ,0               ,0} /* DIAGRAMS */
+	,{"vertex_"     ,0 ,0             ,0               ,0} /* VERTEX */
+	,{"edge_"       ,0 ,0             ,0               ,0} /* EDGE */
 };
 
 FIXEDSET fixedsets[] = {

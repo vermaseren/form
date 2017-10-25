@@ -1661,6 +1661,20 @@ int StrICont(UBYTE *s1, UBYTE *s2)
 
 /*
  		#] StrICont : 
+ 		#[ CmpArray :
+*/
+
+int CmpArray(WORD *t1, WORD *t2, WORD n)
+{
+	int i,x;
+	for ( i = 0; i < n; i++ ) {
+		if ( ( x = (int)(t1[i]-t2[i]) ) != 0 ) return(x);
+	}
+	return(0);
+}
+
+/*
+ 		#] CmpArray : 
  		#[ ConWord :
 */
 
@@ -2101,7 +2115,7 @@ one_byte set_sub(set_of_char set, set_of_char set1, set_of_char set2)
 }/*set_sub*/
 /*
  		#] set_sub : 
-  	#] Strings : 
+  	#] Strings :
   	#[ Mixed :
  		#[ iniTools :
 */

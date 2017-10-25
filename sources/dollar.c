@@ -855,6 +855,30 @@ void TermAssign(WORD *term)
 
 /*
   	#] TermAssign : 
+  	#[ PutTermInDollar :
+
+	We assume here that the dollar is local.
+*/
+
+int PutTermInDollar(WORD *term, WORD numdollar)
+{
+	DOLLARS d = Dollars+numdollar;
+	WORD i;
+	if ( d->size < *term || d->size > 2*term[0] || d->where == 0 ) {
+		if ( d->size > 0 && d->where ) {
+			M_free(d->where,"dollar contents");
+		}
+		d->where = Malloc1((term[0]+1)*sizeof(WORD),"dollar contents");
+		d->size = term[0]+1;
+	}
+	d->type = DOLTERMS;
+	for ( i = 0; i < term[0]; i++ ) d->where[i] = term[i];
+	d->where[i] = 0;
+	return(0);
+}
+
+/*
+  	#] PutTermInDollar : 
   	#[ WildDollars :
 
 	Note that we cannot upload wildcards into dollar variables when WITHPTHREADS.
