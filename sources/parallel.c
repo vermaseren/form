@@ -810,7 +810,7 @@ cancelled:
 /*
 					keep the left term and get the loser of right subtree
 */
-				newnlen <<= 1;
+				newnlen *= 2;
 				newclen = ( newnlen > 0 ) ? ( newnlen + 1 ) : ( newnlen - 1 );
 				if ( newnlen < 0 ) newnlen = -newnlen;
 				PF_newclen[n->lloser] = newclen;

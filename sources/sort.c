@@ -1968,11 +1968,11 @@ WORD AddCoef(PHEAD WORD **ps1, WORD **ps2)
 		}
 	}
 	if ( !OutLen ) { *ps1 = *ps2 = 0; return(0); }
-	OutLen <<= 1;
+	OutLen *= 2;
 	if ( OutLen < 0 ) i = - ( --OutLen );
 	else			  i = ++OutLen;
 	if ( l1 < 0 ) l1 = -l1;
-	l1 <<= 1; l1++;
+	l1 *= 2; l1++;
 	if ( i <= l1 ) {	/* Fits in 1 */
 		l1 -= i;
 		**ps1 -= l1;
@@ -1983,7 +1983,7 @@ WORD AddCoef(PHEAD WORD **ps1, WORD **ps2)
 		goto RegEnd;
 	}
 	if ( l2 < 0 ) l2 = -l2;
-	l2 <<= 1; l2++;
+	l2 *= 2; l2++;
 	if ( i <= l2 ) {	/* Fits in 2 */
 		l2 -= i;
 		**ps2 -= l2;
@@ -3812,7 +3812,7 @@ ConMer:
 		/* More than one patch. Construct the tree. */
 
 		lpat = 1;
-		do { lpat <<= 1; } while ( lpat < S->lPatch );
+		do { lpat *= 2; } while ( lpat < S->lPatch );
 		mpat = ( lpat >> 1 ) - 1;
 		k = lpat - S->lPatch;
 
@@ -3823,7 +3823,7 @@ ConMer:
 			S->tree[i] = -1;
 		}
 		for ( i = 1; i <= k; i++ ) {
-			im = ( i << 1 ) - 1;
+			im = ( i * 2 ) - 1;
 			poin[im] = S->Patches[i-1];
 			poin2[im] = poin[im] + *(poin[im]);
 			S->used[i] = im;
@@ -3831,7 +3831,7 @@ ConMer:
 			S->tree[mpat+i] = 0;
 			poin[im-1] = poin2[im-1] = 0;
 		}
-		for ( i = (k<<1)+1; i <= lpat; i++ ) {
+		for ( i = (k*2)+1; i <= lpat; i++ ) {
 			S->used[i-k] = i;
 			S->ktoi[i] = i-k-1;
 			poin[i] = S->Patches[i-k-1];
@@ -3968,11 +3968,11 @@ OneTerm:
 							for ( ii = 1; ii < r3; ii++ ) coef[r3+ii] = 0;
 						}
 					  }
-					  r3 <<= 1;
+					  r3 *= 2;
 					  r33 = ( r3 > 0 ) ? ( r3 + 1 ) : ( r3 - 1 );
 					  if ( r3 < 0 ) r3 = -r3;
 					  if ( r1 < 0 ) r1 = -r1;
-					  r1 <<= 1;
+					  r1 *= 2;
 					  r31 = r3 - r1;
 					  if ( !r3 ) {		/* Terms cancel */
 cancelled:

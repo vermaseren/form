@@ -528,7 +528,7 @@ ScaledVariety:;
 					r4 = AddRHS(AT.ebufnum,1);
 					while ( (r4+j+12) > CC->Top ) r4 = DoubleCbuffer(AT.ebufnum,r4,3);
 					*r4++ = j+1;
-					i = (j-1)>>1;
+					i = (j-1)/2;  /* was (j-1)*2  ????? 17-oct-2017 */
 					for ( k = 0; k < i; k++ ) *r4++ = r3[i+k];
 					for ( k = 0; k < i; k++ ) *r4++ = r3[k];
 					if ( ( type == TYPENORM3 ) || ( type == TYPENORM4 ) ) *r4++ = j*sign;

@@ -4229,7 +4229,7 @@ OnlyNum:
 				}
 			}
 			u[1] = WORDDIF(w,u);
-			u[2] = (u[1] - 3)>>1;
+			u[2] = (u[1] - 3)/2;
 			if ( level ) u[2] = -u[2];
 			gotexp = 1;
 		}

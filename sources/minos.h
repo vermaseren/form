@@ -140,8 +140,8 @@ typedef struct compile {
  */
 #define TODISK 0
 #define FROMDISK 1
-#define MCLEANFLAG -2L
-#define DIRTYFLAG 1
+#define MDIRTYFLAG 1
+#define MCLEANFLAG (~MDIRTYFLAG)
 #define INANDOUT 0
 #define INPUTONLY 1
 #define OUTPUTONLY 2

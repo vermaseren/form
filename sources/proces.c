@@ -2580,7 +2580,7 @@ ComAct:		if ( t < u ) do { *m++ = *t++; } while ( t < u );
 				if ( MulRat(BHEAD (UWORD *)u,REDLENG(l1),(UWORD *)r,REDLENG(l2),
 				(UWORD *)m,&l1) ) goto InsCall;
 				l2 = l1;
-				l2 <<= 1;
+				l2 *= 2;
 				if ( l2 < 0 ) {
 					m -= l2;
 					*m++ = l2-1;
@@ -2804,7 +2804,7 @@ WORD *PasteTerm(PHEAD WORD number, WORD *accum, WORD *position, WORD times, WORD
 			return(0);
 		}
 		x = l1;
-		x <<= 1;
+		x *= 2;
 		if ( x < 0 ) { accum -= x; *accum++ = x - 1; }
 		else		 { accum += x; *accum++ = x + 1; }
 		*u = WORDDIF(accum,u);
@@ -2976,7 +2976,7 @@ Nextr:;
 			}
 
 			i = ABS(l2);
-			i <<= 1;
+			i *= 2;
 			i++;
 			l2 = ( l2 >= 0 ) ? i: -i;
 			r = coef;
@@ -4897,7 +4897,7 @@ WORD PrepPoly(PHEAD WORD *term,WORD par)
 				while ( t < vv ) *m++ = *t++;
 				if ( MulRat(BHEAD (UWORD *)vv,ncoef,(UWORD *)tstop,jcoef,
 					(UWORD *)m,&ncoef) ) Terminate(-1);
-				ncoef <<= 1;
+				ncoef *= 2;
 				m += ABS(ncoef);
 				if ( ncoef < 0 ) ncoef--;
 				else ncoef++;

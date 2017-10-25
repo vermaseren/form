@@ -714,7 +714,7 @@ IllDollarExp:
 								k = -t[1]-NMIN4SHIFT;
 								k = ExtraSymbol(k,1,nsym,ppsym,&ncoef);
 								nsym += k;
-								ppsym += (k << 1);
+								ppsym += (k * 2);
 							}
 							else if ( t[1] == 0 ) goto NormZero;
 							else {
@@ -1742,7 +1742,7 @@ gcdcalc:					if ( GcdLong(BHEAD (UWORD *)num1,size1,(UWORD *)num2,size2
 							for ( iii = 2; iii < t1[1]; iii += 2 ) {
 								change = ExtraSymbol(t1[iii],t1[iii+1],nsym,ppsym,&ncoef);
 								nsym += change;
-								ppsym += change << 1;
+								ppsym += change * 2;
 							}
 						}
 						t1 = gcd + *gcd;
@@ -2571,7 +2571,7 @@ TryAgain:;
 				t += FUNHEAD+1;
 				change = ExtraSymbol(*t,-1,nsym,ppsym,&ncoef);
 				nsym += change;
-				ppsym += change << 1;
+				ppsym += change * 2;
 				goto DropDen;
 			}
 			else if ( t[FUNHEAD] == -SNUMBER ) {
@@ -2621,7 +2621,7 @@ TryAgain:;
 								WORD change;
 								change = ExtraSymbol(*t,-t[1],nsym,ppsym,&ncoef);
 								nsym += change;
-								ppsym += change << 1;
+								ppsym += change * 2;
 								t += 2;
 							}
 						}
@@ -2694,7 +2694,7 @@ WithFix:				shortnum = k;
 						WORD change;
 						change = ExtraSymbol((WORD)(-k),(WORD)1,nsym,ppsym,&ncoef);
 						nsym += change;
-						ppsym += change << 1;
+						ppsym += change * 2;
 	   				}
 					t[1] = pdel[ndel-1];
 					t[0] = pdel[ndel-2];
@@ -5102,9 +5102,6 @@ int TestFunFlag(PHEAD WORD *tfun)
   	#] TestFunFlag : 
   	#[ BracketNormalize :
 */
-
-#define EXCHN(t1,t2,n) { WORD a,i; for(i=0;i<n;i++){x=t1[i];t1[i]=t2[i];t2[i]=a;}
-#define EXCH(x,y) { WORD a = (x); (x) = (y); (y) = a; }
 
 WORD BracketNormalize(PHEAD WORD *term)
 {

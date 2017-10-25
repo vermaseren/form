@@ -136,7 +136,7 @@ AllLev:
 	mstop = c2;
 	fac = t[1] - FUNHEAD;
 	m = AT.TMout;
-	*m++ = 3 + (min<<1);		/* The full length */
+	*m++ = 3 + (min*2);		/* The full length */
 	*m++ = CONTRACT;
 	if ( number < 0 ) *m++ = 1;
 	else *m++ = 0;
@@ -183,9 +183,9 @@ AllLev:
 		MUNLOCK(ErrorMessageLock);
 		SETERROR(-1)
 	}
-	tstop += (ABS(ncoef))<<1;
+	tstop += (ABS(ncoef))*2;
 	if ( sgn < 0 ) ncoef = -ncoef;
-	ncoef <<= 1;
+	ncoef *= 2;
 	*tstop++ = (ncoef<0)?(ncoef-1):(ncoef+1);
 	*term = WORDDIF(tstop,term);
 	return(1);
@@ -284,7 +284,7 @@ WORD EpfGen(WORD number, WORD *inlist, WORD *kron, WORD *perm, WORD sgn)
 	WORD i, *in2, k, a;
 	if ( !sgn ) {
 		in2 = inlist + number;
-		number <<= 1;
+		number *= 2;
 		for ( i = 1; i < number; i += 2 ) {
 			*perm++ = i;
 			*perm++ = i;
@@ -294,7 +294,7 @@ WORD EpfGen(WORD number, WORD *inlist, WORD *kron, WORD *perm, WORD sgn)
 		if ( number <= 0 ) return(0);
 		else return(1);
 	}
-	number <<= 1;
+	number *= 2;
 	i = number - 1;
 	while ( ( i -= 2 ) >= 0 ) {
 		if ( ( k = perm[i] ) != i ) {
@@ -433,7 +433,7 @@ WORD Trace4no(WORD number, WORD *kron, TRACES *t)
 		t->sgn = 1;
 		{
 			WORD nhalf = number >> 1;
-			WORD ndouble = number << 1;
+			WORD ndouble = number * 2;
 			p = t->eers;
 			t->eers = p;	p += nhalf;
 			t->mepf = p;	p += nhalf;
@@ -727,7 +727,7 @@ WORD Trace4(PHEAD WORD *term, WORD *params, WORD num, WORD level)
 	}
 	t->inlist = AT.WorkPointer;
 	t->accup = t->accu = t->inlist + number;
-	t->perm = t->accu + (number<<1);
+	t->perm = t->accu + (number*2);
 	t->eers = t->perm + number;
 	if ( ( AT.WorkPointer += 19 * number ) >= AT.WorkTop ) {
 		MLOCK(ErrorMessageLock);
