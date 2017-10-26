@@ -90,12 +90,20 @@ if [ "x$TRAVIS_OS_NAME" = xosx ]; then
 fi
 
 case $CI_TARGET in
-  form|tform)
+  form|tform|form-i386|tform-i386)
     # Install Forcer to "./formlib".
     mkdir -p formlib
     wget https://github.com/benruijl/forcer/archive/v1.0.0.tar.gz -O - | tar -x --gzip
     mv forcer-1.0.0/forcer.h formlib
     mv forcer-1.0.0/forcer formlib
     rm -rf forcer-1.0.0
+    ;;
+esac
+
+case $CI_TARGET in
+  form-i386|tform-i386)
+    # Use Docker (travis-ci/travis-ci#5770).
+    docker run -d --name build_test -v "$(pwd):$(pwd)" toopher/centos-i386:centos6 /sbin/init
+    docker exec -i -t build_test /bin/sh -c 'linux32 --32bit i386 sudo yum install -y automake gcc-c++ git gmp-devel ruby zlib-devel'
     ;;
 esac

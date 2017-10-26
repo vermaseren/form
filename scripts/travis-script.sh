@@ -28,6 +28,14 @@ case $CI_TARGET in
     make
     ./check/check.rb ./sources/parform --stat
     ;;
+  form-i386)
+    # Use Docker (travis-ci/travis-ci#5770).
+    docker exec -i -t build_test /bin/sh -c "export CI_TARGET=form && cd $(pwd) && linux32 --32bit i386 ./scripts/travis-script.sh"
+    ;;
+  tform-i386)
+    # Use Docker (travis-ci/travis-ci#5770).
+    docker exec -i -t build_test /bin/sh -c "export CI_TARGET=tform && cd $(pwd) && linux32 --32bit i386 ./scripts/travis-script.sh"
+    ;;
   coverage-vorm)
     autoreconf -iv
     ./configure --disable-dependency-tracking --enable-scalar --disable-threaded --disable-parform --enable-debug --enable-coverage --with-gmp --with-zlib
