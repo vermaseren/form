@@ -39,6 +39,8 @@ extern "C" {
  
 #include "gentopo.h"
 
+#define TKMOD
+
 //using namespace std;
  
 #define MAXPOINTS 120
@@ -49,7 +51,11 @@ typedef struct ToPoTyPe {
 	WORD *vert;
 	WORD *vertmax;
 	WORD nvert;
+#ifdef TKMOD
+	int opt[OPT_Size];
+#else
 	WORD sopi;
+#endif
 } TOPOTYPE;
 
 /*
@@ -83,9 +89,13 @@ int GenerateVertices(TOPOTYPE *TopoInf, int pointsremaining, int level)
 			TopoInf->clext[TopoInf->ncl] = 0;
 			TopoInf->ncl++;
 
+#ifdef TKMOD
+			mgraph = new MGraph(0, TopoInf->ncl, TopoInf->cldeg,
+					     TopoInf->clnum, TopoInf->clext, TopoInf->opt);
+#else
 			mgraph = new MGraph(0, TopoInf->ncl, TopoInf->cldeg,
 					     TopoInf->clnum, TopoInf->clext, TopoInf->sopi);
-
+#endif
 		    mgraph->generate();
 
 			delete mgraph;
@@ -144,10 +154,21 @@ WORD GenerateTopologies(PHEAD WORD nloops, WORD nlegs, WORD setvert, WORD setmax
 //	First the external nodes.
 
 	for ( i = 0; i < nlegs; i++ ) {
+#ifdef TKMOD
+		TopoInf.cldeg[i] = 1; TopoInf.clnum[i] = 1; TopoInf.clext[i] = -1;
+#else
 		TopoInf.cldeg[i] = 1; TopoInf.clnum[i] = 1; TopoInf.clext[i] = 1;
+#endif
 	}
 	TopoInf.ncl = nlegs;
+#ifdef TKMOD
+	TopoInf.opt[OPT_1PI]        = 1;  // For now
+	TopoInf.opt[OPT_NoTadpole]  = 0;
+	TopoInf.opt[OPT_No1PtBlock] = 0;
+	TopoInf.opt[OPT_No2PtL1PI]  = 0;
+#else
 	TopoInf.sopi = 1;  // For now
+#endif
 
 	if ( GenerateVertices(&TopoInf,points,0) != 0 ) {
 		MLOCK(ErrorMessageLock);
@@ -193,7 +214,11 @@ void toForm(EGraph *egraph)
 //	Options are in AT.TopologiesOptions[]
 
 	for ( n = 0; n < egraph->nNodes; n++ ) {
+#ifdef TKMOD
+		if ( ( AT.TopologiesOptions[1] &1 ) == 1 && egraph->isExternal(n) ) continue;
+#else
 		if ( ( AT.TopologiesOptions[1] &1 ) == 1 && egraph->nodes[n].ext ) continue;
+#endif
 		tt = t;
 		*t++ = VERTEX; t++; FILLFUN(t);
 		*t++ = -SNUMBER; *t++ = n;
