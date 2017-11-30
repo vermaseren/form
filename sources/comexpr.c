@@ -816,6 +816,7 @@ IllLeft:MesPrint("&Illegal LHS");
 		return(1);
 	}
 	if ( error == 0 ) {
+		WORD oldpolyfun = AR.PolyFun;
 		if ( NewSort(BHEAD0) || NewSort(BHEAD0) ) {
 			if ( !error ) error = 1;
 			return(error);
@@ -826,13 +827,15 @@ IllLeft:MesPrint("&Illegal LHS");
 		while ( --i >= 0 ) *ww++ = *mm++; AT.WorkPointer = ww;
 		AC.lhdollarflag = 0; oldEside = AR.Eside; AR.Eside = LHSIDE;
 		AR.Cnumlhs = C->numlhs;
+		AR.PolyFun = 0;
 		if ( Generator(BHEAD ow,C->numlhs) ) {
 			AR.Eside = oldEside;
-			LowerSortLevel(); LowerSortLevel(); goto IllLeft;
+			LowerSortLevel(); LowerSortLevel(); AR.PolyFun = oldpolyfun; goto IllLeft;
 		}
 		AR.Eside = oldEside;
 		AT.WorkPointer = w;
-		if ( EndSort(BHEAD w,0) < 0 ) { LowerSortLevel(); goto IllLeft; }
+		if ( EndSort(BHEAD w,0) < 0 ) { LowerSortLevel(); AR.PolyFun = oldpolyfun; goto IllLeft; }
+		AR.PolyFun = oldpolyfun;
 		if ( *w == 0 || *(w+*w) != 0 ) {
 			MesPrint("&LHS must be one term");
 			AC.lhdollarflag = 0;
