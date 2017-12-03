@@ -75,7 +75,9 @@ Currently, the standard test set (run by default) consists of 3 files:
 - `fixes.frm`: Test cases for bug fixes.
 
 Each test case in these files should finish in a short time: the timeout is set
-to 10 seconds.
+to 10 seconds. Bigger tests that take more time are put in subdirectories
+(e.g., forcer) and should be specified by command-line options when the test
+suite is invoked.
 
 ### Structure of a test case
 

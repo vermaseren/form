@@ -2,12 +2,21 @@
 set -eu
 set -o pipefail
 
+if [ -d `pwd`/mpich/bin ]; then
+  export PATH=`pwd`/mpich/bin:$PATH
+fi
+if [ -d `pwd`/texlive/bin ]; then
+  export PATH=`pwd`/texlive/bin/`uname -m`-linux:$PATH
+fi
+if [ -d `pwd`/formlib ]; then
+  export FORMPATH=`pwd`/formlib
+fi
+
 # Print all executed commands to the log.
 set -x
 
 case $CI_TARGET in
   form)
-    export FORMPATH=`pwd`/formlib
     autoreconf -iv
     ./configure --disable-dependency-tracking --enable-scalar --disable-threaded --disable-parform --with-gmp --with-zlib
     make
@@ -15,7 +24,6 @@ case $CI_TARGET in
     ./check/check.rb ./sources/form --stat -C forcer --timeout 60
     ;;
   tform)
-    export FORMPATH=`pwd`/formlib
     autoreconf -iv
     ./configure --disable-dependency-tracking --disable-scalar --enable-threaded --disable-parform --with-gmp --with-zlib
     make
@@ -99,7 +107,6 @@ case $CI_TARGET in
     ls -l $distdir.tar.gz && file $distdir.tar.gz
     ;;
   doc-pdf-release)
-    export PATH=`pwd`/texlive/bin/`uname -m`-linux:$PATH
     distname=form-`./scripts/git-version-gen.sh -r | sed '2q;d' | sed 's/^v//'`
     distname=$distname-manual
     autoreconf -iv
@@ -109,7 +116,6 @@ case $CI_TARGET in
     ls -l $distname.pdf && file $distname.pdf
     ;;
   doc-html-release)
-    export PATH=`pwd`/texlive/bin/`uname -m`-linux:$PATH
     distname=form-`./scripts/git-version-gen.sh -r | sed '2q;d' | sed 's/^v//'`
     distdir=$distname-manual-html
     autoreconf -iv

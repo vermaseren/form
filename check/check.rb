@@ -1,6 +1,9 @@
-#! /bin/sh
+#!/bin/sh
+# See bbatsov/rubocop#3326
+# rubocop:disable all
 exec ruby "-S" "-x" "$0" "$@"
 #! ruby
+# rubocop:enable all
 
 # The default prefix for the root temporary directory. See TempDir.root.
 TMPDIR_PREFIX = "form_check_"
@@ -279,7 +282,7 @@ module FormTest
     #       is because, in Ruby 1.9, test/unit is implemented based on
     #       minitest and MiniTest::Assertion is not a subclass of
     #       StandardError.
-    rescue Exception => e
+    rescue Exception => e # rubocop:disable Lint/RescueException
       STDERR.puts
       STDERR.puts("=" * 79)
       STDERR.puts("#{info.desc} FAILED")
@@ -374,7 +377,7 @@ module FormTest
         out.join
         err.join
         killer.kill
-      rescue
+      rescue StandardError
         while out.alive? && stdout.empty?
           sleep(0.01)
         end
@@ -499,7 +502,7 @@ module FormTest
       open(File.join(@tmpdir, filename), "r") do |f|
         return f.read
       end
-    rescue
+    rescue StandardError
       STDERR.puts("warning: failed to read '#{filename}'")
     end
     ""
@@ -567,7 +570,11 @@ module FormTest
   def succeeded?
     if finished? && !warning? && !compile_error? && !runtime_error? && return_value == 0
       if FormTest.cfg.valgrind.nil?
-        return @stderr.empty?
+        if @stderr.empty?
+          return true
+        end
+        @stdout += "!!! stderr is not empty"
+        return false
       end
       # Check for Valgrind errors.
       ok = !@stderr.include?("Invalid read") &&
@@ -584,7 +591,7 @@ module FormTest
            @stderr !~ /indirectly lost: [1-9]/ &&
            @stderr !~ /possibly lost: [1-9]/
       if !ok
-        @stdout += "Valgrind test failed"
+        @stdout += "!!! Valgrind test failed"
       end
       return ok
     end
@@ -989,11 +996,11 @@ class FormConfig
     begin
       frmname = File.join(tmpdir, "ver.frm")
       open(frmname, "w") do |f|
-        f.write(<<-'EOF')
+        f.write(<<-'TEST_FRM')
   #-
   Off finalstats;
   .end
-  EOF
+  TEST_FRM
       end
       @head = `#{@form_bin} #{frmname} 2>/dev/null`.split("\n").first
       @is_serial = false
@@ -1010,11 +1017,13 @@ class FormConfig
         @is_threaded = false
         @is_mpi      = true
       else
+        system("#{form_bin} #{frmname}")
         fatal("failed to get the version of '#{@form}'")
       end
       if @head =~ /FORM[^(]*\([^)]*\)\s*(\d+)-bits/
         @wordsize = $1.to_i / 16
       else
+        system("#{form_bin} #{frmname}")
         fatal("failed to get the wordsize of '#{@form}'")
       end
       # Prepare for mpirun
@@ -1050,10 +1059,12 @@ class FormConfig
       # Check the output header.
       @head = `#{@form_cmd} #{frmname} 2>/dev/null`.split("\n").first
       if $? != 0
+        system("#{form_cmd} #{frmname}")
         fatal("failed to execute '#{@form_cmd}'")
       end
       if !@valgrind.nil?
-        @head += "\n" + `#{@form_cmd} @{frmname} 2>&1 >/dev/null`.split("\n")[0..2].join("\n")
+        # Include valgrind version information.
+        @head += "\n" + `#{@form_cmd} @{frmname} 2>&1 >/dev/null | grep Valgrind`.split("\n")[0]
       end
     ensure
       FileUtils.rm_rf(tmpdir)
@@ -1350,6 +1361,6 @@ rescue LoadError, NoMethodError
   end
 end
 
-if __FILE__ == $0
+if $0 == __FILE__
   main
 end

@@ -16,7 +16,11 @@ addons:
       - zlib1g-dev
 
 before_install:
-  - eval "$MATRIX_EVAL"
+  - |
+    type gcc-7 >/dev/null 2>&1 && type g++-7 >/dev/null && {
+      export CC=gcc-7
+      export CXX=g++-7
+    } || :
 
 install:
   - ./scripts/travis-install.sh
@@ -33,17 +37,16 @@ after_script:
 # NOTE:
 # - Travis CI doesn't support 32-bit environments (travis-ci/travis-ci#5770).
 #   For testing 32-bit builds, we use a 32-bit Docker image.
-# - The following combinations give many false positives on the valgrind check:
-#   - openmpi-bin + valgrind on precise,
-#   - mpich-3.2 + valgrind-3.12.0 on xcode7.3.
-#   The ATP whitelist request for mpich seems to be continuously ignored,
-#   travis-ci/apt-package-whitelist#406, so on linux we need to build/brew it.
-#   Here our strategy for the valgrind check of parform is to use
-#   mpich + valgrind-3.11.0 on osx.
+# - Builds with sanitizers require recent versions of compilers.
 # - openmpi + gcov on precise occasionally crashes. We measure the code
-#   coverage of parform with mpich on osx.
-# - It is best to cache ./texlive for doc-*-release:
-#     cache: { directories: [ texlive ] }
+#   coverage of parform with mpich.
+# - The following combinations give many false positives on the valgrind check:
+#   - openmpi-bin + valgrind on precise, trusty,
+#   - mpich-3.2 + valgrind-3.12.0 on xcode7.3.
+#   The Valgrind-suppression file in openmpi is almost useless.
+#   The APT whitelist request for mpich seems to be continuously ignored,
+#   travis-ci/apt-package-whitelist#406, so on linux we need to build/brew it.
+# - It is best to cache ./mpich or ./texlive when adequate.
 matrix:
   include:
     - os: linux
@@ -56,15 +59,6 @@ matrix:
       compiler: gcc
       env: CI_TARGET=parform
       addons: { apt: { packages: [ libgmp-dev, libopenmpi-dev, openmpi-bin, zlib1g-dev ] } }
-    - os: osx
-      compiler: clang
-      env: CI_TARGET=form
-    - os: osx
-      compiler: clang
-      env: CI_TARGET=tform
-    - os: osx
-      compiler: clang
-      env: CI_TARGET=parform
     - os: linux
       compiler: gcc
       env: CI_TARGET=form-i386
@@ -79,11 +73,11 @@ matrix:
       services: [ docker ]
     - os: linux
       compiler: gcc
-      env: CI_TARGET=sanitize-vorm MATRIX_EVAL='CC=gcc-7 && CXX=g++-7'
+      env: CI_TARGET=sanitize-vorm
       addons: { apt: { sources: [ ubuntu-toolchain-r-test ], packages: [ g++-7, libgmp-dev, zlib1g-dev ] } }
     - os: linux
       compiler: gcc
-      env: CI_TARGET=sanitize-tvorm MATRIX_EVAL='CC=gcc-7 && CXX=g++-7'
+      env: CI_TARGET=sanitize-tvorm
       addons: { apt: { sources: [ ubuntu-toolchain-r-test ], packages: [ g++-7, libgmp-dev, zlib1g-dev ] } }
     - os: linux
       compiler: gcc
@@ -91,9 +85,10 @@ matrix:
     - os: linux
       compiler: gcc
       env: CI_TARGET=coverage-tvorm
-    - os: osx
+    - os: linux
       compiler: gcc
       env: CI_TARGET=coverage-parvorm
+      cache: { directories: [ mpich ] }
     - os: linux
       compiler: gcc
       env: CI_TARGET=valgrind-vorm TEST=examples.frm
@@ -118,15 +113,21 @@ matrix:
       compiler: gcc
       env: CI_TARGET=valgrind-tvorm TEST=fixes.frm
       addons: { apt: { packages: [ libgmp-dev, valgrind, zlib1g-dev ] } }
-    - os: osx
+    - os: linux
       compiler: gcc
       env: CI_TARGET=valgrind-parvorm TEST=examples.frm
-    - os: osx
+      addons: { apt: { packages: [ libgmp-dev, valgrind, zlib1g-dev ] } }
+      cache: { directories: [ mpich ] }
+    - os: linux
       compiler: gcc
       env: CI_TARGET=valgrind-parvorm TEST=features.frm
-    - os: osx
+      addons: { apt: { packages: [ libgmp-dev, valgrind, zlib1g-dev ] } }
+      cache: { directories: [ mpich ] }
+    - os: linux
       compiler: gcc
       env: CI_TARGET=valgrind-parvorm TEST=fixes.frm
+      addons: { apt: { packages: [ libgmp-dev, valgrind, zlib1g-dev ] } }
+      cache: { directories: [ mpich ] }
     - os: linux
       env: CI_TARGET=src-release
     - os: linux
