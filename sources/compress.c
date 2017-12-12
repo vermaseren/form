@@ -708,5 +708,19 @@ LONG FillInputGZIP(FILEHANDLE *f, POSITION *position, UBYTE *buffer, LONG buffer
 
 /*
   	#] FillInputGZIP : 
+  	#[ ClearSortGZIP :
+*/
+
+void ClearSortGZIP(FILEHANDLE *f)
+{
+	if ( f->ziobuffer ) {
+		M_free(f->ziobuffer,"output zbuffer");
+		M_free(f->zsp,"output zstream");
+		f->ziobuffer = 0;
+	}
+}
+
+/*
+  	#] ClearSortGZIP : 
 */
 #endif

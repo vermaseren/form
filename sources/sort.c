@@ -1096,6 +1096,9 @@ RetRetval:
 	if ( S->file.handle >= 0 && ( par != 1 ) && ( par != 2 ) ) {
 				/* sortfile is still open */
 		UpdateMaxSize();
+#ifdef WITHZLIB
+		ClearSortGZIP(&(S->file));
+#endif
 		CloseFile(S->file.handle);
 		S->file.handle = -1;
 		remove(S->file.name);
@@ -4171,6 +4174,9 @@ EndOfAll:
 */
 /*			TruncateFile(fin->handle); */
 			UpdateMaxSize();
+#ifdef WITHZLIB
+			ClearSortGZIP(fin);
+#endif
 			CloseFile(fin->handle);
 			remove(fin->name);		/* Gives diskspace free again. */
 #ifdef GZIPDEBUG
@@ -4194,6 +4200,9 @@ EndOfAll:
 	if ( par == 0 ) {
 /*		TruncateFile(fin->handle); */
 		UpdateMaxSize();
+#ifdef WITHZLIB
+		ClearSortGZIP(fin);
+#endif
 		CloseFile(fin->handle);
 		remove(fin->name);
 		fin->handle = -1;
@@ -4552,6 +4561,9 @@ void CleanUpSort(int num)
 				if ( S->file.handle >= 0 ) {
 /*					TruncateFile(S->file.handle); */
 					UpdateMaxSize();
+#ifdef WITHZLIB
+					ClearSortGZIP(&(S->file));
+#endif
 					CloseFile(S->file.handle);
 					S->file.handle = -1;
 					remove(S->file.name);
@@ -4572,6 +4584,9 @@ void CleanUpSort(int num)
 				if ( S->file.handle >= 0 ) {
 /*					TruncateFile(S->file.handle); */
 					UpdateMaxSize();
+#ifdef WITHZLIB
+					ClearSortGZIP(&(S->file));
+#endif
 					CloseFile(S->file.handle);
 					S->file.handle = -1;
 					remove(S->file.name);
@@ -4587,6 +4602,9 @@ void CleanUpSort(int num)
 	for ( i = 0; i < 2; i++ ) {
 		if ( AR.FoStage4[i].handle >= 0 ) {
 			UpdateMaxSize();
+#ifdef WITHZLIB
+			ClearSortGZIP(&(AR.FoStage4[i]));
+#endif
 			CloseFile(AR.FoStage4[i].handle);
 			remove(AR.FoStage4[i].name);
 			AR.FoStage4[i].handle = -1;

@@ -1353,6 +1353,7 @@ extern int    PutOutputGZIP(FILEHANDLE *);
 extern int    FlushOutputGZIP(FILEHANDLE *);
 extern int    SetupAllInputGZIP(SORTING *);
 extern LONG   FillInputGZIP(FILEHANDLE *,POSITION *,UBYTE *,LONG,int);
+extern void   ClearSortGZIP(FILEHANDLE *f);
 #endif
 
 #ifdef WITHPTHREADS
