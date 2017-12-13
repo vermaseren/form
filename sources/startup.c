@@ -1295,6 +1295,8 @@ WORD IniVars()
 	AM.gOutNumberType = RATIONALMODE;
 #ifdef WITHZLIB
 	AR.gzipCompress = GZIPDEFAULT;
+	AR.FoStage4[0].ziobuffer = 0;
+	AR.FoStage4[1].ziobuffer = 0;
 #endif
 	AR.BracketOn = 0;
 	AC.bracketindexflag = 0;

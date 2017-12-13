@@ -785,7 +785,6 @@ LONG EndSort(PHEAD WORD *buffer, int par)
 #ifdef WITHZLIB
 			{ int oldgzipCompress = AR.gzipCompress;
 				AR.gzipCompress = 0;
-				/* SetupOutputGZIP(fout); */
 #endif
 			if ( tover > 0 ) {
 				ss = S->sPointer;
@@ -1414,9 +1413,12 @@ WORD PutOut(PHEAD WORD *term, POSITION *position, FILEHANDLE *fi, WORD ncomp)
 						fi->handle = (WORD)RetCode;
 						PUTZERO(fi->filesize);
 						PUTZERO(fi->POposition);
+/*
+						Should not be here anymore?
 #ifdef WITHZLIB
 						fi->ziobuffer = 0;
 #endif
+*/
 					}
 					else {
 						MLOCK(ErrorMessageLock);
@@ -1628,9 +1630,12 @@ nocompress:
 						fi->handle = (WORD)RetCode;
 						PUTZERO(fi->filesize);
 						PUTZERO(fi->POposition);
+/*
+						Should not be here?
 #ifdef WITHZLIB
 						fi->ziobuffer = 0;
 #endif
+*/
 					}
 					else {
 						MLOCK(ErrorMessageLock);
@@ -1762,9 +1767,12 @@ WORD FlushOut(POSITION *position, FILEHANDLE *fi, int compr)
 				PUTZERO(fi->filesize);
 				PUTZERO(fi->POposition);
 				fi->handle = (WORD)RetCode;
+/*
+				Should not be here?
 #ifdef WITHZLIB
 				fi->ziobuffer = 0;
 #endif
+*/
 			}
 			else {
 				MLOCK(ErrorMessageLock);
@@ -3548,9 +3556,12 @@ FileMake:
 			fout->handle = fhandle;
 			PUTZERO(fout->filesize);
 			PUTZERO(fout->POposition);
+/*
+			Should not be here?
 #ifdef WITHZLIB
 			fout->ziobuffer = 0;
 #endif
+*/
 #ifdef ALLLOCK
 			LOCK(fout->pthreadslock);
 #endif
@@ -3736,7 +3747,6 @@ ConMer:
 			#define FRONTSIZE (2*AM.MaxTer)
 			WORD *copybuf = (WORD *)(((UBYTE *)(S->sBuffer)) + FRONTSIZE);
 			WORD *copytop;
-			SetupOutputGZIP(fout);
 			SetupAllInputGZIP(S);
 			m1 = m2 = copybuf;
 			position2 = S->iPatches[0];

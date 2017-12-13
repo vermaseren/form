@@ -542,6 +542,8 @@ ALLPRIVATES *InitializeOneThread(int identity)
 #ifdef WITHZLIB
 	AR.FoStage4[0].ziosize = IOsize;
 	AR.FoStage4[1].ziosize = IOsize;
+	AR.FoStage4[0].ziobuffer = 0;
+	AR.FoStage4[1].ziobuffer = 0;
 #endif	
 	AR.FoStage4[0].POsize  = ((IOsize+sizeof(WORD)-1)/sizeof(WORD))*sizeof(WORD);
 	AR.FoStage4[1].POsize  = ((IOsize+sizeof(WORD)-1)/sizeof(WORD))*sizeof(WORD);

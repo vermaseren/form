@@ -116,6 +116,7 @@ int SetupOutputGZIP(FILEHANDLE *f)
 /*
 	6: Initiate the deflation
 */
+
 	if ( deflateInit(f->zsp,AR.gzipCompress) != Z_OK ) {
 		MLOCK(ErrorMessageLock);
 		MesPrint("Error from zlib: %s",f->zsp->msg);

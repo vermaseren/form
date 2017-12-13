@@ -947,6 +947,7 @@ SORTING *AllocSort(LONG LargeSize, LONG SmallSize, LONG SmallEsize, LONG TermsIn
 #ifdef WITHZLIB
 /*	sort->file.ziosize = IOsize; */
 	sort->file.ziosize = IObuffersize*sizeof(WORD);
+	sort->file.ziobuffer = 0;
 #endif
 	if ( AM.S0 != 0 ) {
 		sort->file.name = (char *)(sort->file.PObuffer + IObuffersize);
