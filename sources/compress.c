@@ -116,7 +116,6 @@ int SetupOutputGZIP(FILEHANDLE *f)
 /*
 	6: Initiate the deflation
 */
-
 	if ( deflateInit(f->zsp,AR.gzipCompress) != Z_OK ) {
 		MLOCK(ErrorMessageLock);
 		MesPrint("Error from zlib: %s",f->zsp->msg);
@@ -479,7 +478,7 @@ LONG FillInputGZIP(FILEHANDLE *f, POSITION *position, UBYTE *buffer, LONG buffer
 {
 	GETIDENTITY
 	int zerror;
-	LONG readsize, toread;
+	LONG readsize, toread = 0;
 	SORTING *S = AT.SS;
 	z_streamp zsp;
 	POSITION pos;
@@ -543,7 +542,8 @@ LONG FillInputGZIP(FILEHANDLE *f, POSITION *position, UBYTE *buffer, LONG buffer
 				zsp->total_in = 0;
 			}
 		}
-		while ( ( zerror = inflate(zsp,Z_NO_FLUSH) ) == Z_OK ) {
+		if ( toread > 0 || zsp->avail_in ) {
+		  while ( ( zerror = inflate(zsp,Z_NO_FLUSH) ) == Z_OK ) {
 			if ( zsp->avail_out == 0 ) {
 /*
 				Finish
@@ -556,11 +556,15 @@ LONG FillInputGZIP(FILEHANDLE *f, POSITION *position, UBYTE *buffer, LONG buffer
 /*
 					We finished this stream. Try to terminate.
 */
+					zerror = Z_STREAM_END;
+					break;
+/*
 					if ( ( zerror = inflate(zsp,Z_SYNC_FLUSH) ) == Z_OK ) {
 						return((LONG)(zsp->total_out));
 					}
 					else
 						break;
+*/
 /*
 #ifdef GZIPDEBUG
 					MLOCK(ErrorMessageLock);
@@ -643,6 +647,11 @@ LONG FillInputGZIP(FILEHANDLE *f, POSITION *position, UBYTE *buffer, LONG buffer
 			else {
 				break;
 			}
+		  }
+		}
+		else {
+			zerror = Z_STREAM_END;
+			zsp->total_out = 0;
 		}
 #ifdef GZIPDEBUG
 			MLOCK(ErrorMessageLock);
@@ -674,7 +683,11 @@ LONG FillInputGZIP(FILEHANDLE *f, POSITION *position, UBYTE *buffer, LONG buffer
 			}
 			MUNLOCK(ErrorMessageLock);
 #endif
-			if ( inflateEnd(zsp) == Z_OK ) return(readsize);
+			if ( zsp->zalloc != Z_NULL ) {
+				zerror = inflateEnd(zsp);
+				zsp->zalloc = Z_NULL;
+			}
+			if ( zerror == Z_OK || zerror == Z_STREAM_END ) return(readsize);
 		}
 
 		MLOCK(ErrorMessageLock);

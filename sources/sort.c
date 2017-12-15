@@ -785,6 +785,7 @@ LONG EndSort(PHEAD WORD *buffer, int par)
 #ifdef WITHZLIB
 			{ int oldgzipCompress = AR.gzipCompress;
 				AR.gzipCompress = 0;
+				/* SetupOutputGZIP(fout); */
 #endif
 			if ( tover > 0 ) {
 				ss = S->sPointer;
@@ -3747,6 +3748,7 @@ ConMer:
 			#define FRONTSIZE (2*AM.MaxTer)
 			WORD *copybuf = (WORD *)(((UBYTE *)(S->sBuffer)) + FRONTSIZE);
 			WORD *copytop;
+/*			SetupOutputGZIP(fout); */
 			SetupAllInputGZIP(S);
 			m1 = m2 = copybuf;
 			position2 = S->iPatches[0];
