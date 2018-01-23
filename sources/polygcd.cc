@@ -205,7 +205,7 @@ const poly polygcd::integer_content (const poly &a) {
 const poly polygcd::content_univar (const poly &a, int x) {
 	
 #ifdef DEBUG
-	cout << "*** [" << thetime() << "]  CALL: content_univar(" << a << "," << x << ")" << endl;
+	cout << "*** [" << thetime() << "]  CALL: content_univar(" << a << "," << string(1,'a'+x) << ")" << endl;
 #endif
 	
 	POLY_GETIDENTITY(a);
@@ -234,7 +234,7 @@ const poly polygcd::content_univar (const poly &a, int x) {
 	if (a.sign() != res.sign()) res *= poly(BHEAD -1);
 	
 #ifdef DEBUG
-	cout << "*** [" << thetime() << "]  RES : content_univar(" << a << "," << x << ") = " << res << endl;
+	cout << "*** [" << thetime() << "]  RES : content_univar(" << a << "," << string(1,'a'+x) << ") = " << res << endl;
 #endif
 
 	return res;
@@ -263,7 +263,7 @@ const poly polygcd::content_univar (const poly &a, int x) {
 const poly polygcd::content_multivar (const poly &a, int x) {
 	
 #ifdef DEBUGALL
-	cout << "*** [" << thetime() << "]  CALL: content_multivar(" << a << "," << x << ")" << endl;
+	cout << "*** [" << thetime() << "]  CALL: content_multivar(" << a << "," << string(1,'a'+x) << ")" << endl;
 #endif
 
 	POLY_GETIDENTITY(a);
@@ -299,7 +299,7 @@ const poly polygcd::content_multivar (const poly &a, int x) {
 	}	
 	
 #ifdef DEBUGALL
-	cout << "*** [" << thetime() << "]  RES : content_multivar(" << a << "," << x << ") = " << res << endl;
+	cout << "*** [" << thetime() << "]  RES : content_multivar(" << a << "," << string(1,'a'+x) << ") = " << res << endl;
 #endif
 
 	return res;
@@ -678,7 +678,7 @@ const poly polygcd::gcd_modular_sparse_interpolation (const poly &origa, const p
 
 #ifdef DEBUG
 	cout << "*** [" << thetime() << "]  CALL: gcd_modular_sparse_interpolation("
-			 << a << "," << b << "," << x << "," << "," << s <<")" << endl;
+			 << origa << "," << origb << "," << x << "," << "," << s <<")" << endl;
 #endif
 
 	POLY_GETIDENTITY(origa);
@@ -901,7 +901,7 @@ const poly polygcd::gcd_modular_sparse_interpolation (const poly &origa, const p
 const poly polygcd::gcd_modular_dense_interpolation (const poly &a, const poly &b, const vector<int> &x, const poly &s) {
 	
 #ifdef DEBUG
-	cout << "*** [" << thetime() << "]  CALL: gcd_modular_dense_interpolation(" << a << "," << b << "," << x << "," << "," << s <<")" << endl;
+	cout << "*** [" << thetime() << "]  CALL: gcd_modular_dense_interpolation(" << a << "," << b << "," << x << "," << s <<")" << endl;
 #endif
 
 	POLY_GETIDENTITY(a);
@@ -1109,7 +1109,6 @@ const poly polygcd::gcd_modular (const poly &origa, const poly &origb, const vec
 
 		// check whether this is the complete gcd
 		if (poly::divides(ppd,a) && poly::divides(ppd,b)) {
-			ppd /= content_univar(ppd,x[0]);
 #ifdef DEBUG
 			cout << "*** [" << thetime() << "]  RES : gcd_modular(" << origa << "," << origb << "," << x << ") = "
 					 << ic * ppd << endl;
@@ -1117,7 +1116,7 @@ const poly polygcd::gcd_modular (const poly &origa, const poly &origb, const vec
 			return ic * ppd;
 		}
 #ifdef DEBUG
-		MesPrint("*** [" << thetime() << "] Retrying modular_gcd with new prime");
+		cout << "*** [" << thetime() << "] Retrying modular_gcd with new prime" << endl;
 #endif
 	}
 }
@@ -1435,6 +1434,10 @@ const poly gcd_linear_helper (const poly &a, const poly &b) {
 	polynomials is linear. If no terms are linear, fall back to Zippel's method.
 */
 const poly polygcd::gcd_linear (const poly &a, const poly &b) {
+#ifdef DEBUG
+	cout << "*** [" << thetime() << "]  CALL: gcd_linear("<<a<<","<<b<<")\n";
+#endif
+
 	POLY_GETIDENTITY(a);
 
 	if (a.is_zero()) return a.modp==0 ? b : b / b.integer_lcoeff();
@@ -1574,6 +1577,7 @@ const poly polygcd::gcd (const poly &a, const poly &b) {
 		// if there are no unused variables, go to the linear routine directly
 		if (!unusedVars) {
 			res = gcd_linear(ppa,ppb);
+			cout << "New GCD attempt (unused vars): " << res << endl;
 		}
 
 		// if res is not the gcd, it is 0 or larger than the gcd.
