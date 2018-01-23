@@ -1577,7 +1577,9 @@ const poly polygcd::gcd (const poly &a, const poly &b) {
 		// if there are no unused variables, go to the linear routine directly
 		if (!unusedVars) {
 			res = gcd_linear(ppa,ppb);
+#ifdef DEBUG
 			cout << "New GCD attempt (unused vars): " << res << endl;
+#endif
 		}
 
 		// if res is not the gcd, it is 0 or larger than the gcd.
