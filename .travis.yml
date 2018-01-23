@@ -59,6 +59,7 @@ matrix:
       compiler: gcc
       env: CI_TARGET=parform
       addons: { apt: { packages: [ libgmp-dev, libopenmpi-dev, openmpi-bin, zlib1g-dev ] } }
+      sudo: required
     - os: linux
       compiler: gcc
       env: CI_TARGET=form-i386
@@ -75,10 +76,12 @@ matrix:
       compiler: gcc
       env: CI_TARGET=sanitize-vorm
       addons: { apt: { sources: [ ubuntu-toolchain-r-test ], packages: [ g++-7, libgmp-dev, zlib1g-dev ] } }
+      sudo: required
     - os: linux
       compiler: gcc
       env: CI_TARGET=sanitize-tvorm
       addons: { apt: { sources: [ ubuntu-toolchain-r-test ], packages: [ g++-7, libgmp-dev, zlib1g-dev ] } }
+      sudo: required
     - os: linux
       compiler: gcc
       env: CI_TARGET=coverage-vorm
