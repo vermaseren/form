@@ -2793,6 +2793,7 @@ int DIVfunction(PHEAD WORD *term,WORD level,int par)
 	WORD *proper1, *proper2, *proper3 = 0;
 	int numargs = 0, type1, type2, actionflag1, actionflag2;
 	WORD startebuf = cbuf[AT.ebufnum].numrhs;
+	int division = ( par <= 2 );  /* false for mul_ */
 	if ( par < 0 || par > 3 ) {
 		MLOCK(ErrorMessageLock);
 		MesPrint("Internal error. Illegal parameter %d in DIVfunction.",par);
@@ -2826,7 +2827,7 @@ int DIVfunction(PHEAD WORD *term,WORD level,int par)
 /*
 	We have two arguments in arg1 and arg2.
 */
-	if ( *arg1 == -SNUMBER && arg1[1] == 0 ) {
+	if ( division && *arg1 == -SNUMBER && arg1[1] == 0 ) {
 		if ( *arg2 == -SNUMBER && arg2[1] == 0 ) {
 zerozero:;
 			MLOCK(ErrorMessageLock);
@@ -2836,16 +2837,22 @@ zerozero:;
 		}
 		return(0);
 	}
-	if ( *arg2 == -SNUMBER && arg2[1] == 0 ) {
+	if ( division && *arg2 == -SNUMBER && arg2[1] == 0 ) {
 divzero:;
 		MLOCK(ErrorMessageLock);
 		MesPrint("Division by zero in either div_ or rem_ function.");
 		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
+	if ( !division ) {
+		if ( (*arg1 == -SNUMBER && arg1[1] == 0) ||
+		     (*arg2 == -SNUMBER && arg2[1] == 0) ) {
+			return(0);
+		}
+	}
 	if ( ( arg1 = ConvertArgument(BHEAD arg1, &type1) ) == 0 ) goto CalledFrom;
 	if ( ( arg2 = ConvertArgument(BHEAD arg2, &type2) ) == 0 ) goto CalledFrom;
-	if ( *arg1 == 0 ) {
+	if ( division && *arg1 == 0 ) {
 		if ( *arg2 == 0 ) {
 			M_free(arg2,"DIVfunction");
 			M_free(arg1,"DIVfunction");
@@ -2855,10 +2862,15 @@ divzero:;
 		M_free(arg1,"DIVfunction");
 		return(0);
 	}
-	if ( *arg2 == 0 ) {
+	if ( division && *arg2 == 0 ) {
 		M_free(arg2,"DIVfunction");
 		M_free(arg1,"DIVfunction");
 		goto divzero;
+	}
+	if ( !division && (*arg1 == 0 || *arg2 == 0) ) {
+		M_free(arg2,"DIVfunction");
+		M_free(arg1,"DIVfunction");
+		return(0);
 	}
 	if ( ( proper1 = PutExtraSymbols(BHEAD arg1,startebuf,&actionflag1) ) == 0 ) goto CalledFrom;
 	if ( ( proper2 = PutExtraSymbols(BHEAD arg2,startebuf,&actionflag2) ) == 0 ) goto CalledFrom;

@@ -1857,3 +1857,115 @@ assert succeeded?
 assert result("F1") =~ expr("x3*x4^4 + x2^3*x4 + x1*x3")
 assert result("F2") =~ expr("x2^4*x3 + 84*x1^5")
 *--#] Issue260 : 
+*--#[ Issue261_1 :
+* Division by zero error by mul_(1,0)
+S x;
+#$x = 1 + x + x^2;
+#$z = 0;
+L F1  = mul_(1,0);
+L F2  = mul_(0,1);
+L F3  = mul_(0,0);
+L F4  = mul_($x,$z);
+L F5  = mul_($z,$x);
+L F6  = mul_($z,$z);
+L F7  = mul_($x,0);
+L F8  = mul_(0,$x);
+L F9  = mul_(1,$z);
+L F10 = mul_($z,1);
+
+L F12 = div_(0,1);
+L F15 = div_($z,$x);
+L F18 = div_(0,$x);
+L F20 = div_($z,1);
+
+L F22 = rem_(0,1);
+L F25 = rem_($z,$x);
+L F28 = rem_(0,$x);
+L F30 = rem_($z,1);
+
+L F32 = inverse_(0,1);
+L F35 = inverse_($z,$x);
+L F38 = inverse_(0,$x);
+L F40 = inverse_($z,1);
+
+P;
+.end
+assert succeeded?
+assert result("F1")  =~ expr("0")
+assert result("F2")  =~ expr("0")
+assert result("F3")  =~ expr("0")
+assert result("F4")  =~ expr("0")
+assert result("F5")  =~ expr("0")
+assert result("F6")  =~ expr("0")
+assert result("F7")  =~ expr("0")
+assert result("F8")  =~ expr("0")
+assert result("F9")  =~ expr("0")
+assert result("F10") =~ expr("0")
+assert result("F12") =~ expr("0")
+assert result("F15") =~ expr("0")
+assert result("F18") =~ expr("0")
+assert result("F20") =~ expr("0")
+assert result("F22") =~ expr("0")
+assert result("F25") =~ expr("0")
+assert result("F28") =~ expr("0")
+assert result("F30") =~ expr("0")
+assert result("F32") =~ expr("0")
+assert result("F35") =~ expr("0")
+assert result("F38") =~ expr("0")
+assert result("F40") =~ expr("0")
+*--#] Issue261_1 : 
+*--#[ Issue261_2 :
+L F11 = div_(1,0);
+P;
+.end
+# Runtime errors may freeze ParFORM.
+#pend_if mpi?
+assert runtime_error?
+*--#] Issue261_2 : 
+*--#[ Issue261_3 :
+L F23 = rem_(0,0);
+P;
+.end
+# Runtime errors may freeze ParFORM.
+#pend_if mpi?
+assert runtime_error?
+*--#] Issue261_3 : 
+*--#[ Issue261_4 :
+S x;
+#$x = 1 + x + x^2;
+#$z = 0;
+L F34 = inverse_($x,$z);
+P;
+.end
+# Runtime errors may freeze ParFORM.
+#pend_if mpi?
+assert runtime_error?
+*--#] Issue261_4 : 
+*--#[ Issue261_5 :
+#$z = 0;
+L F16 = div_($z,$z);
+P;
+.end
+# Runtime errors may freeze ParFORM.
+#pend_if mpi?
+assert runtime_error?
+*--#] Issue261_5 : 
+*--#[ Issue261_6 :
+S x;
+#$x = 1 + x + x^2;
+L F27 = rem_($x,0);
+P;
+.end
+# Runtime errors may freeze ParFORM.
+#pend_if mpi?
+assert runtime_error?
+*--#] Issue261_6 : 
+*--#[ Issue261_7 :
+#$z = 0;
+L F39 = inverse_(1,$z);
+P;
+.end
+# Runtime errors may freeze ParFORM.
+#pend_if mpi?
+assert runtime_error?
+*--#] Issue261_7 : 
