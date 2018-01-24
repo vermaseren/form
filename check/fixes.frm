@@ -1833,6 +1833,22 @@ Symbol x;
 .end
 assert succeeded?
 *--#] Issue222 : 
+*--#[ Issue258 :
+* gcd_ gives wrong results
+S s,t,m;
+L test1   = 1/5*s + 1/5*(s+t)*m;
+L test2   = (s+t)*m;
+L result1 = gcd_(test1*replace_(s,t,t,m,m,s),test2*replace_(s,t,t,m,m,s));
+L result2 = gcd_(test1,test2);
+* Previous versions gave
+*   result1 = 1 (correct), but had Valgrind errors
+*   result2 = m (wrong)
+P;
+.end
+assert succeeded?
+assert result("result1") =~ expr("1")
+assert result("result2") =~ expr("1")
+*--#] Issue258 : 
 *--#[ Issue260 :
 * gcd_ doesn't give the correct result
 S x1,...,x5;
