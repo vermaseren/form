@@ -2087,7 +2087,7 @@ int GCDterms(PHEAD WORD *term1, WORD *term2, WORD *termout)
 		t2 = term2+1;
 		if ( *t1 == SYMBOL ) {
 			while ( t2 < t2stop && *t2 != SYMBOL ) t2 += t2[1];
-			if ( *t2 == SYMBOL ) {
+			if ( t2 < t2stop && *t2 == SYMBOL ) {
 				t2next = t2+t2[1];
 				tt1 = t1+2; tt2 = t2+2; count1 = 0;
 				while ( tt1 < t1next && tt2 < t2next ) {
@@ -2114,7 +2114,7 @@ int GCDterms(PHEAD WORD *term1, WORD *term2, WORD *termout)
 		}
 		else if ( *t1 == DOTPRODUCT ) {
 			while ( t2 < t2stop && *t2 != DOTPRODUCT ) t2 += t2[1];
-			if ( *t2 == DOTPRODUCT ) {
+			if ( t2 < t2stop && *t2 == DOTPRODUCT ) {
 				t2next = t2+t2[1];
 				tt1 = t1+2; tt2 = t2+2; count1 = 0;
 				while ( tt1 < t1next && tt2 < t2next ) {
@@ -2142,7 +2142,7 @@ int GCDterms(PHEAD WORD *term1, WORD *term2, WORD *termout)
 		}
 		else if ( *t1 == VECTOR ) {
 			while ( t2 < t2stop && *t2 != VECTOR ) t2 += t2[1];
-			if ( *t2 == VECTOR ) {
+			if ( t2 < t2stop && *t2 == VECTOR ) {
 				t2next = t2+t2[1];
 				tt1 = t1+2; tt2 = t2+2; count1 = 0;
 				while ( tt1 < t1next && tt2 < t2next ) {
@@ -2162,7 +2162,7 @@ int GCDterms(PHEAD WORD *term1, WORD *term2, WORD *termout)
 		}
 		else if ( *t1 == INDEX ) {
 			while ( t2 < t2stop && *t2 != INDEX ) t2 += t2[1];
-			if ( *t2 == INDEX ) {
+			if ( t2 < t2stop && *t2 == INDEX ) {
 				t2next = t2+t2[1];
 				tt1 = t1+2; tt2 = t2+2; count1 = 0;
 				while ( tt1 < t1next && tt2 < t2next ) {
@@ -2181,7 +2181,7 @@ int GCDterms(PHEAD WORD *term1, WORD *term2, WORD *termout)
 		}
 		else if ( *t1 == DELTA ) {
 			while ( t2 < t2stop && *t2 != DELTA ) t2 += t2[1];
-			if ( *t2 == DELTA ) {
+			if ( t2 < t2stop && *t2 == DELTA ) {
 				t2next = t2+t2[1];
 				tt1 = t1+2; tt2 = t2+2; count1 = 0;
 				while ( tt1 < t1next && tt2 < t2next ) {
