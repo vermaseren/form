@@ -174,8 +174,9 @@ case $host_cpu in
 		;;
 esac
 
-# Check for C compiler vendor. we assume that all compilers (CC, CXX, MPICC and
-# MPICXX) have the same vender and the same version.
+# Check for C compiler vendor. We assume that all compilers (CC, CXX, MPICC and
+# MPICXX) have the same vender and the same version. Clang most likely works
+# as GCC.
 vendors="
 intel:     __ICC,__ECC,__INTEL_COMPILER
 gnu:       __GNUC__
@@ -679,17 +680,20 @@ AC_SUBST([MPI_STATIC_LDFLAGS])
 # Check for native/universal build
 AC_ARG_ENABLE([native],
 	[AS_HELP_STRING([--enable-native],
-		[tune for the compiling machine (release versions) @<:@default=check@:>@])],
+		[tune for the compiling machine (release versions) @<:@default=yes@:>@])],
 	[AS_IF([test "x$enableval" = xno || test "x$cross_compiling" = xyes],
 		[enable_native=no], [enable_native=yes])],
 	[enable_native=yes])
 
 # Check for profiling option
 AC_ARG_ENABLE([profile],
-	[AS_HELP_STRING([--enable-profile],
-		[build with profiling (release versions) @<:@default=no@:>@])],
+	[AS_HELP_STRING([--enable-profile@<:@=PROFILER@:>@],
+		[build with profiling (release versions) @<:@default=no@:>@ PROFILER: gprof (default) or gperftools])],
 	[AS_IF([test "x$enableval" = xyes],
-		[enable_profile=yes], [enable_profile=no])],
+		[enable_profile=gprof],
+		[AS_IF([test "x$enableval" = xgprof || test "x$enableval" = xgperftools],
+			[enable_profile=$enableval],
+			[enable_profile=no])])],
 	[enable_profile=no])
 
 # Check for coverage option
@@ -703,7 +707,7 @@ AC_ARG_ENABLE([coverage],
 # Check for sanitizers
 AC_ARG_ENABLE([sanitize],
 	[AS_HELP_STRING([--enable-sanitize@<:@=CHECKS@:>@],
-		[enable sanitizers (debugging versions) @<:@default=no@:>@])],
+		[enable sanitizers (debugging versions) @<:@default=no@:>@ Optionally CHECKS will be passed via the compiler sanitizer option])],
 	[AS_IF([test "x$enable_debug" != xyes],
 		[enable_sanitize=no])],
 	[enable_sanitize=no])
@@ -713,13 +717,15 @@ AC_ARG_VAR([COMPILEFLAGS], [Compiler flags for release versions])
 AC_ARG_VAR([LINKFLAGS], [Linker flags for release versions])
 AC_ARG_VAR([DEBUGCOMPILEFLAGS], [Compiler flags for debugging versions])
 AC_ARG_VAR([DEBUGLINKFLAGS], [Linker flags for debugging versions])
+TOOL_LIBS=
+DEBUGTOOL_LIBS=
 
 my_test_COMPILEFLAGS=${COMPILEFLAGS+set}
 if test "$my_test_COMPILEFLAGS" != set; then
 	if test "x$vendor" = xgnu; then
 		# We don't use -pedantic option because of horrible warnings.
 		COMPILEFLAGS="-Wall -Wextra -Wpadded -O3"
-		if test "x$enable_profile" != xyes; then
+		if test "x$enable_profile" != xgprof; then
 			# -pg conflicts with -fomit-frame-pointer.
 			COMPILEFLAGS="$COMPILEFLAGS -fomit-frame-pointer"
 		fi
@@ -746,8 +752,11 @@ if test "$my_test_COMPILEFLAGS" != set; then
 			fi
 		fi
 		# Profiling option.
-		if test "x$enable_profile" = xyes; then
+		if test "x$enable_profile" = xgprof; then
 			COMPILEFLAGS="$COMPILEFLAGS -g -pg"
+		elif test "x$enable_profile" = xgperftools; then
+			COMPILEFLAGS="$COMPILEFLAGS -g"
+			TOOL_LIBS="$TOOL_LIBS -lprofiler"
 		fi
 	elif test "x$vendor" = xintel; then
 		# NOTE: -fast option includes -static and may cause an error in linking.
@@ -755,10 +764,14 @@ if test "$my_test_COMPILEFLAGS" != set; then
 		if test "x$enable_native" = xyes; then
 			COMPILEFLAGS="$COMPILEFLAGS -xHost"
 		fi
-		enable_profile=false
+		if test "x$enable_profile" != xno; then
+			enable_profile=unavailable
+		fi
 	else
 		COMPILEFLAGS=-O2
-		enable_profile=false
+		if test "x$enable_profile" != xno; then
+			enable_profile=unavailable
+		fi
 	fi
 fi
 my_test_LINKFLAGS=${LINKFLAGS+set}
@@ -768,8 +781,8 @@ if test "$my_test_LINKFLAGS" != set; then
 		# warns the option is obsolete and being ignored, it causes an internal
 		# error "atom not found in symbolIndex...".
 		LINKFLAGS=
-	elif test "x$vendor" = xgnu && test "x$enable_profile" = xyes; then
-		# gprof doesn't work with -s.
+	elif test "x$enable_profile" != xno && test "x$enable_profile" != xunavailable; then
+		# Profilers needs symbol tables.
 		LINKFLAGS=
 	else
 		LINKFLAGS=-s
@@ -843,12 +856,20 @@ if test "$my_test_DEBUGCOMPILEFLAGS" != set && test "x$enable_debug" = xyes; the
 		fi
 	elif test "x$vendor" = xintel; then
 		DEBUGCOMPILEFLAGS='-g3 -Wall -O0'
-		enable_coverage=no
-		enable_sanitize=no
+		if test "x$enable_coverage" != xno; then
+			enable_coverage=unavailable
+		fi
+		if test "x$enable_sanitize" != xno; then
+			enable_sanitize=unavailable
+		fi
 	else
 		DEBUGCOMPILEFLAGS=-g
-		enable_coverage=no
-		enable_sanitize=no
+		if test "x$enable_coverage" != xno; then
+			enable_coverage=unavailable
+		fi
+		if test "x$enable_sanitize" != xno; then
+			enable_sanitize=unavailable
+		fi
 	fi
 fi
 my_test_DEBUGLINKFLAGS=${DEBUGLINKFLAGS+set}
@@ -879,6 +900,9 @@ if test "$my_test_DEBUGLINKFLAGS" != set && test "x$enable_debug" = xyes; then
 		fi
 	fi
 fi
+
+AC_SUBST([TOOL_LIBS])
+AC_SUBST([DEBUGTOOL_LIBS])
 
 # Check for doxygen
 AC_PATH_PROG(DOXYGEN, doxygen, "")
@@ -977,11 +1001,17 @@ if test "x$build_form" = xyes; then
 		fi
 		opts="${opts}statically linked"
 	fi
-	if test "x$enable_profile" = xyes; then
+	if test "x$enable_profile" = xgprof; then
 		if test "x$opts" != x; then
 			opts="${opts}, "
 		fi
 		opts="${opts}gprof"
+	fi
+	if test "x$enable_profile" = xgperftools; then
+		if test "x$opts" != x; then
+			opts="${opts}, "
+		fi
+		opts="${opts}gperftools"
 	fi
 	if test "x$opts" != x; then
 		opts=" (${opts})"
@@ -1023,11 +1053,17 @@ if test "x$build_tform" = xyes; then
 		fi
 		opts="${opts}statically linked"
 	fi
-	if test "x$enable_profile" = xyes; then
+	if test "x$enable_profile" = xgprof; then
 		if test "x$opts" != x; then
 			opts="${opts}, "
 		fi
 		opts="${opts}gprof"
+	fi
+	if test "x$enable_profile" = xgperftools; then
+		if test "x$opts" != x; then
+			opts="${opts}, "
+		fi
+		opts="${opts}gperftools"
 	fi
 	if test "x$opts" != x; then
 		opts=" (${opts})"
@@ -1069,11 +1105,17 @@ if test "x$build_parform" = xyes; then
 		fi
 		opts="${opts}statically linked"
 	fi
-	if test "x$enable_profile" = xyes; then
+	if test "x$enable_profile" = xgprof; then
 		if test "x$opts" != x; then
 			opts="${opts}, "
 		fi
 		opts="${opts}gprof"
+	fi
+	if test "x$enable_profile" = xgperftools; then
+		if test "x$opts" != x; then
+			opts="${opts}, "
+		fi
+		opts="${opts}gperftools"
 	fi
 	if test "x$opts" != x; then
 		opts=" (${opts})"
