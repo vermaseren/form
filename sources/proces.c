@@ -77,6 +77,7 @@ WORD Processor()
 	WORD oldBracketOn = AR.BracketOn;
 	WORD *oldBrackBuf = AT.BrackBuf;
 	WORD oldbracketindexflag = AT.bracketindexflag;
+	WORD minlhs;
 #ifdef WITHPTHREADS
 	int OldMultiThreaded = AS.MultiThreaded, Oldmparallelflag = AC.mparallelflag;
 #endif
@@ -95,6 +96,10 @@ WORD Processor()
 	}
 
 	if ( NumExpressions == 0 ) return(0);
+	for ( i = 1; i < C->numlhs && C->lhs[i][0] == TYPEEXPRESSION; i++ ) {}
+    if ( i <= C->numlhs ) minlhs = i;
+    else minlhs = 0;
+
 	AR.expflags = 0;
 	AR.CompressPointer = AR.CompressBuffer;
 	AR.NoCompress = AC.NoCompress;
@@ -401,7 +406,7 @@ commonread:;
 						&& ( e->status == LOCALEXPRESSION || e->status == GLOBALEXPRESSION ) ) {
 						PolyFunClean(BHEAD term);
 					  }
-					  if ( Generator(BHEAD term,0) ) {
+					  if ( Generator(BHEAD term,minlhs) ) {
 						LowerSortLevel(); goto ProcErr;
 					  }
 					  AN.ninterms += dd;

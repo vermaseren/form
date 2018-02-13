@@ -277,7 +277,11 @@ int DoExpr(UBYTE *inp, int type, int par)
 				AR.outfile->POfull = AR.outfile->POfill;
 			}
 			OldWork[2] = j;
+/*
+			Seems unnecessary (13-feb-2018)
+
 			AddNtoL(OldWork[1],OldWork);
+*/
 			AT.WorkPointer = OldWork;
 			if ( AC.dumnumflag ) Add2Com(TYPEDETCURDUM)
 		}
