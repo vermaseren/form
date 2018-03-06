@@ -2169,21 +2169,26 @@ WORD ContentMerge(PHEAD WORD *content, WORD *term)
 			case GAMMA:
 			default:			/* Functions */
 				told = t;
-				while ( *t < *ct && t < tstop ) t += t[1];
-				if ( t >= tstop ) { t = told; }
-				else {
+				t = term+1;
+				while ( t < tstop ) {
+					if ( *t != *ct ) { t += t[1]; continue; }
+					if ( ct[1] != t[1] ) { t += t[1]; continue; }
+					if ( ct[2] != t[2] ) { t += t[1]; continue; }
 					t1 = t; t2 = ct; i1 = t1[1]; i2 = t2[1];
-					if ( i1 != i2 ) { t = told; }
-					else {
-						while ( i1 > 0 ) {
-							if ( *t1 != *t2 ) break;
-							t1++; t2++; i1--;
-						}
-						if ( i1 == 0 ) {
-							for ( i = 0; i < i2; i++ ) { *outfill++ = *t++; }
-						}
-						else { t = told; }
+					while ( i1 > 0 ) {
+						if ( *t1 != *t2 ) break;
+						t1++; t2++; i1--;
 					}
+					if ( i1 != 0 ) { t += t[1]; continue; }
+					t1 = t;
+					for ( i = 0; i < i2; i++ ) { *outfill++ = *t++; }
+/*
+					Mark as 'used'. The flags must be different!
+*/
+					t1[2] |= SUBTERMUSED1;
+					ct[2] |= SUBTERMUSED2;
+					t = told;
+					break;
 				}
 				break;
 		}
@@ -2210,6 +2215,16 @@ WORD ContentMerge(PHEAD WORD *content, WORD *term)
 	NumberFree(num,"ContentMerge");
 	for ( i = 0; i < *outb; i++ ) content[i] = outb[i];
 	TermFree(outb,"ContentMerge");
+/*
+	Now we have to 'restore' the term to its original.
+	We do not restore the content, because if anything was used the
+	new content overwrites the old. 6-mar-2018 JV
+*/
+	t = term + 1;
+	while ( t < tstop ) {
+		if ( *t >= FUNCTION ) t[2] &= ~SUBTERMUSED1;
+		t += t[1];
+	}
 	return(*content);
 CalledFrom:
 	MLOCK(ErrorMessageLock);
