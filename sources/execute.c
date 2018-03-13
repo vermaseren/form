@@ -2011,6 +2011,7 @@ WORD ContentMerge(PHEAD WORD *content, WORD *term)
 	WORD *outfill, *outb = TermMalloc("ContentMerge"), *ct;
 	WORD *t, *tstop, tsize, trsize, *told;
 	WORD *t1, *t2, *c1, *c2, i1, i2, *out1;
+	WORD didsymbol = 0, diddotp = 0, tfirst;
 	cstop = content + *content;
 	csize = cstop[-1];
 	if ( csize < 0 ) { sign = -sign; csize = -csize; }
@@ -2042,6 +2043,7 @@ WORD ContentMerge(PHEAD WORD *content, WORD *term)
 	while ( ct < cstop ) {
 		switch ( *ct ) {
 			case SYMBOL:
+				didsymbol = 1;
 				t = term+1;
 				while ( t < tstop && *t != *ct ) t += t[1];
 				if ( t >= tstop ) break;
@@ -2084,6 +2086,7 @@ WORD ContentMerge(PHEAD WORD *content, WORD *term)
 				if ( out1[1] == 2 ) outfill = out1;
 				break;
 			case DOTPRODUCT:
+				diddotp = 1;
 				t = term+1;
 				while ( t < tstop && *t != *ct ) t += t[1];
 				if ( t >= tstop ) break;
@@ -2193,6 +2196,32 @@ WORD ContentMerge(PHEAD WORD *content, WORD *term)
 				break;
 		}
 		ct += ct[1];
+	}
+	if ( diddotp == 0 ) {
+		t = term+1; while ( t < tstop && *t != DOTPRODUCT ) t += t[1];
+		if ( t < tstop ) { /* now we need the negative powers */
+			tfirst = 1; told = outfill;
+			for ( i = 2; i < t[1]; i += 3 ) {
+				if ( t[i+2] < 0 ) {
+					if ( tfirst ) { *outfill++ = DOTPRODUCT; *outfill++ = 0; tfirst = 0; }
+					*outfill++ = t[i]; *outfill++ = t[i+1]; *outfill++ = t[i+2];
+				}
+			}
+			if ( outfill > told ) told[1] = outfill-told;
+		}
+	}
+	if ( didsymbol == 0 ) {
+		t = term+1; while ( t < tstop && *t != SYMBOL ) t += t[1];
+		if ( t < tstop ) { /* now we need the negative powers */
+			tfirst = 1; told = outfill;
+			for ( i = 2; i < t[1]; i += 2 ) {
+				if ( t[i+1] < 0 ) {
+					if ( tfirst ) { *outfill++ = SYMBOL; *outfill++ = 0; tfirst = 0; }
+					*outfill++ = t[i]; *outfill++ = t[i+1];
+				}
+			}
+			if ( outfill > told ) told[1] = outfill-told;
+		}
 	}
 /*
 	Now put the coefficient back.
