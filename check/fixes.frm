@@ -1598,6 +1598,46 @@ P;
 assert succeeded?
 assert result("F") =~ expr("rat(1,ep^2 + 2*ep + 1)")
 *--#] Issue180 : 
+*--#[ Issue185 :
+* Wrong result of content_
+
+* This is OK.
+S x,y;
+#$p = (x/3+2/y)^2;
+#$c = content_($p);
+#$q = $p/$c;
+L C1 = $c;
+L Q1 = $q;
+.sort
+
+* This was BAD.
+S x;
+#$p = 1+1/x;
+#$c = content_($p);
+#$q = $p/$c;
+L C2 = $c;
+L Q2 = $q;
+.sort
+
+* Workaround.
+S x,xxx;
+#$p = 1+1/x;
+#$tmp = $p*xxx;
+#$c = content_($tmp)/xxx;
+#$q = $p/$c;
+L C3 = $c;
+L Q3 = $q;
+
+P;
+.end
+assert succeeded?
+assert result("C1") =~ expr("1/9*y^-2")
+assert result("Q1") =~ expr("36+12*x*y+x^2*y^2")
+assert result("C2") =~ expr("x^-1")
+assert result("Q2") =~ expr("1+x")
+assert result("C3") =~ expr("x^-1")
+assert result("Q3") =~ expr("1+x")
+*--#] Issue185 : 
 *--#[ Issue186 :
 * $args not expanded for distrib_
 S x1,...,x4;
