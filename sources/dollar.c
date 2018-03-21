@@ -1,7 +1,7 @@
 /** @file dollar.c
  * 
- *  The routines that deal with the dollar variables.
- *  The name administration is to be found in the file names.c
+ *	The routines that deal with the dollar variables.
+ *	The name administration is to be found in the file names.c
  */
 /* #[ License : */
 /*
@@ -1347,7 +1347,7 @@ WORD DolToSymbol(PHEAD WORD numdollar)
 
 /*
   	#] DolToSymbol : 
-  	#[ DolToIndex :     with LOCK
+  	#[ DolToIndex :	   with LOCK
 */
 
 WORD DolToIndex(PHEAD WORD numdollar)
@@ -1395,6 +1395,10 @@ WORD DolToIndex(PHEAD WORD numdollar)
 	else if ( d->type == DOLINDEX && d->index >= 0 ) {
 		retval = d->index;
 	} 
+	else if ( d->type == DOLNUMBER && d->where[0] == 4 && d->where[2] == 1
+	&& d->where[3] == 3 && d->where[4] == 0 && d->where[1] < AM.OffsetIndex ) {
+		retval = d->where[1];
+	}
 	else if ( d->type == DOLWILDARGS && d->where[0] == 1
 	&& d->where[1] >= 0 ) {
 		retval = d->where[1];
