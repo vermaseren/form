@@ -7,7 +7,7 @@
 
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2013 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -45,12 +45,12 @@
 #else  /* HAVE_CONFIG_H */
 
 #define MAJORVERSION 4
-#define MINORVERSION 1
+#define MINORVERSION 2
 
 #ifdef __DATE__
 #define PRODUCTIONDATE __DATE__
 #else
-#define PRODUCTIONDATE "25-oct-2013"
+#define PRODUCTIONDATE "06-jul-2017"
 #endif
 
 #undef BETAVERSION
@@ -88,6 +88,7 @@
 #define LP64
 #define WITHZLIB
 #define WITHGMP
+#define WITHPOSIXCLOCK
 #endif
 
 #ifdef CYGWIN32
@@ -131,6 +132,40 @@
 
 #endif  /* HAVE_CONFIG_H */
 
+/* Workaround for MSVC. */
+#if defined(_MSC_VER)
+/*
+ * Recent versions of MSVC++ (>= 2012) don't like reserved keywords being
+ * macroized even when they are not available. This is problematic for
+ * `alignof`, which is used in legacy `PADXXX` macros. We disable tests in
+ * xkeycheck.h.
+ */
+#if _MSC_VER >= 1700
+#define _ALLOW_KEYWORD_MACROS
+#endif
+/*
+ * Old versions of MSVC didn't support C99 function `snprintf`, which is used
+ * in poly.cc. On the other hand, macroizing `snprintf` gives a fatal error
+ * with MSVC >= 2015.
+ */
+#if _MSC_VER < 1900
+#define snprintf _snprintf
+#endif
+#endif
+
+/*
+ * Translate our dialect "DEBUGGING" to the standard "NDEBUG".
+ */
+#ifdef DEBUGGING
+#ifdef NDEBUG
+#undef NDEBUG
+#endif
+#else
+#ifndef NDEBUG
+#define NDEBUG
+#endif
+#endif
+
 /*
  * STATIC_ASSERT(condition) will fail to be compiled if the given
  * condition is false.
@@ -155,16 +190,16 @@
 /* Undefine/rename conflicted symbols. */
 #undef VOID  /* WinNT.h */
 #undef MAXLONG  /* WinNT.h */
-#define WORD WORD__Renamed  /* WinDef.h */
-#define LONG LONG__Renamed /* WinNT.h */
-#define ULONG ULONG__Renamed  /* WinDef.h */
+#define WORD FORM_WORD  /* WinDef.h */
+#define LONG FORM_LONG /* WinNT.h */
+#define ULONG FORM_ULONG  /* WinDef.h */
 #undef CreateFile  /* WinBase.h */
 #undef CopyFile  /* WinBase.h */
-#define OpenFile OpenFile__Renamed  /* WinBase.h */
-#define ReOpenFile ReOpenFile__Renamed  /* WinBase.h */
-#define ReadFile ReadFile__Renamed  /* WinBase.h */
-#define WriteFile WriteFile__Renamed  /* WinBase.h */
-#define DeleteObject DeleteObject__Renamed  /* WinGDI.h */
+#define OpenFile FORM_OpenFile  /* WinBase.h */
+#define ReOpenFile FORM_ReOpenFile  /* WinBase.h */
+#define ReadFile FORM_ReadFile  /* WinBase.h */
+#define WriteFile FORM_WriteFile  /* WinBase.h */
+#define DeleteObject FORM_DeleteObject  /* WinGDI.h */
 #else
 #error UNIX or WINDOWS must be defined!
 #endif
@@ -201,6 +236,11 @@ typedef unsigned long ULONG;
 #error INT64 is not available!
 #endif
 
+#define WORD_MIN_VALUE SHRT_MIN
+#define WORD_MAX_VALUE SHRT_MAX
+#define LONG_MIN_VALUE LONG_MIN
+#define LONG_MAX_VALUE LONG_MAX
+
 #elif defined(LLP64)
 
 typedef int WORD;
@@ -214,6 +254,11 @@ typedef unsigned long long ULONG;
 #define INT64 long long
 #undef INT128
 
+#define WORD_MIN_VALUE INT_MIN
+#define WORD_MAX_VALUE INT_MAX
+#define LONG_MIN_VALUE LLONG_MIN
+#define LONG_MAX_VALUE LLONG_MAX
+
 #elif defined(LP64)
 
 typedef int WORD;
@@ -226,6 +271,11 @@ typedef unsigned long ULONG;
 #define INT32 int
 #define INT64 long
 #undef INT128
+
+#define WORD_MIN_VALUE INT_MIN
+#define WORD_MAX_VALUE INT_MAX
+#define LONG_MIN_VALUE LONG_MIN
+#define LONG_MAX_VALUE LONG_MAX
 
 #else
 #error ILP32 or LLP64 or LP64 must be defined!
@@ -247,7 +297,7 @@ STATIC_ASSERT(sizeof(INT128) == 16);
 #endif
 
 typedef void VOID;
-typedef char SBYTE;
+typedef signed char SBYTE;
 typedef unsigned char UBYTE;
 typedef unsigned int UINT;
 typedef ULONG RLONG;  /* Used in reken.c. */
@@ -368,6 +418,7 @@ template<typename T> struct calc {
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <limits.h>
 #ifdef ANSI
 #include <stdarg.h>
 #include <time.h>

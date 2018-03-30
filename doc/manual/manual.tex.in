@@ -2,6 +2,9 @@
 \def\formmajorversion{\repomajorversion}
 \def\formminorversion{\repominorversion}
 \def\formdate{\repodate}
+%begin{latexonly}  % To avoid latex2html/latex2html#37
+\providecommand{\repodate}{\today}
+%end{latexonly}
 
 
 \documentclass[11pt]{report}
@@ -70,7 +73,7 @@
 \begin{titlepage}
 \title{\Huge FORM \\ \Large version @VERSION@ \\ \huge Reference manual}
 \date{\formdate}
-\author{J.A.M.~Vermaseren, J.~Kuipers, M.~Tentyukov, T.~Ueda and J.~Vollinga}
+\author{J.A.M.~Vermaseren, J.~Kuipers, B.~Ruijl, M.~Tentyukov, T.~Ueda and J.~Vollinga}
 \end{titlepage}
 \maketitle
 %\clearemptydoublepage
@@ -115,6 +118,7 @@
 \input{@srcdir@/setup}
 \input{@srcdir@/parallel}
 \input{@srcdir@/external}
+\input{@srcdir@/spectators}
 
 \printindex
 

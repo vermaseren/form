@@ -6,6 +6,7 @@ SRCBASE = \
 	compiler.c \
 	compress.c \
 	comtool.c \
+	comtool.h \
 	declare.h \
 	dict.c \
 	dollar.c \
@@ -86,7 +87,7 @@ SRCPARALLEL = \
 
 # Automatic versioning.
 
-CLEANFILES = version.h
+CLEANFILES = version.h *.gcno *.gcda *.gcov gmon.out
 
 form-startup.$(OBJEXT): version.h
 tform-startup.$(OBJEXT): version.h
@@ -134,7 +135,7 @@ form_CPPFLAGS =
 form_CFLAGS = $(COMPILEFLAGS)
 form_CXXFLAGS = $(COMPILEFLAGS)
 form_LDFLAGS = $(LINKFLAGS) $(STATIC_LDFLAGS)
-form_LDADD =
+form_LDADD = $(TOOL_LIBS)
 if AUTOMAKE_GE_110
 form_LINK = $(CXXLD) $(form_CXXFLAGS) $(CXXFLAGS) $(form_LDFLAGS) $(LDFLAGS) -o $@
 else
@@ -149,7 +150,7 @@ vorm_CPPFLAGS = -DDEBUGGING
 vorm_CFLAGS = $(DEBUGCOMPILEFLAGS)
 vorm_CXXFLAGS = $(DEBUGCOMPILEFLAGS)
 vorm_LDFLAGS = $(DEBUGLINKFLAGS)
-vorm_LDADD =
+vorm_LDADD = $(DEBUGTOOL_LIBS)
 if AUTOMAKE_GE_110
 vorm_LINK = $(CXXLD) $(vorm_CXXFLAGS) $(CXXFLAGS) $(vorm_LDFLAGS) $(LDFLAGS) -o $@
 else
@@ -164,7 +165,7 @@ tform_CPPFLAGS = -DWITHPTHREADS $(PTHREAD_CPPFLAGS)
 tform_CFLAGS = $(COMPILEFLAGS) $(PTHREAD_CFLAGS)
 tform_CXXFLAGS = $(COMPILEFLAGS) $(PTHREAD_CFLAGS)
 tform_LDFLAGS = $(LINKFLAGS) $(STATIC_LDFLAGS)
-tform_LDADD = $(PTHREAD_LIBS)
+tform_LDADD = $(PTHREAD_LIBS) $(TOOL_LIBS)
 if AUTOMAKE_GE_110
 tform_LINK = $(CXXLD) $(tform_CXXFLAGS) $(CXXFLAGS) $(tform_LDFLAGS) $(LDFLAGS) -o $@
 else
@@ -179,7 +180,7 @@ tvorm_CPPFLAGS = -DWITHPTHREADS -DDEBUGGING $(PTHREAD_CPPFLAGS)
 tvorm_CFLAGS = $(DEBUGCOMPILEFLAGS) $(PTHREAD_CFLAGS)
 tvorm_CXXFLAGS = $(DEBUGCOMPILEFLAGS) $(PTHREAD_CFLAGS)
 tvorm_LDFLAGS = $(DEBUGLINKFLAGS)
-tvorm_LDADD = $(PTHREAD_LIBS)
+tvorm_LDADD = $(PTHREAD_LIBS) $(DEBUGTOOL_LIBS)
 if AUTOMAKE_GE_110
 tvorm_LINK = $(CXXLD) $(tvorm_CXXFLAGS) $(CXXFLAGS) $(tvorm_LDFLAGS) $(LDFLAGS) -o $@
 else
@@ -194,7 +195,7 @@ parform_CPPFLAGS = -DWITHMPI -DPF_WITHGETENV -DPF_WITHLOG $(MPI_CPPFLAGS)
 parform_CFLAGS = $(COMPILEFLAGS) $(MPI_CFLAGS)
 parform_CXXFLAGS = $(COMPILEFLAGS) $(MPI_CXXFLAGS)
 parform_LDFLAGS = $(LINKFLAGS) $(MPI_STATIC_LDFLAGS)
-parform_LDADD =
+parform_LDADD = $(TOOL_LIBS)
 if AUTOMAKE_GE_110
 parform_LINK = $(MPICXX) $(parform_CXXFLAGS) $(CXXFLAGS) $(parform_LDFLAGS) $(LDFLAGS) -o $@
 else
@@ -209,7 +210,7 @@ parvorm_CPPFLAGS = -DWITHMPI -DPF_WITHGETENV -DPF_WITHLOG -DDEBUGGING $(MPI_CPPF
 parvorm_CFLAGS = $(DEBUGCOMPILEFLAGS) $(MPI_CFLAGS)
 parvorm_CXXFLAGS = $(DEBUGCOMPILEFLAGS) $(MPI_CXXFLAGS)
 parvorm_LDFLAGS = $(DEBUGLINKFLAGS)
-parvorm_LDADD =
+parvorm_LDADD = $(DEBUGTOOL_LIBS)
 if AUTOMAKE_GE_110
 parvorm_LINK = $(MPICXX) $(parvorm_CXXFLAGS) $(CXXFLAGS) $(parvorm_LDFLAGS) $(LDFLAGS) -o $@
 else

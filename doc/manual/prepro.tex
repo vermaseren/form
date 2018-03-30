@@ -76,6 +76,11 @@ any longer.
                for the current optimization (see chapter \ref{optimization}).
 \item[OPTIMMAXVAR\_]  The number of the last extra symbol\index{OPTIMMAXVAR\_} needed
                for the current optimization (see chapter \ref{optimization}).
+\item[OPTIMSCHEME\_]  The best Horner scheme\index{OPTIMSCHEME\_} found 
+               for the current optimization (see chapter~\ref{optimization}).
+\item[OPTIMVALUE\_]  The number of arithmetic operations\index{OPTIMVALUE\_} 
+               in the resulting expression for the current optimization 
+               (see chapter~\ref{optimization}).
 \item[PID\_]         The process identifier (PID) \index{PID} \index{PID\_} of
                the running process. In \ParFORM{} (\ref{parform}), it represents
                the PID of the master process in order to ensure that all the
@@ -90,6 +95,17 @@ any longer.
                unlike `time\_' this value can be used in the preprocessor 
                calculator and in numerical compares in \#if instructions.
                See also the \#reset (see \ref{prereset}) instruction.
+\item[NUMACTIVEEXPRS\_]  The number of the current active expressions.
+\item[ACTIVEEXPRNAMES\_]  The list of the current active expression names 
+               separated by commas. This can be passed to \#do lvar=\{...\} 
+               instruction~(\ref{predo}) like: 
+\begin{verbatim}
+    #do e = {`activeexprnames_'}
+        #ifdef `e'
+            Local `e' = `e' + something;
+        #endif
+    #enddo
+\end{verbatim}
 \end{description}
 
 \noindent If \FORM\ cannot find a preprocessor variable, because it has 
@@ -345,6 +361,21 @@ be positioned at the end. The next \#write\index{\#write} instruction will
 add to it.
 
 %--#] append : 
+%--#[ appendpath :
+ 
+\section{\#appendpath}
+\label{preappendpath}
+
+\noindent Syntax:
+
+\#appendpath pathname
+
+\noindent See also prependpath~(\ref{preprependpath})
+
+\noindent Appends the given path relative to the current file to the end of
+the FORM path\index{path}.
+
+%--#] appendpath : 
 %--#[ break :
 
 \section{\#break}
@@ -1424,6 +1455,21 @@ Time =       0.00 sec    Generated terms =         10
 \end{verbatim}
 
 %--#] preout : 
+%--#[ prependpath :
+ 
+\section{\#prependpath}
+\label{preprependpath}
+
+\noindent Syntax:
+
+\#prependpath pathname
+
+\noindent See also appendpath~(\ref{preappendpath})
+
+\noindent Prepends the given path relative to the current file to the beginning
+of the FORM path\index{path}.
+
+%--#] prependpath : 
 %--#[ printtimes :
  
 \section{\#printtimes}

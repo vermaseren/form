@@ -5,7 +5,7 @@
  */
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2013 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -567,7 +567,11 @@ int CoCopySpectator(UBYTE *inp)
 			AR.outfile->POfull = AR.outfile->POfill;
 		}
 		OldWork[2] = numexpr;
+/*
+		Seems unnecessary (13-feb-2018)
+
 		AddNtoL(OldWork[1],OldWork);
+*/
 		AT.WorkPointer = OldWork;
 		if ( AC.dumnumflag ) Add2Com(TYPEDETCURDUM)
 	}

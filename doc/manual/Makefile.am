@@ -15,6 +15,7 @@ TEXSRC = \
 	prepro.tex \
 	setup.tex \
 	sorting.tex \
+	spectators.tex \
 	startup.tex \
 	statements.tex \
 	tablebas.tex \
@@ -53,7 +54,7 @@ if FIXED_VERSION
 UPDATE_VERSION_TEX = \
 	[ -f version.tex ] || $(LN_S) "$(srcdir)/version.tex.in" version.tex
 
-DISTHOOK_VERSION_H = \
+DISTHOOK_VERSION_TEX = \
 	cp "$(srcdir)/version.tex.in" "$(distdir)/version.tex.in"
 
 else

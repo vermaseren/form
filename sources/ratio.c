@@ -7,7 +7,7 @@
  */
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2013 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -489,7 +489,7 @@ WORD Glue(PHEAD WORD *term1, WORD *term2, WORD *sub, WORD insert)
 		TermFree(coef,"Glue");
 		SETERROR(-1)
 	}
-	i = (ABS(nc3))<<1;
+	i = (ABS(nc3))*2;
 	t += i++;
 	*t++ = (nc3 >= 0)?i:-i;
 	*term1 = WORDDIF(t,term1);
@@ -612,7 +612,7 @@ int GCDfunction(PHEAD WORD *term,WORD level)
 	WORD *t, *tstop, *tf, *termout, *tin, *tout, *m, *mnext, *mstop, *mm;
 	int todo, i, ii, j, istart, sign = 1, action = 0;
 	WORD firstshort = 0, firstvalue = 0, gcdisone = 0, mlength, tlength, newlength;
-	WORD totargs = 0, numargs, *mh, oldval1, *g, *gcdout = 0;
+	WORD totargs = 0, numargs, argsdone = 0, *mh, oldval1, *g, *gcdout = 0;
 	WORD *arg1, *arg2;
 	UWORD x1,x2,x3;
 	LONG args;
@@ -675,24 +675,24 @@ int GCDfunction(PHEAD WORD *term,WORD level)
 			if ( *tf <= -FUNCTION ) { firstvalue = -(*tf); }
 			else                    { firstvalue = tf[1]; }
 			NEXTARG(tf);
+			argsdone++;
 			continue;
 		}
 		else if ( *tf != firstshort ) {
-			if ( *tf != -INDEX && *tf != -VECTOR && *t != -MINVECTOR ) {
-				gcdisone = 1; break;
+			if ( *tf != -INDEX && *tf != -VECTOR && *tf != -MINVECTOR ) {
+				argsdone++; gcdisone = 1; break;
 			}
 			if ( firstshort != -INDEX && firstshort != -VECTOR && firstshort != -MINVECTOR ) {
-				gcdisone = 1; break;
+				argsdone++; gcdisone = 1; break;
 			}
 			if ( tf[1] != firstvalue ) {
-				gcdisone = 1; break;
+				argsdone++; gcdisone = 1; break;
 			}
 			if ( *t == -MINVECTOR ) { firstshort = -VECTOR; }
 			if ( firstshort == -MINVECTOR ) { firstshort = -VECTOR; }
 		}
 		else if ( *tf > -FUNCTION && *tf != -SNUMBER && tf[1] != firstvalue ) {
-			gcdisone = 1;
-			break;
+			argsdone++; gcdisone = 1; break;
 		}
 		if ( *tf == -SNUMBER && firstvalue != tf[1] ) {
 /*
@@ -707,6 +707,7 @@ int GCDfunction(PHEAD WORD *term,WORD level)
 			}
 			while ( ( x3 = x1%x2 ) != 0 ) { x1 = x2; x2 = x3; }
 			firstvalue = ((WORD)x2)*sign;
+			argsdone++;
 			if ( firstvalue == 1 ) { gcdisone = 1; break; }
 		}
 		NEXTARG(tf);
@@ -735,7 +736,7 @@ gcdone:
 		*termout = tout - termout;
 		if ( sign < 0 ) tout[-1] = -tout[-1];
 		AT.WorkPointer = tout;
-		if ( Generator(BHEAD termout,level) < 0 ) goto CalledFrom;
+		if ( argsdone && Generator(BHEAD termout,level) < 0 ) goto CalledFrom;
 		AT.WorkPointer = termout;
 		AT.pWorkPointer = args;
 		return(0);
@@ -867,6 +868,7 @@ oneterm:;
 					m = d->where;
 					while ( *m ) {
 						GCDterms(BHEAD mh,m,mh); m += *m;
+						argsdone++;
 						if ( mh[0] == 4 && mh[1] == 1 && mh[2] == 1 && mh[3] == 3 ) {
 							gcdisone = 1; sign = 1;
 							if ( d->factors ) M_free(d->factors,"Dollar factors");
@@ -882,6 +884,7 @@ oneterm:;
 				m = mm;
 				while ( *m ) {
 					GCDterms(BHEAD mh,m,mh); m += *m;
+					argsdone++;
 					if ( mh[0] == 4 && mh[1] == 1 && mh[2] == 1 && mh[3] == 3 ) {
 						gcdisone = 1; sign = 1; M_free(mm,"CreateExpression"); goto gcdone;
 					}
@@ -912,6 +915,7 @@ oneterm:;
 */
 			mh[mh[0]] = 0;
 			mm = mh;
+			ii = 0;
 			goto multiterms;
 		}
 	}
@@ -937,6 +941,7 @@ oneterm:;
 			NCOPY(m,mm,i);
 			AT.WorkPointer = m;
 			istart = 1;
+			argsdone++;
 			goto oneterm;
 		}
 	}
@@ -962,6 +967,7 @@ oneterm:;
 			mm = arg1+ARGHEAD;
 			j = *arg1-ARGHEAD;
 			abuf[i].size = j;
+			if ( j ) argsdone++;
 			NCOPY(m,mm,j);
 			*m = 0;
 		}
@@ -970,13 +976,17 @@ oneterm:;
 			abuf[i].buffer = d->where;
 			abuf[i].type = 1;
 			abuf[i].dollar = d;
-			m = abuf[i].buffer; while ( *m ) m+= *m;
+			m = abuf[i].buffer;
+			if ( *m ) argsdone++;
+			while ( *m ) m+= *m;
 			abuf[i].size = m-abuf[i].buffer;
 		}
 		else if ( *arg1 == -EXPRESSION ) {
 			abuf[i].buffer = CreateExpression(BHEAD arg1[1]);
 			abuf[i].type = 2;
-			m = abuf[i].buffer; while ( *m ) m+= *m;
+			m = abuf[i].buffer;
+			if ( *m ) argsdone++;
+			while ( *m ) m+= *m;
 			abuf[i].size = m-abuf[i].buffer;
 		}
 		else {
@@ -988,7 +998,8 @@ oneterm:;
 	}
 	for ( i = 0; i < numargs; i++ ) {
 		arg1 = abuf[i].buffer;
-		if ( arg1[*arg1] == 0 ) {
+		if ( *arg1 == 0 ) {}
+		else if ( arg1[*arg1] == 0 ) {
 /*
 			After expansion there is an argument with a single term
 */
@@ -998,6 +1009,7 @@ oneterm:;
 				m = abuf[j].buffer;
 				while ( *m ) {
 					GCDterms(BHEAD mh,m,mh); m += *m;
+					argsdone++;
 					if ( mh[0] == 4 && mh[1] == 1 && mh[2] == 1 && mh[3] == 3 ) {
 						gcdisone = 1; sign = 1; break;
 					}
@@ -1019,7 +1031,7 @@ oneterm:;
 			tout[-1] = mlength*sign;
 			*termout = tout - termout;
 			AT.WorkPointer = tout;
-			if ( Generator(BHEAD termout,level) < 0 ) goto CalledFrom;
+			if ( argsdone && Generator(BHEAD termout,level) < 0 ) goto CalledFrom;
 			goto cleanup;
 		}
 	}
@@ -1037,13 +1049,20 @@ oneterm:;
   	#] Expand $ and expr : 
   	#[ Multiterm subexpressions :
 */
-	gcdout = abuf[0].buffer;
-	for ( i = 1; i < numargs; i++ ) {
+	ii = 0;
+	gcdout = abuf[ii].buffer;
+	for ( i = 0; i < numargs; i++ ) {
+		if ( abuf[i].buffer[0] ) { gcdout = abuf[i].buffer; ii = i; i++; argsdone++; break; }
+	}
+	for ( ; i < numargs; i++ ) {
+	  if ( abuf[i].buffer[0] ) {
 		g = GCDfunction3(BHEAD gcdout,abuf[i].buffer);
-		if ( gcdout != abuf[0].buffer ) M_free(gcdout,"gcdout");
+		argsdone++;
+		if ( gcdout != abuf[ii].buffer ) M_free(gcdout,"gcdout");
 		gcdout = g;
 		if ( gcdout[*gcdout] == 0 && gcdout[0] == 4 && gcdout[1] == 1
 		&& gcdout[2] == 1 && gcdout[3] == 3 ) break;
+	  }
 	}
 	mm = gcdout;
 multiterms:;
@@ -1063,10 +1082,10 @@ multiterms:;
 		tout[-1] = mlength;
 		*termout = tout - termout;
 		AT.WorkPointer = tout;
-		if ( Generator(BHEAD termout,level) < 0 ) goto CalledFrom;
+		if ( argsdone && Generator(BHEAD termout,level) < 0 ) goto CalledFrom;
 		mm = mnext; /* next term */
 	}
-	if ( action && ( gcdout != abuf[0].buffer ) ) M_free(gcdout,"gcdout");
+	if ( action && ( gcdout != abuf[ii].buffer ) ) M_free(gcdout,"gcdout");
 /*
   	#] Multiterm subexpressions : 
   	#[ Cleanup :
@@ -1126,6 +1145,7 @@ WORD *GCDfunction3(PHEAD WORD *in1, WORD *in2)
 	WORD *t, *tt, *gcdout, *term1, *term2, *confree1, *confree2, *gcdout1, *proper1, *proper2;
 	int i, actionflag1, actionflag2;
 	WORD startebuf = cbuf[AT.ebufnum].numrhs;
+	WORD tryterm1, tryterm2;
 	if ( in2[*in2] == 0 ) { t = in1; in1 = in2; in2 = t; }
 	if ( in1[*in1] == 0 ) {	/* First input with only one term */
 		gcdout = (WORD *)Malloc1((*in1+1)*sizeof(WORD),"gcdout");
@@ -1149,7 +1169,9 @@ WORD *GCDfunction3(PHEAD WORD *in1, WORD *in2)
 	term2 = TermMalloc("GCDfunction3-b");
 
 	confree1 = TakeContent(BHEAD in1,term1);
+	tryterm1 = AN.tryterm; AN.tryterm = 0;
 	confree2 = TakeContent(BHEAD in2,term2);
+	tryterm2 = AN.tryterm; AN.tryterm = 0;
 /*
 	confree1 = TakeSymbolContent(BHEAD in1,term1);
 	confree2 = TakeSymbolContent(BHEAD in2,term2);
@@ -1161,19 +1183,25 @@ WORD *GCDfunction3(PHEAD WORD *in1, WORD *in2)
 	by extra symbols.
 */
 	if ( ( proper1 = PutExtraSymbols(BHEAD confree1,startebuf,&actionflag1) ) == 0 ) goto CalledFrom;
-	if ( confree1 != in1 ) M_free(confree1,"TakeContent");
+	if ( confree1 != in1 ) {
+		if ( tryterm1 ) { TermFree(confree1,"TakeContent"); }
+		else { M_free(confree1,"TakeContent"); }
+	}
 /*
 	TermFree(confree1,"TakeSymbolContent");
 */
 	if ( ( proper2 = PutExtraSymbols(BHEAD confree2,startebuf,&actionflag2) ) == 0 ) goto CalledFrom;
-	if ( confree2 != in2 ) M_free(confree2,"TakeContent");
+	if ( confree2 != in2 ) {
+		if ( tryterm2 ) { TermFree(confree2,"TakeContent"); }
+		else { M_free(confree2,"TakeContent"); }
+	}
 /*
 	TermFree(confree2,"TakeSymbolContent");
 */
 /*
 	And now the real work:
 */
-	gcdout1 = poly_gcd(BHEAD proper1,proper2);
+	gcdout1 = poly_gcd(BHEAD proper1,proper2,0);
 	M_free(proper1,"PutExtraSymbols");
 	M_free(proper2,"PutExtraSymbols");
 
@@ -1191,7 +1219,9 @@ WORD *GCDfunction3(PHEAD WORD *in1, WORD *in2)
 	Now multiply gcdout by term1
 */
 	if ( term1[0] != 4 || term1[3] != 3 || term1[1] != 1 || term1[2] != 1 ) {
+		AN.tryterm = -1;
 		if ( ( gcdout1 = MultiplyWithTerm(BHEAD gcdout,term1,2) ) == 0 ) goto CalledFrom;
+		AN.tryterm = 0;
 		M_free(gcdout,"gcdout");
 		gcdout = gcdout1;
 	}
@@ -1199,6 +1229,7 @@ WORD *GCDfunction3(PHEAD WORD *in1, WORD *in2)
 	AT.WorkPointer = ow;
 	return(gcdout);
 CalledFrom:
+	AN.tryterm = 0;
 	MLOCK(ErrorMessageLock);
 	MesCall("GCDfunction3");
 	MUNLOCK(ErrorMessageLock);
@@ -1307,6 +1338,8 @@ WORD *MultiplyWithTerm(PHEAD WORD *in, WORD *term, WORD par)
 		in += *in;
 	}
 	if ( par == 2 ) {
+/*		if ( AN.tryterm == 0 ) AN.tryterm = 1; */
+		AN.tryterm = 0; /* For now */
 		if ( EndSort(BHEAD (WORD *)((VOID *)(&termout)),2) < 0 ) goto CalledFrom;
 	}
 	else {
@@ -2054,7 +2087,7 @@ int GCDterms(PHEAD WORD *term1, WORD *term2, WORD *termout)
 		t2 = term2+1;
 		if ( *t1 == SYMBOL ) {
 			while ( t2 < t2stop && *t2 != SYMBOL ) t2 += t2[1];
-			if ( *t2 == SYMBOL ) {
+			if ( t2 < t2stop && *t2 == SYMBOL ) {
 				t2next = t2+t2[1];
 				tt1 = t1+2; tt2 = t2+2; count1 = 0;
 				while ( tt1 < t1next && tt2 < t2next ) {
@@ -2081,7 +2114,7 @@ int GCDterms(PHEAD WORD *term1, WORD *term2, WORD *termout)
 		}
 		else if ( *t1 == DOTPRODUCT ) {
 			while ( t2 < t2stop && *t2 != DOTPRODUCT ) t2 += t2[1];
-			if ( *t2 == DOTPRODUCT ) {
+			if ( t2 < t2stop && *t2 == DOTPRODUCT ) {
 				t2next = t2+t2[1];
 				tt1 = t1+2; tt2 = t2+2; count1 = 0;
 				while ( tt1 < t1next && tt2 < t2next ) {
@@ -2109,7 +2142,7 @@ int GCDterms(PHEAD WORD *term1, WORD *term2, WORD *termout)
 		}
 		else if ( *t1 == VECTOR ) {
 			while ( t2 < t2stop && *t2 != VECTOR ) t2 += t2[1];
-			if ( *t2 == VECTOR ) {
+			if ( t2 < t2stop && *t2 == VECTOR ) {
 				t2next = t2+t2[1];
 				tt1 = t1+2; tt2 = t2+2; count1 = 0;
 				while ( tt1 < t1next && tt2 < t2next ) {
@@ -2129,7 +2162,7 @@ int GCDterms(PHEAD WORD *term1, WORD *term2, WORD *termout)
 		}
 		else if ( *t1 == INDEX ) {
 			while ( t2 < t2stop && *t2 != INDEX ) t2 += t2[1];
-			if ( *t2 == INDEX ) {
+			if ( t2 < t2stop && *t2 == INDEX ) {
 				t2next = t2+t2[1];
 				tt1 = t1+2; tt2 = t2+2; count1 = 0;
 				while ( tt1 < t1next && tt2 < t2next ) {
@@ -2148,7 +2181,7 @@ int GCDterms(PHEAD WORD *term1, WORD *term2, WORD *termout)
 		}
 		else if ( *t1 == DELTA ) {
 			while ( t2 < t2stop && *t2 != DELTA ) t2 += t2[1];
-			if ( *t2 == DELTA ) {
+			if ( t2 < t2stop && *t2 == DELTA ) {
 				t2next = t2+t2[1];
 				tt1 = t1+2; tt2 = t2+2; count1 = 0;
 				while ( tt1 < t1next && tt2 < t2next ) {
@@ -2246,7 +2279,7 @@ int ReadPolyRatFun(PHEAD WORD *term)
 	t = term+1;
 	while ( t < tstop ) {
 		if ( *t != AR.PolyFun ) { t += t[1]; continue; }
-		if ( ( t[2] & CLEANPRF ) == 0 ) { t += t[1]; continue; }
+		if ( ( t[2] & MUSTCLEANPRF ) == 0 ) { t += t[1]; continue; }
 		fun = t;
 		nextt = t + t[1];
 		if ( fun[1] > FUNHEAD && fun[FUNHEAD] == -SNUMBER && fun[FUNHEAD+1] == 0 )
@@ -2265,7 +2298,7 @@ int ReadPolyRatFun(PHEAD WORD *term)
 		confree2 = TakeSymbolContent(BHEAD den+ARGHEAD,term2);
 		GCDclean(BHEAD term1,term2);
 /*		gcd = PreGCD(BHEAD confree1,confree2,1); */
-		gcd = poly_gcd(BHEAD confree1,confree2);
+		gcd = poly_gcd(BHEAD confree1,confree2,1);
 		newnum = PolyDiv(BHEAD confree1,gcd,"ReadPolyRatFun");
 		newden = PolyDiv(BHEAD confree2,gcd,"ReadPolyRatFun");
 		TermFree(confree2,"ReadPolyRatFun");
@@ -2274,13 +2307,14 @@ int ReadPolyRatFun(PHEAD WORD *term)
 		den1 = MULfunc(BHEAD term2,newden);
 		TermFree(newnum,"ReadPolyRatFun");
 		TermFree(newden,"ReadPolyRatFun");
-		M_free(gcd,"poly_gcd");
+/*		M_free(gcd,"poly_gcd"); */
+		TermFree(gcd,"poly_gcd");
 		TermFree(term1,"ReadPolyRatFun");
 		TermFree(term2,"ReadPolyRatFun");
 /*
 		Now we can put the function back together.
 		Notice that we cannot use ToFast, because there is no reservation
-		for the header of the argument. Fortutately there are only two
+		for the header of the argument. Fortunately there are only two
 		types of fast arguments.
 */
 		if ( num1[0] == 4 && num1[4] == 0 && num1[2] == 1 && num1[1] > 0 ) {
@@ -2568,7 +2602,8 @@ didwork:;
 		if ( j*sizeof(WORD) > (size_t)(AM.MaxTer) ) goto OverWork;
 		in = tout = TermMalloc("TakeSymbolContent");
 		NCOPY(tout,t,j); *tout = 0;
-		M_free(inp,"MultiplyWithTerm");
+		if ( AN.tryterm > 0 ) { TermFree(inp,"MultiplyWithTerm"); AN.tryterm = 0; }
+		else { M_free(inp,"MultiplyWithTerm"); }
 	}
 	else {
 		t = in; while ( *t ) t += *t;
@@ -2705,10 +2740,16 @@ void GCDclean(PHEAD WORD *num, WORD *den)
 
 WORD *PolyDiv(PHEAD WORD *a,WORD *b,char *text)
 {
+/*
+	Probably the following would work now
+*/
+	DUMMYUSE(text);
+	return(poly_div(BHEAD a,b,1));
+/*
 	WORD *quo, *qq;
 	WORD *x, *xx;
 	LONG i;
-	quo = poly_div(BHEAD a,b);
+	quo = poly_div(BHEAD a,b,1);
 	x = TermMalloc(text);
 	qq = quo; while ( *qq ) qq += *qq;
 	i = (qq-quo+1);
@@ -2721,8 +2762,9 @@ WORD *PolyDiv(PHEAD WORD *a,WORD *b,char *text)
 	}
 	xx = x; qq = quo;
 	NCOPY(xx,qq,i)
-	M_free(quo,"poly_div");
+	TermFree(quo,"poly_div");
 	return(x);
+*/
 }
 
 /*
@@ -2737,9 +2779,11 @@ WORD *PolyDiv(PHEAD WORD *a,WORD *b,char *text)
 	Note that the output can be just a number or many terms.
 	In case par == 0 the output is [arg1/arg2]
 	In case par == 1 the output is [arg1%arg2]
+	In case par == 2 the output is [inverse of arg1 modulus arg2]
+	In case par == 3 the output is [arg1*arg2]
 */
 
-WORD divrem[3] = { DIVFUNCTION, REMFUNCTION, INVERSEFUNCTION };
+WORD divrem[4] = { DIVFUNCTION, REMFUNCTION, INVERSEFUNCTION, MULFUNCTION };
 
 int DIVfunction(PHEAD WORD *term,WORD level,int par)
 {
@@ -2749,7 +2793,8 @@ int DIVfunction(PHEAD WORD *term,WORD level,int par)
 	WORD *proper1, *proper2, *proper3 = 0;
 	int numargs = 0, type1, type2, actionflag1, actionflag2;
 	WORD startebuf = cbuf[AT.ebufnum].numrhs;
-	if ( par < 0 || par > 2 ) {
+	int division = ( par <= 2 );  /* false for mul_ */
+	if ( par < 0 || par > 3 ) {
 		MLOCK(ErrorMessageLock);
 		MesPrint("Internal error. Illegal parameter %d in DIVfunction.",par);
 		MUNLOCK(ErrorMessageLock);
@@ -2782,7 +2827,7 @@ int DIVfunction(PHEAD WORD *term,WORD level,int par)
 /*
 	We have two arguments in arg1 and arg2.
 */
-	if ( *arg1 == -SNUMBER && arg1[1] == 0 ) {
+	if ( division && *arg1 == -SNUMBER && arg1[1] == 0 ) {
 		if ( *arg2 == -SNUMBER && arg2[1] == 0 ) {
 zerozero:;
 			MLOCK(ErrorMessageLock);
@@ -2792,16 +2837,22 @@ zerozero:;
 		}
 		return(0);
 	}
-	if ( *arg2 == -SNUMBER && arg2[1] == 0 ) {
+	if ( division && *arg2 == -SNUMBER && arg2[1] == 0 ) {
 divzero:;
 		MLOCK(ErrorMessageLock);
 		MesPrint("Division by zero in either div_ or rem_ function.");
 		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
+	if ( !division ) {
+		if ( (*arg1 == -SNUMBER && arg1[1] == 0) ||
+		     (*arg2 == -SNUMBER && arg2[1] == 0) ) {
+			return(0);
+		}
+	}
 	if ( ( arg1 = ConvertArgument(BHEAD arg1, &type1) ) == 0 ) goto CalledFrom;
 	if ( ( arg2 = ConvertArgument(BHEAD arg2, &type2) ) == 0 ) goto CalledFrom;
-	if ( *arg1 == 0 ) {
+	if ( division && *arg1 == 0 ) {
 		if ( *arg2 == 0 ) {
 			M_free(arg2,"DIVfunction");
 			M_free(arg1,"DIVfunction");
@@ -2811,10 +2862,15 @@ divzero:;
 		M_free(arg1,"DIVfunction");
 		return(0);
 	}
-	if ( *arg2 == 0 ) {
+	if ( division && *arg2 == 0 ) {
 		M_free(arg2,"DIVfunction");
 		M_free(arg1,"DIVfunction");
 		goto divzero;
+	}
+	if ( !division && (*arg1 == 0 || *arg2 == 0) ) {
+		M_free(arg2,"DIVfunction");
+		M_free(arg1,"DIVfunction");
+		return(0);
 	}
 	if ( ( proper1 = PutExtraSymbols(BHEAD arg1,startebuf,&actionflag1) ) == 0 ) goto CalledFrom;
 	if ( ( proper2 = PutExtraSymbols(BHEAD arg2,startebuf,&actionflag2) ) == 0 ) goto CalledFrom;
@@ -2836,9 +2892,10 @@ divzero:;
 	}
 */
 	M_free(arg1,"DIVfunction");
-	if ( par == 0 )      proper3 = poly_div(BHEAD proper1, proper2);
-	else if ( par == 1 ) proper3 = poly_rem(BHEAD proper1, proper2);
+	if ( par == 0 )      proper3 = poly_div(BHEAD proper1, proper2,0);
+	else if ( par == 1 ) proper3 = poly_rem(BHEAD proper1, proper2,0);
 	else if ( par == 2 ) proper3 = poly_inverse(BHEAD proper1, proper2);
+	else if ( par == 3 ) proper3 = poly_mul(BHEAD proper1, proper2);
 	if ( proper3 == 0 ) goto CalledFrom;
 	if ( actionflag1 || actionflag2 ) {
 		if ( ( arg3 = TakeExtraSymbols(BHEAD proper3,startebuf) ) == 0 ) goto CalledFrom;
@@ -3056,6 +3113,7 @@ int ExpandRat(PHEAD WORD *fun)
 	WORD *numerator, *denominator, *rnext;
 	WORD *thecopy, *rc, ncoef, newcoef, *m, *mm, nco, *outarg = 0;
 	UWORD co[2], co1[2], co2[2];
+	WORD OldPolyFunPow = AR.PolyFunPow;
 	int i, j, minpow = 0, eppow, first, error = 0, ipoly;
 	if ( fun[1] == FUNHEAD ) { return(0); }
 	tnext = fun + fun[1];
@@ -3069,6 +3127,29 @@ NormArg:;
 		AT.TrimPower = 1;
 		NewSort(BHEAD0);
 		r = fun+FUNHEAD+ARGHEAD;
+		if ( AR.PolyFunExp ==  2 ) {	/* Find minimum power */
+			WORD minpow2 = MAXPOWER, *rrm;
+			rrm = r;
+			while ( rrm < tnext ) {
+				if ( *rrm == 4 ) {
+					if ( minpow2 > 0 ) minpow2 = 0;
+				}
+				else if ( ABS(rrm[*rrm-1]) == (*rrm-1) ) {
+					if ( minpow2 > 0 ) minpow2 = 0;
+				}
+				else {
+					if ( rrm[1] == SYMBOL && rrm[2] == 4 && rrm[3] == AR.PolyFunVar ) {
+						if ( rrm[4] < minpow2 ) minpow2 = rrm[4];
+					}
+					else {
+						MesPrint("Illegal term in expanded polyratfun.");
+						goto onerror;
+					}
+				}
+				rrm += *rrm;
+			}
+			AR.PolyFunPow += minpow2;
+		}
 		while ( r < tnext ) {
 			rr = r + *r;
 			i = *r; rrr = outarg; NCOPY(rrr,r,i);
@@ -3157,6 +3238,29 @@ NormArg:;
 			else {	/* Multi-term numerator. */
 				m = arg1+ARGHEAD;
 				NewSort(BHEAD0);	/* Technically maybe not needed */
+				if ( AR.PolyFunExp ==  2 ) {	/* Find minimum power */
+					WORD minpow2 = MAXPOWER, *rrm;
+					rrm = m;
+					while ( rrm < arg2 ) {
+						if ( *rrm == 4 ) {
+							if ( minpow2 > 0 ) minpow2 = 0;
+						}
+						else if ( ABS(rrm[*rrm-1]) == (*rrm-1) ) {
+							if ( minpow2 > 0 ) minpow2 = 0;
+						}
+						else {
+							if ( rrm[1] == SYMBOL && rrm[2] == 4 && rrm[3] == AR.PolyFunVar ) {
+								if ( rrm[4] < minpow2 ) minpow2 = rrm[4];
+							}
+							else {
+								MesPrint("Illegal term in expanded polyratfun.");
+								goto onerror;
+							}
+						}
+						rrm += *rrm;
+					}
+					AR.PolyFunPow += minpow2-1;
+				}
 				while ( m < arg2 ) {
 					r = outarg;
 					rrr = r++; mm = m + *m;
@@ -3214,6 +3318,29 @@ NormArg:;
 			else {	/* Multi-term numerator. */
 				m = arg1+ARGHEAD;
 				NewSort(BHEAD0);	/* Technically maybe not needed */
+				if ( AR.PolyFunExp ==  2 ) {	/* Find minimum power */
+					WORD minpow2 = MAXPOWER, *rrm;
+					rrm = m;
+					while ( rrm < arg2 ) {
+						if ( *rrm == 4 ) {
+							if ( minpow2 > 0 ) minpow2 = 0;
+						}
+						else if ( ABS(rrm[*rrm-1]) == (*rrm-1) ) {
+							if ( minpow2 > 0 ) minpow2 = 0;
+						}
+						else {
+							if ( rrm[1] == SYMBOL && rrm[2] == 4 && rrm[3] == AR.PolyFunVar ) {
+								if ( rrm[4] < minpow2 ) minpow2 = rrm[4];
+							}
+							else {
+								MesPrint("Illegal term in expanded polyratfun.");
+								goto onerror;
+							}
+						}
+						rrm += *rrm;
+					}
+					AR.PolyFunPow += minpow2;
+				}
 				while ( m < arg2 ) {
 					r = rr;
 					rrr = r++; mm = m + *m;
@@ -3225,7 +3352,15 @@ NormArg:;
 					if ( r < AT.WorkTop && r >= AT.WorkSpace )
 								AT.WorkPointer = r;
 					Normalize(BHEAD rrr);
-					StoreTerm(BHEAD rrr);
+					if ( ABS(rrr[*rrr-1]) == *rrr-1 ) {
+						if ( AR.PolyFunPow >= 0 ) {
+							StoreTerm(BHEAD rrr);
+						}
+					}
+					else if ( rrr[1] == SYMBOL && rrr[2] == 4 &&
+					rrr[3] == AR.PolyFunVar && rrr[4] <= AR.PolyFunPow ) {
+						StoreTerm(BHEAD rrr);
+					}
 				}
 				EndSort(BHEAD rr,1);
 			}
@@ -3344,7 +3479,12 @@ NormArg:;
 		Note that the return value is an offset in AT.pWorkSpace.
 		Hence there is no need to free memory afterwards.
 */
-		ipoly = InvPoly(BHEAD denominator,AR.PolyFunPow,AR.PolyFunVar);
+		if ( AR.PolyFunExp == 3 ) {
+			ipoly = InvPoly(BHEAD denominator,AR.PolyFunPow-minpow,AR.PolyFunVar);
+		}
+		else {
+			ipoly = InvPoly(BHEAD denominator,AR.PolyFunPow,AR.PolyFunVar);
+		}
 /*
 		Now we start the multiplying
 */
@@ -3413,11 +3553,13 @@ NormArg:;
 	}
 done:
 	if ( outarg ) TermFree(outarg-ARGHEAD,"ExpandRat");
+	AR.PolyFunPow = OldPolyFunPow;
 	AT.WorkPointer = ow;
 	AN.PolyNormFlag = 1;
 	return(0);
 onerror:
 	if ( outarg ) TermFree(outarg-ARGHEAD,"ExpandRat");
+	AR.PolyFunPow = OldPolyFunPow;
 	AT.WorkPointer = ow;
 	MLOCK(ErrorMessageLock);
 	MesPrint(TheErrorMessage[error]);

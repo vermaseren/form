@@ -7,7 +7,7 @@
  */
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2013 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -145,7 +145,7 @@ void PolyFunDirty(PHEAD WORD *term)
 	t = term+1;
 	while ( t < tstop ) {
 		if ( *t == AR.PolyFun ) {
-			if ( AR.PolyFunType == 2 ) t[2] |= CLEANPRF;
+			if ( AR.PolyFunType == 2 ) t[2] |= MUSTCLEANPRF;
 			endarg = t + t[1];
 			t[2] |= DIRTYFLAG;
 			t += FUNHEAD;
@@ -180,7 +180,7 @@ void PolyFunClean(PHEAD WORD *term)
 	t = term+1;
 	while ( t < tstop ) {
 		if ( *t == AR.PolyFun ) {
-			t[2] &= ~CLEANPRF;
+			t[2] &= ~MUSTCLEANPRF;
 		}
 		t += t[1];
 	}
@@ -1239,7 +1239,8 @@ IndAll:				i = m[1] - WILDOFFSET;
 			else if ( *m == -ARGWILD ) goto ArgAll;
 			else if ( *m == -INDEX && m[1] >= AM.OffsetIndex+WILDOFFSET
 			&& m[1] < AM.OffsetIndex+(WILDOFFSET<<1) ) {
-				if ( *t == -VECTOR || *t == -SNUMBER ) goto IndAll;
+				if ( *t == -VECTOR ) goto IndAll;
+				if ( *t == -SNUMBER && t[1] >= 0 && t[1] < AM.OffsetIndex ) goto IndAll;
 				if ( *t == -MINVECTOR ) {
 					i = m[1] - WILDOFFSET;
 					AN.argaddress = AT.MinVecArg;
@@ -1887,7 +1888,7 @@ Failure:
 	AT.WorkPointer = OldWork;
 	return(0);
 OnSuccess:
-	if ( AT.idallflag ) {
+	if ( AT.idallflag && AN.nogroundlevel <= 0 ) {
 		if ( AT.idallmaxnum > 0 && AT.idallnum >= AT.idallmaxnum ) {
 			AN.terfirstcomm = Oterfirstcomm;
     		AN.SignCheck = oldSignCheck;

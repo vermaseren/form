@@ -1,6 +1,9 @@
-#! /bin/sh
+#!/bin/sh
+# See bbatsov/rubocop#3326
+# rubocop:disable all
 exec ruby "-S" "-x" "$0" "$@"
 #! ruby
+# rubocop:enable all
 
 # The default prefix for the root temporary directory. See TempDir.root.
 TMPDIR_PREFIX = "form_check_"
@@ -195,6 +198,10 @@ module FormTest
     RUBY_PLATFORM =~ /linux/i
   end
 
+  def travis?
+    ENV["TRAVIS"] == "true"
+  end
+
   # Override methods in Test::Unit::TestCase.
 
   def setup
@@ -275,7 +282,7 @@ module FormTest
     #       is because, in Ruby 1.9, test/unit is implemented based on
     #       minitest and MiniTest::Assertion is not a subclass of
     #       StandardError.
-    rescue Exception => e
+    rescue Exception => e # rubocop:disable Lint/RescueException
       STDERR.puts
       STDERR.puts("=" * 79)
       STDERR.puts("#{info.desc} FAILED")
@@ -293,6 +300,15 @@ module FormTest
       end
       raise e
     else
+      if FormTest.cfg.verbose
+        STDERR.puts
+        STDERR.puts("=" * 79)
+        STDERR.puts("#{info.desc} SUCCEEDED")
+        STDERR.puts("=" * 79)
+        STDERR.puts(@stdout)
+        STDERR.puts("=" * 79)
+        STDERR.puts
+      end
       info.status = "OK"
     end
   end
@@ -346,24 +362,22 @@ module FormTest
       err = Thread.new do
         while (line = stderrstream.gets)
           stderr << line
-          if !FormTest.cfg.valgrind.nil?
-            # We print both stdout and stderr when the test fails under
-            # Valgrind, by copying stderr into stdout. Unfortunately,
-            # their orders are not preserved.
-            stdout << line
-          end
+          # We print both stdout and stderr when a test fails. An easy way to
+          # implement this is to copy messages in stderr to those in stdout.
+          # Unfortunately their orders are not preserved.
+          stdout << line
         end
       end
       begin
         runner = Thread.current
-        killer = Thread.new(timeout) do |timeout_|
-          sleep(timeout_)
+        killer = Thread.new(timeout) do |timeout1|
+          sleep(timeout1)
           runner.raise
         end
         out.join
         err.join
         killer.kill
-      rescue
+      rescue StandardError
         while out.alive? && stdout.empty?
           sleep(0.01)
         end
@@ -383,6 +397,19 @@ module FormTest
 
     if !stdout.empty? && stdout[0] =~ /pid=([0-9]+)/
       stdout.shift
+    end
+
+    if !FormTest.cfg.valgrind.nil?
+      # The exit status may be in the middle of the output (sometimes annoyingly
+      # happened on Travis CI).
+      if @finished && !stdout.empty? && !stdout[-1].start_with?("exit_status=")
+        i = stdout.map { |x| x.start_with?("exit_status") }.rindex(true)
+        if !i.nil?
+          s = stdout[i]
+          stdout.delete_at(i)
+          stdout << s
+        end
+      end
     end
 
     if @finished && !stdout.empty? && stdout[-1] =~ /exit_status=([0-9]+)/
@@ -435,6 +462,7 @@ module FormTest
 
   # The method to be called before the test.
   def prepare
+    # Can be overridden in child classes.
   end
 
   # Test-result functions.
@@ -447,7 +475,7 @@ module FormTest
   # The verbatim result keeping line breaks and whitespaces.
   # Must be in the default output format.
   def exact_result(exprname, index = -1)
-    matches = @stdout.scan(/^[ \t]+#{exprname}\s*=(.+?);/m)
+    matches = @stdout.scan(/^[ \t]+#{Regexp.escape(exprname)}\s*=(.+?);/m)
     return matches[index].first if !matches.empty? && !matches[index].nil?
     ""
   end
@@ -474,7 +502,7 @@ module FormTest
       open(File.join(@tmpdir, filename), "r") do |f|
         return f.read
       end
-    rescue
+    rescue StandardError
       STDERR.puts("warning: failed to read '#{filename}'")
     end
     ""
@@ -542,7 +570,11 @@ module FormTest
   def succeeded?
     if finished? && !warning? && !compile_error? && !runtime_error? && return_value == 0
       if FormTest.cfg.valgrind.nil?
-        return @stderr.empty?
+        if @stderr.empty?
+          return true
+        end
+        @stdout += "!!! stderr is not empty"
+        return false
       end
       # Check for Valgrind errors.
       ok = !@stderr.include?("Invalid read") &&
@@ -559,12 +591,11 @@ module FormTest
            @stderr !~ /indirectly lost: [1-9]/ &&
            @stderr !~ /possibly lost: [1-9]/
       if !ok
-        @stdout += "Valgrind test failed"
+        @stdout += "!!! Valgrind test failed"
       end
       return ok
-    else
-      return false
     end
+    false
   end
 
   # Utility functions for pattern matching.
@@ -712,10 +743,8 @@ class TestCases
               warn("unmatched fold '#{fold}', which should be '#{foldname}'", inname, lineno)
             end
 
-            if skipping
-              line = ""
-            else
-              line = ""
+            line = ""
+            if !skipping
               if fileno == 0
                 # no .end
                 blockno.times do
@@ -900,7 +929,7 @@ end
 
 # FORM configuration.
 class FormConfig
-  def initialize(form, mpirun, valgrind, ncpu, timeout, stat, full)
+  def initialize(form, mpirun, valgrind, ncpu, timeout, stat, full, verbose)
     @form     = form
     @mpirun   = mpirun
     @valgrind = valgrind
@@ -908,6 +937,7 @@ class FormConfig
     @timeout  = timeout
     @stat     = stat
     @full     = full
+    @verbose  = verbose
 
     @form_bin      = nil
     @mpirun_bin    = nil
@@ -922,7 +952,7 @@ class FormConfig
     @form_cmd    = nil
   end
 
-  attr_reader :form, :mpirun, :valgrind, :ncpu, :timeout, :stat, :full
+  attr_reader :form, :mpirun, :valgrind, :ncpu, :timeout, :stat, :full, :verbose
   attr_reader :form_bin, :mpirun_bin, :valgrind_bin, :valgrind_supp
   attr_reader :head, :wordsize, :form_cmd
 
@@ -941,12 +971,14 @@ class FormConfig
   def check_bin(name, bin)
     # Check if the executable is available.
     system("cd #{TempDir.root}; type #{bin} >/dev/null 2>&1")
-    if $? != 0
-      if name == bin
-        fatal("executable '#{name}' not found")
-      else
-        fatal("executable '#{name}' ('#{bin}') not found")
-      end
+    if $? == 0
+      # OK.
+      return
+    end
+    if name == bin
+      fatal("executable '#{name}' not found")
+    else
+      fatal("executable '#{name}' ('#{bin}') not found")
     end
   end
 
@@ -964,11 +996,11 @@ class FormConfig
     begin
       frmname = File.join(tmpdir, "ver.frm")
       open(frmname, "w") do |f|
-        f.write(<<-'EOF')
-#-
-Off finalstats;
-.end
-  EOF
+        f.write(<<-'TEST_FRM')
+  #-
+  Off finalstats;
+  .end
+  TEST_FRM
       end
       @head = `#{@form_bin} #{frmname} 2>/dev/null`.split("\n").first
       @is_serial = false
@@ -985,11 +1017,13 @@ Off finalstats;
         @is_threaded = false
         @is_mpi      = true
       else
+        system("#{form_bin} #{frmname}")
         fatal("failed to get the version of '#{@form}'")
       end
       if @head =~ /FORM[^(]*\([^)]*\)\s*(\d+)-bits/
         @wordsize = $1.to_i / 16
       else
+        system("#{form_bin} #{frmname}")
         fatal("failed to get the wordsize of '#{@form}'")
       end
       # Prepare for mpirun
@@ -1025,10 +1059,12 @@ Off finalstats;
       # Check the output header.
       @head = `#{@form_cmd} #{frmname} 2>/dev/null`.split("\n").first
       if $? != 0
+        system("#{form_cmd} #{frmname}")
         fatal("failed to execute '#{@form_cmd}'")
       end
       if !@valgrind.nil?
-        @head += "\n" + `#{@form_cmd} @{frmname} 2>&1 >/dev/null`.split("\n")[0..2].join("\n")
+        # Include valgrind version information.
+        @head += "\n" + `#{@form_cmd} @{frmname} 2>&1 >/dev/null | grep Valgrind`.split("\n")[0]
       end
     ensure
       FileUtils.rm_rf(tmpdir)
@@ -1101,6 +1137,7 @@ def main
   opts.name_patterns = []
   opts.exclude_patterns = []
   opts.files = []
+  opts.verbose = false
 
   parser = OptionParser.new
   parser.banner = "Usage: #{File.basename($0)} [options] [--] [binname] [files|tests..]"
@@ -1115,10 +1152,11 @@ def main
   parser.on("--full",                "Full test, ignoring pending")       { opts.full = true }
   parser.on("--enable-valgrind",     "Enable Valgrind")                   { opts.enable_valgrind = true }
   parser.on("--valgrind BIN",        "Use BIN as Valgrind executable")    { |bin| opts.enable_valgrind = true; opts.valgrind = bin }
-  parser.on("-C", "--directory DIR", "Directory for test cases")          { |dir|  opts.dir = search_dir(dir, opts) }
-  parser.on("-n", "--name NAME",     "Run tests matching NAME")           { |pat|  opts.name_patterns << pat }
-  parser.on("-x", "--exclude NAME",  "Do not run tests matching NAME")    { |pat|  opts.exclude_patterns << pat }
-  parser.on("-D TEST=NAME",          "Alternative way to run tests NAME") { |pat|  opts.name_patterns << parse_def(pat) }
+  parser.on("-C", "--directory DIR", "Directory for test cases")          { |dir| opts.dir = search_dir(dir, opts) }
+  parser.on("-n", "--name NAME",     "Run tests matching NAME")           { |pat| opts.name_patterns << pat }
+  parser.on("-x", "--exclude NAME",  "Do not run tests matching NAME")    { |pat| opts.exclude_patterns << pat }
+  parser.on("-v", "--verbose",       "Do not suppress the test output")   { opts.verbose = true }
+  parser.on("-D TEST=NAME",          "Alternative way to run tests NAME") { |pat| opts.name_patterns << parse_def(pat) }
   begin
     parser.parse!(ARGV)
   rescue OptionParser::ParseError => e
@@ -1140,6 +1178,8 @@ def main
       opts.mpirun = ARGV[0]
     elsif ARGV[0] =~ /form/ || ARGV[0] =~ /vorm/ || File.executable?(ARGV[0])
       opts.form = ARGV[0]
+    elsif File.exist?(ARGV[0])
+      opts.files << ARGV[0]
     else
       opts.name_patterns << ARGV[0]
     end
@@ -1197,7 +1237,8 @@ def main
                                 opts.ncpu,
                                 opts.timeout > 1 ? opts.timeout : 1,
                                 opts.stat,
-                                opts.full)
+                                opts.full,
+                                opts.verbose)
   FormTest.cfg.check
   puts("Check #{FormTest.cfg.form_bin}")
   puts(FormTest.cfg.head)
@@ -1306,7 +1347,7 @@ end
 def guess_term_width
   require "io/console"
   IO.console.winsize[1]
-rescue LoadError
+rescue LoadError, NoMethodError
   system("type tput >/dev/null 2>&1")
   if $? == 0
     cols = `tput cols`
@@ -1320,6 +1361,6 @@ rescue LoadError
   end
 end
 
-if __FILE__ == $0
+if $0 == __FILE__
   main
 end

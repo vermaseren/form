@@ -4,7 +4,7 @@
  */
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2013 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -44,6 +44,7 @@ static KEYWORD precommands[] = {
 	 {"add"          , DoPreAdd       , 0, 0}
 	,{"addseparator" , DoPreAddSeparator,0,0}
 	,{"append"       , DoPreAppend    , 0, 0}
+	,{"appendpath"   , DoPreAppendPath, 0, 0}
 	,{"assign"       , DoPreAssign    , 0, 0}
 	,{"break"        , DoPreBreak     , 0, 0}
 	,{"breakdo"      , DoBreakDo      , 0, 0}
@@ -79,6 +80,7 @@ static KEYWORD precommands[] = {
 	,{"optimize"     , DoOptimize     , 0, 0}
 	,{"pipe"         , DoPipe         , 0, 0}
 	,{"preout"       , DoPreOut       , 0, 0}
+	,{"prependpath"  , DoPrePrependPath,0, 0}
 	,{"printtimes"   , DoPrePrintTimes, 0, 0}
 	,{"procedure"    , DoProcedure    , 0, 0}
 	,{"procedureextension" , DoPrcExtension   , 0, 0}
@@ -448,6 +450,8 @@ VOID UnsetAllowDelay()
 static UBYTE *yes = (UBYTE *)"1";
 static UBYTE *no  = (UBYTE *)"0";
 static UBYTE numintopolynomial[12];
+#include "vector.h"
+static Vector(UBYTE, exprstr);  /* Used for numactiveexprs_ and activeexprnames_. */
 
 UBYTE *GetPreVar(UBYTE *name, int flag)
 {
@@ -483,6 +487,66 @@ UBYTE *GetPreVar(UBYTE *name, int flag)
 		static char timestring[40];
     	sprintf(timestring,"%ld",(GetRunningTime() - AP.StopWatchZero));
 		return((UBYTE *)timestring);
+	}
+	else if ( StrICmp(name, (UBYTE *)"numactiveexprs_") == 0 ) {
+		/* the number of active expressions */
+		int n = 0;
+		for ( i = 0; i < NumExpressions; i++ ) {
+			EXPRESSIONS e = Expressions + i;
+			switch ( e->status ) {
+				case LOCALEXPRESSION:
+				case GLOBALEXPRESSION:
+				case UNHIDELEXPRESSION:
+				case UNHIDEGEXPRESSION:
+				case INTOHIDELEXPRESSION:
+				case INTOHIDEGEXPRESSION:
+					n++;
+					break;
+			}
+		}
+		VectorReserve(exprstr, 41);  /* up to 128-bit */
+		LongCopy(n, (char *)VectorPtr(exprstr));
+		return VectorPtr(exprstr);
+	}
+	else if ( StrICmp(name, (UBYTE *)"activeexprnames_") == 0 ) {
+		/* the list of active expressions separated by commas */
+		int j = 0;
+		VectorReserve(exprstr, 16);  /* at least 1 character for '\0' */
+		for ( i = 0; i < NumExpressions; i++ ) {
+			UBYTE *p, *s;
+			int len, k;
+			EXPRESSIONS e = Expressions + i;
+			switch ( e->status ) {
+				case LOCALEXPRESSION:
+				case GLOBALEXPRESSION:
+				case UNHIDELEXPRESSION:
+				case UNHIDEGEXPRESSION:
+				case INTOHIDELEXPRESSION:
+				case INTOHIDEGEXPRESSION:
+					s = AC.exprnames->namebuffer + e->name;
+					len = StrLen(s);
+					VectorSize(exprstr) = j;  /* j bytes must be copied in extending the buffer. */
+					VectorReserve(exprstr, j + len * 2 + 1);
+					p = VectorPtr(exprstr);
+					if ( j > 0 ) p[j++] = ',';
+					for ( k = 0; k < len; k++ ) {
+						if ( s[k] == ',' || s[k] == '|' ) p[j++] = '\\';
+						p[j++] = s[k];
+					}
+					break;
+			}
+		}
+		VectorPtr(exprstr)[j] = '\0';
+		return VectorPtr(exprstr);
+	}
+	else if ( StrICmp(name, (UBYTE *)"path_") == 0 ) {
+		/* the current FORM path (for debugging both in .c and .frm) */
+		if ( AM.Path ) {
+			return(AM.Path);
+		}
+		else {
+			return((UBYTE *)"");
+		}
 	}
 	t = name;
 	while ( *t && *t != '_' ) t++;
@@ -744,7 +808,6 @@ VOID IniModule(int type)
 		if ( AC.LabelNames[AC.NumLabels] ) M_free(AC.LabelNames[AC.NumLabels],"LabelName");
 	}
 
-	if ( type == FIRSTMODULE ) AC.iPointer = AC.iBuffer;
 	C->Pointer = C->Buffer;
 
 	AC.Commercial[0] = 0;
@@ -809,7 +872,10 @@ VOID PreProcessor()
 	AP.StopWatchZero = GetRunningTime();
 	AC.compiletype = 0;
 	AP.PreContinuation = 0;
+	AP.PreAssignLevel = 0;
 	AP.gNumPre = NumPre;
+	AC.iPointer = AC.iBuffer;
+	AC.iPointer[0] = 0;
 
 	if ( AC.CheckpointFlag == -1 ) DoRecovery(&moduletype);
 	AC.CheckpointStamp = Timer(0);
@@ -974,8 +1040,9 @@ endmodule:			if ( error2 == 0 && AM.qError == 0 ) {
 						if ( AP.PreAssignFlag ) AC.RhsExprInModuleFlag = 0;
 #endif
 						if ( AP.PreOut || ( AP.PreDebug & DUMPTOCOMPILER )
-								== DUMPTOCOMPILER ) MesPrint(" %s",AC.iBuffer);
-						retcode = CompileStatement(AC.iBuffer);
+								== DUMPTOCOMPILER )
+									MesPrint(" %s",AC.iBuffer+AP.PreAssignStack[AP.PreAssignLevel]);
+						retcode = CompileStatement(AC.iBuffer+AP.PreAssignStack[AP.PreAssignLevel]);
 						if ( retcode < 0 ) error1++;
 						if ( retcode ) { error2++; AP.preError++; }
 						if ( AP.PreAssignFlag ) {
@@ -984,7 +1051,9 @@ endmodule:			if ( error2 == 0 && AM.qError == 0 ) {
 								else if ( retcode > 0 ) { error2++; AP.preError++; }
 							}
 							else CatchDollar(-1);
-							AP.PreAssignFlag = 0;
+							POPPREASSIGNLEVEL;
+							if ( AP.PreAssignLevel <=0 )
+								AP.PreAssignFlag = 0;
 							NumPotModdollars = onpmd;
 #ifdef WITHMPI
 							AC.RhsExprInModuleFlag = oldRhsExprInModuleFlag;
@@ -992,10 +1061,19 @@ endmodule:			if ( error2 == 0 && AM.qError == 0 ) {
 						}
 					}
 					else {
-						MesPrint(" %s",AC.iBuffer);
+						MesPrint(" %s",AC.iBuffer+AP.PreAssignStack[AP.PreAssignLevel]);
 					}
 				}
+				else if ( !AP.PreContinuation ) {
+					if ( AP.PreAssignLevel > 0 ) {
+						POPPREASSIGNLEVEL;
+						if ( AP.PreAssignLevel <=0 )
+							AP.PreAssignFlag = 0;
+					}
+				}
+/*
 				if ( !AP.PreContinuation ) AP.PreAssignFlag = 0;
+*/
 			}
 		}
 	}
@@ -1297,7 +1375,8 @@ int LoadStatement(int type)
 {
 	UBYTE *s, c, cp;
 	int retval = 0, stringlevel = 0, newstatement = 0;
-	if ( type == NEWSTATEMENT ) { AP.eat = 1; s = AC.iBuffer; newstatement = 1; }
+	if ( type == NEWSTATEMENT ) { AP.eat = 1; newstatement = 1;
+		s = AC.iBuffer+AP.PreAssignStack[AP.PreAssignLevel]; }
 	else { s = AC.iPointer; *s = 0; c = ' '; goto blank; }
 	*s = 0;
 	for(;;) {
@@ -1353,7 +1432,7 @@ doall:;			if ( AP.eat < 0 ) {
 				}
 				else if ( newstatement == 1 ) newstatement = 0;
 				AP.eat = 1;
-				if ( c == '*' && s > AC.iBuffer && s[-1] == '*' ) {
+				if ( c == '*' && s > AC.iBuffer+AP.PreAssignStack[AP.PreAssignLevel] && s[-1] == '*' ) {
 					s[-1] = '^';
 					continue;
 				}
@@ -1362,11 +1441,13 @@ doall:;			if ( AP.eat < 0 ) {
 		if ( s >= AC.iStop ) {
 			if ( !AP.iBufError ) {
 				LONG position = s - AC.iBuffer;
+				LONG position2 = AC.iPointer - AC.iBuffer;
 				UBYTE **ppp = &(AC.iBuffer); /* to avoid a compiler warning */
 				if ( DoubleLList((VOID ***)ppp,&AC.iBufferSize
 				,sizeof(UBYTE),"statement buffer") ) {
 					*s = 0; retval = -1; AP.iBufError = 1;
 				}
+				AC.iPointer = AC.iBuffer + position2;
 				AC.iStop = AC.iBuffer + AC.iBufferSize-2;
 				s = AC.iBuffer + position;
 			}
@@ -1433,7 +1514,7 @@ int ExpandTripleDots(int par)
 	int i, error = 0, i1 ,i2, ii, *nums = 0;
 
 	if ( par == 0 ) {
-		Buffer = AC.iBuffer; Stop = AC.iStop;
+		Buffer = AC.iBuffer+AP.PreAssignStack[AP.PreAssignLevel]; Stop = AC.iStop;
 	}
 	else {
 		Buffer = AP.preStart; Stop = AP.preStop;
@@ -1532,13 +1613,15 @@ int ExpandTripleDots(int par)
 				LONG position = s - Buffer;
 				UBYTE **ppp;
 				if ( par == 0 ) {
+					LONG position2 = AC.iPointer - AC.iBuffer;
 					ppp = &(AC.iBuffer); /* to avoid a compiler warning */
 					if ( DoubleLList((VOID ***)ppp,&AC.iBufferSize
 						,sizeof(UBYTE),"statement buffer") ) {
 							Terminate(-1);
 					}
+					AC.iPointer = AC.iBuffer + position2;
 					AC.iStop = AC.iBuffer + AC.iBufferSize-2;
-					Buffer = AC.iBuffer; Stop = AC.iStop;
+					Buffer = AC.iBuffer+AP.PreAssignStack[AP.PreAssignLevel]; Stop = AC.iStop;
 				}
 				else {
 					LONG fillpos = 0;
@@ -1744,14 +1827,34 @@ theend:			M_free(nums,"Expand ...");
 			while ( *s ) *n1++ = *s++;
 			*n1 = 0;
 			if ( par == 0 ) {
-				AC.iStop = nBuffer + x2 - 2;
-				AC.iBufferSize = x2;
-				M_free(AC.iBuffer,"input buffer");
+				LONG nnn1 = n1-nBuffer;
+				LONG nnn2 = n2-nBuffer;
+				LONG nnn3;
+				while ( AC.iBuffer+AP.PreAssignStack[AP.PreAssignLevel] + x2 >= AC.iStop ) {
+					LONG position = s-Buffer;
+					LONG position2 = AC.iPointer - AC.iBuffer;
+					UBYTE **ppp;
+					ppp = &(AC.iBuffer); /* to avoid a compiler warning */
+					if ( DoubleLList((VOID ***)ppp,&AC.iBufferSize
+						,sizeof(UBYTE),"statement buffer") ) {
+							Terminate(-1);
+					}
+					AC.iPointer = AC.iBuffer + position2;
+					AC.iStop = AC.iBuffer + AC.iBufferSize-2;
+					Buffer = AC.iBuffer+AP.PreAssignStack[AP.PreAssignLevel]; Stop = AC.iStop;
+					s  = Buffer + position;
+				}
+/*
+				This can be improved. We only have to start from the first term.
+*/
+				for ( nnn3 = 0; nnn3 < nnn1; nnn3++ ) Buffer[nnn3] = nBuffer[nnn3];
+				Buffer[nnn3] = 0;
+				n1 = Buffer + nnn1;
+				n2 = Buffer + nnn2;
+				M_free(nBuffer,"input buffer");
 				M_free(nums,"Expand ...");
-				AC.iBuffer = nBuffer;
-				Buffer = AC.iBuffer; Stop = AC.iStop;
 			}
-			else {
+			else { /* Comes here only inside a real preprocessor instruction */
 				AP.preStop = nBuffer + x2 - 2;
 				AP.pSize = x2;
 				M_free(AP.preStart,"input buffer");
@@ -1949,13 +2052,16 @@ int DoPreAssign(UBYTE *s)
 		MesPrint("@Illegal characters in %#assign instruction");
 		error = 1;
 	}
+	PUSHPREASSIGNLEVEL;
 	AP.PreAssignFlag = 1;
+/*
 	if ( AP.PreContinuation ) {
 		MesPrint("@Assign instructions cannot occur inside statements");
 		MesPrint("@Missing ; ?");
 		AP.PreContinuation = 0;
 		error = 1;
 	}
+*/
 	return(error);
 }
 
@@ -2124,13 +2230,13 @@ int DoInclude(UBYTE *s) { return(Include(s,FILESTREAM)); }
 
 /*
  		#] DoInclude : 
- 		#[ DoInclude :
+ 		#[ DoReverseInclude :
 */
 
 int DoReverseInclude(UBYTE *s) { return(Include(s,REVERSEFILESTREAM)); }
 
 /*
- 		#] DoInclude : 
+ 		#] DoReverseInclude : 
  		#[ Include :
 */
 
@@ -2171,6 +2277,7 @@ int Include(UBYTE *s, int type)
 			MesPrint("@Empty fold name");
 			return(-1);
 		}
+continue_fold:
 		while ( *s && *s != ' ' && *s != '\t' ) {
 			if ( *s == '\\' ) s++;
 			s++;
@@ -2178,8 +2285,10 @@ int Include(UBYTE *s, int type)
 		t = s;
 		while ( *s == ' ' || *s == '\t' ) s++;
 		if ( *s ) {
-			MesPrint("@Improper fold name");
-			return(-1);
+			/*
+			 * A non-whitespace character is found. Continue parsing the fold.
+			 */
+			goto continue_fold;
 		}
 	}
 	else if ( *s == 0 ) {
@@ -2595,7 +2704,7 @@ int DoDo(UBYTE *s)
 	DOLOOP *loop;
 	WORD expnum;
 	LONG linenum  = AC.CurrentStream->linenumber;
-	int oldNoShowInput = AC.NoShowInput, i;
+	int oldNoShowInput = AC.NoShowInput, i, oldpreassignflag;
 
 	if ( ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH )
 	|| ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) ) {
@@ -2765,13 +2874,14 @@ int DoDo(UBYTE *s)
 		Compile and put in dollar variable.
 		Note that we remember the dollar by name and that this name ends in _
 */
+		oldpreassignflag = AP.PreAssignFlag;
 		AP.PreAssignFlag = 2;
         CompileStatement(loop->dollarname);
 		if ( CatchDollar(0) ) {
 			MesPrint("@Cannot load expression in do loop");
 			return(-1);
 		}
-		AP.PreAssignFlag = 0;
+		AP.PreAssignFlag = oldpreassignflag;
 		NumPotModdollars = oldNumPotModdollars;
 #ifdef WITHMPI
 		AC.RhsExprInModuleFlag = oldRhsExprInModuleFlag;
@@ -3218,10 +3328,13 @@ int DoInside(UBYTE *s)
 		MesPrint("@Illegal nesting of %#inside/%#endinside instructions");
 		return(-1);
 	}
+/*
 	if ( AP.PreContinuation ) {
 		error = -1;
 		MesPrint("@%#inside cannot be inside a regular statement");
 	}
+*/
+	PUSHPREASSIGNLEVEL
 /*
 	Now the dollars to do
 */
@@ -3415,6 +3528,7 @@ cleanup:
 	AS.MultiThreaded = oldmultithreaded;
 	AC.mparallelflag = AP.inside.oldparallelflag;
 	NumPotModdollars = AP.inside.oldnumpotmoddollars;
+	POPPREASSIGNLEVEL
 #ifdef WITHMPI
 	PF_RestoreInsideInfo();
 	if ( error ) return error;
@@ -4745,6 +4859,7 @@ UBYTE *PreCalc()
 	UBYTE *buff, *s = 0, *t, *newb, c;
 	int size, i, n, parlevel = 0, bralevel = 0;
 	LONG answer;
+	ULONG uanswer;
 	size = n = 0;
 	buff = 0; c = '{';
 	for (;;) {
@@ -4790,13 +4905,14 @@ UBYTE *PreCalc()
 	if ( PreEval(buff+1,&answer) == 0 ) goto setstring;
 	t = buff + size;
 	s = buff;
-	if ( answer < 0 ) { *s++ = '-'; answer = -answer; }
+	if ( answer < 0 ) { *s++ = '-'; }
+	uanswer = LongAbs(answer);
 	n = 0;
 	do {
-		*--t = ( answer % 10 ) + '0';
-		answer /= 10;
+		*--t = ( uanswer % 10 ) + '0';
+		uanswer /= 10;
 		n++;
-	} while ( answer > 0 );
+	} while ( uanswer > 0 );
 	NCOPYB(s,t,n);
 	*s = 0;
 setstring:;
@@ -4837,7 +4953,9 @@ UBYTE *PreEval(UBYTE *s, LONG *x)
 		for(;;){
 			while ( *s == ' ' || *s == '\t' ) s++;
 			if ( *s <= '9' && *s >= '0' ) {
-				ParseNumber(y,s)
+				ULONG uy;
+				ParseNumber(uy,s)
+				y = uy;  /* may cause an implementation-defined behaviour */
 			}
 			else if ( *s == '(' || *s == '{' ) {
 				if ( ( t = PreEval(s+1,&y) ) == 0 ) return(0);
@@ -4943,8 +5061,12 @@ UBYTE *PreEval(UBYTE *s, LONG *x)
 			else if ( *s == '&' ) tobemultiplied = 3;
 			else if ( *s == '|' ) tobemultiplied = 4;
 			else {
-				if ( tobeadded >= 0 ) *x += a;
-				else *x -= a;
+				ULONG ux, ua;
+				ux = *x;
+				ua = a;
+				if ( tobeadded >= 0 ) ux += ua;
+				else ux -= ua;
+				*x = ULongToLong(ux);
 				if ( *s == ')' || *s == '}' ) return(s+1);
 				else if ( *s == '-' || *s == '+' ) { tobeadded = 1; break; }
 				else return(0);
@@ -5412,13 +5534,10 @@ int DoRmExternal(UBYTE *s)
 int DoFromExternal(UBYTE *s)
 {
 #ifdef WITHEXTERNALCHANNEL
-	/*[02feb2006 mt]:*/
 	UBYTE *prevar=0; 
 	int lbuf=-1;
-	/*:[02feb20006 mt]*/
-	/*[17may2006 mt]:*/
-   int withNoList=AC.NoShowInput;
-	/*:[17may2006 mt]*/
+	int withNoList=AC.NoShowInput;
+	int oldpreassignflag;
 #else
 	DUMMYUSE(s);
 #endif
@@ -5556,11 +5675,12 @@ int DoFromExternal(UBYTE *s)
 			*c++='=';
 			b=buf;
 			while(  (*c++=*b++)!='\0'  );
+			oldpreassignflag = AP.PreAssignFlag;
 			AP.PreAssignFlag = 1;
 			if ( ( cc = CompileStatement(pbuf) ) || ( cc = CatchDollar(0) ) ) {
 				Error1("External channel: can't asign output to dollar variable ",prevar);
 			}
-			AP.PreAssignFlag = 0;
+			AP.PreAssignFlag = oldpreassignflag;
 			NumPotModdollars = oldNumPotModdollars;
 #ifdef WITHMPI
 			AC.RhsExprInModuleFlag = oldRhsExprInModuleFlag;
@@ -5766,7 +5886,6 @@ int writeToChannel(int wtype, UBYTE *s, HANDLERS *h)
 			fstring++;
 			if ( *fstring == 'd' ) {
 				int sign,dig;
-				LONG x;
 				number = -1;
 donumber:
 				while ( *s == ',' || *s == ' ' || *s == '\t' ) s++;
@@ -5776,7 +5895,7 @@ donumber:
 					s++;
 				}
 				dig = 0; ss = s; if ( sign < 0 ) { ss--; *ss = '-'; dig++; }
-				while ( *s >= '0' && *s <= '9' ) { x = 10*x+(*s++-'0'); dig++; }
+				while ( *s >= '0' && *s <= '9' ) { s++; dig++; }
 				if ( number < 0 ) {
 					while ( ss < s ) {
 						if ( to >= stopper ) {
@@ -6587,7 +6706,7 @@ int DoSkipExtraSymbols(UBYTE *s)
 	j = AO.OptimizeResult.minvar - oldval;
 	while ( j > 0 ) {
 		AddRHS(AM.sbufnum,1);
-		AddNtoC(AM.sbufnum,1,&tt);
+		AddNtoC(AM.sbufnum,1,&tt,16);
 		AddToCB(C,0)
 		InsTree(AM.sbufnum,C->numrhs);
 		j--;
@@ -6631,5 +6750,159 @@ int DoPreReset(UBYTE *s)
 
 /*
  		#] DoPreReset : 
+ 		#[ DoPreAppendPath :
+*/
+
+static int DoAddPath(UBYTE *s, int bPrepend)
+{
+	/* NOTE: this doesn't support some file systems, e.g., 0x5c with CP932. */
+
+	UBYTE *path, *path_end, *current_dir, *current_dir_end, *NewPath, *t;
+	int bRelative, n;
+
+	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
+	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
+
+	/* Parse the path in the input. */
+	while ( *s == ' ' || *s == '\t' ) s++;  /* skip spaces */
+	if ( *s == '"' ) {  /* the path is given by "..." */
+		path = ++s;
+		while ( *s && *s != '"' ) {
+			if ( SEPARATOR != '\\' && *s == '\\' ) {  /* escape character, e.g., "\\\"" */
+				if ( !s[1] ) goto ImproperPath;
+				s++;
+			}
+			s++;
+		}
+		if ( *s != '"' ) goto ImproperPath;
+		path_end = s++;
+	}
+	else {
+		path = s;
+		while ( *s && *s != ' ' && *s != '\t' ) {
+			if ( SEPARATOR != '\\' && *s == '\\' ) {  /* escape character, e.g., "\\ " */
+				if ( !s[1] ) goto ImproperPath;
+				s++;
+			}
+			s++;
+		}
+		path_end = s;
+	}
+	if ( path == path_end ) goto ImproperPath;  /* empty path */
+	while ( *s == ' ' || *s == '\t' ) s++;  /* skip spaces */
+	if ( *s ) goto ImproperPath;  /* extra tokens found */
+
+	/* Check if the path is an absolute path. */
+	bRelative = 1;
+	if ( path[0] == SEPARATOR ) {  /* starts with the directory separator */
+		bRelative = 0;
+	}
+#ifdef WINDOWS
+	else if ( chartype[path[0]] == 0 && path[1] == ':' ) {  /* starts with (drive letter): */
+		bRelative = 0;
+	}
+#endif
+
+	/* Get the current file directory when a relative path is given. */
+	if ( bRelative ) {
+		if ( !AC.CurrentStream ) goto FileNameUnavailable;
+		if ( AC.CurrentStream->type != FILESTREAM && AC.CurrentStream->type != REVERSEFILESTREAM ) goto FileNameUnavailable;
+		if ( !AC.CurrentStream->name ) goto FileNameUnavailable;
+		s = current_dir = current_dir_end = AC.CurrentStream->name;
+		while ( *s ) {
+			if ( SEPARATOR != '\\' && *s == '\\' && s[1] ) {  /* escape character, e.g., "\\\"" */
+				s += 2;
+				continue;
+			}
+			if ( *s == SEPARATOR ) {
+				current_dir_end = s;
+			}
+			s++;
+		}
+	}
+	else {
+		current_dir = current_dir_end = NULL;
+	}
+
+	/* Allocate a buffer for new AM.Path. */
+	n = path_end - path;
+	if ( AM.Path ) n += StrLen(AM.Path) + 1;
+	if ( current_dir != current_dir_end ) n+= current_dir_end - current_dir + 1;
+	s = NewPath = (UBYTE *)Malloc1(n + 1,"add path");
+
+	/* Construct new FORM path. */
+	if ( bPrepend ) {
+		if ( current_dir != current_dir_end ) {
+			t = current_dir;
+			while ( t != current_dir_end ) *s++ = *t++;
+			*s++ = SEPARATOR;
+		}
+		t = path;
+		while ( t != path_end ) *s++ = *t++;
+		if ( AM.Path ) *s++ = PATHSEPARATOR;
+	}
+	if ( AM.Path ) {
+		t = AM.Path;
+		while ( *t ) *s++ = *t++;
+	}
+	if ( !bPrepend ) {
+		if ( AM.Path ) *s++ = PATHSEPARATOR;
+		if ( current_dir != current_dir_end ) {
+			t = current_dir;
+			while ( t != current_dir_end ) *s++ = *t++;
+			*s++ = SEPARATOR;
+		}
+		t = path;
+		while ( t != path_end ) *s++ = *t++;
+	}
+	*s = '\0';
+
+	/* Update AM.Path. */
+	if ( AM.Path ) M_free(AM.Path,"add path");
+	AM.Path = NewPath;
+
+	return(0);
+
+ImproperPath:
+	MesPrint("@Improper syntax for %#%sPath", bPrepend ? "Prepend" : "Append");
+	return(-1);
+
+FileNameUnavailable:
+	/* This may be improved in future. */
+	MesPrint("@Sorry, %#%sPath can't resolve the current file name from here", bPrepend ? "Prepend" : "Append");
+	return(-1);
+}
+
+/**
+ * Appends the given path (absolute or relative to the current file directory)
+ * to the FORM path.
+ *
+ * Syntax:
+ *   #appendpath <path>
+ */
+int DoPreAppendPath(UBYTE *s)
+{
+	return DoAddPath(s, 0);
+}
+
+/*
+ 		#] DoPreAppendPath : 
+ 		#[ DoPrePrependPath :
+*/
+
+/**
+ * Prepends the given path (absolute or relative to the current file directory)
+ * to the FORM path.
+ *
+ * Syntax:
+ *   #prependpath <path>
+ */
+int DoPrePrependPath(UBYTE *s)
+{
+	return DoAddPath(s, 1);
+}
+
+/*
+ 		#] DoPrePrependPath : 
  	# ] PreProcessor :
 */

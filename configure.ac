@@ -13,9 +13,22 @@ m4_define([FORM_VERSION], m4_esyscmd_s([
 	if test -f .version; then
 		cat .version
 	else
-		scripts/git-version-gen.sh -C . -v || cat <<END >&2
+		scripts/git-version-gen.sh -C . -v || {
+			# As a fallback, try for form3.h.
+			major_version=`grep MAJORVERSION sources/form3.h | sed -e 's/ *#define  *MAJORVERSION *//'`
+			minor_version=`grep MINORVERSION sources/form3.h | sed -e 's/ *#define  *MINORVERSION *//'`
+			if test "x$major_version" != x && test "x$minor_version" != x; then
+				# Make the version files.
+				echo "$major_version.$minor_version" >.version
+				echo "#define REPO_MAJOR_VERSION $major_version"  >sources/version.h.in
+				echo "#define REPO_MINOR_VERSION $minor_version" >>sources/version.h.in
+				echo '\\def\\repomajorversion'"{$major_version}"  >doc/manual/version.tex.in
+				echo '\\def\\repominorversion'"{$minor_version}" >>doc/manual/version.tex.in
+				cp doc/manual/version.tex.in doc/devref/version.tex.in
+			fi
+			cat <<END >&2
 ========================================================================
-Failed to determine the version of the source code.
+Failed to determine the revision of the source code.
 
 The reason may be
   - this is neither a source distribution (containing the configure
@@ -28,11 +41,20 @@ Source distributions and some binaries can be found in:
   http://www.nikhef.nl/~form/maindir/binaries/binaries.html
   https://github.com/vermaseren/form/releases
 
-The latest source code can be obtained as
+The latest source code can be cloned by:
 
   git clone https://github.com/vermaseren/form.git
+END
+			test -f .version && cat <<END >&2
+
+You can continue the build, but binaries will not contain the revision
+information.
+END
+			cat <<END >&2
 ========================================================================
 END
+			test -f .version && cat .version
+		}
 	fi
 ]))
 
@@ -45,7 +67,7 @@ m4_define([serial_tests], [m4_esyscmd_s([
 ])])
 
 AC_PREREQ(2.59)
-AC_INIT([FORM], FORM_VERSION, [form@nikhef.nl])
+AC_INIT([FORM], FORM_VERSION, [https://github.com/vermaseren/form/issues])
 AC_CONFIG_SRCDIR([sources/form3.h])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_AUX_DIR([build-aux])
@@ -82,6 +104,27 @@ AC_LANG_PUSH([C++])
 AC_CHECK_HEADERS([unordered_map tr1/unordered_map boost/unordered_map.hpp])
 AC_CHECK_HEADERS([unordered_set tr1/unordered_set boost/unordered_set.hpp])
 AC_LANG_POP([C++])
+
+# Checks for builtin functions
+ok=no
+AS_IF([test $ok != yes],
+	[AC_MSG_CHECKING([__builtin_popcount])
+	AC_LINK_IFELSE(
+		[AC_LANG_PROGRAM([], [
+			int x = __builtin_popcount((unsigned int)(-1));
+		])],
+		[ok=yes;
+		AC_DEFINE([HAVE_BUILTIN_POPCOUNT], [1], [Define to 1 if you have __builtin_popcount function.])])
+	AC_MSG_RESULT($ok)])
+AS_IF([test $ok != yes],
+	[AC_MSG_CHECKING([__popcnt])
+	AC_LINK_IFELSE(
+		[AC_LANG_PROGRAM([#include <intrin.h>], [
+			unsigned int x = __popcnt((unsigned int)(-1));
+		])],
+		[ok=yes;
+		AC_DEFINE([HAVE_POPCNT], [1], [Define to 1 if you have __popcnt function.])])
+	AC_MSG_RESULT($ok)])
 
 # Check for inline
 AC_C_INLINE
@@ -131,8 +174,9 @@ case $host_cpu in
 		;;
 esac
 
-# Check for C compiler vendor. we assume that all compilers (CC, CXX, MPICC and
-# MPICXX) have the same vender and the same version.
+# Check for C compiler vendor. We assume that all compilers (CC, CXX, MPICC and
+# MPICXX) have the same vender and the same version. Clang most likely works
+# as GCC.
 vendors="
 intel:     __ICC,__ECC,__INTEL_COMPILER
 gnu:       __GNUC__
@@ -288,7 +332,7 @@ AC_ARG_ENABLE([parform],
 	[enable_parform=no])
 AC_ARG_ENABLE([debug],
 	[AS_HELP_STRING([--enable-debug],
-		[build debugging versions (form/tvorm/parvorm) @<:@default=no@:>@])],
+		[build debugging versions (vorm/tvorm/parvorm) @<:@default=no@:>@])],
 	[AS_IF([test "x$enableval" != xno], [enable_debug=yes])],
 	[enable_debug=no])
 
@@ -574,7 +618,7 @@ STATIC_LDFLAGS=
 MPI_STATIC_LDFLAGS=
 AC_ARG_ENABLE([static-link],
 	[AS_HELP_STRING([--enable-static-link],
-		[link with static libraries @<:@default=no@:>@])],
+		[link with static libraries (release versions) @<:@default=no@:>@])],
 	[AS_IF([test "x$enableval" != xno && test "x$enableval" != xcheck], [enable_static_link=yes])],
 	[enable_static_link=no])
 AS_IF([test "x$enable_static_link" != xno],
@@ -636,22 +680,55 @@ AC_SUBST([MPI_STATIC_LDFLAGS])
 # Check for native/universal build
 AC_ARG_ENABLE([native],
 	[AS_HELP_STRING([--enable-native],
-		[tune for the compiling machine @<:@default=check@:>@])],
+		[tune for the compiling machine (release versions) @<:@default=yes@:>@])],
 	[AS_IF([test "x$enableval" = xno || test "x$cross_compiling" = xyes],
 		[enable_native=no], [enable_native=yes])],
 	[enable_native=yes])
+
+# Check for profiling option
+AC_ARG_ENABLE([profile],
+	[AS_HELP_STRING([--enable-profile@<:@=PROFILER@:>@],
+		[build with profiling (release versions) @<:@default=no@:>@ PROFILER: gprof (default) or gperftools])],
+	[AS_IF([test "x$enableval" = xyes],
+		[enable_profile=gprof],
+		[AS_IF([test "x$enableval" = xgprof || test "x$enableval" = xgperftools],
+			[enable_profile=$enableval],
+			[enable_profile=no])])],
+	[enable_profile=no])
+
+# Check for coverage option
+AC_ARG_ENABLE([coverage],
+	[AS_HELP_STRING([--enable-coverage],
+		[generate coverage files (debugging versions) @<:@default=no@:>@])],
+	[AS_IF([test "x$enableval" = xyes && test "x$enable_debug" = xyes],
+		[enable_coverage=yes], [enable_coverage=no])],
+	[enable_coverage=no])
+
+# Check for sanitizers
+AC_ARG_ENABLE([sanitize],
+	[AS_HELP_STRING([--enable-sanitize@<:@=CHECKS@:>@],
+		[enable sanitizers (debugging versions) @<:@default=no@:>@ Optionally CHECKS will be passed via the compiler sanitizer option])],
+	[AS_IF([test "x$enable_debug" != xyes],
+		[enable_sanitize=no])],
+	[enable_sanitize=no])
 
 # Optimization/debugging flags
 AC_ARG_VAR([COMPILEFLAGS], [Compiler flags for release versions])
 AC_ARG_VAR([LINKFLAGS], [Linker flags for release versions])
 AC_ARG_VAR([DEBUGCOMPILEFLAGS], [Compiler flags for debugging versions])
 AC_ARG_VAR([DEBUGLINKFLAGS], [Linker flags for debugging versions])
+TOOL_LIBS=
+DEBUGTOOL_LIBS=
 
 my_test_COMPILEFLAGS=${COMPILEFLAGS+set}
 if test "$my_test_COMPILEFLAGS" != set; then
 	if test "x$vendor" = xgnu; then
 		# We don't use -pedantic option because of horrible warnings.
-		COMPILEFLAGS="-Wall -Wextra -Wpadded -O3 -fomit-frame-pointer"
+		COMPILEFLAGS="-Wall -Wextra -Wpadded -O3"
+		if test "x$enable_profile" != xgprof; then
+			# -pg conflicts with -fomit-frame-pointer.
+			COMPILEFLAGS="$COMPILEFLAGS -fomit-frame-pointer"
+		fi
 		if test "x$enable_native" = xyes; then
 			# Check for -march=native.
 			AC_MSG_CHECKING([whether compiler accepts -march=native])
@@ -674,14 +751,27 @@ if test "$my_test_COMPILEFLAGS" != set; then
 				fi
 			fi
 		fi
+		# Profiling option.
+		if test "x$enable_profile" = xgprof; then
+			COMPILEFLAGS="$COMPILEFLAGS -g -pg"
+		elif test "x$enable_profile" = xgperftools; then
+			COMPILEFLAGS="$COMPILEFLAGS -g"
+			TOOL_LIBS="$TOOL_LIBS -lprofiler"
+		fi
 	elif test "x$vendor" = xintel; then
 		# NOTE: -fast option includes -static and may cause an error in linking.
 		COMPILEFLAGS="-Wall -ipo -O3 -no-prec-div"
 		if test "x$enable_native" = xyes; then
 			COMPILEFLAGS="$COMPILEFLAGS -xHost"
 		fi
+		if test "x$enable_profile" != xno; then
+			enable_profile=unavailable
+		fi
 	else
 		COMPILEFLAGS=-O2
+		if test "x$enable_profile" != xno; then
+			enable_profile=unavailable
+		fi
 	fi
 fi
 my_test_LINKFLAGS=${LINKFLAGS+set}
@@ -691,14 +781,21 @@ if test "$my_test_LINKFLAGS" != set; then
 		# warns the option is obsolete and being ignored, it causes an internal
 		# error "atom not found in symbolIndex...".
 		LINKFLAGS=
+	elif test "x$enable_profile" != xno && test "x$enable_profile" != xunavailable; then
+		# Profilers needs symbol tables.
+		LINKFLAGS=
 	else
 		LINKFLAGS=-s
 	fi
 fi
-my_test_DEBUGCOMPILEFLAGS=${DEUBUGCOMPILEFLAGS+set}
-if test "$my_test_DEBUGCOMPILEFLAGS" != set; then
+my_test_DEBUGCOMPILEFLAGS=${DEBUGCOMPILEFLAGS+set}
+if test "$my_test_DEBUGCOMPILEFLAGS" != set && test "x$enable_debug" = xyes; then
 	if test "x$vendor" = xgnu; then
-		DEBUGCOMPILEFLAGS='-g3 -Wall -Wextra -Wpadded'
+		DEBUGCOMPILEFLAGS='-g3 -Wall -Wextra'
+		if test "x$enable_sanitize" = xno; then
+			# UBSan puts many paddings (at least in gcc 5.3).
+			DEBUGCOMPILEFLAGS="$DEBUGCOMPILEFLAGS -Wpadded"
+		fi
 		# Check for -Og.
 		AC_MSG_CHECKING([whether compiler accepts -Og])
 		ok=no
@@ -712,16 +809,100 @@ if test "$my_test_DEBUGCOMPILEFLAGS" != set; then
 		else
 			DEBUGCOMPILEFLAGS="$DEBUGCOMPILEFLAGS -O0"
 		fi
+		# Coverage option.
+		if test "x$enable_coverage" = xyes; then
+			DEBUGCOMPILEFLAGS="$DEBUGCOMPILEFLAGS -coverage"
+		fi
+		# Sanitizer option.
+		if test "x$enable_sanitize" = xyes; then
+			enable_sanitize=
+			for san in address undefined; do
+				if test "x$enable_sanitize" = x; then
+					tmp_sanitize=$san
+				else
+					tmp_sanitize=$enable_sanitize,$san
+				fi
+				AC_MSG_CHECKING([whether compiler accepts -fsanitize=$tmp_sanitize])
+				ok=no
+				save_CFLAGS=$CFLAGS
+				CFLAGS="$CFLAGS -fsanitize=$tmp_sanitize"
+				AC_COMPILE_IFELSE([AC_LANG_PROGRAM()], [ok=yes])
+				CFLAGS=$save_CFLAGS
+				AC_MSG_RESULT($ok)
+				if test "x$ok" = xyes; then
+					enable_sanitize=$tmp_sanitize
+				fi
+			done
+			if test "x$enable_sanitize" = x; then
+				enable_sanitize=failed
+			fi
+		elif test "x$enable_sanitize" != xno; then
+			AC_MSG_CHECKING([whether compiler accepts -fsanitize=$enable_sanitize])
+			ok=no
+			save_CFLAGS=$CFLAGS
+			CFLAGS="$CFLAGS -fsanitize=$enable_sanitize"
+			AC_COMPILE_IFELSE([AC_LANG_PROGRAM()], [ok=yes])
+			CFLAGS=$save_CFLAGS
+			AC_MSG_RESULT($ok)
+			if test "x$ok" != xyes; then
+				enable_sanitize=failed
+			fi
+		fi
+		if test "x$enable_sanitize" = xfailed; then
+			AC_MSG_FAILURE([test for sanitizer failed. Give --disable-sanitize if you want to compile without sanitizer])
+		fi
+		if test "x$enable_sanitize" != xno; then
+			DEBUGCOMPILEFLAGS="$DEBUGCOMPILEFLAGS -fsanitize=$enable_sanitize"
+		fi
 	elif test "x$vendor" = xintel; then
 		DEBUGCOMPILEFLAGS='-g3 -Wall -O0'
+		if test "x$enable_coverage" != xno; then
+			enable_coverage=unavailable
+		fi
+		if test "x$enable_sanitize" != xno; then
+			enable_sanitize=unavailable
+		fi
 	else
 		DEBUGCOMPILEFLAGS=-g
+		if test "x$enable_coverage" != xno; then
+			enable_coverage=unavailable
+		fi
+		if test "x$enable_sanitize" != xno; then
+			enable_sanitize=unavailable
+		fi
 	fi
 fi
 my_test_DEBUGLINKFLAGS=${DEBUGLINKFLAGS+set}
-if test "$my_test_DEBUGLINKFLAGS" != set; then
+if test "$my_test_DEBUGLINKFLAGS" != set && test "x$enable_debug" = xyes; then
 	DEBUGLINKFLAGS=
+	if test "x$vendor" = xgnu; then
+		# Coverage option.
+		if test "x$enable_coverage" = xyes; then
+			DEBUGLINKFLAGS="$DEBUGLINKFLAGS -coverage"
+		fi
+		# Sanitizer option.
+		if test "x$enable_sanitize" != xno; then
+			# Workaround for https://bugs.launchpad.net/ubuntu/+source/gcc-defaults/+bug/1650186
+			ok=no
+			save_CFLAGS=$CFLAGS
+			save_LDFLAGS=$LDFLAGS
+			CFLAGS="$CFLAGS -fsanitize=$enable_sanitize"
+			AC_LINK_IFELSE([AC_LANG_PROGRAM()], [ok=yes])
+			if test "x$ok" != xyes; then
+				LDFLAGS="$LDFLAGS -fuse-ld=gold"
+				AC_LINK_IFELSE([AC_LANG_PROGRAM()], [ok=yes])
+				if test "x$ok" = xyes; then
+					DEBUGLINKFLAGS="$DEBUGLINKFLAGS -fuse-ld=gold"
+				fi
+			fi
+			CFLAGS=$save_CFLAGS
+			LDFLAGS=$save_LDFLAGS
+		fi
+	fi
 fi
+
+AC_SUBST([TOOL_LIBS])
+AC_SUBST([DEBUGTOOL_LIBS])
 
 # Check for doxygen
 AC_PATH_PROG(DOXYGEN, doxygen, "")
@@ -784,6 +965,8 @@ echo "##################### CONFIGURATION #####################"
 echo
 outputdir=$(eval "echo $bindir")
 outputdir=$(eval "echo $outputdir")
+manoutputdir=$(eval "echo $mandir")
+manoutputdir=$(eval "echo $manoutputdir")
 echo "FORM $VERSION"
 echo
 echo "Compiling for: $print_cpu $print_os ($print_data_model $print_api)"
@@ -805,27 +988,159 @@ echo
 echo "The following executables can be compiled:"
 atleastone=no
 if test "x$build_form" = xyes; then
-	echo "    form       scalar version"
+	opts=
+	if test "x$enable_native" = xyes; then
+		if test "x$opts" != x; then
+			opts="${opts}, "
+		fi
+		opts="${opts}native"
+	fi
+	if test "x$STATIC_LDFLAGS" != x; then
+		if test "x$opts" != x; then
+			opts="${opts}, "
+		fi
+		opts="${opts}statically linked"
+	fi
+	if test "x$enable_profile" = xgprof; then
+		if test "x$opts" != x; then
+			opts="${opts}, "
+		fi
+		opts="${opts}gprof"
+	fi
+	if test "x$enable_profile" = xgperftools; then
+		if test "x$opts" != x; then
+			opts="${opts}, "
+		fi
+		opts="${opts}gperftools"
+	fi
+	if test "x$opts" != x; then
+		opts=" (${opts})"
+	fi
+	echo "    form       scalar version$opts"
 	atleastone=yes
 fi
 if test "x$build_vorm" = xyes; then
-	echo "    vorm       debugging version"
+	opts=
+	if test "x$enable_coverage" = xyes; then
+		if test "x$opts" != x; then
+			opts="${opts}, "
+		fi
+		opts="${opts}gcov"
+	fi
+	if test "x$enable_sanitize" != xno; then
+		if test "x$opts" != x; then
+			opts="${opts}, "
+		fi
+		opts="${opts}sanitize=$enable_sanitize"
+	fi
+	if test "x$opts" != x; then
+		opts=" (${opts})"
+	fi
+	echo "    vorm       debugging version$opts"
 	atleastone=yes
 fi
 if test "x$build_tform" = xyes; then
-	echo "    tform      multi-threaded version"
+	opts=
+	if test "x$enable_native" = xyes; then
+		if test "x$opts" != x; then
+			opts="${opts}, "
+		fi
+		opts="${opts}native"
+	fi
+	if test "x$STATIC_LDFLAGS" != x; then
+		if test "x$opts" != x; then
+			opts="${opts}, "
+		fi
+		opts="${opts}statically linked"
+	fi
+	if test "x$enable_profile" = xgprof; then
+		if test "x$opts" != x; then
+			opts="${opts}, "
+		fi
+		opts="${opts}gprof"
+	fi
+	if test "x$enable_profile" = xgperftools; then
+		if test "x$opts" != x; then
+			opts="${opts}, "
+		fi
+		opts="${opts}gperftools"
+	fi
+	if test "x$opts" != x; then
+		opts=" (${opts})"
+	fi
+	echo "    tform      multi-threaded version$opts"
 	atleastone=yes
 fi
 if test "x$build_tvorm" = xyes; then
-	echo "    tvorm      multi-threaded debugging version"
+	opts=
+	if test "x$enable_coverage" = xyes; then
+		if test "x$opts" != x; then
+			opts="${opts}, "
+		fi
+		opts="${opts}gcov"
+	fi
+	if test "x$enable_sanitize" != xno; then
+		if test "x$opts" != x; then
+			opts="${opts}, "
+		fi
+		opts="${opts}sanitize=$enable_sanitize"
+	fi
+	if test "x$opts" != x; then
+		opts=" (${opts})"
+	fi
+	echo "    tvorm      multi-threaded debugging version$opts"
 	atleastone=yes
 fi
 if test "x$build_parform" = xyes; then
-	echo "    parform    parallel version using MPI"
+	opts=
+	if test "x$enable_native" = xyes; then
+		if test "x$opts" != x; then
+			opts="${opts}, "
+		fi
+		opts="${opts}native"
+	fi
+	if test "x$MPI_STATIC_LDFLAGS" != x; then
+		if test "x$opts" != x; then
+			opts="${opts}, "
+		fi
+		opts="${opts}statically linked"
+	fi
+	if test "x$enable_profile" = xgprof; then
+		if test "x$opts" != x; then
+			opts="${opts}, "
+		fi
+		opts="${opts}gprof"
+	fi
+	if test "x$enable_profile" = xgperftools; then
+		if test "x$opts" != x; then
+			opts="${opts}, "
+		fi
+		opts="${opts}gperftools"
+	fi
+	if test "x$opts" != x; then
+		opts=" (${opts})"
+	fi
+	echo "    parform    parallel version using MPI$opts"
 	atleastone=yes
 fi
 if test "x$build_parvorm" = xyes; then
-	echo "    parvorm    parallel debugging version using MPI"
+	opts=
+	if test "x$enable_coverage" = xyes; then
+		if test "x$opts" != x; then
+			opts="${opts}, "
+		fi
+		opts="${opts}gcov"
+	fi
+	if test "x$enable_sanitize" != xno; then
+		if test "x$opts" != x; then
+			opts="${opts}, "
+		fi
+		opts="${opts}sanitize=$enable_sanitize"
+	fi
+	if test "x$opts" != x; then
+		opts=" (${opts})"
+	fi
+	echo "    parvorm    parallel debugging version using MPI$opts"
 	atleastone=yes
 fi
 if test $atleastone = no; then
@@ -855,8 +1170,12 @@ fi
 echo
 echo "Type 'make <executable name>' in the source directory to"
 echo "build a specific version. Type 'make' to build all."
+echo
 echo "Type 'make install' to install the executables in"
-echo "$outputdir."
+echo "    $outputdir"
+echo "and the man page in"
+echo "    $manoutputdir"
+echo
 if test "x$with_ruby_test" = xyes; then
 	echo "Type 'make check' to run automatic tests."
 else
@@ -902,11 +1221,12 @@ if test "x$LATEX" != x || test "x$PDFLATEX" != x; then
 fi
 if test $atleastone = no; then
 	echo "    <NONE>"
+else
+	echo
+	echo "Type 'make <format>' in the directories doc/manual or"
+	echo "doc/doxygen to generate the respective documentation with"
+	echo "the specified format."
 fi
-echo
-echo "Type 'make <format>' in the directories doc/manual or"
-echo "doc/doxygen to generate the respective documentation with"
-echo "the specified format."
 echo
 echo "#########################################################"
 echo

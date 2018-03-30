@@ -1,6 +1,11 @@
 *.o
 *.exe
 
+*.gcno
+*.gcda
+*.gcov
+gmon.out
+
 .deps
 Makefile
 Makefile.in

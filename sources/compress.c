@@ -6,7 +6,7 @@
 
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2013 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -400,7 +400,11 @@ int SetupAllInputGZIP(SORTING *S)
 			MUNLOCK(ErrorMessageLock);
 			Terminate(-1);
 		}
-		AN.ziobuffers = (Bytef *)Malloc1(S->MaxFpatches*S->file.ziosize*sizeof(Bytef),"input raw buffers");
+/*
+		We add 128 bytes in the hope that if it can happen that it goes
+		outside the buffer during decompression, it does not do damage.
+*/
+		AN.ziobuffers = (Bytef *)Malloc1(S->MaxFpatches*(S->file.ziosize+128)*sizeof(Bytef),"input raw buffers");
 /*
 		This seems to be one of the really stupid errors:
 		We allocate way too much space. Way way way too much.
@@ -414,7 +418,7 @@ int SetupAllInputGZIP(SORTING *S)
 			Terminate(-1);
 		}
 		for ( i  = 0 ; i < S->MaxFpatches; i++ ) {
-			AN.ziobufnum[i] = AN.ziobuffers + i * S->file.ziosize;
+			AN.ziobufnum[i] = AN.ziobuffers + i * (S->file.ziosize+128);
 		}
 	}
 	for ( i = 0; i < S->inNum; i++ ) {
@@ -474,7 +478,7 @@ LONG FillInputGZIP(FILEHANDLE *f, POSITION *position, UBYTE *buffer, LONG buffer
 {
 	GETIDENTITY
 	int zerror;
-	LONG readsize, toread;
+	LONG readsize, toread = 0;
 	SORTING *S = AT.SS;
 	z_streamp zsp;
 	POSITION pos;
@@ -538,7 +542,8 @@ LONG FillInputGZIP(FILEHANDLE *f, POSITION *position, UBYTE *buffer, LONG buffer
 				zsp->total_in = 0;
 			}
 		}
-		while ( ( zerror = inflate(zsp,Z_NO_FLUSH) ) == Z_OK ) {
+		if ( toread > 0 || zsp->avail_in ) {
+		  while ( ( zerror = inflate(zsp,Z_NO_FLUSH) ) == Z_OK ) {
 			if ( zsp->avail_out == 0 ) {
 /*
 				Finish
@@ -551,11 +556,15 @@ LONG FillInputGZIP(FILEHANDLE *f, POSITION *position, UBYTE *buffer, LONG buffer
 /*
 					We finished this stream. Try to terminate.
 */
+					zerror = Z_STREAM_END;
+					break;
+/*
 					if ( ( zerror = inflate(zsp,Z_SYNC_FLUSH) ) == Z_OK ) {
 						return((LONG)(zsp->total_out));
 					}
 					else
 						break;
+*/
 /*
 #ifdef GZIPDEBUG
 					MLOCK(ErrorMessageLock);
@@ -572,7 +581,7 @@ LONG FillInputGZIP(FILEHANDLE *f, POSITION *position, UBYTE *buffer, LONG buffer
 					}
 					MUNLOCK(ErrorMessageLock);
 #endif
-					if ( inflateEnd(zsp) == Z_OK ) return(readsize);
+					if ( ( zerror = inflateEnd(zsp) ) == Z_OK ) return(readsize);
 					break;
 */
 				}
@@ -638,6 +647,11 @@ LONG FillInputGZIP(FILEHANDLE *f, POSITION *position, UBYTE *buffer, LONG buffer
 			else {
 				break;
 			}
+		  }
+		}
+		else {
+			zerror = Z_STREAM_END;
+			zsp->total_out = 0;
 		}
 #ifdef GZIPDEBUG
 			MLOCK(ErrorMessageLock);
@@ -669,11 +683,15 @@ LONG FillInputGZIP(FILEHANDLE *f, POSITION *position, UBYTE *buffer, LONG buffer
 			}
 			MUNLOCK(ErrorMessageLock);
 #endif
-			if ( inflateEnd(zsp) == Z_OK ) return(readsize);
+			if ( zsp->zalloc != Z_NULL ) {
+				zerror = inflateEnd(zsp);
+				zsp->zalloc = Z_NULL;
+			}
+			if ( zerror == Z_OK || zerror == Z_STREAM_END ) return(readsize);
 		}
 
 		MLOCK(ErrorMessageLock);
-		MesPrint("%wFillInputGZIP: Error in gzip handling of input.");
+		MesPrint("%wFillInputGZIP: Error in gzip handling of input. zerror = %d",zerror);
 		MUNLOCK(ErrorMessageLock);
 		return(-1);
 	}
@@ -704,5 +722,19 @@ LONG FillInputGZIP(FILEHANDLE *f, POSITION *position, UBYTE *buffer, LONG buffer
 
 /*
   	#] FillInputGZIP : 
+  	#[ ClearSortGZIP :
+*/
+
+void ClearSortGZIP(FILEHANDLE *f)
+{
+	if ( f->ziobuffer ) {
+		M_free(f->ziobuffer,"output zbuffer");
+		M_free(f->zsp,"output zstream");
+		f->ziobuffer = 0;
+	}
+}
+
+/*
+  	#] ClearSortGZIP : 
 */
 #endif

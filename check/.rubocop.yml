@@ -1,0 +1,92 @@
+# AllCops:
+#   TargetRubyVersion: 2.1
+
+# Stop ridiculous use of freeze.
+Style/MutableConstant:
+  Enabled: false
+
+# Allow several expressions on the same line.
+Style/Semicolon:
+  AllowAsExpressionSeparator: true
+
+# Prefer double quotes.
+Style/StringLiterals:
+  EnforcedStyle: double_quotes
+
+# Math is more intuitive than words.
+Style/NumericPredicate:
+  EnforcedStyle: comparison
+
+####
+
+# Modifiers. Favor the traditional way.
+
+Style/IfUnlessModifier:
+  Enabled: false
+
+Style/WhileUntilModifier:
+  Enabled: false
+
+####
+
+# Negating conditions. Forcing them may leads to confusing constructs.
+
+Style/NegatedIf:
+  Enabled: false
+
+Style/NegatedWhile:
+  Enabled: false
+
+Style/Next:
+  Enabled: false
+
+####
+
+# Some Ruby features that personally I never get used to.
+
+Style/ConditionalAssignment:
+  Enabled: false
+
+####
+
+# Disable metrics checks. We are not smart enough to think in simple terms.
+
+Metrics/AbcSize:
+  Enabled: false
+
+Metrics/BlockNesting:
+  Enabled: false
+
+Metrics/ClassLength:
+  Enabled: false
+
+Metrics/CyclomaticComplexity:
+  Enabled: false
+
+Metrics/MethodLength:
+  Enabled: false
+
+Metrics/BlockLength:
+  Enabled: false
+
+Metrics/ModuleLength:
+  Enabled: false
+
+Metrics/LineLength:
+  Enabled: false
+
+Metrics/ParameterLists:
+  Enabled: false
+
+Metrics/PerceivedComplexity:
+  Enabled: false
+
+####
+
+# For now.
+
+Style/PerlBackrefs:
+  Enabled: false
+
+Style/SpecialGlobalVars:
+  Enabled: false

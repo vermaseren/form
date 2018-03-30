@@ -16,7 +16,7 @@
 
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2013 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -378,6 +378,7 @@ typedef struct TaBlEs {
 typedef struct ExPrEsSiOn {
 	POSITION	onfile;
 	POSITION	prototype;
+    POSITION    size;
 	RENUMBER renum;			/* For Renumbering of global stored expressions */
 	BRACKETINFO *bracketinfo;
 	BRACKETINFO *newbracketinfo;
@@ -397,11 +398,12 @@ typedef struct ExPrEsSiOn {
 	WORD	compression;
 	WORD	numdummies;
 	WORD	numfactors;
+	WORD	sizeprototype;
 #ifdef PARALLELCODE
     WORD    partodo;        /* Whether to be done in parallel mode */
-	PADPOSITION(5,2,0,12,0);
+	PADPOSITION(5,2,0,13,0);
 #else
-	PADPOSITION(5,2,0,11,0);
+	PADPOSITION(5,2,0,12,0);
 #endif
 } *EXPRESSIONS;
 
@@ -1011,6 +1013,18 @@ typedef struct PeRmUtE {
 } PERM;
 
 /**
+ *  Like struct PERM but works with pointers.
+ */
+
+typedef struct PeRmUtEp {
+    WORD **objects;
+    WORD sign;
+    WORD n;
+    WORD cycle[MAXMATCH];
+    PADPOINTER(0,0,MAXMATCH+2,0);
+} PERMP;
+
+/**
  *  The struct DISTRIBUTE is used to help the pattern
  *  matcher when matching antisymmetric tensors.
  */
@@ -1026,6 +1040,22 @@ typedef struct DiStRiBuTe {
     WORD cycle[MAXMATCH];
     PADPOINTER(0,0,(MAXMATCH+4),0);
 } DISTRIBUTE;
+
+/**
+ *  The struct PARTI is used to help determining whether a partition_
+ *  function can be replaced.
+ */
+
+typedef struct PaRtI {
+	WORD *psize;  /* the sizes of the partitions */
+	WORD *args;   /* the offsets of the arguments to be partitioned */
+	WORD *nargs;  /* argument numbers (different number = different argument) */
+	WORD *nfun;   /* the functions into which the partitions go */
+	WORD numargs; /* the number of arguments to be partitioned */
+	WORD numpart; /* the number of partitions */
+	WORD where;   /* offset of the function in the term */
+    PADPOINTER(0,0,3,0);
+} PARTI;
 
 /**
  *  The struct SORTING is used to control a sort operation.
@@ -1227,7 +1257,7 @@ typedef struct {
     int   printstats;
     int   debugflags;
     int   schemeflags;
-    int   experiments;
+    int   mctsdecaymode;
     int   saIter; /* Simulated annealing updates */
     union {
         float fval;
@@ -1391,6 +1421,8 @@ struct M_const {
 	int		SizeForSpectatorFiles; /* Size in AM.spectatorfiles; */
     int     gOldGCDflag;
     int     ggOldGCDflag;
+    int     gWTimeStatsFlag;
+    int     ggWTimeStatsFlag;
     WORD    MaxTal;                /* (M) Maximum number of words in a number */
     WORD    IndDum;                /* (M) Basis value for dummy indices */
     WORD    DumInd;                /* (M) */
@@ -1449,9 +1481,9 @@ struct M_const {
     WORD    havesortdir;
     WORD    BracketFactors[8];
 #ifdef WITHPTHREADS
-	PADPOSITION(17,25,59,81,sizeof(pthread_rwlock_t)+sizeof(pthread_mutex_t)*2);
+	PADPOSITION(17,25,61,81,sizeof(pthread_rwlock_t)+sizeof(pthread_mutex_t)*2);
 #else
-	PADPOSITION(17,23,59,81,0);
+	PADPOSITION(17,23,61,81,0);
 #endif
 };
 /*
@@ -1479,6 +1511,7 @@ struct P_const {
     UBYTE *preFill;                /* (P) Filling point in preStart */
     UBYTE *procedureExtension;     /* (P) Extension for procedure files (prc) */
     UBYTE *cprocedureExtension;    /* (P) Extension after .clear */
+    LONG  *PreAssignStack;         /* For nesting #$name assignments */
     int *PreIfStack;               /* (P) Tracks nesting of #if */
     int *PreSwitchModes;           /* (P) Stack of switch status */
     int *PreTypes;                 /* (P) stack of #call, #do etc nesting */
@@ -1507,11 +1540,13 @@ struct P_const {
     int     gNumPre;               /* (P) Number of preprocessor variables for .clear */
     int     PreDebug;              /* (C) */
     int     OpenDictionary;
+    int     PreAssignLevel;        /* For nesting #$name = ...; assignments */
+    int     MaxPreAssignLevel;     /* For nesting #$name = ...; assignments */
     WORD    DebugFlag;             /* (P) For debugging purposes */
     WORD    preError;              /* (P) Blocks certain types of execution */
     UBYTE   ComChar;               /* (P) Commentary character */
     UBYTE   cComChar;              /* (P) Old commentary character for .clear */
-    PADPOINTER(3,19,2,2);
+    PADPOINTER(3,21,2,2);
 };
 
 /*
@@ -1690,6 +1725,7 @@ struct C_const {
     int     OldFactArgFlag;
     int     MemDebugFlag;          /* Only used when MALLOCDEBUG in tools.c */
     int     OldGCDflag;
+    int     WTimeStatsFlag;
 	int     doloopstacksize;
 	int     dolooplevel;
     int     CheckpointFlag;        /**< Tells preprocessor whether checkpoint code must executed.
@@ -1702,6 +1738,7 @@ struct C_const {
     int     sizepfirstnum;         /* For redefine */
 #endif
     int     origin;                /* Determines whether .sort or ModuleOption */
+    int     vectorlikeLHS;
     WORD    argsumcheck[MAXNEST];  /* (C) Checking of nesting */
     WORD    insidesumcheck[MAXNEST];/* (C) Checking of nesting */
     WORD    inexprsumcheck[MAXNEST];/* (C) Checking of nesting */
@@ -1754,11 +1791,11 @@ struct C_const {
     UBYTE   Commercial[COMMERCIALSIZE+2]; /* (C) Message to be printed in statistics */
     UBYTE   debugFlags[MAXFLAGS+2];    /* On/Off Flag number(s) */
 #if defined(WITHPTHREADS)
-	PADPOSITION(47,8+3*MAXNEST,70,45+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17+sizeof(pthread_mutex_t));
+	PADPOSITION(47,8+3*MAXNEST,72,45+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17+sizeof(pthread_mutex_t));
 #elif defined(WITHMPI)
-	PADPOSITION(47,8+3*MAXNEST,70,46+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17);
+	PADPOSITION(47,8+3*MAXNEST,72,46+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17);
 #else
-	PADPOSITION(45,8+3*MAXNEST,68,45+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17);
+	PADPOSITION(45,8+3*MAXNEST,70,45+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17);
 #endif
 };
 /*
@@ -1942,13 +1979,17 @@ struct T_const {
     WORD    *previousEfactor;      /* () Cache for factors in expressions */
     WORD    **TermMemHeap;        /* For TermMalloc. Set zero in Checkpoint */
     UWORD    **NumberMemHeap;      /* For NumberMalloc. Set zero in Checkpoint */
+    UWORD    **CacheNumberMemHeap; /* For CacheNumberMalloc. Set zero in Checkpoint */
 	BRACKETINFO *bracketinfo;
     WORD    **ListPoly;
     WORD    *ListSymbols;
+    UWORD   *NumMem;
+    PARTI   partitions;
     LONG    sBer;                  /* (T) Size of the bernoullis buffer */
     LONG    pWorkPointer;          /* (R) Offset-pointer in pWorkSpace */
     LONG    lWorkPointer;          /* (R) Offset-pointer in lWorkSpace */
     LONG    posWorkPointer;        /* (R) Offset-pointer in posWorkSpace */
+    LONG    InNumMem;
     int     sfact;                 /* (T) size of the factorials buffer */
     int     mfac;                  /* (T) size of the pfac array. */
     int     ebufnum;               /* (R) extra compiler buffer */
@@ -1971,6 +2012,8 @@ struct T_const {
     int     TermMemTop;            /* For TermMalloc. Set zero in Checkpoint */
     int     NumberMemMax;          /* For NumberMalloc. Set zero in Checkpoint */
     int     NumberMemTop;          /* For NumberMalloc. Set zero in Checkpoint */
+    int     CacheNumberMemMax;     /* For CacheNumberMalloc. Set zero in Checkpoint */
+    int     CacheNumberMemTop;     /* For CacheNumberMalloc. Set zero in Checkpoint */
     int     bracketindexflag;      /* Are brackets going to be indexed? */
     int     optimtimes;            /* Number of the evaluation of the MCTS tree */
     int     ListSymbolsSize;
@@ -2005,12 +2048,12 @@ struct T_const {
     WORD    fromindex;             /* Tells the compare routine whether call from index */
 #ifdef WITHPTHREADS
 #ifdef WITHSORTBOTS
-	PADPOINTER(4,25,100+SUBEXPSIZE*4+FUNHEAD*2+ARGHEAD*2,0);
+	PADPOINTER(5,27,100+SUBEXPSIZE*4+FUNHEAD*2+ARGHEAD*2,0);
 #else
-	PADPOINTER(4,23,100+SUBEXPSIZE*4+FUNHEAD*2+ARGHEAD*2,0);
+	PADPOINTER(5,25,100+SUBEXPSIZE*4+FUNHEAD*2+ARGHEAD*2,0);
 #endif
 #else
-	PADPOINTER(4,21,100+SUBEXPSIZE*4+FUNHEAD*2+ARGHEAD*2,0);
+	PADPOINTER(5,23,100+SUBEXPSIZE*4+FUNHEAD*2+ARGHEAD*2,0);
 #endif
 };
 /*
@@ -2147,15 +2190,17 @@ struct N_const {
     WORD    WildEat;               /* (R) */
     WORD    PolyNormFlag;          /* (R) For polynomial arithmetic */
     WORD    PolyFunTodo;           /* deals with expansions and multiplications */
-	WORD	sizeselecttermundo;    /* () Used in pattern.c */
-	WORD	patternbuffersize;     /* () Used in pattern.c */
-	WORD	numlistinprint;        /* () Used in process.c */
+    WORD    sizeselecttermundo;    /* () Used in pattern.c */
+    WORD    patternbuffersize;     /* () Used in pattern.c */
+    WORD    numlistinprint;        /* () Used in process.c */
     WORD    ncmod;                 /* () used as some type of flag to disable */
-	WORD	ExpectedSign;          /** Used in pattern matching of antisymmetric functions */
-	WORD	SignCheck;             /** Used in pattern matching of antisymmetric functions */
-	WORD	IndDum;                /* Active dummy indices */
-	WORD    poly_num_vars;
+    WORD    ExpectedSign;          /** Used in pattern matching of antisymmetric functions */
+    WORD    SignCheck;             /** Used in pattern matching of antisymmetric functions */
+    WORD    IndDum;                /* Active dummy indices */
+    WORD    poly_num_vars;
     WORD    idfunctionflag;
+    WORD    poly_vars_type;        /* type of allocation. For free. */
+    WORD    tryterm;               /* For EndSort(...,2) */
 #ifdef WHICHSUBEXPRESSION
 	WORD	nbino;                 /* () Used in proces.c */
 	WORD	last1;                 /* () Used in proces.c */
@@ -2163,29 +2208,29 @@ struct N_const {
 #ifdef WITHPTHREADS
 #ifdef WHICHSUBEXPRESSION
 #ifdef WITHZLIB
-	PADPOSITION(55,11,23,26,sizeof(SHvariables));
+	PADPOSITION(55,11,23,28,sizeof(SHvariables));
 #else
-	PADPOSITION(53,11,23,26,sizeof(SHvariables));
+	PADPOSITION(53,11,23,28,sizeof(SHvariables));
 #endif
 #else
 #ifdef WITHZLIB
-	PADPOSITION(54,9,23,24,sizeof(SHvariables));
+	PADPOSITION(54,9,23,26,sizeof(SHvariables));
 #else
-	PADPOSITION(52,9,23,24,sizeof(SHvariables));
+	PADPOSITION(52,9,23,26,sizeof(SHvariables));
 #endif
 #endif
 #else
 #ifdef WHICHSUBEXPRESSION
 #ifdef WITHZLIB
-	PADPOSITION(53,9,23,26,sizeof(SHvariables));
+	PADPOSITION(53,9,23,28,sizeof(SHvariables));
 #else
-	PADPOSITION(51,9,23,26,sizeof(SHvariables));
+	PADPOSITION(51,9,23,28,sizeof(SHvariables));
 #endif
 #else
 #ifdef WITHZLIB
-	PADPOSITION(52,7,23,24,sizeof(SHvariables));
+	PADPOSITION(52,7,23,26,sizeof(SHvariables));
 #else
-	PADPOSITION(50,7,23,24,sizeof(SHvariables));
+	PADPOSITION(50,7,23,26,sizeof(SHvariables));
 #endif
 #endif
 #endif

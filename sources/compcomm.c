@@ -9,7 +9,7 @@
  */
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2013 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -38,7 +38,8 @@
 */
 
 #include "form3.h"
- 
+#include "comtool.h"
+
 static KEYWORD formatoptions[] = {
 	 {"c",				(TFUN)0,	CMODE,				0}
 	,{"doublefortran",	(TFUN)0,	DOUBLEFORTRANMODE,	0}
@@ -127,6 +128,7 @@ static KEYWORD onoffoptions[] = {
 	,{"memdebugflag",	(TFUN)&(AC.MemDebugFlag),	1,	0}
 	,{"oldgcd", 		(TFUN)&(AC.OldGCDflag),	1,	0}
 	,{"innertest",      (TFUN)&(AC.InnerTest),  1,  0}
+	,{"wtimestats",     (TFUN)&(AC.WTimeStatsFlag),  1,  0}
 };
 
 static WORD one = 1;
@@ -690,7 +692,7 @@ int CoFormat(UBYTE *s)
 			AO.Optimize.printstats = 0;
 			AO.Optimize.debugflags = 0;
 			AO.Optimize.schemeflags = 0;
-			AO.Optimize.experiments = 0;
+			AO.Optimize.mctsdecaymode = 1; // default is decreasing C_p with iteration number
 			if ( AO.inscheme ) {
 				M_free(AO.inscheme,"Horner input scheme");
 				AO.inscheme = 0; AO.schemenum = 0;
@@ -760,7 +762,7 @@ int CoFormat(UBYTE *s)
 			AO.Optimize.printstats = 0;
 			AO.Optimize.debugflags = 0;
 			AO.Optimize.schemeflags = 0;
-			AO.Optimize.experiments = 0;
+			AO.Optimize.mctsdecaymode = 1;
 			if ( AO.inscheme ) {
 				M_free(AO.inscheme,"Horner input scheme");
 				AO.inscheme = 0; AO.schemenum = 0;
@@ -1109,7 +1111,10 @@ FoundExpr:;
 			}
 			else if ( GetLastExprName(name,&numexpr)
 			&& ( Expressions[numexpr].status == LOCALEXPRESSION
-			|| Expressions[numexpr].status == GLOBALEXPRESSION ) ) {
+			|| Expressions[numexpr].status == GLOBALEXPRESSION
+			|| Expressions[numexpr].status == UNHIDELEXPRESSION
+			|| Expressions[numexpr].status == UNHIDEGEXPRESSION
+			) ) {
 				goto FoundExpr;
 			}
 			else {
@@ -1516,7 +1521,7 @@ void AddToCom(int n, WORD *array)
 #ifdef COMPBUFDEBUG
 	MesPrint("  %a",n,array);
 #endif
-	while ( C->Pointer+n >= C->Top ) DoubleCbuffer(AC.cbufnum,C->Pointer);
+	while ( C->Pointer+n >= C->Top ) DoubleCbuffer(AC.cbufnum,C->Pointer,18);
 	while ( --n >= 0 ) *(C->Pointer)++ = *array++;
 }
 
@@ -1546,7 +1551,7 @@ int AddComString(int n, WORD *array, UBYTE *thestring, int par)
 	}
 	AddLHS(AC.cbufnum);
 	size = numchars/sizeof(WORD)+1;
-	while ( C->Pointer+size+n+1 >= C->Top ) DoubleCbuffer(AC.cbufnum,C->Pointer);
+	while ( C->Pointer+size+n+2 >= C->Top ) DoubleCbuffer(AC.cbufnum,C->Pointer,19);
 #ifdef COMPBUFDEBUG
 	cc = C->Pointer;
 #endif
@@ -1597,7 +1602,7 @@ int Add2ComStrings(int n, WORD *array, UBYTE *string1, UBYTE *string2)
 		size2 = num2chars/sizeof(WORD)+1;
 	}
 	else size2 = 0;
-	while ( C->Pointer+size1+size2+n+3 >= C->Top ) DoubleCbuffer(AC.cbufnum,C->Pointer);
+	while ( C->Pointer+size1+size2+n+3 >= C->Top ) DoubleCbuffer(AC.cbufnum,C->Pointer,20);
 	*(C->Pointer)++ = array[0];
 	*(C->Pointer)++ = size1+size2+n+3;
 	for ( i = 1; i < n; i++ ) *(C->Pointer)++ = array[i];
@@ -1753,6 +1758,7 @@ int DoArgument(UBYTE *s, int par)
 		case TYPESPLITFIRSTARG:
 		case TYPESPLITLASTARG:
 		case TYPEFACTARG:
+		case TYPEARGTOEXTRASYMBOL:
 	        *w++ = cbuf[AC.cbufnum].numlhs+1;
 			break;
     }
@@ -4223,7 +4229,7 @@ OnlyNum:
 				}
 			}
 			u[1] = WORDDIF(w,u);
-			u[2] = (u[1] - 3)>>1;
+			u[2] = (u[1] - 3)/2;
 			if ( level ) u[2] = -u[2];
 			gotexp = 1;
 		}
@@ -5224,7 +5230,9 @@ int CoPolyRatFun(UBYTE *s)
 	AR.PolyFunType = AC.lPolyFunType = 2;
 	AC.PolyRatFunChanged = 1;
 	if ( c == 0 ) return(0);
-	*t = c; while ( *t == ',' || *t == ' ' || *t == '\t' ) t++;
+	*t = c;
+	if ( *t == '-' ) { AC.PolyRatFunChanged = 0; t++; }
+	while ( *t == ',' || *t == ' ' || *t == '\t' ) t++;
 	if ( *t == 0 ) return(0);
 	if ( *t != '(' ) {
 		s = t;
@@ -5242,7 +5250,9 @@ int CoPolyRatFun(UBYTE *s)
 		}
 		AR.PolyFunInv = AC.lPolyFunInv = numfun+FUNCTION;
 		if ( c == 0 ) return(0);
-		*t = c; while ( *t == ',' || *t == ' ' || *t == '\t' ) t++;
+		*t = c;
+		if ( *t == '-' ) { AC.PolyRatFunChanged = 0; t++; }
+		while ( *t == ',' || *t == ' ' || *t == '\t' ) t++;
 		if ( *t == 0 ) return(0);
 	}
 	if ( *t == '(' ) {
@@ -5285,7 +5295,7 @@ int CoPolyRatFun(UBYTE *s)
 			symbols[AC.lPolyFunVar].maxpower =  MAXPOWER;
 		}
 		else if ( StrICmp(s,(UBYTE *)"expand") == 0 ) {
-			WORD x = 0;
+			WORD x = 0, etype = 2;
 			if ( c != ',' ) {
 				MesPrint("&Illegal option field in PolyRatFun statement.");
 				return(1);
@@ -5309,17 +5319,35 @@ int CoPolyRatFun(UBYTE *s)
 			while ( *t <= '9' && *t >= '0' ) x = 10*x + *t++ - '0';
 			while ( *t == ',' || *t == ' ' || *t == '\t' ) t++;
 			if ( *t != ')' ) {
-				MesPrint("&Illegal termination of option in PolyRatFun statement.");
-				return(1);
+				s = t;
+				t = SkipAName(s);
+				if ( t == 0 ) goto ParErr;
+				c = *t; *t = 0;
+				if ( StrICmp(s,(UBYTE *)"fixed") == 0 ) {
+					etype = 3;
+				}
+				else if ( StrICmp(s,(UBYTE *)"relative") == 0 ) {
+					etype = 2;
+				}
+				else {
+					MesPrint("&Illegal termination of option in PolyRatFun statement.");
+					return(1);
+				}
+				*t = c;
+				while ( *t == ',' || *t == ' ' || *t == '\t' ) t++;
+				if ( *t != ')' ) {
+					MesPrint("&Illegal termination of option in PolyRatFun statement.");
+					return(1);
+				}
 			}
-			AR.PolyFunExp = AC.lPolyFunExp = 2;
+			AR.PolyFunExp = AC.lPolyFunExp = etype;
 			AR.PolyFunVar = AC.lPolyFunVar;
 			AR.PolyFunPow = AC.lPolyFunPow = x;
 			symbols[AC.lPolyFunVar].minpower = -MAXPOWER;
 			symbols[AC.lPolyFunVar].maxpower =  MAXPOWER;
 		}
 		else {
-			MesPrint("&Illegal option %s in PolyRatFun statement.",s);
+ParErr:		MesPrint("&Illegal option %s in PolyRatFun statement.",s);
 			return(1);
 		}
 		t++;
@@ -5807,6 +5835,60 @@ int CoFromPolynomial(UBYTE *inp)
 
 /*
   	#] CoFromPolynomial : 
+  	#[ CoArgToExtraSymbol :
+
+	Converts the specified function arguments into extra symbols.
+
+	Syntax: ArgToExtraSymbol [ToNumber] [<argument specifications>]
+*/
+
+int CoArgToExtraSymbol(UBYTE *s)
+{
+	CBUF *C = cbuf + AC.cbufnum;
+	WORD *lhs;
+
+	/* TODO: resolve interference with rational arithmetic. (#138) */
+	if ( ( AC.topolynomialflag & ~TOPOLYNOMIALFLAG ) != 0 ) {
+		MesPrint("&ArgToExtraSymbol statement and FactArg statement are not allowed in the same module");
+		return(1);
+	}
+	if ( AO.OptimizeResult.code != NULL ) {
+		MesPrint("&Using ArgToExtraSymbol statement when there are still optimization results active.");
+		MesPrint("&Please use #ClearOptimize instruction first.");
+		MesPrint("&This will loose the optimized expression.");
+		return(1);
+	}
+
+	SkipSpaces(&s);
+	int tonumber = ConsumeOption(&s, "tonumber");
+
+	int ret = DoArgument(s,TYPEARGTOEXTRASYMBOL);
+	if ( ret ) return(ret);
+
+	/*
+	 * The "scale" parameter is unused. Instead, we put the "tonumber"
+	 * parameter.
+	 */
+	lhs = C->lhs[C->numlhs];
+	if ( lhs[4] != 1 ) {
+		Warning("scale parameter (^n) is ignored in ArgToExtraSymbol");
+	}
+	lhs[4] = tonumber;
+
+	AC.topolynomialflag |= TOPOLYNOMIALFLAG;  /* This flag is also used in ParFORM. */
+#ifdef WITHMPI
+	/*
+	 * In ParFORM, the conversion to extra symbols has to be performed on
+	 * the master.
+	 */
+	AC.mparallelflag |= NOPARALLEL_CONVPOLY;
+#endif
+
+	return(0);
+}
+
+/*
+  	#] CoArgToExtraSymbol : 
   	#[ CoExtraSymbols :
 */
 
@@ -6706,22 +6788,22 @@ GotTheNumber:
 				}
 			}
 		}
-		else if ( StrICmp(name,(UBYTE *)"experiments") == 0 ) {
+		else if ( StrICmp(name,(UBYTE *)"mctsdecaymode") == 0 ) {
 			x = 0;
 			u = value;
 			if ( FG.cTable[*u] == 1 ) {
 				while ( *u >= '0' && *u <= '9' ) x = 10*x + *u++ - '0';
 				if ( *u != 0 ) {
-					MesPrint("&Numerical value for DebugFlag in Format,Optimize statement should be a nonnegative number: %s",value);
-					AO.Optimize.experiments = 0;
+					MesPrint("&Option MCTSDecayMode in Format,Optimize statement should be a nonnegative integer: %s",value);
+					AO.Optimize.mctsdecaymode = 0;
 					error = 1;
 				}
 				else {
-					AO.Optimize.experiments = x;
+					AO.Optimize.mctsdecaymode = x;
 				}
 			}
 			else {
-				AO.Optimize.experiments = 0;
+				AO.Optimize.mctsdecaymode = 0;
 				MesPrint("&Unrecognized option value in Format,Optimize statement: %s=%s",name,value);
 				error = 1;
 			}

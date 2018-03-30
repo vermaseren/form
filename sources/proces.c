@@ -5,7 +5,7 @@
  */
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2013 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -1040,12 +1040,12 @@ TooMuch:;
 						m += ARGHEAD;
 						i = t[FUNHEAD] - ARGHEAD;
 						while ( (t1 + i + 10) > C->Top )
-							t1 = DoubleCbuffer(AT.ebufnum,t1);
+							t1 = DoubleCbuffer(AT.ebufnum,t1,9);
 						while ( --i >= 0 ) *t1++ = *m++;
 					}
 					else {
 						if ( (t1 + 20) > C->Top )
-							t1 = DoubleCbuffer(AT.ebufnum,t1);
+							t1 = DoubleCbuffer(AT.ebufnum,t1,10);
 						ToGeneral(m,t1,1);
 						t1 += *t1;
 					}
@@ -1110,12 +1110,12 @@ Important: we may not have enough spots here
 							i = *r - ARGHEAD;
 							r += ARGHEAD;
 							while ( (m + i + 10) > C->Top )
-								m = DoubleCbuffer(AT.ebufnum,m);
+								m = DoubleCbuffer(AT.ebufnum,m,11);
 							while ( --i >= 0 ) *m++ = *r++;
 						}
 						else {
 							while ( (m + 20) > C->Top )
-								m = DoubleCbuffer(AT.ebufnum,m);
+								m = DoubleCbuffer(AT.ebufnum,m,12);
 							ToGeneral(r,m,1);
 							m += *m;
 						}
@@ -1178,7 +1178,7 @@ Important: we may not have enough spots here
 				}
 			}
 			if ( functions[funnum-FUNCTION].spec == 0
-				|| ( t[2] & (DIRTYFLAG|CLEANPRF) ) != 0 ) { funflag = 1; }
+				|| ( t[2] & (DIRTYFLAG|MUSTCLEANPRF) ) != 0 ) { funflag = 1; }
 			if ( *t <= MAXBUILTINFUNCTION ) {
 			  if ( *t <= DELTAP && *t >= THETA ) { /* Speeds up by 2 or 3 compares */
 			  if ( *t == THETA || *t == THETA2 ) {
@@ -1230,10 +1230,17 @@ Important: we may not have enough spots here
 			  && t[FUNHEAD+2] == -SNUMBER
 			  && t[FUNHEAD+4] <= -FUNCTION
 			  && t[FUNHEAD+5] <= -FUNCTION ) {
-				AN.TeInFun = -1;
-				AN.TeSuOut = 0;
-				AR.TePos = -1;
-				return(1);
+				WORD *ttt = t+FUNHEAD+6, *tttstop = t+t[1];
+				while ( ttt < tttstop ) {
+					if ( *ttt == -DOLLAREXPRESSION ) break;
+					NEXTARG(ttt);
+				}
+				if ( ttt >= tttstop ) {
+					AN.TeInFun = -1;
+					AN.TeSuOut = 0;
+					AR.TePos = -1;
+					return(1);
+				}
 			  }
 			  else if ( *t == DELTA3 && ((t[1]-FUNHEAD) & 1 ) == 0 ) {
 				AN.TeInFun = -2;
@@ -1346,24 +1353,54 @@ Important: we may not have enough spots here
 					return(1);
 				}
 			  }
-              else if ( *t == GCDFUNCTION ) {
-                WORD *tf;
-				int todo = 1;
-                tf = t + FUNHEAD;
-                while ( tf < t + t[1] ) {
-					if ( *tf > 0 && tf[1] != 0 ) todo = 0;
-                    NEXTARG(tf);
-                }
-				if ( todo ) {
-					AN.TeInFun = -8;
-					AN.TeSuOut = 0;
-					AR.TePos = -1;
-					return(1);
-				}
-              }
-              else if ( *t == DIVFUNCTION || *t == REMFUNCTION || *t == INVERSEFUNCTION ) {
+              else if ( *t == DIVFUNCTION || *t == REMFUNCTION
+                        || *t == INVERSEFUNCTION || *t == MULFUNCTION
+						|| *t == GCDFUNCTION ) {
                 WORD *tf;
 				int todo = 1, numargs = 0;
+                tf = t + FUNHEAD;
+                while ( tf < t + t[1] ) {
+					DOLLARS d;
+					if ( *tf == -DOLLAREXPRESSION ) {
+						d = Dollars + tf[1];
+						if ( d->type == DOLWILDARGS ) {
+							WORD *tterm = AT.WorkPointer, *tw;
+							WORD *ta = term, *tb = tterm, *tc, *td = term + *term;
+							while ( ta < t ) *tb++ = *ta++;
+							tc = tb;
+							while ( ta < tf ) *tb++ = *ta++;
+							tw = d->where+1;
+							while ( *tw ) {
+								if ( *tw < 0 ) {
+									if ( *tw > -FUNCTION ) *tb++ = *tw++;
+									*tb++ = *tw++;
+								}
+								else {
+									int ia;
+									for ( ia = 0; ia < *tw; ia++ ) *tb++ = *tw++;
+								}
+							}
+							NEXTARG(ta)
+							while ( ta < t+t[1] ) *tb++ = *ta++;
+							tc[1] = tb-tc;
+							while ( ta < td ) *tb++ = *ta++;
+							*tterm = tb - tterm;
+							{
+								int ia, na = *tterm;
+								ta = tterm; tb  = term;
+								for ( ia = 0; ia < na; ia++ ) *tb++ = *ta++;
+							}
+							if ( tb > AT.WorkTop ) {
+								MLOCK(ErrorMessageLock);
+								MesWork();
+								goto EndTest2;
+							}
+							AT.WorkPointer = tb;
+							goto ReStart;
+						}
+					}
+                    NEXTARG(tf);
+                }
                 tf = t + FUNHEAD;
                 while ( tf < t + t[1] ) {
 					numargs++;
@@ -1374,11 +1411,36 @@ Important: we may not have enough spots here
 					if ( *t == DIVFUNCTION ) AN.TeInFun = -9;
 					else if ( *t == REMFUNCTION ) AN.TeInFun = -10;
 					else if ( *t == INVERSEFUNCTION ) AN.TeInFun = -11;
+					else if ( *t == MULFUNCTION ) AN.TeInFun = -14;
+					else if ( *t == GCDFUNCTION ) AN.TeInFun = -8;
 					AN.TeSuOut = 0;
 					AR.TePos = -1;
 					return(1);
 				}
-              }
+				else if ( todo && *t == GCDFUNCTION ) {
+					AN.TeInFun = -8;
+					AN.TeSuOut = 0;
+					AR.TePos = -1;
+					return(1);
+				}
+			  }
+			  else if ( *t == PERMUTATIONS && ( ( t[1] >= FUNHEAD+1
+				&& t[FUNHEAD] <= -FUNCTION ) || ( t[1] >= FUNHEAD+3
+				&& t[FUNHEAD] == -SNUMBER && t[FUNHEAD+2] <= -FUNCTION ) ) ) {
+				AN.TeInFun = -12;
+				AN.TeSuOut = 0;
+				AR.TePos = -1;
+				return(1);
+			  }
+			  else if ( *t == PARTITIONS ) {
+				if ( TestPartitions(t,&(AT.partitions)) ) {
+					AT.partitions.where = t-term;
+					AN.TeInFun = -13;
+					AN.TeSuOut = 0;
+					AR.TePos = -1;
+					return(1);
+				}
+			  }
 			}
 		}
 		t += t[1];
@@ -1452,7 +1514,7 @@ redosize:
 								AN.subsubveto = 0;
 								t1[2] = 1;
 								if ( *t1 == AR.PolyFun && AR.PolyFunType == 2 )
-									t1[2] |= CLEANPRF;
+									t1[2] |= MUSTCLEANPRF;
 								AT.RecFlag--;
 								AT.NestPoin--;
 								AN.TeInFun++;
@@ -1492,6 +1554,7 @@ redosize:
 									m = term + *term;
 									while ( r < m ) *t++ = *r++;
 									*term -= i;
+									t = AT.NestPoin[-1].argsize + ARGHEAD;
 								}
 							}
 							AN.subsubveto = 0;
@@ -1525,8 +1588,7 @@ redosize:
 								if ( *t1 == AR.PolyFun && AR.PolyFunType == 2 ) {
 									AR.SortType = oldsorttype;
 									AR.CompareRoutine = oldcompareroutine;
-/*									t1[2] &= CLEANPRF; */
-									t1[2] |= CLEANPRF;
+									t1[2] |= MUSTCLEANPRF;
 								}
 								LowerSortLevel(); goto EndTest;
 							}
@@ -1538,23 +1600,25 @@ redosize:
 										if ( *t1 == AR.PolyFun && AR.PolyFunType == 2 ) {
 											AR.SortType = oldsorttype;
 											AR.CompareRoutine = oldcompareroutine;
-/*											t1[2] &= CLEANPRF; */
-											t1[2] |= CLEANPRF;
+											t1[2] |= MUSTCLEANPRF;
 										}
 										goto EndTest;
 									}
 								}
 							}
+							if ( AR.PolyFun > 0 ) {
+								if ( PrepPoly(BHEAD r,1) != 0 ) goto EndTest;
+							}
 							if ( *r ) StoreTerm(BHEAD r);
 							AT.WorkPointer = r;
 						}
-						if ( EndSort(BHEAD AT.WorkPointer+ARGHEAD,0) < 0 ) goto EndTest;
+/* the next call had parameter 0. That was wrong!!!!!) */
+						if ( EndSort(BHEAD AT.WorkPointer+ARGHEAD,1) < 0 ) goto EndTest;
 						m = AT.WorkPointer+ARGHEAD;
 						if ( *t1 == AR.PolyFun && AR.PolyFunType == 2 ) {
 							AR.SortType = oldsorttype;
 							AR.CompareRoutine = oldcompareroutine;
-/*							t1[2] &= CLEANPRF; */
-							t1[2] |= CLEANPRF;
+							t1[2] |= MUSTCLEANPRF;
 						}
 						while ( *m ) m += *m;
 						i = WORDDIF(m,AT.WorkPointer);
@@ -1887,7 +1951,7 @@ EndTest2:;
 }
 
 /*
- 		#] TestSub :
+ 		#] TestSub : 
  		#[ InFunction :			WORD InFunction(term,termout)
 */
 /**
@@ -1971,7 +2035,9 @@ WORD InFunction(PHEAD WORD *term, WORD *termout)
 						AR.CompareRoutine = &CompareSymbols;
 						AR.SortType = SORTHIGHFIRST;
 					}
+/*
 					AR.PolyFun = 0;
+*/
 					while ( t < v ) {
 						i = *t;
 						NCOPY(m,t,i);
@@ -2514,7 +2580,7 @@ ComAct:		if ( t < u ) do { *m++ = *t++; } while ( t < u );
 				if ( MulRat(BHEAD (UWORD *)u,REDLENG(l1),(UWORD *)r,REDLENG(l2),
 				(UWORD *)m,&l1) ) goto InsCall;
 				l2 = l1;
-				l2 <<= 1;
+				l2 *= 2;
 				if ( l2 < 0 ) {
 					m -= l2;
 					*m++ = l2-1;
@@ -2525,7 +2591,11 @@ ComAct:		if ( t < u ) do { *m++ = *t++; } while ( t < u );
 				}
 			}
 			*termout = WORDDIF(m,termout);
-			if ( (*termout)*((LONG)sizeof(WORD)) > AM.MaxTer ) goto InsCall;
+			if ( (*termout)*((LONG)sizeof(WORD)) > AM.MaxTer ) {
+				MLOCK(ErrorMessageLock);
+				MesPrint("Term too complex during substitution. MaxTermSize of %l is too small",AM.MaxTer);
+				goto InsCall2;
+			}
 			AT.WorkPointer = coef;
 			return(0);
 		}
@@ -2552,6 +2622,7 @@ ComAct:		if ( t < u ) do { *m++ = *t++; } while ( t < u );
 
 InsCall:
 	MLOCK(ErrorMessageLock);
+InsCall2:
 	MesCall("InsertTerm");
 	MUNLOCK(ErrorMessageLock);
 	SETERROR(-1)
@@ -2733,7 +2804,7 @@ WORD *PasteTerm(PHEAD WORD number, WORD *accum, WORD *position, WORD times, WORD
 			return(0);
 		}
 		x = l1;
-		x <<= 1;
+		x *= 2;
 		if ( x < 0 ) { accum -= x; *accum++ = x - 1; }
 		else		 { accum += x; *accum++ = x + 1; }
 		*u = WORDDIF(accum,u);
@@ -2905,7 +2976,7 @@ Nextr:;
 			}
 
 			i = ABS(l2);
-			i <<= 1;
+			i *= 2;
 			i++;
 			l2 = ( l2 >= 0 ) ? i: -i;
 			r = coef;
@@ -2964,10 +3035,10 @@ WORD Generator(PHEAD WORD *term, WORD level)
 {
 	GETBIDENTITY
 	WORD replac, *accum, *termout, *t, i, j, tepos, applyflag = 0, *StartBuf;
-	WORD *a, power, power1, DumNow = AR.CurDum, oldtoprhs, retnorm, extractbuff;
+	WORD *a, power, power1, DumNow = AR.CurDum, oldtoprhs, oldatoprhs, retnorm, extractbuff;
 	int *RepSto = AN.RepPoint, iscopy = 0;
-	CBUF *C = cbuf+AM.rbufnum, *CC = cbuf + AT.ebufnum;
-	LONG posisub, oldcpointer;
+	CBUF *C = cbuf+AM.rbufnum, *CC = cbuf + AT.ebufnum, *CCC = cbuf + AT.aebufnum;
+	LONG posisub, oldcpointer, oldacpointer;
 	DOLLARS d = 0;
 	WORD numfac[5], idfunctionflag;
 #ifdef WITHPTHREADS
@@ -2975,12 +3046,14 @@ WORD Generator(PHEAD WORD *term, WORD level)
 #endif
 	oldtoprhs = CC->numrhs;
 	oldcpointer = CC->Pointer - CC->Buffer;
+	oldatoprhs = CCC->numrhs;
+	oldacpointer = CCC->Pointer - CCC->Buffer;
 ReStart:
 	if ( ( replac = TestSub(BHEAD term,level) ) == 0 ) {
 		if ( applyflag ) { TableReset(); applyflag = 0; }
 /*
 		if ( AN.PolyNormFlag > 1 ) {
-			if ( PolyFunMul(BHEAD term) ) goto GenCall;
+			if ( PolyFunMul(BHEAD term) < 0 ) goto GenCall;
 			AN.PolyNormFlag = 0;
 			if ( !*term ) goto Return0;
 		}
@@ -3000,20 +3073,23 @@ Renormalize:
 
 		if ( AN.PolyNormFlag ) {
 			if ( AN.PolyFunTodo == 0 ) {
-				if ( PolyFunMul(BHEAD term) ) goto GenCall;
+				if ( PolyFunMul(BHEAD term) < 0 ) goto GenCall;
 				if ( !*term ) { AN.PolyNormFlag = 0; goto Return0; }
 			}
 			else {
 				WORD oldPolyFunExp = AR.PolyFunExp;
 				AR.PolyFunExp = 0;
-				if ( PolyFunMul(BHEAD term) ) goto GenCall;
+				if ( PolyFunMul(BHEAD term) < 0 ) goto GenCall;
+				AT.WorkPointer = term+*term;
 				AR.PolyFunExp = oldPolyFunExp;
 				if ( !*term ) { AN.PolyNormFlag = 0; goto Return0; }
 				if ( Normalize(BHEAD term) < 0 ) goto GenCall;
 				if ( !*term ) { AN.PolyNormFlag = 0; goto Return0; }
+				AT.WorkPointer = term+*term;
 				if ( AN.PolyNormFlag ) {
-					if ( PolyFunMul(BHEAD term) ) goto GenCall;
+					if ( PolyFunMul(BHEAD term) < 0 ) goto GenCall;
 					if ( !*term ) { AN.PolyNormFlag = 0; goto Return0; }
+					AT.WorkPointer = term+*term;
 				}
 				AN.PolyFunTodo = 0;
 			}
@@ -3053,7 +3129,10 @@ SkipCount:	level++;
 					if ( olddummies > AR.MaxDum ) AR.MaxDum = olddummies;
 				}
 				if ( AR.PolyFun > 0 && ( AR.sLevel <= 0 || AN.FunSorts[AR.sLevel]->PolyFlag > 0 ) ) {
-					if ( PrepPoly(BHEAD term) != 0 ) goto Return0;
+					if ( PrepPoly(BHEAD term,0) != 0 ) goto Return0;
+				}
+				else if ( AR.PolyFun > 0 ) {
+					if ( PrepPoly(BHEAD term,1) != 0 ) goto Return0;
 				}
 				if ( AR.sLevel <= 0 && AR.BracketOn ) {
 					if ( AT.WorkPointer < term + *term ) AT.WorkPointer = term + *term;
@@ -3066,6 +3145,8 @@ SkipCount:	level++;
 					AT.WorkPointer = termout;
 					CC->numrhs = oldtoprhs;
 					CC->Pointer = CC->Buffer + oldcpointer;
+					CCC->numrhs = oldatoprhs;
+					CCC->Pointer = CCC->Buffer + oldacpointer;
 					return(i);
 				}
 				else {
@@ -3076,6 +3157,8 @@ SkipCount:	level++;
 					i = StoreTerm(BHEAD term);
 					CC->numrhs = oldtoprhs;
 					CC->Pointer = CC->Buffer + oldcpointer;
+					CCC->numrhs = oldatoprhs;
+					CCC->Pointer = CCC->Buffer + oldacpointer;
 					return(i);
 				}
 			}
@@ -3314,6 +3397,7 @@ CommonEnd:
 				  case TYPESPLITARG2:
 				  case TYPESPLITFIRSTARG:
 				  case TYPESPLITLASTARG:
+				  case TYPEARGTOEXTRASYMBOL:
 					if ( execarg(BHEAD term,level) < 0 ) goto GenCall;
 					level = C->lhs[level][2];
 					break;
@@ -3463,6 +3547,8 @@ CommonEnd:
 					AR.CurDum = DumNow;
 					CC->numrhs = oldtoprhs;
 					CC->Pointer = CC->Buffer + oldcpointer;
+					CCC->numrhs = oldatoprhs;
+					CCC->Pointer = CCC->Buffer + oldacpointer;
 					return(retnorm);
 				  case TYPEDETCURDUM:
 					AT.WorkPointer = term + *term;
@@ -3654,6 +3740,15 @@ AutoGen:	i = *AT.TMout;
 					break;
 				case -11:
 					if ( DIVfunction(BHEAD term,level,2) < 0 ) goto GenCall;
+					break;
+				case -12:
+					if ( DoPermutations(BHEAD term,level) ) goto GenCall;
+					break;
+				case -13:
+					if ( DoPartitions(BHEAD term,level) ) goto GenCall;
+					break;
+				case -14:
+					if ( DIVfunction(BHEAD term,level,3) < 0 ) goto GenCall;
 					break;
 			}
 		}
@@ -3982,7 +4077,7 @@ AutoGen:	i = *AT.TMout;
 #endif
 					if ( Generator(BHEAD termout,level) ) goto GenCall;
 #ifdef WITHPTHREADS
-					if ( dtype > 0 && dtype != MODLOCAL ) { dtype = 0; break; }
+					if ( dtype > 0 && dtype != MODLOCAL && dtype != MODSUM ) { dtype = 0; break; }
 #endif
 					if ( iscopy == 0 && ( extractbuff != AM.dbufnum ) )
 							StartBuf = cbuf[extractbuff].Buffer;
@@ -4137,6 +4232,8 @@ Return0:
 	AN.RepPoint = RepSto;
 	CC->numrhs = oldtoprhs;
 	CC->Pointer = CC->Buffer + oldcpointer;
+	CCC->numrhs = oldatoprhs;
+	CCC->Pointer = CCC->Buffer + oldacpointer;
 	return(0);
 
 GenCall:
@@ -4158,10 +4255,14 @@ GenCall:
 	}
 	CC->numrhs = oldtoprhs;
 	CC->Pointer = CC->Buffer + oldcpointer;
+	CCC->numrhs = oldatoprhs;
+	CCC->Pointer = CCC->Buffer + oldacpointer;
 	return(-1);
 OverWork:
 	CC->numrhs = oldtoprhs;
 	CC->Pointer = CC->Buffer + oldcpointer;
+	CCC->numrhs = oldatoprhs;
+	CCC->Pointer = CCC->Buffer + oldacpointer;
 	MLOCK(ErrorMessageLock);
 	MesWork();
 	MUNLOCK(ErrorMessageLock);
@@ -4496,10 +4597,8 @@ WORD Deferred(PHEAD WORD *term, WORD level)
 		AR.CompressPointer = oldipointer;
 		AT.WorkPointer = termout;
 		retval = GetOneTerm(BHEAD AT.WorkPointer,AR.infile,&startposition,0);
-
+		if ( retval >= 0 ) AR.CompressPointer = oldipointer;
 		if ( retval <= 0 ) break;
-
-		AR.CompressPointer = oldipointer;
 		t = AR.CompressPointer;
 		if ( *t < (1 + decr + ABS(*(t+*t-1))) ) break;
 		t++;
@@ -4527,7 +4626,7 @@ DefCall:;
 
 /*
  		#] Deferred : 
- 		#[ PrepPoly :			WORD PrepPoly(term)
+ 		#[ PrepPoly :			WORD PrepPoly(term,par)
 */
 /**
  *		Routine checks whether the count of function AR.PolyFun is zero
@@ -4546,9 +4645,12 @@ DefCall:;
  *		The compression should then stop at the PolyFun. It doesn't
  *		really have to stop when writing the final result but this may
  *		be too complicated.
+ *
+ *		The parameter par tells whether we are at groundlevel or
+ *		inside a function or dollar variable.
  */
 
-WORD PrepPoly(PHEAD WORD *term)
+WORD PrepPoly(PHEAD WORD *term,WORD par)
 {
 	GETBIDENTITY
 	WORD count = 0, i, jcoef, ncoef;
@@ -4564,8 +4666,8 @@ WORD PrepPoly(PHEAD WORD *term)
 	if ( AR.PolyFunType == 2 && AR.PolyFunExp != 2 ) {
 		WORD oldtype = AR.SortType;
 		AR.SortType = SORTHIGHFIRST;
-/*		if ( poly_ratfun_normalize(BHEAD term) != 0 ) Terminate(-1); */
-		if ( ReadPolyRatFun(BHEAD term) != 0 ) Terminate(-1);
+		if ( poly_ratfun_normalize(BHEAD term) != 0 ) Terminate(-1);
+/*		if ( ReadPolyRatFun(BHEAD term) != 0 ) Terminate(-1); */
 		oldworkpointer = AT.WorkPointer;
 		AR.SortType = oldtype;
 	}
@@ -4583,7 +4685,16 @@ WORD PrepPoly(PHEAD WORD *term)
 	}
 	r = m = term + *term;
 	i = ABS(m[-1]);
-	if ( count == 0 ) {
+	if ( par > 0 ) {
+		if ( count == 0 ) return(0);
+		else if ( AR.PolyFunType == 1 || (AR.PolyFunType == 2 && AR.PolyFunExp == 2) )
+			goto DoOne;
+		else if ( AR.PolyFunType == 2 )
+			goto DoTwo;
+		else
+			goto DoError;
+	}
+	else if ( count == 0 ) {
 /*
  		#[ Create a PolyFun :
 */
@@ -4608,6 +4719,7 @@ WORD PrepPoly(PHEAD WORD *term)
 			}
 		}
 		else {
+			WORD *vm;
 			r = tstop;
 			if ( AR.PolyFunType == 1 || (AR.PolyFunType == 2 && AR.PolyFunExp == 2) ) {
 				*m++ = AR.PolyFun;
@@ -4629,8 +4741,9 @@ WORD PrepPoly(PHEAD WORD *term)
 				v = m;
 				AT.PolyAct = WORDDIF(v,term);
 				*v++ = AR.PolyFun;
-				*v++ = FUNHEAD + 2*(ARGHEAD+sizenum+sizeden+2);
+				v++;
 				FILLFUN(v);
+				vm = v;
 				*v++ = ARGHEAD+2*sizenum+2;
 				*v++ = 0;
 				FILLARG(v);
@@ -4639,6 +4752,8 @@ WORD PrepPoly(PHEAD WORD *term)
 				*v++ = 1;
 				for ( i = 1; i < sizenum; i++ ) *v++ = 0;
 				*v++ = sign*(2*sizenum+1);
+				if ( ToFast(vm,vm) ) v = vm+2;
+				vm = v;
 				*v++ = ARGHEAD+2*sizeden+2;
 				*v++ = 0;
 				FILLARG(v);
@@ -4647,8 +4762,10 @@ WORD PrepPoly(PHEAD WORD *term)
 				*v++ = 1;
 				for ( i = 1; i < sizeden; i++ ) *v++ = 0;
 				*v++ = 2*sizeden+1;
+				if ( ToFast(vm,vm) ) v = vm+2;
+				i = v-m;
+				m[1] = i;
 				w = num;
-				i = v - m;
 				NCOPY(w,m,i);
 				*w++ = 1; *w++ = 1; *w++ = 3; *term = w - term;
 				return(0);
@@ -4659,6 +4776,7 @@ WORD PrepPoly(PHEAD WORD *term)
 */
 	}
 	else if ( AR.PolyFunType == 1 || (AR.PolyFunType == 2 && AR.PolyFunExp == 2) ) {
+		DoOne:;
 /*
  		#[ One argument :
 */
@@ -4779,7 +4897,7 @@ WORD PrepPoly(PHEAD WORD *term)
 				while ( t < vv ) *m++ = *t++;
 				if ( MulRat(BHEAD (UWORD *)vv,ncoef,(UWORD *)tstop,jcoef,
 					(UWORD *)m,&ncoef) ) Terminate(-1);
-				ncoef <<= 1;
+				ncoef *= 2;
 				m += ABS(ncoef);
 				if ( ncoef < 0 ) ncoef--;
 				else ncoef++;
@@ -4810,6 +4928,7 @@ WORD PrepPoly(PHEAD WORD *term)
 */
 	}
 	else if ( AR.PolyFunType == 2 ) {
+		DoTwo:;
 /*
  		#[ Two arguments :
 */
@@ -4840,7 +4959,8 @@ WORD PrepPoly(PHEAD WORD *term)
 		v = m;
 		*v++ = AR.PolyFun;
 		*v++ = FUNHEAD + 2*(ARGHEAD+sizenum+sizeden+2);
-		*v++ = CLEANPRF;
+/*		*v++ = MUSTCLEANPRF; */
+		*v++ = 0;
 		FILLFUN3(v);
 		*v++ = ARGHEAD+2*sizenum+2;
 		*v++ = 0;
@@ -4869,10 +4989,15 @@ WORD PrepPoly(PHEAD WORD *term)
 		{
 			WORD oldtype = AR.SortType;
 			AR.SortType = SORTHIGHFIRST;
+/*
 			if ( count > 0 )
 				poly_ratfun_normalize(BHEAD term);
 			else
 				ReadPolyRatFun(BHEAD term);
+*/
+			poly_ratfun_normalize(BHEAD term);
+
+/*			oldworkpointer = AT.WorkPointer; */
 			AR.SortType = oldtype;
 		}
 		goto endofit;
@@ -4881,6 +5006,7 @@ WORD PrepPoly(PHEAD WORD *term)
 */
 	}
 	else {
+		DoError:;
 		MLOCK(ErrorMessageLock);
 		MesPrint("Illegal value for PolyFunType in PrepPoly");
 		MUNLOCK(ErrorMessageLock);
@@ -4916,8 +5042,8 @@ WORD PolyFunMul(PHEAD WORD *term)
 {
 	GETBIDENTITY
 	WORD *t, *fun1, *fun2, *t1, *t2, *m, *w, *ww, *tt1, *tt2, *tt4, *arg1, *arg2;
-	WORD *tstop, i, dirty = 0;
-	WORD n1, n2, i1, i2, l1, l2, l3, l4, action = 0, noac = 0;
+	WORD *tstop, i, dirty = 0, OldPolyFunPow = AR.PolyFunPow, minp1, minp2;
+	WORD n1, n2, i1, i2, l1, l2, l3, l4, action = 0, noac = 0, retval = 0;
 	if ( AR.PolyFunType == 2 && AR.PolyFunExp == 1 ) {
 		WORD pow = 0, pow1;
 		t = term + 1; t1 = term + *term; t1 -= ABS(t1[-1]);
@@ -4995,23 +5121,27 @@ NoLegal:
 ReStart:
 	if ( AR.PolyFunType == 2 && ( ( AR.PolyFunExp != 2 )
 	 || ( AR.PolyFunExp == 2 && AN.PolyNormFlag > 1 ) ) ) {
-		WORD retval, count1 = 0, count2 = 0, count3;
+		WORD count1 = 0, count2 = 0, count3;
 		WORD oldtype = AR.SortType;
 		t = term + 1; t1 = term + *term; t1 -= ABS(t1[-1]);
 		while ( t < t1 ) {
 			if ( *t == AR.PolyFun ) {
-			  if ( t[2] && dirty == 0 ) {
+			  if ( t[2] && dirty == 0 ) { /* Any dirty flag on? */
 				dirty = 1;
-				ReadPolyRatFun(BHEAD term);
-/*				poly_ratfun_normalize(BHEAD term); */
+/*				ReadPolyRatFun(BHEAD term); */
+/*				ToPolyFunGeneral(BHEAD term); */
+				poly_ratfun_normalize(BHEAD term);
 				if ( term[0] == 0 ) return(0);
+				count1 = 0;
+				action++;
 				goto ReStart;
 			  }
 			  t2 = t + t[1]; tt2 = t+FUNHEAD; count3 = 0;
 			  while ( tt2 < t2 ) { count3++; NEXTARG(tt2); }
 			  if ( count3 == 2 ) {
 				count1++;
-				if ( ( t[2] & CLEANPRF ) != 0 ) {	/* Better civilize this guy */
+				if ( ( t[2] & MUSTCLEANPRF ) != 0 ) {	/* Better civilize this guy */
+					action++;
 					w = AT.WorkPointer;
 					AR.SortType = SORTHIGHFIRST;
 					t2 = t + t[1]; tt2 = t+FUNHEAD;
@@ -5059,7 +5189,7 @@ ReStart:
 			}
 			t += t[1];
 		}
-		if ( count1 <= 1 ) return(0);
+		if ( count1 <= 1 ) { goto checkaction; }
 		if ( AR.PolyFunExp == 1 ) {
 			t = term + *term; t -= ABS(t[-1]);
 			*t++ = 1; *t++ = 1; *t++ = 3; *term = t - term;
@@ -5067,11 +5197,12 @@ ReStart:
 		{
 			AR.SortType = SORTHIGHFIRST;
 /*			retval = ReadPolyRatFun(BHEAD term); */
+/*			ToPolyFunGeneral(BHEAD term); */
 			retval = poly_ratfun_normalize(BHEAD term);
 			if ( *term == 0 ) return(retval);
 			AR.SortType = oldtype;
 		}
-	
+
 		t = term + 1; t1 = term + *term; t1 -= ABS(t1[-1]);
 		while ( t < t1 ) {
 			if ( *t == AR.PolyFun ) {
@@ -5089,7 +5220,7 @@ ReStart:
 				if ( *t == AR.PolyFun ) {
 					t2 = t;
 					t = t + t[1];
-					t2[2] |= (DIRTYFLAG|CLEANPRF);
+					t2[2] |= (DIRTYFLAG|MUSTCLEANPRF);
 					t2 += FUNHEAD;
 					while ( t2 < t ) {
 						if ( *t2 > 0 ) t2[1] = DIRTYFLAG;
@@ -5099,8 +5230,11 @@ ReStart:
 				else t += t[1];
 			}
 		}
+
 		w = term + *term;
 		if ( w > AT.WorkSpace && w < AT.WorkTop ) AT.WorkPointer = w;
+checkaction:
+		if ( action ) retval = action;
 		return(retval);
 	}
 retry:
@@ -5184,7 +5318,50 @@ retry:
 */
 	w = AT.WorkPointer;
 	NewSort(BHEAD0);
-	if ( AR.PolyFunType == 2 && AR.PolyFunExp == 2 ) AT.TrimPower = 1;
+	if ( AR.PolyFunType == 2 && AR.PolyFunExp == 2 ) {
+		AT.TrimPower = 1;
+/*
+		We have to find the lowest power in both polynomials.
+		This will be needed to temporarily correct the AR.PolyFunPow
+*/
+		minp1 = MAXPOWER;
+		for ( t1 = arg1, i1 = 0; i1 < n1; i1++, t1 += *t1 ) {
+			if ( *t1 == 4 ) {
+				if ( minp1 > 0 ) minp1 = 0;
+			}
+			else if ( ABS(t1[*t1-1]) == (*t1-1) ) {
+				if ( minp1 > 0 ) minp1 = 0;
+			}
+			else {
+				if ( t1[1] == SYMBOL && t1[2] == 4 && t1[3] == AR.PolyFunVar ) {
+					if ( t1[4] < minp1 ) minp1 = t1[4];
+				}
+				else {
+					MesPrint("Illegal term in expanded polyratfun.");
+					goto PolyCall;
+				}
+			}
+		}
+		minp2 = MAXPOWER;
+		for ( t2 = arg2, i2 = 0; i2 < n2; i2++, t2 += *t2 ) {
+			if ( *t2 == 4 ) {
+				if ( minp2 > 0 ) minp2 = 0;
+			}
+			else if ( ABS(t2[*t2-1]) == (*t2-1) ) {
+				if ( minp2 > 0 ) minp2 = 0;
+			}
+			else {
+				if ( t2[1] == SYMBOL && t2[2] == 4 && t2[3] == AR.PolyFunVar ) {
+					if ( t2[4] < minp2 ) minp2 = t2[4];
+				}
+				else {
+					MesPrint("Illegal term in expanded polyratfun.");
+					goto PolyCall;
+				}
+			}
+		}
+		AR.PolyFunPow += minp1+minp2;
+	}
 	for ( t1 = arg1, i1 = 0; i1 < n1; i1++, t1 += *t1 ) {
 	for ( t2 = arg2, i2 = 0; i2 < n2; i2++, t2 += *t2 ) {
 		m = w;
@@ -5239,6 +5416,7 @@ retry:
 	}	
 	}	
 	if ( EndSort(BHEAD w,0) < 0 ) goto PolyCall;
+	AR.PolyFunPow = OldPolyFunPow;
 	AT.TrimPower = 0;
 	if ( *w == 0 ) {
 		*term = 0;
@@ -5289,6 +5467,7 @@ done:
 PolyCall:;
 	MLOCK(ErrorMessageLock);
 PolyCall2:;
+	AR.PolyFunPow = OldPolyFunPow;
 	MesCall("PolyFunMul");
 	MUNLOCK(ErrorMessageLock);
 	SETERROR(-1)

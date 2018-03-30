@@ -16,7 +16,7 @@
  */
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2013 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -95,6 +95,7 @@ VOID WriteStats(POSITION *plspace, WORD par)
 	WORD timepart;
 	SORTING *S;
 	POSITION pp;
+	int use_wtime;
 	if ( AT.SS == AT.S0 && AC.StatsFlag ) {
 #ifdef WITHPTHREADS
 		if ( AC.ThreadStats == 0 && identity > 0 ) return;
@@ -132,7 +133,19 @@ VOID WriteStats(POSITION *plspace, WORD par)
 			MesPrint("");
 #endif
 		}
-		millitime = TimeCPU(1);
+		/*
+		 * We define WTimeStatsFlag as a flag to print the wall-clock time on
+		 * the *master*, not in workers. This can be confusing in thread
+		 * statistics when short statistics is used. Technically,
+		 * TimeWallClock() is not thread-safe in TFORM.
+		 */
+		use_wtime = AC.WTimeStatsFlag;
+#if defined(WITHPTHREADS)
+		if ( use_wtime && identity > 0 ) use_wtime = 0;
+#elif defined(WITHMPI)
+		if ( use_wtime && PF.me != MASTER ) use_wtime = 0;
+#endif
+		millitime = use_wtime ? TimeWallClock(1) * 10 : TimeCPU(1);
 		timepart = (WORD)(millitime%1000);
 		millitime /= 1000;
 		timepart /= 10;
@@ -391,21 +404,44 @@ VOID WriteStats(POSITION *plspace, WORD par)
 		} }
 		else {
 		if ( par == 1 ) {
-			MesPrint("Time = %7l.%2i sec",millitime,timepart);
+			if ( use_wtime ) {
+				MesPrint("WTime = %7l.%2i sec",millitime,timepart);
+			}
+			else {
+				MesPrint("Time = %7l.%2i sec",millitime,timepart);
+			}
 		}
 		else {
 #if ( BITSINLONG > 32 )
 			if ( S->GenTerms >= 10000000000L ) {
-				MesPrint("Time = %7l.%2i sec    Generated terms = %16l",
+				if ( use_wtime ) {
+					MesPrint("WTime = %7l.%2i sec   Generated terms = %16l",
+						millitime,timepart,S->GenTerms);
+				}
+				else {
+					MesPrint("Time = %7l.%2i sec    Generated terms = %16l",
+						millitime,timepart,S->GenTerms);
+				}
+			}
+			else {
+				if ( use_wtime ) {
+					MesPrint("WTime = %7l.%2i sec   Generated terms = %10l",
+						millitime,timepart,S->GenTerms);
+				}
+				else {
+					MesPrint("Time = %7l.%2i sec    Generated terms = %10l",
+						millitime,timepart,S->GenTerms);
+				}
+			}
+#else
+			if ( use_wtime ) {
+				MesPrint("WTime = %7l.%2i sec   Generated terms = %10l",
 					millitime,timepart,S->GenTerms);
 			}
 			else {
 				MesPrint("Time = %7l.%2i sec    Generated terms = %10l",
 					millitime,timepart,S->GenTerms);
 			}
-#else
-			MesPrint("Time = %7l.%2i sec    Generated terms = %10l",
-				millitime,timepart,S->GenTerms);
 #endif
 		}
 #if ( BITSINLONG > 32 )
@@ -572,7 +608,8 @@ WORD NewSort(PHEAD0)
 		if ( AR.PolyFun == 0 ) { AT.S0->PolyFlag = 0; }
 		else if ( AR.PolyFunType == 1 ) { AT.S0->PolyFlag = 1; }
 		else if ( AR.PolyFunType == 2 ) {
-			if ( AR.PolyFunExp == 2 ) AT.S0->PolyFlag = 1;
+			if ( AR.PolyFunExp == 2
+			  || AR.PolyFunExp == 3 ) AT.S0->PolyFlag = 1;
 			else                      AT.S0->PolyFlag = 2;
 		}
 		AR.ShortSortCount = 0;
@@ -664,7 +701,8 @@ LONG EndSort(PHEAD WORD *buffer, int par)
 		if ( AR.PolyFun == 0 ) { S->PolyFlag = 0; }
 		else if ( AR.PolyFunType == 1 ) { S->PolyFlag = 1; }
 		else if ( AR.PolyFunType == 2 ) {
-			if ( AR.PolyFunExp == 2 ) S->PolyFlag = 1;
+			if ( AR.PolyFunExp == 2
+			  || AR.PolyFunExp == 3 ) S->PolyFlag = 1;
 			else                      S->PolyFlag = 2;
 		}
 		S->PolyWise = 0;
@@ -693,7 +731,16 @@ LONG EndSort(PHEAD WORD *buffer, int par)
 			if ( par == 2 ) {
 				sSpace = 3;
 				while ( ( t = *ss++ ) != 0 ) { sSpace += *t; }
-				to = (WORD *)Malloc1(sSpace*sizeof(WORD),"$-sort space");
+				if ( AN.tryterm > 0 && ( (sSpace+1)*sizeof(WORD) < (size_t)(AM.MaxTer) ) ) {
+					to = TermMalloc("$-sort space");
+				}
+				else {
+					LONG allocsp = sSpace+1;
+					if ( allocsp < 20 ) allocsp = 20;
+					allocsp = ((allocsp+7)/8)*8;
+					to = (WORD *)Malloc1(allocsp*sizeof(WORD),"$-sort space");
+					if ( AN.tryterm > 0 ) AN.tryterm = 0;
+				}
 				*((WORD **)buffer) = to;
 				ss = S->sPointer;
 				while ( ( t = *ss++ ) != 0 ) {
@@ -773,6 +820,7 @@ LONG EndSort(PHEAD WORD *buffer, int par)
 			DIFPOS(oldpos,position,oldpos);
 			S->SpaceLeft = BASEPOSITION(oldpos);
 			WriteStats(&oldpos,(WORD)2);
+			pp = oldpos;
 			goto RetRetval;
 		}
 	}
@@ -853,11 +901,11 @@ LONG EndSort(PHEAD WORD *buffer, int par)
 					retval = -1; goto RetRetval;
 				}
 				if ( S == AT.S0 ) {
+					pp = S->SizeInFile[2];
+					MULPOS(pp,sizeof(WORD));
 #ifdef WITHPTHREADS
 					if ( AS.MasterSort && ( fout == AR.outfile ) ) goto RetRetval;
 #endif
-					pp = S->SizeInFile[2];
-					MULPOS(pp,sizeof(WORD));
 					WriteStats(&pp,2);
 					UpdateMaxSize();
 				}
@@ -871,6 +919,7 @@ LONG EndSort(PHEAD WORD *buffer, int par)
 						SeekFile(newout->handle,&zeropos,SEEK_SET);
 						to = (WORD *)Malloc1(BASEPOSITION(newout->filesize)+sizeof(WORD)*2
 								,"$-buffer reading");
+						if ( AN.tryterm > 0 ) AN.tryterm = 0;
 						if ( ( retval = ReadFile(newout->handle,(UBYTE *)to,BASEPOSITION(newout->filesize)) ) !=
 								BASEPOSITION(newout->filesize) ) {
 							MLOCK(ErrorMessageLock);
@@ -899,7 +948,16 @@ TooLarge:
 						t = newout->PObuffer;
 						if ( par == 2 ) {
 							jj = newout->POfill - t;
-							to = (WORD *)Malloc1((jj+2)*sizeof(WORD),"$-sort space");
+							if ( AN.tryterm > 0 && ( (jj+2)*sizeof(WORD) < (size_t)(AM.MaxTer) ) ) {
+								to = TermMalloc("$-sort space");
+							}
+							else {
+								LONG allocsp = jj+2;
+								if ( allocsp < 20 ) allocsp = 20;
+								allocsp = ((allocsp+7)/8)*8;
+								to = (WORD *)Malloc1(allocsp*sizeof(WORD),"$-sort space");
+								if ( AN.tryterm > 0 ) AN.tryterm = 0;
+							}
 							*((WORD **)buffer) = to;
 							NCOPY(to,t,jj);
 						}
@@ -1026,16 +1084,21 @@ RetRetval:
 	/* NOTE: PF_EndSort has been changed such that it sets S->TermsLeft. (TU 30 Jun 2011) */
 	if ( AR.sLevel == 0 && (PF.me == MASTER || PF.exprtodo >= 0) ) {
 		Expressions[AR.CurExpr].counter = S->TermsLeft;
+		Expressions[AR.CurExpr].size = pp;
 	}
 #else
 	if ( AR.sLevel == 0 ) {
 		Expressions[AR.CurExpr].counter = S->TermsLeft;
+		Expressions[AR.CurExpr].size = pp;
 	}/*if ( AR.sLevel == 0 )*/
 #endif
 /*:[25nov2003 mt]*/
 	if ( S->file.handle >= 0 && ( par != 1 ) && ( par != 2 ) ) {
 				/* sortfile is still open */
 		UpdateMaxSize();
+#ifdef WITHZLIB
+		ClearSortGZIP(&(S->file));
+#endif
 		CloseFile(S->file.handle);
 		S->file.handle = -1;
 		remove(S->file.name);
@@ -1051,8 +1114,10 @@ RetRetval:
 	if ( par == 1 ) {
 		if ( retval < 0 ) {
 			UpdateMaxSize();
-			DeAllocFileHandle(newout);
-			newout = 0;
+			if ( newout ) {
+				DeAllocFileHandle(newout);
+				newout = 0;
+			}
 		}
 		else if ( newout ) {
 		  if ( newout->handle >= 0 ) {
@@ -1099,6 +1164,7 @@ RetRetval:
 				SeekFile(newout->handle,&zeropos,SEEK_SET);
 				to = (WORD *)Malloc1(BASEPOSITION(position)+sizeof(WORD)*3
 						,"$-buffer reading");
+				if ( AN.tryterm > 0 ) AN.tryterm = 0;
 				if ( ( retval = ReadFile(newout->handle,(UBYTE *)to,BASEPOSITION(position)) ) !=
 				BASEPOSITION(position) ) {
 					MLOCK(ErrorMessageLock);
@@ -1120,7 +1186,16 @@ RetRetval:
 				output resides in the cache buffer and the file was never opened
 */
 				LONG wsiz = newout->POfill - newout->PObuffer;
-				to = (WORD *)Malloc1((wsiz+2)*sizeof(WORD),"$-buffer reading");
+				if ( AN.tryterm > 0 && ( (wsiz+2)*sizeof(WORD) < (size_t)(AM.MaxTer) ) ) {
+					to = TermMalloc("$-sort space");
+				}
+				else {
+					LONG allocsp = wsiz+2;
+					if ( allocsp < 20 ) allocsp = 20;
+					allocsp = ((allocsp+7)/8)*8;
+					to = (WORD *)Malloc1(allocsp*sizeof(WORD),"$-buffer reading");
+					if ( AN.tryterm > 0 ) AN.tryterm = 0;
+				}
 				*((WORD **)buffer) = to; t = newout->PObuffer;
 				retval = wsiz;
 				NCOPY(to,t,wsiz);
@@ -1339,9 +1414,12 @@ WORD PutOut(PHEAD WORD *term, POSITION *position, FILEHANDLE *fi, WORD ncomp)
 						fi->handle = (WORD)RetCode;
 						PUTZERO(fi->filesize);
 						PUTZERO(fi->POposition);
+/*
+						Should not be here anymore?
 #ifdef WITHZLIB
 						fi->ziobuffer = 0;
 #endif
+*/
 					}
 					else {
 						MLOCK(ErrorMessageLock);
@@ -1436,7 +1514,7 @@ WORD PutOut(PHEAD WORD *term, POSITION *position, FILEHANDLE *fi, WORD ncomp)
 					polystop += polystop[1];
 				}
 				if ( polystop < sa ) {
-					if ( AR.PolyFunType == 2 ) polystop[2] &= ~CLEANPRF;
+					if ( AR.PolyFunType == 2 ) polystop[2] &= ~MUSTCLEANPRF;
 					while ( i > 0 && j > 0 && *p == *r && p < polystop ) {
 						i--; j--; k--; p++; r++;
 					}
@@ -1495,7 +1573,7 @@ nocompress:
 					polystop += polystop[1];
 				}
 				if ( polystop < sa ) {
-					if ( AR.PolyFunType == 2 ) polystop[2] &= ~CLEANPRF;
+					if ( AR.PolyFunType == 2 ) polystop[2] &= ~MUSTCLEANPRF;
 					while ( i > 0 && j > 0 && *p == *r && p < polystop ) {
 						i--; j--; k--; p++; r++;
 					}
@@ -1517,7 +1595,7 @@ nocompress:
 				t = term+1;
 				while ( t < tstop ) {
 					if ( *t == AR.PolyFun ) {
-						t[2] &= ~CLEANPRF;
+						t[2] &= ~MUSTCLEANPRF;
 					}
 					t += t[1];
 				}
@@ -1553,9 +1631,12 @@ nocompress:
 						fi->handle = (WORD)RetCode;
 						PUTZERO(fi->filesize);
 						PUTZERO(fi->POposition);
+/*
+						Should not be here?
 #ifdef WITHZLIB
 						fi->ziobuffer = 0;
 #endif
+*/
 					}
 					else {
 						MLOCK(ErrorMessageLock);
@@ -1687,9 +1768,12 @@ WORD FlushOut(POSITION *position, FILEHANDLE *fi, int compr)
 				PUTZERO(fi->filesize);
 				PUTZERO(fi->POposition);
 				fi->handle = (WORD)RetCode;
+/*
+				Should not be here?
 #ifdef WITHZLIB
 				fi->ziobuffer = 0;
 #endif
+*/
 			}
 			else {
 				MLOCK(ErrorMessageLock);
@@ -1896,11 +1980,11 @@ WORD AddCoef(PHEAD WORD **ps1, WORD **ps2)
 		}
 	}
 	if ( !OutLen ) { *ps1 = *ps2 = 0; return(0); }
-	OutLen <<= 1;
+	OutLen *= 2;
 	if ( OutLen < 0 ) i = - ( --OutLen );
 	else			  i = ++OutLen;
 	if ( l1 < 0 ) l1 = -l1;
-	l1 <<= 1; l1++;
+	l1 *= 2; l1++;
 	if ( i <= l1 ) {	/* Fits in 1 */
 		l1 -= i;
 		**ps1 -= l1;
@@ -1911,7 +1995,7 @@ WORD AddCoef(PHEAD WORD **ps1, WORD **ps2)
 		goto RegEnd;
 	}
 	if ( l2 < 0 ) l2 = -l2;
-	l2 <<= 1; l2++;
+	l2 *= 2; l2++;
 	if ( i <= l2 ) {	/* Fits in 2 */
 		l2 -= i;
 		**ps2 -= l2;
@@ -1999,7 +2083,7 @@ WORD AddPoly(PHEAD WORD **ps1, WORD **ps2)
 /*
 	Add here the two arguments. Is a straight merge.
 */
-	if ( S->PolyFlag == 2 && AR.PolyFunExp != 2 ) {
+	if ( S->PolyFlag == 2 && AR.PolyFunExp != 2 && AR.PolyFunExp != 3 ) {
 		WORD **oldSplitScratch = AN.SplitScratch;
 		LONG oldSplitScratchSize = AN.SplitScratchSize;
 		LONG oldInScratch = AN.InScratch;
@@ -2455,7 +2539,8 @@ WORD Compare1(PHEAD WORD *term1, WORD *term2, WORD level)
 */
 		count = 0; localPoly = 1; S->PolyWise = polyhit = 0;
 		S->PolyFlag = AR.PolyFunType;
-		if ( AR.PolyFunType == 2 && AR.PolyFunExp == 2 ) S->PolyFlag = 1;
+		if ( AR.PolyFunType == 2 &&
+			 ( AR.PolyFunExp == 2 || AR.PolyFunExp == 3 ) ) S->PolyFlag = 1;
 	}
 	else { localPoly = 0; }
 	prevorder = 0;
@@ -3472,9 +3557,12 @@ FileMake:
 			fout->handle = fhandle;
 			PUTZERO(fout->filesize);
 			PUTZERO(fout->POposition);
+/*
+			Should not be here?
 #ifdef WITHZLIB
 			fout->ziobuffer = 0;
 #endif
+*/
 #ifdef ALLLOCK
 			LOCK(fout->pthreadslock);
 #endif
@@ -3660,7 +3748,7 @@ ConMer:
 			#define FRONTSIZE (2*AM.MaxTer)
 			WORD *copybuf = (WORD *)(((UBYTE *)(S->sBuffer)) + FRONTSIZE);
 			WORD *copytop;
-			SetupOutputGZIP(fout);
+/*			SetupOutputGZIP(fout); */
 			SetupAllInputGZIP(S);
 			m1 = m2 = copybuf;
 			position2 = S->iPatches[0];
@@ -3739,7 +3827,7 @@ ConMer:
 		/* More than one patch. Construct the tree. */
 
 		lpat = 1;
-		do { lpat <<= 1; } while ( lpat < S->lPatch );
+		do { lpat *= 2; } while ( lpat < S->lPatch );
 		mpat = ( lpat >> 1 ) - 1;
 		k = lpat - S->lPatch;
 
@@ -3750,7 +3838,7 @@ ConMer:
 			S->tree[i] = -1;
 		}
 		for ( i = 1; i <= k; i++ ) {
-			im = ( i << 1 ) - 1;
+			im = ( i * 2 ) - 1;
 			poin[im] = S->Patches[i-1];
 			poin2[im] = poin[im] + *(poin[im]);
 			S->used[i] = im;
@@ -3758,7 +3846,7 @@ ConMer:
 			S->tree[mpat+i] = 0;
 			poin[im-1] = poin2[im-1] = 0;
 		}
-		for ( i = (k<<1)+1; i <= lpat; i++ ) {
+		for ( i = (k*2)+1; i <= lpat; i++ ) {
 			S->used[i-k] = i;
 			S->ktoi[i] = i-k-1;
 			poin[i] = S->Patches[i-k-1];
@@ -3895,11 +3983,11 @@ OneTerm:
 							for ( ii = 1; ii < r3; ii++ ) coef[r3+ii] = 0;
 						}
 					  }
-					  r3 <<= 1;
+					  r3 *= 2;
 					  r33 = ( r3 > 0 ) ? ( r3 + 1 ) : ( r3 - 1 );
 					  if ( r3 < 0 ) r3 = -r3;
 					  if ( r1 < 0 ) r1 = -r1;
-					  r1 <<= 1;
+					  r1 *= 2;
 					  r31 = r3 - r1;
 					  if ( !r3 ) {		/* Terms cancel */
 cancelled:
@@ -4098,6 +4186,9 @@ EndOfAll:
 */
 /*			TruncateFile(fin->handle); */
 			UpdateMaxSize();
+#ifdef WITHZLIB
+			ClearSortGZIP(fin);
+#endif
 			CloseFile(fin->handle);
 			remove(fin->name);		/* Gives diskspace free again. */
 #ifdef GZIPDEBUG
@@ -4121,6 +4212,9 @@ EndOfAll:
 	if ( par == 0 ) {
 /*		TruncateFile(fin->handle); */
 		UpdateMaxSize();
+#ifdef WITHZLIB
+		ClearSortGZIP(fin);
+#endif
 		CloseFile(fin->handle);
 		remove(fin->name);
 		fin->handle = -1;
@@ -4479,6 +4573,9 @@ void CleanUpSort(int num)
 				if ( S->file.handle >= 0 ) {
 /*					TruncateFile(S->file.handle); */
 					UpdateMaxSize();
+#ifdef WITHZLIB
+					ClearSortGZIP(&(S->file));
+#endif
 					CloseFile(S->file.handle);
 					S->file.handle = -1;
 					remove(S->file.name);
@@ -4499,6 +4596,9 @@ void CleanUpSort(int num)
 				if ( S->file.handle >= 0 ) {
 /*					TruncateFile(S->file.handle); */
 					UpdateMaxSize();
+#ifdef WITHZLIB
+					ClearSortGZIP(&(S->file));
+#endif
 					CloseFile(S->file.handle);
 					S->file.handle = -1;
 					remove(S->file.name);
@@ -4514,6 +4614,9 @@ void CleanUpSort(int num)
 	for ( i = 0; i < 2; i++ ) {
 		if ( AR.FoStage4[i].handle >= 0 ) {
 			UpdateMaxSize();
+#ifdef WITHZLIB
+			ClearSortGZIP(&(AR.FoStage4[i]));
+#endif
 			CloseFile(AR.FoStage4[i].handle);
 			remove(AR.FoStage4[i].name);
 			AR.FoStage4[i].handle = -1;

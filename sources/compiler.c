@@ -14,7 +14,7 @@
  */
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2013 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -106,6 +106,7 @@ static KEYWORD com2commands[] = {
 	,{"aputinside",     (TFUN)CoAntiPutInside,    STATEMENT,    PARTEST}
 	,{"argexplode",     (TFUN)CoArgExplode,       STATEMENT,    PARTEST}
 	,{"argimplode",     (TFUN)CoArgImplode,       STATEMENT,    PARTEST}
+	,{"argtoextrasymbol",(TFUN)CoArgToExtraSymbol,STATEMENT,    PARTEST}
 	,{"argument",       (TFUN)CoArgument,         STATEMENT,    PARTEST}
 	,{"assign",         (TFUN)CoAssign,           STATEMENT,    PARTEST}
 	,{"auto",           (TFUN)CoAuto,             DECLARATION,  PARTEST}
@@ -1026,6 +1027,8 @@ dovector:		if ( inset == 0 ) x1 += AM.OffsetVector;
 					if ( s[0] == TFUNOPEN && s[1] == TEXPRESSION ) {
 doexpr:					s += 2;
 						*t++ = x1; *t++ = FUNHEAD+2; *t++ = 0;
+						if ( x1 == AR.PolyFun && AR.PolyFunType == 2 && AR.Eside != LHSIDE )
+								t[-1] |= MUSTCLEANPRF;
 						FILLFUN3(t)
 						x2 = 0; while ( *s >= 0 ) { x2 = x2*128 + *s++; }
 						*t++ = -EXPRESSION; *t++ = x2;
@@ -1116,11 +1119,13 @@ doexpr:					s += 2;
 				if ( functions[x3-FUNCTION].commute ) cc = 1;
 				if ( *s != TFUNOPEN ) {
 					*t++ = x1; *t++ = FUNHEAD; *t++ = 0;
+					if ( x1 == AR.PolyFun && AR.PolyFunType == 2 && AR.Eside != LHSIDE )
+							t[-1] |= MUSTCLEANPRF;
 					FILLFUN3(t) sumlevel = 0; goto fin;
 				}
 				v = t; *t++ = x1; *t++ = FUNHEAD; *t++ = DIRTYFLAG;
-				if ( x1 == AR.PolyFun && AR.PolyFunType == 2 )
-						t[-1] |= CLEANPRF;
+				if ( x1 == AR.PolyFun && AR.PolyFunType == 2 && AR.Eside != LHSIDE )
+						t[-1] |= MUSTCLEANPRF;
 				FILLFUN3(t)
 				needarg = -1;
 				if ( !inset && functions[x3-FUNCTION].spec >= TENSORFUNCTION ) {
@@ -1230,6 +1235,7 @@ dotensor:
 				else {
 dofunction:			firstsumarg = 1;
 					do {
+						unsigned int ux2;
 						s++;
 						c = *s++;
 						if ( c == TMINUS && ( *s == TVECTOR || *s == TNUMBER
@@ -1238,7 +1244,8 @@ dofunction:			firstsumarg = 1;
 						}
 						else minus = 0;
 						base = ( c == TNUMBER ) ? 100: 128;
-						x2 = 0; while ( *s >= 0 ) { x2 = base*x2 + *s++; }
+						ux2 = 0; while ( *s >= 0 ) { ux2 = base*ux2 + *s++; }
+						x2 = ux2;  /* may cause an implementation-defined behaviour */
 /*
 		!!!!!!!!  What if it does not fit?
 */
@@ -1394,7 +1401,7 @@ dofunction:			firstsumarg = 1;
 								break;
 							case TNUMBER:
 							case TNUMBER1:
-								if ( minus ) x2 = -x2;
+								if ( minus ) x2 = UnsignedToInt(-IntAbs(x2));
 								*t++ = -SNUMBER;
 								*t++ = x2;
 								break;
@@ -1427,6 +1434,8 @@ dofunction:			firstsumarg = 1;
 					x1 += FUNCTION;
 					cc = 1;
 					v = t; *t++ = x1; *t++ = FUNHEAD; *t++ = DIRTYFLAG;
+					if ( x1 == AR.PolyFun && AR.PolyFunType == 2 && AR.Eside != LHSIDE )
+							t[-1] |= MUSTCLEANPRF;
 					FILLFUN3(t)
 					needarg = -1; goto dofunction;
 				}
@@ -1859,7 +1868,7 @@ int CompleteTerm(WORD *term, UWORD *numer, UWORD *denom, WORD nnum, WORD nden, i
 	for ( ; i < nsize; i++ ) *t++ = 0;
 	*t++ = (2*nsize+1)*sign;
 	*term = t - term;
-	AddNtoC(AC.cbufnum,*term,term);
+	AddNtoC(AC.cbufnum,*term,term,7);
 	return(0);
 }
 

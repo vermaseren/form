@@ -8,7 +8,7 @@
  */
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2013 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -1916,7 +1916,7 @@ FinishUp:;
 }
 
 /*
-  	#] DoTable :
+  	#] DoTable : 
   	#[ CoTable :
 */
 
@@ -2559,6 +2559,7 @@ int AddExpression(UBYTE *name, int x, int y)
 	expr->status = x;
 	expr->printflag = y;
 	PUTZERO(expr->onfile);
+	PUTZERO(expr->size);
 	expr->renum = 0;
 	expr->renumlists = 0;
 	expr->hidelevel = 0;

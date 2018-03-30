@@ -189,6 +189,45 @@ Int. J. Mod. Phys.} {\bf A15} (2000) 725,
 \vspace{10mm}
 
 %--#] argimplode : 
+%--#[ argtoextrasymbol :
+
+\section{argtoextrasymbol}
+\label{substaargtoextrasymbol}
+
+\noindent
+\begin{tabular}{ll}
+Type &
+  Executable statement \\
+Syntax &
+  argtoextrasymbol [tonumber] [{\tt<}argument specifications{\tt>}]; \\
+See also &
+  topolynomial (\ref{substatopolynomial}) and
+  extrasymbols (\ref{substaextrasymbols}, \ref{sect-extrasymbols}).
+\end{tabular}
+\vspace{4mm}
+
+\noindent
+Converts function arguments into extra symbols. 
+An argument will be replaced with an extra symbol. 
+The arguments that have been encountered before are replaced with the same 
+extra symbols. 
+Unlike the \texttt{topolynomial} statement (\ref{substatopolynomial}), the 
+replacement occurs even for arguments consisting only of numbers and symbols 
+(including extra symbols). 
+\vspace{4mm}
+
+\noindent
+The \texttt{tonumber} option requests that function arguments are converted to 
+positive integers corresponding to extra symbols. This provides an efficient 
+mapping from any expression (stored as a function argument) to a number. 
+\vspace{4mm}
+
+\noindent
+The function arguments to be converted can be specified in the same way as the 
+\texttt{argument} statement (see \ref{substaargument}). 
+\vspace{10mm}
+
+%--#] argtoextrasymbol : 
 %--#[ argument :
 
 \section{argument}
@@ -732,6 +771,34 @@ the case, because there can be a complicated network of contracted indices.
 \vspace{10mm}
 
 %--#] contract : 
+%--#[ copyspectator :
+
+\section{copyspectator}
+\label{substacopyspectator}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & copyspectator {\tt<}exprname = spectator;{\tt>};
+\end{tabular} \vspace{4mm}
+
+\noindent See chapter\ref{spectators} on spectators.
+\vspace{10mm}
+
+%--#] copyspectator : 
+%--#[ createspectator :
+
+\section{createspectator}
+\label{substacreatespectator}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & createspectator {\tt<}spectatorname, "filename";{\tt>};
+\end{tabular} \vspace{4mm}
+
+\noindent See chapter\ref{spectators} on spectators.
+\vspace{10mm}
+
+%--#] createspectator : 
 %--#[ ctable :
 
 \section{ctable}
@@ -1156,6 +1223,20 @@ syntax for the condition is exactly the same as for the condition in the if
 statement. \vspace{10mm}
  
 %--#] elseif : 
+%--#[ emptyspectator :
+
+\section{emptyspectator}
+\label{substaemptyspectator}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & emptyspectator {\tt<}spectator;{\tt>};
+\end{tabular} \vspace{4mm}
+
+\noindent See chapter\ref{spectators} on spectators.
+\vspace{10mm}
+
+%--#] emptyspectator : 
 %--#[ endargument :
 
 \section{endargument}
@@ -1333,7 +1414,8 @@ indicate where \FORM\ ran into the exit statement. \vspace{10mm}
 Type & Declaration statement\\
 Syntax & extrasymbols,array\textbar{}vector\textbar{}underscore,name;
 \\ See also & ToPolynomial (\ref{substatopolynomial}), FromPolynomial 
-(\ref{substafrompolynomial}) and extra symbols 
+(\ref{substafrompolynomial}), ArgToExtraSymbol (\ref{substaargtoextrasymbol}) 
+\\& and extra symbols 
 (\ref{sect-extrasymbols}).
 \end{tabular} \vspace{4mm}
 
@@ -3675,6 +3757,10 @@ command~\ref{ontotalsize}.}
 \leftvitem{3.5cm}{warnings\index{off!warnings}}
 \rightvitem{13cm}{Turns off the printing of warnings.}
 
+\leftvitem{3.5cm}{wtimestats\index{off!wtimestats}}
+\rightvitem{13cm}{Disables the wall-clock time in the timing information in the 
+statistics on the master.}
+
 \noindent If a description is too short, one should also consult the 
 description in the on statement (see \ref{substaon}). \vspace{10mm}
 
@@ -3848,6 +3934,16 @@ in the command tail when \FORM\ is started (see \ref{running}).}
 \leftvitem{3.5cm}{warnings\index{on!warnings}}
 \rightvitem{13cm}{Turns on the printing of warnings in regular mode. This 
 is the default.}
+
+\leftvitem{3.5cm}{wtimestats\index{on!wtimestats}}
+\rightvitem{13cm}{Prints the wall-clock time in the timing information in the 
+statistics. The wall-clock time is indicated by `\texttt{WTime}' instead of 
+`\texttt{Time}' in the normal statistics with `\texttt{shortstatistics}' turned 
+off. For parallel versions, it affects the statistics only on the master, and 
+does not change those on the workers. The same can be obtained with the 
+\texttt{-W} option in the command line options of \FORM{} (see \ref{running}) 
+or `\texttt{WTimeStats ON}' in the setup (see \ref{setup}). Default is off.}
+
 \vspace{10mm}
 
 %--#] on : 
@@ -4480,6 +4576,20 @@ time a term has more than three powers of x, i will get the string value
 dollar variable\index{\$-variable} (see \ref{dollars}). \vspace{10mm}
 
 %--#] redefine : 
+%--#[ removespectator :
+
+\section{removespectator}
+\label{substaremovespectator}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & removespectator {\tt<}spectator;{\tt>};
+\end{tabular} \vspace{4mm}
+
+\noindent See chapter\ref{spectators} on spectators.
+\vspace{10mm}
+
+%--#] removespectator : 
 %--#[ renumber :
 
 \section{renumber}
@@ -5501,7 +5611,8 @@ section on \TFORM\ (\ref{tform}). To find out what its value is, use the
 Type & Executable statement\\
 Syntax & topolynomial[,OnlyFunctions[,{\tt<}list of functions{\tt>}]];
 \\ See also & factarg (\ref{substafactarg}), FromPolynomial 
-(\ref{substafrompolynomial}) and ExtraSymbols (\ref{substaextrasymbols},
+(\ref{substafrompolynomial}), ArgToExtraSymbol (\ref{substaargtoextrasymbol}) 
+\\& and ExtraSymbols (\ref{substaextrasymbols},
 \ref{sect-extrasymbols}).
 \end{tabular} \vspace{4mm}
 
@@ -5524,6 +5635,20 @@ replaced.
 \vspace{10mm}
 
 %--#] topolynomial : 
+%--#[ tospectator :
+
+\section{tospectator}
+\label{substatospectator}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & tospectator {\tt<}spectator;{\tt>};
+\end{tabular} \vspace{4mm}
+
+\noindent See chapter\ref{spectators} on spectators.
+\vspace{10mm}
+
+%--#] tospectator : 
 %--#[ totensor :
 
 \section{totensor}
@@ -5776,11 +5901,16 @@ Instead of ``tointegralnotation'' one may also use the word
 \rightvitem{13cm}{permute(1,3,5)(2,6) will permute the arguments 
 according to the cycles indicated. The cycles are executed in order and may 
 overlap. Their number is not restricted. In the above example
-f(a1,a2,a3,a4,a5,a6,a7) $\rightarrow$ f(a3,a6,a5,a4,a1,a2,a7)}
+f(a1,a2,a3,a4,a5,a6,a7) $\rightarrow$ f(a3,a6,a5,a4,a1,a2,a7).
+It is allowed to use \$-variables in the cycles, including \$-variables 
+that are obtained by matching argument field wildcards.}
 
 \leftvitem{3.2cm}{reverse\index{transform!reverse}\index{reverse}}
 \rightvitem{13cm}{reverse(r1,r2) reverses the order of the arguments in 
 specified range.}
+
+\leftvitem{3.2cm}{dedup\index{transform!dedup}\index{dedup}}
+\rightvitem{13cm}{dedup(r1,r2) removes duplicates from the arguments in the range, keeping the first.}
 
 \leftvitem{3.2cm}{cycle\index{transform!cycle}\index{cycle}}
 \rightvitem{13cm}{cycle(r1,r2)=+/-number will perform a cyclic permutation 
@@ -5886,7 +6016,7 @@ it is faster by more than a factor 100.
 
 \vspace{10mm}
 
-%--#] transform : 
+%--#] transform :
 %--#[ tryreplace :
 
 \section{tryreplace}

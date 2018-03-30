@@ -7,7 +7,7 @@
  */
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2013 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -60,7 +60,7 @@ int tokenize(UBYTE *in, WORD leftright)
 	int error = 0, object, funlevel = 0, bracelevel = 0, explevel = 0, numexp;
 	int polyflag = 0;
 	WORD number, type;
-	UBYTE *s, c;
+	UBYTE *s = in, c;
 	SBYTE *out, *outtop, num[MAXNUMSIZE], *t;
 	LONG i;
 	if ( AC.tokens == 0 ) {
@@ -253,6 +253,10 @@ donumber:		i = 0;
 							*out++ = (SBYTE)i;
 						}
 						else {
+							if ( AC.vectorlikeLHS == 0 ) {
+								MesPrint("&Generated index ? only allowed in vector substitution",s);
+								error = 1;
+							}
 							*out++ = TGENINDEX;
 						}
 						object = 1;
@@ -576,7 +580,7 @@ IllPos:			MesPrint("&Illegal character at this position: %s",in);
 }
 
 /*
- 		#] tokenize :
+ 		#] tokenize : 
  		#[ WriteTokens :
 */
 
@@ -944,6 +948,7 @@ int simp2token(SBYTE *s)
 						|| n == (DIVFUNCTION-FUNCTION)
 						|| n == (REMFUNCTION-FUNCTION)
 						|| n == (INVERSEFUNCTION-FUNCTION)
+						|| n == (MULFUNCTION-FUNCTION)
 						|| n == (FACTORIN-FUNCTION)
 						|| n == (FIRSTTERM-FUNCTION)
 						|| n == (CONTENTTERM-FUNCTION) )
@@ -975,14 +980,14 @@ int simp2token(SBYTE *s)
 						}
 						else {
 							if ( *v == TNUMBER || *v == TNUMBER1 ) {
-							  if ( BITSINWORD == 16 ) { LONG x; WORD base;
+							  if ( BITSINWORD == 16 ) { ULONG x; WORD base;
 								base = ( *v == TNUMBER ) ? 100: 128;
 								vv = v+1; x = 0; while ( *vv >= 0 ) { x = x*base + *vv++; }
 								if ( ( vv != t ) || ( ( vv - v ) > 4 ) || ( x > (MAXPOSITIVE+1) ) )
 									*fill++ = *s++;
 								else { *t = TEMPTY; s++; break; }
 							  }
-							  else if ( BITSINWORD == 32 ) { LONG x; WORD base;
+							  else if ( BITSINWORD == 32 ) { ULONG x; WORD base;
 								base = ( *v == TNUMBER ) ? 100: 128;
 								vv = v+1; x = 0; while ( *vv >= 0 ) { x = x*base + *vv++; }
 								if ( ( vv != t ) || ( ( vv - v ) > 6 ) || ( x > (MAXPOSITIVE+1) ) )
@@ -1034,14 +1039,14 @@ tcommon:				v++; while ( *v >= 0 ) v++;
 						break;
 					case TNUMBER:
 					case TNUMBER1:
-						if ( BITSINWORD == 16 ) { LONG x; WORD base;
+						if ( BITSINWORD == 16 ) { ULONG x; WORD base;
 							base = ( *v == TNUMBER ) ? 100: 128;
 							vv = v+1; x = 0; while ( *vv >= 0 ) { x = x*base + *vv++; }
 							if ( ( vv != t ) || ( ( vv - v ) > 4 ) || ( x > MAXPOSITIVE ) )
 								*fill++ = *s++;
 							else { *t = TEMPTY; s++; break; }
 						}
-						else if ( BITSINWORD == 32 ) { LONG x; WORD base;
+						else if ( BITSINWORD == 32 ) { ULONG x; WORD base;
 							base = ( *v == TNUMBER ) ? 100: 128;
 							vv = v+1; x = 0; while ( *vv >= 0 ) { x = x*base + *vv++; }
 							if ( ( vv != t ) || ( ( vv - v ) > 6 ) || ( x > MAXPOSITIVE ) )
@@ -1086,7 +1091,8 @@ tcommon:				v++; while ( *v >= 0 ) v++;
 						if ( n == GCDFUNCTION-FUNCTION
 						|| n == DIVFUNCTION-FUNCTION
 						|| n == REMFUNCTION-FUNCTION
-						|| n == INVERSEFUNCTION-FUNCTION ) {
+						|| n == INVERSEFUNCTION-FUNCTION
+						|| n == MULFUNCTION-FUNCTION ) {
 							*t = TEMPTY; s++;
 						}
 						else *fill++ = *s++;

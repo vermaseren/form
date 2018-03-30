@@ -7,7 +7,7 @@
 
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2013 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -40,6 +40,7 @@
 #include <vector>
 #include <map>
 #include <climits>
+#include <cassert>
 
 //#define DEBUG
 
@@ -117,7 +118,7 @@ WORD poly_determine_modulus (PHEAD bool multi_error, bool is_fun_arg, string mes
  *   - Called from ratio.c
  *   - Calls polygcd::gcd
  */
-WORD *poly_gcd(PHEAD WORD *a, WORD *b) {
+WORD *poly_gcd(PHEAD WORD *a, WORD *b, WORD fit) {
 
 #ifdef DEBUG
 	cout << "*** [" << thetime() << "]  CALL : poly_gcd" << endl;
@@ -157,11 +158,23 @@ WORD *poly_gcd(PHEAD WORD *a, WORD *b) {
 	poly gcd(polygcd::gcd(pa,pb));
 	
 	// Allocate new memory and convert to Form notation
-	WORD *res = (WORD *)Malloc1((gcd.size_of_form_notation()+1)*sizeof(WORD), "poly_gcd");
+	int newsize = (gcd.size_of_form_notation()+1);
+	WORD *res;
+	if ( fit ) {
+		if ( newsize*sizeof(WORD) >= (size_t)(AM.MaxTer) ) {
+			MLOCK(ErrorMessageLock);
+			MesPrint("poly_gcd: Term too complex. Maybe increasing MaxTermSize can help");
+			MUNLOCK(ErrorMessageLock);
+			Terminate(-1);
+		}
+		res = TermMalloc("poly_gcd");
+	}
+	else {
+		res = (WORD *)Malloc1(newsize*sizeof(WORD), "poly_gcd");
+	}
 	poly::poly_to_argument(gcd, res, false);
 
-	if (AN.poly_num_vars > 0)
-		M_free(AN.poly_vars, "AN.poly_vars");
+	poly_free_poly_vars(BHEAD "AN.poly_vars_qcd");
 
 	// reset modulo calculation
 	AN.ncmod = AC.ncmod;
@@ -170,10 +183,12 @@ WORD *poly_gcd(PHEAD WORD *a, WORD *b) {
 
 /*
   	#] poly_gcd : 
-  	#[ poly_divmod : 
+  	#[ poly_divmod :
+
+	if fit == 1 the answer must fit inside a term.
 */
 
-WORD *poly_divmod(PHEAD WORD *a, WORD *b, int divmod) {
+WORD *poly_divmod(PHEAD WORD *a, WORD *b, int divmod, WORD fit) {
 
 #ifdef DEBUG
 	cout << "*** [" << thetime() << "]  CALL : poly_divmod" << endl;
@@ -192,13 +207,14 @@ WORD *poly_divmod(PHEAD WORD *a, WORD *b, int divmod) {
 	const int DENOMSYMBOL = MAXPOSITIVE;
 	const int DENOMPOWER  = MAXPOSITIVE;
 	
-	WORD *new_poly_vars = (WORD *)Malloc1((AN.poly_num_vars+1)*sizeof(WORD), "AN.poly_vars");
-	WCOPY(new_poly_vars, AN.poly_vars, AN.poly_num_vars);
-	new_poly_vars[AN.poly_num_vars] = DENOMSYMBOL;
-	if (AN.poly_num_vars > 0)
-		M_free(AN.poly_vars, "AN.poly_vars");
-	AN.poly_num_vars++;
-	AN.poly_vars = new_poly_vars;
+//	WORD *new_poly_vars = (WORD *)Malloc1((AN.poly_num_vars+1)*sizeof(WORD), "AN.poly_vars");
+//	WCOPY(new_poly_vars, AN.poly_vars, AN.poly_num_vars);
+//	new_poly_vars[AN.poly_num_vars] = DENOMSYMBOL;
+//	if (AN.poly_num_vars > 0)
+//		M_free(AN.poly_vars, "AN.poly_vars");
+//	AN.poly_num_vars++;
+//	AN.poly_vars = new_poly_vars;
+	AN.poly_vars[AN.poly_num_vars++] = DENOMSYMBOL;
 	
 	// convert to polynomials
 	poly dena(BHEAD 0);
@@ -274,12 +290,19 @@ WORD *poly_divmod(PHEAD WORD *a, WORD *b, int divmod) {
 
 	poly pres(divmod==0 ? pa/pb : pa%pb);
 
-	// convert to Form notation	
+	// convert to Form notation
+	// NOTE: this part can be rewritten with poly::size_of_form_notation_with_den()
+	// and poly::poly_to_argument_with_den().
 	WORD *res;
 
 	// special case: a=0
 	if (pres[0]==1) {
-		res = (WORD *)Malloc1(sizeof(WORD), "poly_divmod");
+		if ( fit ) {
+			res = TermMalloc("poly_divmod");
+		}
+		else {
+			res = (WORD *)Malloc1(sizeof(WORD), "poly_divmod");
+		}
 		res[0] = 0;
 	}
 	else {
@@ -291,8 +314,19 @@ WORD *poly_divmod(PHEAD WORD *a, WORD *b, int divmod) {
 		// allocate the memory; note that this overestimates the size,
 		// since the estimated denominators are too large
 		int ressize = pres.size_of_form_notation() + pres.number_of_terms()*2*ABS(denres[denres[1]]) + 1;
-		res = (WORD *)Malloc1(ressize*sizeof(WORD), "poly_divmod");
 
+		if ( fit ) {
+			if ( ressize*sizeof(WORD) > (size_t)(AM.MaxTer) ) {
+				MLOCK(ErrorMessageLock);
+				MesPrint("poly_divmod: Term too complex. Maybe increasing MaxTermSize can help");
+				MUNLOCK(ErrorMessageLock);
+				Terminate(-1);
+			}
+			res = TermMalloc("poly_divmod");
+		}
+		else {
+			res = (WORD *)Malloc1(ressize*sizeof(WORD), "poly_divmod");
+		}
 		int L=0;
 
 		for (int i=1; i!=pres[0]; i+=pres[i]) {
@@ -335,8 +369,7 @@ WORD *poly_divmod(PHEAD WORD *a, WORD *b, int divmod) {
 	}
 
 	// clean up
-	if (AN.poly_num_vars > 0)
-		M_free(AN.poly_vars, "AN.poly_vars");
+	poly_free_poly_vars(BHEAD "AN.poly_vars_divmod");
 
 	// reset modulo calculation
 	AN.ncmod = AC.ncmod;
@@ -355,13 +388,13 @@ WORD *poly_divmod(PHEAD WORD *a, WORD *b, int divmod) {
 	The answer should be a buffer (allocated by Malloc1) with a zero
 	terminated sequence of terms (or just zero).
 */
-WORD *poly_div(PHEAD WORD *a, WORD *b) {
+WORD *poly_div(PHEAD WORD *a, WORD *b, WORD fit) {
 
 #ifdef DEBUG
 	cout << "*** [" << thetime() << "]  CALL : poly_div" << endl;
 #endif
 	
-	return poly_divmod(BHEAD a, b, 0);
+	return poly_divmod(BHEAD a, b, 0, fit);
 }
 
 /*
@@ -376,13 +409,13 @@ WORD *poly_div(PHEAD WORD *a, WORD *b) {
 	The answer should be a buffer (allocated by Malloc1) with a zero
 	terminated sequence of terms (or just zero).
 */
-WORD *poly_rem(PHEAD WORD *a, WORD *b) {
+WORD *poly_rem(PHEAD WORD *a, WORD *b, WORD fit) {
 
 #ifdef DEBUG
 	cout << "*** [" << thetime() << "]  CALL : poly_rem" << endl;
 #endif
 
-	return poly_divmod(BHEAD a, b, 1);
+	return poly_divmod(BHEAD a, b, 1, fit);
 }
 
 /*
@@ -396,7 +429,7 @@ WORD *poly_rem(PHEAD WORD *a, WORD *b) {
  *   ===========
  *   This method reads a polyratfun starting at the pointer a. The
  *   resulting numerator and denominator are written in num and
- *   den. If not CLEANPRF, the result is normalized.
+ *   den. If MUSTCLEANPRF, the result is normalized.
  *
  *   Notes
  *   =====
@@ -414,7 +447,7 @@ void poly_ratfun_read (WORD *a, poly &num, poly &den) {
 	
 	WORD *astop = a+a[1];
 
-	bool clean = (a[2] & CLEANPRF) != 0;
+	bool clean = (a[2] & MUSTCLEANPRF) == 0;
 		
 	a += FUNHEAD;
 	if (a >= astop) {
@@ -607,7 +640,8 @@ WORD *poly_ratfun_add (PHEAD WORD *t1, WORD *t2) {
 
 	*t++ = AR.PolyFun;                   // function 
 	*t++ = 0;                            // length (to be determined)
-	*t++ = CLEANPRF;                     // clean polyratfun
+//	*t++ &= ~MUSTCLEANPRF;               // clean polyratfun
+	*t++ = 0;
 	FILLFUN3(t);                         // header
 	poly::poly_to_argument(num,t, true); // argument 1 (numerator)
 	if (*t>0 && t[1]==DIRTYFLAG)          // to Form order
@@ -621,8 +655,7 @@ WORD *poly_ratfun_add (PHEAD WORD *t1, WORD *t2) {
 	oldworkpointer[1] = t - oldworkpointer; // length
 	AT.WorkPointer = t;
 
-	if (AN.poly_num_vars > 0) 
-		M_free(AN.poly_vars, "AN.poly_vars");
+	poly_free_poly_vars(BHEAD "AN.poly_vars_ratfun_add");
 
 	// reset modulo calculation
 	AN.ncmod = AC.ncmod;
@@ -667,12 +700,16 @@ int poly_ratfun_normalize (PHEAD WORD *term) {
 	for (WORD *t=term+1; t<tstop; t+=t[1]) 
 		if (*t == AR.PolyFun) {
 			num_polyratfun++;
-			if ((t[2] & CLEANPRF) == 0)
+			if ((t[2] & MUSTCLEANPRF) != 0)
 				num_polyratfun = INT_MAX;
 			if (num_polyratfun > 1) break;
 		}
 		
 	if (num_polyratfun <= 1) return 0;
+
+	WORD oldsorttype = AR.SortType;
+	AR.SortType = SORTHIGHFIRST;
+
 /*
 	When there are polyratfun's with only one variable: rename them
 	temporarily to TMPPOLYFUN.
@@ -699,6 +736,7 @@ int poly_ratfun_normalize (PHEAD WORD *term) {
 	WORD modp=poly_determine_modulus(BHEAD true, true, "PolyRatFun");
 	
 	// Accumulate total denominator/numerator and copy the remaining terms
+	// We start with 'trivial' polynomials
 	poly num1(BHEAD (UWORD *)tstop, ncoeff/2, modp, 1);
 	poly den1(BHEAD (UWORD *)tstop+ABS(ncoeff/2), ABS(ncoeff)/2, modp, 1);
 
@@ -710,6 +748,11 @@ int poly_ratfun_normalize (PHEAD WORD *term) {
 			poly num2(BHEAD 0,modp,1);
 			poly den2(BHEAD 0,modp,1);
 			poly_ratfun_read(t,num2,den2);
+			if ((t[2] & MUSTCLEANPRF) != 0) { // first normalize
+				poly gcd1(polygcd::gcd(num2,den2));
+				num2 = num2/gcd1;
+				den2 = den2/gcd1;
+			}
 			t += t[1];
 			poly gcd1(polygcd::gcd(num1,den2));
 			poly gcd2(polygcd::gcd(num2,den1));
@@ -722,7 +765,7 @@ int poly_ratfun_normalize (PHEAD WORD *term) {
 			if ( s != t ) {	NCOPY(s,t,i) }
 			else { t += i; s += i; }
 		}			
-	
+
 	// Fix sign
 	if (den1.sign() == -1) { num1*=poly(BHEAD -1); den1*=poly(BHEAD -1); }
 
@@ -740,7 +783,7 @@ int poly_ratfun_normalize (PHEAD WORD *term) {
 	WORD *t = s;
 	*t++ = AR.PolyFun;                   // function
 	*t++ = 0;                            // size (to be determined)
-	*t++ = CLEANPRF;                     // clean polyratfun
+	*t++ &= ~MUSTCLEANPRF;                   // clean polyratfun
 	FILLFUN3(t);                         // header
 	poly::poly_to_argument(num1,t,true); // argument 1 (numerator)
 	if (*t>0 && t[1]==DIRTYFLAG)         // to Form order
@@ -759,8 +802,7 @@ int poly_ratfun_normalize (PHEAD WORD *term) {
 	
 	term[0] = t-term;                    // term length
 
-	if (AN.poly_num_vars > 0) 
-		M_free(AN.poly_vars, "AN.poly_vars");
+	poly_free_poly_vars(BHEAD "AN.poly_vars_ratfun_normalize");
 
 	// reset modulo calculation
 	AN.ncmod = AC.ncmod;
@@ -770,6 +812,7 @@ int poly_ratfun_normalize (PHEAD WORD *term) {
 		if (*t == TMPPOLYFUN ) *t = AR.PolyFun;
 	}
 
+	AR.SortType = oldsorttype;
 	return 0;
 }
 
@@ -943,8 +986,7 @@ WORD *poly_factorize (PHEAD WORD *argin, WORD *argout, bool with_arghead, bool i
 	
 	*argout=0;
 
-	if (AN.poly_num_vars > 0)
-		M_free(AN.poly_vars, "AN.poly_vars");
+	poly_free_poly_vars(BHEAD "AN.poly_vars_factorize");
 
 	// reset modulo calculation
 	AN.ncmod = AC.ncmod;
@@ -1347,8 +1389,7 @@ int poly_factorize_expression(EXPRESSIONS expr) {
 	AT.bracketindexflag = oldbracketindexflag;
 	strcpy((char*)AC.Commercial, oldCommercial);
 	
-	if (AN.poly_num_vars > 0)
-		M_free(AN.poly_vars, "AN.poly_vars");
+	poly_free_poly_vars(BHEAD "AN.poly_vars_factorize_expression");
 
 	return 0;
 }
@@ -1706,8 +1747,7 @@ WORD *poly_inverse(PHEAD WORD *arga, WORD *argb) {
 	}
 
 	// clean up and reset modulo calculation
-	if (AN.poly_num_vars > 0)
-		M_free(AN.poly_vars, "AN.poly_vars");
+	poly_free_poly_vars(BHEAD "AN.poly_vars_inverse");
 	
 	AN.ncmod = AC.ncmod;
 	return res;
@@ -1715,4 +1755,80 @@ WORD *poly_inverse(PHEAD WORD *arga, WORD *argb) {
 
 /*
   	#] poly_inverse : 
+  	#[ poly_mul :
+*/
+
+WORD *poly_mul(PHEAD WORD *a, WORD *b) {
+
+#ifdef DEBUG
+	cout << "*** [" << thetime() << "]  CALL : poly_mul" << endl;
+#endif
+
+	// Extract variables
+	vector<WORD *> e;
+	e.push_back(a);
+	e.push_back(b);
+	poly::get_variables(BHEAD e, false, false);  // TODO: any performance effect by sort_vars=true?
+
+	// Convert to polynomials
+	poly dena(BHEAD 0);
+	poly denb(BHEAD 0);
+	poly pa(poly::argument_to_poly(BHEAD a, false, true, &dena));
+	poly pb(poly::argument_to_poly(BHEAD b, false, true, &denb));
+
+	// Check for modulus calculus
+	WORD modp = poly_determine_modulus(BHEAD true, true, "polynomial multiplication");
+	pa.setmod(modp, 1);
+
+	// NOTE: mul_ is currently implemented by translating negative powers of
+	// symbols to extra symbols. For future improvement, it may be better to
+	// compute
+	//   (content(a) * content(b)) * (a/content(a)) * (b/content(b))
+	// to avoid introducing extra symbols for "mixed" cases, e.g.,
+	// (1+x) * (1/x) -> (1+x) * (1+Z1_).
+	assert(dena.is_integer());
+	assert(denb.is_integer());
+	assert(modp == 0 || dena.is_one());
+	assert(modp == 0 || denb.is_one());
+
+	// multiplication
+	pa *= pb;
+
+	// convert to Form notation
+	WORD *res;
+	if (dena.is_one() && denb.is_one()) {
+		res = (WORD *)Malloc1((pa.size_of_form_notation() + 1) * sizeof(WORD), "poly_mul");
+		poly::poly_to_argument(pa, res, false);
+	} else {
+		dena *= denb;
+		res = (WORD *)Malloc1((pa.size_of_form_notation_with_den(dena[dena[1]]) + 1) * sizeof(WORD), "poly_mul");
+		poly::poly_to_argument_with_den(pa, dena[dena[1]], (const UWORD *)&dena[2+AN.poly_num_vars], res, false);
+	}
+
+	// clean up and reset modulo calculation
+	poly_free_poly_vars(BHEAD "AN.poly_vars_mul");
+	AN.ncmod = AC.ncmod;
+
+	return res;
+}
+
+/*
+  	#] poly_mul : 
+  	#[ poly_free_poly_vars :
+*/
+
+void poly_free_poly_vars(PHEAD const char *text)
+{
+	if ( AN.poly_vars_type == 0 ) {
+		TermFree(AN.poly_vars, text);
+	}
+	else {
+		M_free(AN.poly_vars, text);
+	}
+	AN.poly_num_vars = 0;
+	AN.poly_vars = 0;
+}
+
+/*
+  	#] poly_free_poly_vars : 
 */

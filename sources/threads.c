@@ -21,7 +21,7 @@
  */
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2013 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -487,6 +487,7 @@ ALLPRIVATES *InitializeOneThread(int identity)
 		for ( i = 0; i <= AN.NumFunSorts; i++ ) AN.FunSorts[i] = 0;
 		AN.FunSorts[0] = AT.S0 = AT.SS;
 		AN.idfunctionflag = 0;
+		AN.tryterm = 0;
 
 		return(B);
 	}
@@ -541,6 +542,8 @@ ALLPRIVATES *InitializeOneThread(int identity)
 #ifdef WITHZLIB
 	AR.FoStage4[0].ziosize = IOsize;
 	AR.FoStage4[1].ziosize = IOsize;
+	AR.FoStage4[0].ziobuffer = 0;
+	AR.FoStage4[1].ziobuffer = 0;
 #endif	
 	AR.FoStage4[0].POsize  = ((IOsize+sizeof(WORD)-1)/sizeof(WORD))*sizeof(WORD);
 	AR.FoStage4[1].POsize  = ((IOsize+sizeof(WORD)-1)/sizeof(WORD))*sizeof(WORD);
@@ -594,6 +597,7 @@ ALLPRIVATES *InitializeOneThread(int identity)
 	AN.RepPoint = AT.RepCount;
 	AN.polysortflag = 0;
 	AN.subsubveto = 0;
+	AN.tryterm = 0;
 	AT.RepTop = AT.RepCount + AM.RepMax;
 
 	AT.WildArgTaken = (WORD *)Malloc1((LONG)AC.WildcardBufferSize*sizeof(WORD)/2
@@ -1803,6 +1807,7 @@ bucketstolen:;
 				AR.CompressPointer = ttco;
 				term = AT.WorkPointer;
 				while ( GetTerm(BHEAD term) ) {
+					SeekScratch(fi,&where);
 					AT.WorkPointer = term + *term;
 					AN.IndDum = AM.IndDum;
 					AR.CurDum = ReNumber(BHEAD term);
@@ -1831,7 +1836,7 @@ bucketstolen:;
 						Terminate(-1);
 					}
 					AN.ninterms++;
-					SeekScratch(fi,&where);
+					SetScratch(fi,&(where));
 					if ( ISGEPOS(where,stoppos) ) break;
 				}
 				AT.WorkPointer = term;
@@ -1928,7 +1933,8 @@ void *RunSortBot(void *dummy)
 				if ( AR.PolyFun == 0 ) { AT.SS->PolyFlag = 0; }
 				else if ( AR.PolyFunType == 1 ) { AT.SS->PolyFlag = 1; }
 				else if ( AR.PolyFunType == 2 ) {
-					if ( AR.PolyFunExp == 2 ) AT.SS->PolyFlag = 1;
+					if ( AR.PolyFunExp == 2
+					  || AR.PolyFunExp == 3 ) AT.SS->PolyFlag = 1;
 					else                      AT.SS->PolyFlag = 2;
 				}
 				AT.SS->PolyWise = 0;
@@ -3572,8 +3578,9 @@ int MasterMerge()
 	if ( AR0.PolyFun == 0 ) { S->PolyFlag = 0; }
 	else if ( AR0.PolyFunType == 1 ) { S->PolyFlag = 1; }
 	else if ( AR0.PolyFunType == 2 ) {
-		if ( AR0.PolyFunExp == 2 ) S->PolyFlag = 1;
-		else                      S->PolyFlag = 2;
+		if ( AR0.PolyFunExp == 2
+		  || AR0.PolyFunExp == 3 ) S->PolyFlag = 1;
+		else                       S->PolyFlag = 2;
 	}
 	S->TermsLeft = 0;
 	coef = AN0.SoScratC;
@@ -3655,7 +3662,7 @@ int MasterMerge()
 */
 	for ( i = 1; i < lpat; i++ ) { S->tree[i] = -1; }
 	for ( i = 1; i <= k; i++ ) {
-		im = ( i << 1 ) - 1;
+		im = ( i * 2 ) - 1;
 		poin[im] = AB[i]->T.SB.MasterStart[AB[i]->T.SB.MasterBlock];
 		poin2[im] = poin[im] + *(poin[im]);
 		S->used[i] = im;
@@ -3663,7 +3670,7 @@ int MasterMerge()
 		S->tree[mpat+i] = 0;
 		poin[im-1] = poin2[im-1] = 0;
 	}
-	for ( i = (k<<1)+1; i <= lpat; i++ ) {
+	for ( i = (k*2)+1; i <= lpat; i++ ) {
 		S->used[i-k] = i;
 		S->ktoi[i] = i-k-1;
 		poin[i] = AB[i-k]->T.SB.MasterStart[AB[i-k]->T.SB.MasterBlock];
@@ -3804,11 +3811,11 @@ OneTerm:
 							for ( ii = 1; ii < r3; ii++ ) coef[r3+ii] = 0;
 						}
 					}
-					r3 <<= 1;
+					r3 *= 2;
 					r33 = ( r3 > 0 ) ? ( r3 + 1 ) : ( r3 - 1 );
 					if ( r3 < 0 ) r3 = -r3;
 					if ( r1 < 0 ) r1 = -r1;
-					r1 <<= 1;
+					r1 *= 2;
 					r31 = r3 - r1;
 					if ( !r3 ) {		/* Terms cancel */
 cancelled:
@@ -3971,6 +3978,7 @@ EndOfMerge:
 	}
 	WriteStats(&position,2);
 	Expressions[AR0.CurExpr].counter = S->TermsLeft;
+	Expressions[AR0.CurExpr].size = position;
 /*
 	Release all locks
 */
@@ -4112,6 +4120,7 @@ int SortBotMasterMerge()
 	S->TermsLeft = numberofterms;
 	WriteStats(&position,2);
 	Expressions[AR.CurExpr].counter = S->TermsLeft;
+	Expressions[AR.CurExpr].size = position;
 	AS.MasterSort = 0;
 /*
 	The next statement is to prevent one of the sortbots not having
@@ -4356,11 +4365,11 @@ next2:		im = *term2;
 					}
 				}
 				if ( !r3 ) { goto cancelled; }
-				r3 <<= 1;
+				r3 *= 2;
 				r33 = ( r3 > 0 ) ? ( r3 + 1 ) : ( r3 - 1 );
 				if ( r3 < 0 ) r3 = -r3;
 				if ( r1 < 0 ) r1 = -r1;
-				r1 <<= 1;
+				r1 *= 2;
 				r31 = r3 - r1;
 				if ( !r31 ) {		/* copy coef into term1 */
 					m2 = (WORD *)coef; im = r3;

@@ -4,7 +4,7 @@
  */
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2013 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -53,6 +53,7 @@
 			Explode(argfirst,arglast)
 			Permute(cycle)(cycle)(cycle)...(cycle)
 			Reverse(argfirst,arglast)
+			Dedup(argfirst,arglast)
 			Cycle(argfirst,arglast)=+/-num
 			IsLyndon(argfirst,arglast)=(yes,no)
 			ToLyndon(argfirst,arglast)=(yes,no)
@@ -389,21 +390,37 @@ illsize:					MesPrint("&Illegal value for base in encode/decode transformation")
 			do {
 			  wstart = wp; wp++;
 			  do {
-				x = 0; in++;
-				while ( FG.cTable[*in] == 1 ) {
+				in++;
+				if ( *in == '$' ) {
+					WORD number; UBYTE *t;
+					in++; t = in;
+					while ( FG.cTable[*in] < 2 ) in++;
+					c = *in; *in = 0;
+					if ( ( number = GetDollar(t) ) < 0 ) {
+						MesPrint("&Undefined variable $%s",t);
+						if ( !error ) error = 1;
+						number = AddDollar(t,0,0,0);
+					}
+					*in = c;
+					*wp++ = -number-1;
+				}
+				else {
+				  x = 0;
+				  while ( FG.cTable[*in] == 1 ) {
 					x = 10*x + *in++ - '0';
 					if ( x > MAXPOSITIVE4 ) {
 						MesPrint("&value in permute transformation too large");
 						if ( error == 0 ) error = 1;
 						return(error);
 					}
-				}
-				if ( x == 0 ) {
+				  }
+				  if ( x == 0 ) {
 					MesPrint("&value 0 in permute transformation not allowed");
 					if ( error == 0 ) error = 1;
 					return(error);
+				  }
+				  *wp++ = (WORD)x-1;
 				}
-				*wp++ = (WORD)x-1;
 			  } while ( *in == ',' );
 			  if ( *in != ')' ) {
 				MesPrint("&Illegal syntax in permute transformation");
@@ -444,6 +461,25 @@ illsize:					MesPrint("&Illegal value for base in encode/decode transformation")
 		}
 /*
  		#] reverse : 
+ 		#[ dedup :
+*/
+		else if ( StrICmp(s,(UBYTE *)"dedup") == 0 ) {
+			type = DEDUPARG;
+			*ss = c;
+			if ( ( in = ReadRange(in,range,1) ) == 0 ) {
+				if ( error == 0 ) error = 1;
+				return(error);
+			}
+			*wp++ = ARGRANGE;
+			*wp++ = range[0];
+			*wp++ = range[1];
+			*wp++ = type;
+			*work = wp-work;
+			work = wp; *wp++ = 0;
+			s = in;
+		}
+/*
+ 		#] dedup : 
  		#[ cycle :
 */
 		else if ( StrICmp(s,(UBYTE *)"cycle") == 0 ) {
@@ -704,6 +740,10 @@ hit:;
 						break;
 					case REVERSEARG:
 						if ( RunReverse(BHEAD fun,args) ) goto abo;
+						out = fun + fun[1];
+						break;
+					case DEDUPARG:
+						if ( RunDedup(BHEAD fun,args) ) goto abo;
 						out = fun + fun[1];
 						break;
 					case CYCLEARG:
@@ -2032,6 +2072,8 @@ OverWork:;
 WORD RunPermute(PHEAD WORD *fun, WORD *args, WORD *info)
 {
 	WORD *tt, totarg, *tstop, arg1, arg2, n, num, i, *f, *f1, *f2, *infostop;
+	WORD *in, *iw, withdollar;
+	DOLLARS d;
 	if ( *args != ARGRANGE ) {
 		MLOCK(ErrorMessageLock);
 		MesPrint("Illegal range encountered in RunPermute");
@@ -2063,6 +2105,130 @@ WORD RunPermute(PHEAD WORD *fun, WORD *args, WORD *info)
 		infostop = info + *info;
 		info++;
 		if ( *info > totarg ) return(0);
+/*
+		Now we have a look whether there are dollar variables to be expanded
+		We also sift out all values that are out of range.
+*/
+		withdollar = 0;  in = info;
+		while ( in < infostop ) {
+			if ( *in < 0 ) { /* Dollar variable -(number+1) */
+				d = Dollars - *in - 1;
+#ifdef WITHPTHREADS
+				{
+					int nummodopt, dtype = -1, numdollar = -*in-1;
+					if ( AS.MultiThreaded && ( AC.mparallelflag == PARALLELFLAG ) ) {
+						for ( nummodopt = 0; nummodopt < NumModOptdollars; nummodopt++ ) {
+							if ( numdollar == ModOptdollars[nummodopt].number ) break;
+						}
+						if ( nummodopt < NumModOptdollars ) {
+							dtype = ModOptdollars[nummodopt].type;
+							if ( dtype == MODLOCAL ) {
+								d = ModOptdollars[nummodopt].dstruct+AT.identity;
+							}
+							else {
+								LOCK(d->pthreadslockread);
+							}
+						}
+					}
+				}
+#endif
+				if ( ( d->type == DOLNUMBER || d->type == DOLTERMS )
+				 && d->where[0] == 4 && d->where[4] == 0 ) {
+					if ( d->where[3] < 0 || d->where[2] != 1 || d->where[1] > totarg ) return(0);
+				}
+				else if ( d->type == DOLWILDARGS ) {
+					iw = d->where+1;
+					while ( *iw ) {
+						if ( *iw == -SNUMBER ) {
+							if ( iw[1] <= 0 || iw[1] > totarg ) return(0);
+						}
+						else goto IllType;
+						iw += 2;
+					}
+				}
+				else {
+IllType:
+                    MLOCK(ErrorMessageLock);
+					MesPrint("Illegal type of $-variable in RunPermute");
+					MUNLOCK(ErrorMessageLock);
+					Terminate(-1);
+				}
+				withdollar++;
+			}
+			else if ( *in > totarg ) return(0);
+			in++;
+		}
+		if ( withdollar ) { /* We need some space for a copy */
+			WORD *incopy, *tocopy;
+			incopy = TermMalloc("RunPermute");
+			tocopy = incopy+1; in = info;
+			while ( in < infostop ) {
+				if ( *in < 0 ) {
+					d = Dollars - *in - 1;
+#ifdef WITHPTHREADS
+				{
+					int nummodopt, dtype = -1, numdollar = -*in-1;
+					if ( AS.MultiThreaded && ( AC.mparallelflag == PARALLELFLAG ) ) {
+						for ( nummodopt = 0; nummodopt < NumModOptdollars; nummodopt++ ) {
+							if ( numdollar == ModOptdollars[nummodopt].number ) break;
+						}
+						if ( nummodopt < NumModOptdollars ) {
+							dtype = ModOptdollars[nummodopt].type;
+							if ( dtype == MODLOCAL ) {
+								d = ModOptdollars[nummodopt].dstruct+AT.identity;
+							}
+							else {
+								LOCK(d->pthreadslockread);
+							}
+						}
+					}
+				}
+#endif
+					if ( d->type == DOLNUMBER || d->type == DOLTERMS ) {
+						*tocopy++ = d->where[1] - 1;
+					}
+					else if ( d->type == DOLWILDARGS ) {
+						iw = d->where+1;
+						while ( *iw ) {
+							*tocopy++ = iw[1] - 1;
+							iw += 2;
+						}
+					}
+					in++;
+				}
+				else *tocopy++ = *in++;
+			}
+			*tocopy = 0;
+			*incopy = tocopy - incopy;
+			in = incopy+1;
+			tt = AT.pWorkSpace[AT.pWorkPointer+*in];
+			in++;
+			while ( in < tocopy ) {
+				if ( *in > totarg ) return(0);
+				AT.pWorkSpace[AT.pWorkPointer+in[-1]] = AT.pWorkSpace[AT.pWorkPointer+*in];
+				in++;
+			}
+			AT.pWorkSpace[AT.pWorkPointer+in[-1]] = tt;
+			TermFree(incopy,"RunPermute");
+			info = infostop;
+		}
+		else {
+			tt = AT.pWorkSpace[AT.pWorkPointer+*info];
+			info++;
+			while ( info < infostop ) {
+				if ( *info > totarg ) return(0);
+				AT.pWorkSpace[AT.pWorkPointer+info[-1]] = AT.pWorkSpace[AT.pWorkPointer+*info];
+				info++;
+			}
+			AT.pWorkSpace[AT.pWorkPointer+info[-1]] = tt;
+		}
+	  }
+/*
+	  info++;
+	  while ( *info ) {
+		infostop = info + *info;
+		info++;
+		if ( *info > totarg ) return(0);
 		tt = AT.pWorkSpace[AT.pWorkPointer+*info];
 		info++;
 		while ( info < infostop ) {
@@ -2072,6 +2238,7 @@ WORD RunPermute(PHEAD WORD *fun, WORD *args, WORD *info)
 		}
 		AT.pWorkSpace[AT.pWorkPointer+info[-1]] = tt;
 	  }
+*/
 /*
 	  And the final cleanup
 */
@@ -2213,6 +2380,95 @@ OverWork:;
 
 /*
  		#] RunReverse : 
+ 		#[ RunDedup :
+*/
+
+WORD RunDedup(PHEAD WORD *fun, WORD *args)
+{
+	WORD *tt, totarg, *tstop, arg1, arg2, n, i, j,k, *f, *f1, *f2, *fd, *fstart;
+	if ( *args != ARGRANGE ) {
+		MLOCK(ErrorMessageLock);
+		MesPrint("Illegal range encountered in RunDedup");
+		MUNLOCK(ErrorMessageLock);
+		Terminate(-1);
+	}
+	if ( functions[fun[0]-FUNCTION].spec != TENSORFUNCTION ) {
+	  tt = fun+FUNHEAD; tstop = fun+fun[1]; totarg = 0;
+	  while ( tt < tstop ) { totarg++; NEXTARG(tt); }
+	  if ( FindRange(BHEAD args,&arg1,&arg2,totarg) ) return(-1);
+
+	  if ( arg2 < arg1 ) { n = arg1; arg1 = arg2; arg2 = n; }
+	  if ( arg2 > totarg ) return(0);
+
+	  f = fun+FUNHEAD; n = 1;
+	  while ( n < arg1 ) { n++; NEXTARG(f) }
+	  f1 = f; // fast forward to first element in range
+	  i = 0; // new argument count
+	  fstart = f1;
+
+	  for (; n <= arg2; n++ ) {
+	  	f2 = fstart;
+	  	for ( j = 0; j < i; j++ ) { // check all previous terms
+	  		fd = f2;
+	  		NEXTARG(fd)
+	  		for ( k = 0; k < fd-f2; k++ ) // byte comparison of args
+	  			if ( f2[k] != f[k] ) break;
+
+	  		if ( k == fd-f2 ) break; // duplicate arg
+	  		f2 = fd;
+	  	}
+
+	  	if ( j == i ) {
+	  		// unique factor, copy in situ
+	  		COPY1ARG(f1,f)
+	  		i++;
+	  	} else {
+	  		NEXTARG(f)
+	  	}
+	  }
+
+	  // move the terms from after the range
+	  for (j = n; j <= totarg; j++) {
+	  	COPY1ARG(f1,f)
+	  }
+
+	  fun[1] = f1 - fun; // resize function
+	}
+	else {	/* Tensors */
+	  tt = fun+FUNHEAD; tstop = fun+fun[1]; totarg = tstop - tt;
+	  if ( FindRange(BHEAD args,&arg1,&arg2,totarg) ) return(-1);
+
+	  if ( arg2 < arg1 ) { n = arg1; arg1 = arg2; arg2 = n; }
+	  if ( arg2 > totarg ) return(0);
+
+	  f = fun+FUNHEAD;
+	  i = arg1; // new argument count
+	  n = i;
+
+	  for (; n <= arg2; n++ ) {
+	  	for ( j = arg1; j < i; j++ ) { // check all previous terms
+	  		if ( f[n-1] == f[j-1] ) break; // duplicate arg
+	  	}
+
+	  	if ( j == i ) {
+	  		// unique factor, copy in situ
+	  		f[i-1] = f[n-1];
+	  		i++;
+	  	}
+	  }
+
+	  // move the terms from after the range
+	  for (j = n; j <= totarg; j++, i++) {
+	  	f[i-1] = f[j-1];
+	  }
+
+	  fun[1] = f + i - 1 - fun; // resize function
+	}
+	return(0);
+}
+
+/*
+ 		#] RunDedup : 
  		#[ RunCycle :
 */
 
@@ -2454,7 +2710,8 @@ WORD RunAddArg(PHEAD WORD *fun, WORD *args)
 WORD RunMulArg(PHEAD WORD *fun, WORD *args)
 {
 	WORD *t, totarg, *tstop, arg1, arg2, n, *f, nb, *m, i, *w;
-	WORD *scratch, argbuf[20], argsize, *where, *oldcpointer, *newterm;
+	WORD *scratch, argbuf[20], argsize, *where, *newterm;
+	LONG oldcpointer_pos;
 	CBUF *C = cbuf + AT.ebufnum;
 	if ( *args != ARGRANGE ) {
 		MLOCK(ErrorMessageLock);
@@ -2492,7 +2749,8 @@ WORD RunMulArg(PHEAD WORD *fun, WORD *args)
 	}
 	scratch = AT.WorkPointer;
 	w = scratch+1;
-	nb = C->numrhs; oldcpointer = C->Pointer;
+	oldcpointer_pos = C->Pointer-C->Buffer;
+	nb = C->numrhs;
 	while ( n <= arg2 ) {
 		if ( *t > 0 ) {
 			argsize = *t - ARGHEAD; where = t + ARGHEAD; t += *t;
@@ -2547,7 +2805,7 @@ WORD RunMulArg(PHEAD WORD *fun, WORD *args)
 		Now add the argbuf to AT.ebufnum
 */
 		m = AddRHS(AT.ebufnum,1);
-		while ( (m + argsize + 10) > C->Top ) m = DoubleCbuffer(AT.ebufnum,m);
+		while ( (m + argsize + 10) > C->Top ) m = DoubleCbuffer(AT.ebufnum,m,17);
 		for ( i = 0; i < argsize; i++ ) m[i] = where[i];
 		m[i] = 0;
 		C->Pointer = m + i + 1;
@@ -2562,7 +2820,7 @@ WORD RunMulArg(PHEAD WORD *fun, WORD *args)
 	Generator(BHEAD scratch,AR.Cnumlhs);
 	newterm = AT.WorkPointer;
 	EndSort(BHEAD newterm+ARGHEAD,0);
-	C->Pointer = oldcpointer;
+	C->Pointer = C->Buffer+oldcpointer_pos;
 	C->numrhs = nb;
 	w = newterm+ARGHEAD; while ( *w ) w += *w;
 	*newterm = w-newterm; newterm[1] = 0;

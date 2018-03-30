@@ -5,7 +5,7 @@
 
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2013 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -38,6 +38,13 @@
 //#define DEBUG_MCTS
 //#define DEBUG_GREEDY
 
+#ifdef HAVE_CONFIG_H
+#ifndef CONFIG_H_INCLUDED
+#define CONFIG_H_INCLUDED
+#include <config.h>
+#endif
+#endif
+
 #include <vector>
 #include <stack>
 #include <algorithm>
@@ -48,13 +55,6 @@
 #include <string>
 #include <algorithm>
 #include <iostream>
-
-#ifdef HAVE_CONFIG_H
-#ifndef CONFIG_H_INCLUDED
-#define CONFIG_H_INCLUDED
-#include <config.h>
-#endif
-#endif
 
 #ifdef HAVE_UNORDERED_MAP
 	#include <unordered_map>
@@ -75,6 +75,26 @@
 #else
 	#include <tr1/unordered_set>
 	using std::tr1::unordered_set;
+#endif
+
+#if defined(HAVE_BUILTIN_POPCOUNT)
+	static inline int popcount(unsigned int x) {
+		return __builtin_popcount(x);
+	}
+#elif defined(HAVE_POPCNT)
+	#include <intrin.h>
+	static inline int popcount(unsigned int x) {
+		return __popcnt(x);
+	}
+#else
+	static inline int popcount(unsigned int x) {
+		int count = 0;
+		while (x > 0) {
+			if ((x & 1) == 1) count++;
+			x >>= 1;
+		}
+		return count;
+	}
 #endif
 
 extern "C" {
@@ -399,7 +419,7 @@ int count_operators (const WORD *expr, bool print=false) {
 				}
 				if (t[i+1]>2) { 		 // (extra)symbol power>2
 					cntpow++;
-					sumpow += (int)floor(log(t[i+1])/log(2.0)) + __builtin_popcount(t[i+1]) - 1;
+					sumpow += (int)floor(log(t[i+1])/log(2.0)) + popcount(t[i+1]) - 1;
 				}
 				if (t[i+1]==2) cntmul++; // (extra)symbol squared
 				cntsym++;
@@ -445,7 +465,7 @@ int count_operators (const vector<WORD> &instr, bool print=false) {
 				if (*(t+4)==2) cntmul++;			// (extra)symbol squared
 				if (*(t+4)>2) { 					// (extra)symbol power>2
 					cntpow++;
-					sumpow += (int)floor(log(*(t+4))/log(2.0)) + __builtin_popcount(*(t+4)) - 1;
+					sumpow += (int)floor(log(*(t+4))/log(2.0)) + popcount(*(t+4)) - 1;
 				}
 			}
 			if (ABS(*(t+*t-1))!=3 || *(t+*t-2)!=1 || *(t+*t-3)!=1) cntmul++; // non +/-1 coefficient
@@ -1317,7 +1337,7 @@ int count_operators_cse (const vector<WORD> &tree) {
 					if (tree[i + 3] == 2)
 						numinstr++;
 					else
-						numinstr += (int)floor(log(tree[i+3])/log(2.0)) + __builtin_popcount(tree[i+3]) - 1;
+						numinstr += (int)floor(log(tree[i+3])/log(2.0)) + popcount(tree[i+3]) - 1;
 
 					ID[x] = numinstr;
 					s.push(1);
@@ -1408,7 +1428,7 @@ int count_operators_cse (const vector<WORD> &tree) {
 		}
 	}
 
-	MesPrint ("*** [%s] Stopping CSEE", thetime_str().c_str());
+	//MesPrint ("*** [%s] Stopping CSEE", thetime_str().c_str());
 	return numinstr - numcommas;
 }
 
@@ -1573,7 +1593,7 @@ int count_operators_cse_topdown (vector<WORD> &tree) {
 					if (c->data[3] == 2)
 						numinstr++;
 					else
-						numinstr += (int)floor(log(c->data[3])/log(2.0)) + __builtin_popcount(c->data[3]) - 1;
+						numinstr += (int)floor(log(c->data[3])/log(2.0)) + popcount(c->data[3]) - 1;
 				}
 			}
 		} else {
@@ -1754,8 +1774,8 @@ inline static void next_MCTS_scheme (PHEAD vector<WORD> *porder, vector<WORD> *p
 		select->sum_results+=mcts_expr_score;
 
 //-------------------------------------------------------------------
-				switch ( AO.Optimize.experiments ) {
-					case 1:  // This is what Ben suggested
+				switch ( AO.Optimize.mctsdecaymode ) {
+					case 1:  // Based on http://arxiv.org/abs/arXiv:1312.0841
 						slide_down_factor = 1.0-(1.0*AT.optimtimes)/(1.0*AO.Optimize.mctsnumexpand);
 						break;
 					case 2:  // This gives a bit more cleanup time at the end.
@@ -1767,7 +1787,7 @@ inline static void next_MCTS_scheme (PHEAD vector<WORD> *porder, vector<WORD> *p
 							slide_down_factor = 0.0001;
 						}
 						break;
-					case 3:  // depth dependent factor combined with Ben's method
+					case 3:  // depth dependent factor combined with case 1
 						float dd = 1.0-(1.0*depth)/(1.0*nchild0);
 						slide_down_factor = 1.0-(1.0*AT.optimtimes)/(1.0*AO.Optimize.mctsnumexpand);
 						if ( dd <= 0.000001 ) slide_down_factor = 1.0;

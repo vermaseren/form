@@ -16,7 +16,7 @@
 
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2013 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -140,8 +140,8 @@ typedef struct compile {
  */
 #define TODISK 0
 #define FROMDISK 1
-#define MCLEANFLAG -2L
-#define DIRTYFLAG 1
+#define MDIRTYFLAG 1
+#define MCLEANFLAG (~MDIRTYFLAG)
 #define INANDOUT 0
 #define INPUTONLY 1
 #define OUTPUTONLY 2

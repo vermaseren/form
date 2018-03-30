@@ -4,7 +4,7 @@
  */
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2013 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -27,7 +27,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */
+/* #] License : */ 
 /*
   	#[ Includes :
 
@@ -68,7 +68,8 @@ SETUPPARAMETERS setupparameters[] =
 	,{(UBYTE *)"insidefirst",               ONOFFVALUE, 0, (LONG)1}
 	,{(UBYTE *)"largepatches",          NUMERICALVALUE, 0, (LONG)MAXPATCHES}
 	,{(UBYTE *)"largesize",             NUMERICALVALUE, 0, (LONG)LARGEBUFFER}
-	,{(UBYTE *)"maxnumbersize",         NUMERICALVALUE, 0, (LONG)MAXNUMBERSIZE}
+	,{(UBYTE *)"maxnumbersize",         NUMERICALVALUE, 0, (LONG)0}
+/*	,{(UBYTE *)"maxnumbersize",         NUMERICALVALUE, 0, (LONG)MAXNUMBERSIZE} */
 	,{(UBYTE *)"maxtermsize",           NUMERICALVALUE, 0, (LONG)MAXTER}
 	,{(UBYTE *)"maxwildcards",          NUMERICALVALUE, 0, (LONG)MAXWILDC}
 	,{(UBYTE *)"nospacesinnumbers",         ONOFFVALUE, 0, (LONG)0}
@@ -112,10 +113,11 @@ SETUPPARAMETERS setupparameters[] =
     ,{(UBYTE *)"threadsortfilesynch",       ONOFFVALUE, 0, (LONG)0}
 	,{(UBYTE *)"totalsize",                 ONOFFVALUE, 0, (LONG)2}
 	,{(UBYTE *)"workspace",             NUMERICALVALUE, 0, (LONG)WORKBUFFER}
+	,{(UBYTE *)"wtimestats",                ONOFFVALUE, 0, (LONG)2}
 };
 
 /*
-  	#] Includes :
+  	#] Includes : 
 	#[ Setups :
  		#[ DoSetups :
 */
@@ -164,7 +166,7 @@ int DoSetups()
 }
 
 /*
- 		#] DoSetups :
+ 		#] DoSetups : 
  		#[ ProcessOption :
 */
 
@@ -271,6 +273,7 @@ restart:;
 					AM.IncDir = 0;
 				}
 				else if ( StrICmp(s1,(UBYTE *)"path") == 0 ) {
+					if ( AM.Path ) M_free(AM.Path,"path");
 					AM.Path = 0;
 				}
 				else {
@@ -320,7 +323,7 @@ restart:;
 }
 
 /*
- 		#] ProcessOption :
+ 		#] ProcessOption : 
  		#[ GetSetupPar :
 */
 
@@ -340,7 +343,7 @@ SETUPPARAMETERS *GetSetupPar(UBYTE *s)
 }
 
 /*
- 		#] GetSetupPar :
+ 		#] GetSetupPar : 
  		#[ RecalcSetups :
 */
 
@@ -387,7 +390,7 @@ int RecalcSetups()
 }
 
 /*
- 		#] RecalcSetups :
+ 		#] RecalcSetups : 
  		#[ AllocSetups :
 */
 
@@ -395,15 +398,17 @@ int AllocSetups()
 {
 	SETUPPARAMETERS *sp;
 	LONG LargeSize, SmallSize, SmallEsize, TermsInSmall, IOsize;
-	int MaxPatches, MaxFpatches, error = 0;
+	int MaxPatches, MaxFpatches, error = 0, i, size;
 	UBYTE *s;
 #ifndef WITHPTHREADS
-	int j, size;
+	int j;
 #endif
 	sp = GetSetupPar((UBYTE *)"threads");
 	if ( sp->value > 0 ) AM.totalnumberofthreads = sp->value+1;
 
 	AM.OutBuffer = (UBYTE *)Malloc1(AM.OutBufSize+1,"OutputBuffer");
+	AP.PreAssignStack =(LONG *)Malloc1(AP.MaxPreAssignLevel*sizeof(LONG *),"PreAssignStack");
+	for ( i = 0; i < AP.MaxPreAssignLevel; i++ ) AP.PreAssignStack[i] = 0;
 	AC.iBuffer = (UBYTE *)Malloc1(AC.iBufferSize+1,"statement buffer");
 	AC.iStop = AC.iBuffer + AC.iBufferSize-2;
 	AP.preStart = (UBYTE *)Malloc1(AP.pSize,"instruction buffer");
@@ -475,9 +480,17 @@ int AllocSetups()
 	It seems better to fix it at its maximum value. This way we only worry
 	about maxtermsize. This can be understood better by the 'innocent' user.
 */
-	AM.MaxTal = (AM.MaxTer/sizeof(WORD)-2)/2;
-
+	if ( sp->value == 0 ) {
+		AM.MaxTal = (AM.MaxTer/sizeof(WORD)-2)/2;
+	}
+	else {
+		size = ( sp->value + 11 ) & (-4);
+		AM.MaxTal = size - 2;
+		if ( (size_t)AM.MaxTal > (size_t)((AM.MaxTer/sizeof(WORD)-2)/2) )
+					AM.MaxTal = (AM.MaxTer/sizeof(WORD)-2)/2;
+	}
 	AM.MaxTal &= -sizeof(WORD)*2;
+
 	sp->value = AM.MaxTal;
 	AC.cmod = (UWORD *)Malloc1(AM.MaxTal*4*sizeof(UWORD),(char *)(sp->parameter));
 	AM.gcmod = AC.cmod + AM.MaxTal;
@@ -674,6 +687,9 @@ int AllocSetups()
 	AC.OldFactArgFlag = AM.gOldFactArgFlag = AM.ggOldFactArgFlag = sp->value;
 	sp = GetSetupPar((UBYTE *)"oldgcd");
 	AC.OldGCDflag = AM.gOldGCDflag = AM.ggOldGCDflag = sp->value;
+	sp = GetSetupPar((UBYTE *)"wtimestats");
+	if ( sp->value == 2 ) sp->value = AM.ggWTimeStatsFlag;
+	AC.WTimeStatsFlag = AM.gWTimeStatsFlag = AM.ggWTimeStatsFlag = sp->value;
 	sp = GetSetupPar((UBYTE *)"sorttype");
 	if ( StrICmp((UBYTE *)"lowfirst",(UBYTE *)sp->value) == 0 ) {
 		AC.lSortType = SORTLOWFIRST;
@@ -745,7 +761,7 @@ int AllocSetups()
 }
 
 /*
- 		#] AllocSetups :
+ 		#] AllocSetups : 
  		#[ WriteSetup :
 
 	The routine writes the values of the setup parameters.
@@ -808,7 +824,7 @@ VOID WriteSetup()
 }
 
 /*
- 		#] WriteSetup :
+ 		#] WriteSetup : 
  		#[ AllocSort :
 
 		Routine allocates a complete struct for sorting.
@@ -873,6 +889,9 @@ SORTING *AllocSort(LONG LargeSize, LONG SmallSize, LONG SmallEsize, LONG TermsIn
 		+2*sizeof(WORD *)*longer
 		+2*(longerp*(sizeof(WORD *)+sizeof(WORD)))
 		+(3*longerp+2)*sizeof(WORD)
+#ifdef WITHZLIB
+		+(2*longerp+4)*sizeof(WORD)
+#endif
 		+terms2insmall*sizeof(WORD *)
 		+terms2insmall*sizeof(WORD *)/2
 		+LargeSize
@@ -902,8 +921,8 @@ SORTING *AllocSort(LONG LargeSize, LONG SmallSize, LONG SmallEsize, LONG TermsIn
 	sort->used = sort->tree+longerp;
 #ifdef WITHZLIB
 	sort->fpcompressed = sort->used+longerp;
-	sort->fpincompressed = sort->fpcompressed+longerp;
-	sort->ktoi = sort->fpincompressed+longerp;
+	sort->fpincompressed = sort->fpcompressed+longerp+2;
+	sort->ktoi = sort->fpincompressed+longerp+2;
 	sort->zsparray = 0;
 #else
 	sort->ktoi = sort->used + longerp;
@@ -928,6 +947,7 @@ SORTING *AllocSort(LONG LargeSize, LONG SmallSize, LONG SmallEsize, LONG TermsIn
 #ifdef WITHZLIB
 /*	sort->file.ziosize = IOsize; */
 	sort->file.ziosize = IObuffersize*sizeof(WORD);
+	sort->file.ziobuffer = 0;
 #endif
 	if ( AM.S0 != 0 ) {
 		sort->file.name = (char *)(sort->file.PObuffer + IObuffersize);
@@ -942,7 +962,7 @@ SORTING *AllocSort(LONG LargeSize, LONG SmallSize, LONG SmallEsize, LONG TermsIn
 }
 
 /*
- 		#] AllocSort :
+ 		#] AllocSort : 
  		#[ AllocSortFileName :
 */
 
@@ -967,7 +987,7 @@ VOID AllocSortFileName(SORTING *sort)
 }
 
 /*
- 		#] AllocSortFileName :
+ 		#] AllocSortFileName : 
  		#[ AllocFileHandle :
 */
 
@@ -1025,7 +1045,7 @@ FILEHANDLE *AllocFileHandle(WORD par,char *name)
 }
 
 /*
- 		#] AllocFileHandle :
+ 		#] AllocFileHandle : 
  		#[ DeAllocFileHandle :
 
 		Made to repair deallocation of AN.filenum. 21-sep-2000
@@ -1044,7 +1064,7 @@ void DeAllocFileHandle(FILEHANDLE *fh)
 }
 
 /*
- 		#] DeAllocFileHandle :
+ 		#] DeAllocFileHandle : 
  		#[ MakeSetupAllocs :
 */
 
@@ -1055,7 +1075,7 @@ int MakeSetupAllocs()
 }
 
 /*
- 		#] MakeSetupAllocs :
+ 		#] MakeSetupAllocs : 
  		#[ TryFileSetups :
 
 		Routine looks in the input file for a start of the type
@@ -1148,7 +1168,7 @@ eoi:
 }
 
 /*
- 		#] TryFileSetups :
+ 		#] TryFileSetups : 
  		#[ TryEnvironment :
 */
 
@@ -1173,6 +1193,6 @@ int TryEnvironment()
 }
 
 /*
- 		#] TryEnvironment :
+ 		#] TryEnvironment : 
 	#] Setups :
 */
