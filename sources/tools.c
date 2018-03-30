@@ -3382,7 +3382,7 @@ argerror:
 */
 
 #include <unistd.h> // defines _POSIX_TIMERS if clock_gettime() available
-#ifdef _POSIX_TIMERS
+#ifndef _POSIX_TIMERS
 #include <sys/timeb.h>
 #endif
 
