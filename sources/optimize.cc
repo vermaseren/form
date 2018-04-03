@@ -494,10 +494,12 @@ vector<WORD> occurrence_order (const WORD *expr, bool rev) {
 
 	// count the number of occurrences of variables
 	map<WORD,int> cnt;
-	for (const WORD *t=expr; *t!=0; t+=*t)
+	for (const WORD *t=expr; *t!=0; t+=*t) {
+		if (*t == ABS(*(t+*t-1))+1) continue; // skip constant term
 		if (t[1] == SYMBOL)
 			for (int i=3; i<t[2]; i+=2)
 				cnt[t[i]]++;
+	}
 
 	bool is_fac=false, is_sep=false;
 	if (cnt.count(FACTORSYMBOL)) {
@@ -822,6 +824,8 @@ void build_Horner_tree (const WORD **terms, int numterms, int var, int maxvar, i
  *	 used to sort the terms in correct order.
  */
 bool term_compare (const WORD *a, const WORD *b) {
+	if (*a == ABS(*(a+*a-1))+1) return true; // coefficient comes first
+	if (*b == ABS(*(b+*b-1))+1) return false;
 	if (a[1]!=SYMBOL) return true;
 	if (b[1]!=SYMBOL) return false;
 	for (int i=3; i<a[2] && i<b[2]; i+=2) {
