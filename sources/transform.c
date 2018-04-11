@@ -2686,6 +2686,10 @@ WORD RunAddArg(PHEAD WORD *fun, WORD *args)
 	if ( num == 1 && ToFast(tstop,tstop) == 1 ) {
 		f2 = tstop; NEXTARG(f2);
 	}
+	if ( *tstop == ARGHEAD ) {
+		*tstop = -SNUMBER; tstop[1] = 0;
+		f2 = tstop+2;
+	}
 /*
 	Copy the trailing arguments after the new argument, then copy the whole back.
 */
