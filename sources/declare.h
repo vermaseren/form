@@ -339,7 +339,7 @@ TP=T+1;while(TP<TT){if(*TP==AR.PolyFun){TP[2]|=(DIRTYFLAG|MUSTCLEANPRF);}TP+=TP[
 */
 
 /*
- * The following two functions give the unsigned absolute value of a signed
+ * The following three functions give the unsigned absolute value of a signed
  * integer even for the most negative integer. This is beyond the scope of
  * the standard abs() function and its family, whose return-values are signed.
  * In short, we should not use the unary minus operator with signed numbers
@@ -353,6 +353,12 @@ TP=T+1;while(TP<TT){if(*TP==AR.PolyFun){TP[2]|=(DIRTYFLAG|MUSTCLEANPRF);}TP+=TP[
  *   https://stackoverflow.com/q/1610947   (Why does stdlib.h's abs() family of functions return a signed value?)
  *   https://blog.regehr.org/archives/226  (A Guide to Undefined Behavior in C and C++, Part 2)
  */
+static inline unsigned int IntAbs(int x)
+{
+	if ( x >= 0 ) return x;
+	return(-((unsigned int)x));
+}
+
 static inline UWORD WordAbs(WORD x)
 {
 	if ( x >= 0 ) return x;
@@ -363,6 +369,41 @@ static inline ULONG LongAbs(LONG x)
 {
 	if ( x >= 0 ) return x;
 	return(-((ULONG)x));
+}
+
+/*
+ * The following functions provide portable unsigned-to-signed conversions
+ * (to avoid the implementation-defined behaviour), which is expected to be
+ * optimized to a no-op.
+ *
+ * See also:
+ *   https://stackoverflow.com/a/13208789  (Efficient unsigned-to-signed cast avoiding implementation-defined behavior)
+ */
+static inline int UnsignedToInt(unsigned int x)
+{
+	extern void Terminate(int);
+	if ( x <= INT_MAX ) return(x);
+	if ( x >= (unsigned int)INT_MIN ) return((int)(x - INT_MIN) + INT_MIN);
+	Terminate(1);
+	return(0);
+}
+
+static inline WORD UWordToWord(UWORD x)
+{
+	extern void Terminate(int);
+	if ( x <= WORD_MAX_VALUE ) return(x);
+	if ( x >= (UWORD)WORD_MIN_VALUE ) return((WORD)(x - WORD_MIN_VALUE) + WORD_MIN_VALUE);
+	Terminate(1);
+	return(0);
+}
+
+static inline LONG ULongToLong(ULONG x)
+{
+	extern void Terminate(int);
+	if ( x <= LONG_MAX_VALUE ) return(x);
+	if ( x >= (ULONG)LONG_MIN_VALUE ) return((LONG)(x - LONG_MIN_VALUE) + LONG_MIN_VALUE);
+	Terminate(1);
+	return(0);
 }
 
 /*
@@ -485,13 +526,6 @@ extern WORD   DoDelta(WORD *);
 extern WORD   DoDelta3(PHEAD WORD *,WORD);
 extern WORD   TestPartitions(WORD *, PARTI *);
 extern WORD   DoPartitions(PHEAD WORD *,WORD);
-extern int    CoCanonicalize(UBYTE *);
-extern int    DoCanonicalize(PHEAD WORD *, WORD *);
-extern WORD   GenTopologies(PHEAD WORD *,WORD);
-extern WORD   GenDiagrams(PHEAD WORD *,WORD);
-extern int    DoTopologyCanonicalize(PHEAD WORD *,WORD,WORD,WORD *);
-extern int    DoShattering(PHEAD WORD *,WORD *,WORD *,WORD);
-extern WORD   GenerateTopologies(PHEAD WORD,WORD,WORD,WORD);
 extern WORD   DoTableExpansion(WORD *,WORD);
 extern WORD   DoDistrib(PHEAD WORD *,WORD);
 extern WORD   DoShuffle(PHEAD WORD *,WORD,WORD,WORD);
@@ -634,7 +668,11 @@ extern WORD   Sflush(FILEHANDLE *);
 extern WORD   Simplify(PHEAD UWORD *,WORD *,UWORD *,WORD *);
 extern WORD   SortWild(WORD *,WORD);
 extern FILE  *LocateBase(char **,char **);
+#ifdef NEWSPLITMERGE
 extern LONG   SplitMerge(PHEAD WORD **,LONG);
+#else
+extern VOID   SplitMerge(PHEAD WORD **,LONG);
+#endif
 extern WORD   StoreTerm(PHEAD WORD *);
 extern VOID   SubPLon(UWORD *,WORD,UWORD *,WORD,UWORD *,WORD *);
 extern VOID   Substitute(PHEAD WORD *,WORD *,WORD);
@@ -721,8 +759,6 @@ extern VOID   Terminate(int);
 extern NAMENODE *GetNode(NAMETREE *,UBYTE *);
 extern int    AddName(NAMETREE *,UBYTE *,WORD,WORD,int *);
 extern int    GetName(NAMETREE *,UBYTE *,WORD *,int);
-extern UBYTE  *GetFunction(UBYTE *,WORD *);
-extern UBYTE  *GetNumber(UBYTE *,WORD *);
 extern int    GetLastExprName(UBYTE *,WORD *);
 extern int    GetAutoName(UBYTE *,WORD *);
 extern int    GetVar(UBYTE *,WORD *,WORD *,int,int);
@@ -795,7 +831,6 @@ extern int    StrCmp(UBYTE *,UBYTE *);
 extern int    StrICmp(UBYTE *,UBYTE *);
 extern int    StrHICmp(UBYTE *,UBYTE *);
 extern int    StrICont(UBYTE *,UBYTE *);
-extern int    CmpArray(WORD *,WORD *,WORD);
 extern int    ConWord(UBYTE *,UBYTE *);
 extern int    StrLen(UBYTE *);
 extern UBYTE *GetPreVar(UBYTE *,int);
@@ -1160,7 +1195,6 @@ extern int    AssignDollar(PHEAD WORD *,WORD);
 extern UBYTE *WriteDollarToBuffer(WORD,WORD);
 extern UBYTE *WriteDollarFactorToBuffer(WORD,WORD,WORD);
 extern void   AddToDollarBuffer(UBYTE *);
-extern int    PutTermInDollar(WORD *,WORD);
 extern void   TermAssign(WORD *);
 extern void   WildDollars(PHEAD WORD *);
 extern LONG   numcommute(WORD *,LONG *);
