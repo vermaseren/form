@@ -175,7 +175,7 @@ case $host_cpu in
 esac
 
 # Check for C compiler vendor. We assume that all compilers (CC, CXX, MPICC and
-# MPICXX) have the same vender and the same version. Clang most likely works
+# MPICXX) have the same vendor and the same version. Clang most likely works
 # as GCC.
 vendors="
 intel:     __ICC,__ECC,__INTEL_COMPILER
