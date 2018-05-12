@@ -10,7 +10,7 @@
  */
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2013 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -41,9 +41,9 @@
 	      not to be defined to make sure that all calls will be diverted
 	      to the routines here.
 #define TERMMALLOCDEBUG
+#define FILLVALUE 126
 #define MALLOCDEBUGOUTPUT
 #define MALLOCDEBUG 1
-#define FILLVALUE 126
 */
 #ifndef FILLVALUE
 	#define FILLVALUE 0
@@ -1902,11 +1902,15 @@ WORD ReadSnum(UBYTE **p)
 
 */
 
-UBYTE *NumCopy(WORD x, UBYTE *to)
+UBYTE *NumCopy(WORD y, UBYTE *to)
 {
 	UBYTE *s;
 	WORD i = 0, j;
-	if ( x < 0 ) { x = -x; *to++ = '-'; }
+	UWORD x;
+	if ( y < 0 ) {
+		*to++ = '-';
+	}
+	x = WordAbs(y);
 	s = to;
 	do { *s++ = (UBYTE)((x % 10)+'0'); i++; } while ( ( x /= 10 ) != 0 );
 	*s-- = '\0';
@@ -1925,11 +1929,15 @@ UBYTE *NumCopy(WORD x, UBYTE *to)
 
 */
 
-char *LongCopy(LONG x, char *to)
+char *LongCopy(LONG y, char *to)
 {
 	char *s;
 	WORD i = 0, j;
-	if ( x < 0 ) { x = -x; *to++ = '-'; }
+	ULONG x;
+	if ( y < 0 ) {
+		*to++ = '-';
+	}
+	x = LongAbs(y);
 	s = to;
 	do { *s++ = (x % 10)+'0'; i++; } while ( ( x /= 10 ) != 0 );
 	*s-- = '\0';
@@ -1950,6 +1958,14 @@ char *LongCopy(LONG x, char *to)
 
 char *LongLongCopy(off_t *y, char *to)
 {
+	/*
+	 * This code fails to print the maximum negative value on systems with two's
+	 * complement. To fix this, we need the unsigned version of off_t with the
+	 * same size, but unfortunately it is undefined. On the other hand, if a
+	 * system is configured with a 64-bit off_t, in practice one never reaches
+	 * 2^63 ~ 10^18 as of 2016. If one really reach such a big number, then it
+	 * would be the time to move on a 128-bit off_t.
+	 */
 	off_t x = *y;
 	char *s;
 	WORD i = 0, j;
@@ -2256,7 +2272,13 @@ VOID *Malloc1(LONG size, const char *messageifwrong)
 /*	MUNLOCK(ErrorMessageLock); */
 	UNLOCK(MallocLock);
 #endif
-
+/* 
+	if ( size > 500000000L ) {
+		MLOCK(ErrorMessageLock);
+		MesPrint("Malloc1: %s, allocated %l bytes\n",messageifwrong,size);
+		MUNLOCK(ErrorMessageLock);
+	}
+*/
 	return(mem);
 }
 
@@ -2569,9 +2591,10 @@ MesPrint("AT.NumberMemMax is now %l",AT.NumberMemMax);
 
 UWORD *NumberMalloc2(PHEAD char *text)
 {
-	if ( AT.NumberMemTop <= 0 ) NumberMallocAddMemory(BHEAD0);
+	if ( AT.NumberMemTop <= 0 ) NumberMallocAddMemory(BHEAD text);
 
 #ifdef MALLOCDEBUGOUTPUT
+	if ( (AT.NumberMemMax-AT.NumberMemTop) > 10 )
 	MesPrint("NumberMalloc: %s, %l/%l (%x)",text,AT.NumberMemTop,AT.NumberMemMax,AT.NumberMemHeap[AT.NumberMemTop-1]);
 #endif
 
@@ -2593,6 +2616,57 @@ VOID NumberFree2(PHEAD UWORD *NumberMem, char *text)
 #endif
 	DUMMYUSE(text);
 	AT.NumberMemHeap[AT.NumberMemTop++] = NumberMem;
+
+#ifdef MALLOCDEBUGOUTPUT
+	if ( (AT.NumberMemMax-AT.NumberMemTop) > 10 )
+	MesPrint("NumberFree: %s, %l/%l (%x)",text,AT.NumberMemTop,AT.NumberMemMax,NumberMem);
+#endif
+}
+
+#endif
+
+/*
+ 		#] NumberMalloc : 
+ 		#[ CacheNumberMalloc :
+
+	Similar to NumberMalloc
+ */
+
+VOID CacheNumberMallocAddMemory(PHEAD0)
+{
+	UWORD *newbufs;
+	WORD extra;
+	int i;
+	if ( AT.CacheNumberMemMax == 0 ) extra = NUMBERMEMSTARTNUM;
+	else                             extra = AT.CacheNumberMemMax;
+	if ( AT.CacheNumberMemHeap ) M_free(AT.CacheNumberMemHeap,"NumberMalloc");
+	newbufs = (UWORD *)Malloc1(extra*(AM.MaxTal+NUMBEREXTRAWORDS)*sizeof(UWORD),"CacheNumberMalloc");
+	AT.CacheNumberMemHeap = (UWORD **)Malloc1((extra+AT.NumberMemMax)*sizeof(UWORD *),"CacheNumberMalloc");
+	for ( i = 0; i < extra; i++ ) {
+		AT.CacheNumberMemHeap[i] = newbufs + i*(LONG)(AM.MaxTal+NUMBEREXTRAWORDS);
+	}
+	AT.CacheNumberMemTop = extra;
+	AT.CacheNumberMemMax += extra;
+}
+
+#ifndef MEMORYMACROS
+
+UWORD *CacheNumberMalloc2(PHEAD char *text)
+{
+	if ( AT.CacheNumberMemTop <= 0 ) CacheNumberMallocAddMemory(BHEAD0);
+
+#ifdef MALLOCDEBUGOUTPUT
+	MesPrint("NumberMalloc: %s, %l/%l (%x)",text,AT.NumberMemTop,AT.NumberMemMax,AT.NumberMemHeap[AT.NumberMemTop-1]);
+#endif
+
+	DUMMYUSE(text);
+	return(AT.CacheNumberMemHeap[--AT.CacheNumberMemTop]);
+}
+ 
+VOID CacheNumberFree2(PHEAD UWORD *NumberMem, char *text)
+{
+	DUMMYUSE(text);
+	AT.CacheNumberMemHeap[AT.CacheNumberMemTop++] = NumberMem;
 	
 #ifdef MALLOCDEBUGOUTPUT
 	MesPrint("NumberFree: %s, %l/%l (%x)",text,AT.NumberMemTop,AT.NumberMemMax,NumberMem);
@@ -2602,7 +2676,7 @@ VOID NumberFree2(PHEAD UWORD *NumberMem, char *text)
 #endif
 
 /*
- 		#] NumberMalloc : 
+ 		#] CacheNumberMalloc : 
  		#[ FromList :
 
 	Returns the next object in a list.
@@ -2859,22 +2933,23 @@ void ExpandBuffer(void **buffer, LONG *oldsize, int type)
 LONG iexp(LONG x, int p)
 {
 	int sign;
-	LONG y;
+	ULONG y;
+	ULONG ux;
 	if ( x == 0 ) return(0);
 	if ( p == 0 ) return(1);
-	if ( x < 0 ) { sign = -1; x = -x; }
-	else sign = 1;
+	sign = x < 0 ? -1 : 1;
 	if ( sign < 0 && ( p & 1 ) == 0 ) sign = 1;
-	if ( x == 1 ) return(sign);
+	ux = LongAbs(x);
+	if ( ux == 1 ) return(sign);
 	if ( p < 0 ) return(0);
 	y = 1;
 	while ( p ) {
-		if ( ( p & 1 ) != 0 ) y *= x;
+		if ( ( p & 1 ) != 0 ) y *= ux;
 		p >>= 1;
-		x = x*x;
+		ux = ux*ux;
 	}
 	if ( sign < 0 ) y = -y;
-	return(y);
+	return ULongToLong(y);
 }
 
 /*
@@ -2971,6 +3046,81 @@ int ToFast(WORD *r, WORD *m)
 
 /*
  		#] ToFast : 
+ 		#[ ToPolyFunGeneral :
+
+	Routine forces a polyratfun into general notation if needed.
+	If no action was needed, the return value is zero.
+	A positive return value indicates how many arguments were converted.
+	The new term overwrite the old.
+*/
+
+WORD ToPolyFunGeneral(PHEAD WORD *term)
+{
+	WORD *t = term+1, *tt, *to, *to1, *termout, *tstop, *tnext;
+	WORD numarg, i, change = 0;
+	tstop = term + *term; tstop -= ABS(tstop[-1]);
+	termout = to = AT.WorkPointer;
+	to++;
+	while ( t < tstop ) { /* go through the subterms */
+		if ( *t == AR.PolyFun ) {
+			tt = t+FUNHEAD; tnext = t + t[1];
+			numarg = 0;
+			while ( tt < tnext ) { numarg++; NEXTARG(tt); }
+			if ( numarg == 2 ) { /* this needs attention */
+				tt = t + FUNHEAD;
+				to1 = to;
+				i = FUNHEAD; NCOPY(to,t,i);
+				while ( tt < tnext ) { /* Do the arguments */
+					if ( *tt > 0 ) {
+						i = *tt; NCOPY(to,tt,i);
+					}
+					else if ( *tt == -SYMBOL ) {
+						to1[1] += 6+ARGHEAD; to1[2] |= MUSTCLEANPRF; change++;
+						*to++ = 8+ARGHEAD; *to++ = 0; FILLARG(to);
+						*to++ = 8; *to++ = SYMBOL; *to++ = 4; *to++ = tt[1];
+						*to++ = 1; *to++ = 1; *to++ = 1; *to++ = 3;
+						tt += 2;
+					}
+					else if ( *tt == -SNUMBER ) {
+						if ( tt[1] > 0 ) {
+							to1[1] += 2+ARGHEAD; to1[2] |= MUSTCLEANPRF; change++;
+							*to++ = 4+ARGHEAD; *to++ = 0; FILLARG(to);
+							*to++ = 4; *to++ = tt[1]; *to++ = 1; *to++ = 3;
+							tt += 2;
+						}
+						else if ( tt[1] < 0 ) {
+							to1[1] += 2+ARGHEAD; to1[2] |= MUSTCLEANPRF; change++;
+							*to++ = 4+ARGHEAD; *to++ = 0; FILLARG(to);
+							*to++ = 4; *to++ = -tt[1]; *to++ = 1; *to++ = -3;
+							tt += 2;
+						}
+						else {
+							MLOCK(ErrorMessageLock);
+							MesPrint("Internal error: Zero in PolyRatFun");
+							MUNLOCK(ErrorMessageLock);
+							Terminate(-1);
+						}
+					}
+				}
+				t = tnext;
+				continue;
+			}
+		}
+		i = t[1]; NCOPY(to,t,i)
+	}
+	if ( change ) {
+		tt = term + *term;
+        while ( t < tt ) *to++ = *t++;
+		*termout = to - termout;
+		t = term; i = *termout; tt = termout;
+		NCOPY(t,tt,i)
+		AT.WorkPointer = term + *term;
+	}
+	return(change);
+}
+
+/*
+ 		#] ToPolyFunGeneral : 
  		#[ IsLikeVector :
 
 		Routine determines whether a function argument is like a vector.
@@ -3216,13 +3366,22 @@ argerror:
 #include <sys/timeb.h>
 #endif
 
+/**
+ * Returns the wall-clock time.
+ *
+ * @param   par  If zero, the wall-clock time will be reset to 0.
+ * @return       The wall-clock time in centiseconds.
+ */
 LONG TimeWallClock(WORD par)
 {
+	/*
+	 * NOTE: this function is not thread-safe. Operations on tp are not atomic.
+	 */
+	struct timeb tp;
 #ifdef _POSIX_TIMERS
 	struct timespec tp;
 	clock_gettime(CLOCK_MONOTONIC, &tp);
 #else
-	struct timeb tp;
 	ftime(&tp);
 #endif
 	if ( par ) {
@@ -3263,6 +3422,12 @@ LONG TimeChildren(WORD par)
  		#[ TimeCPU :
 */
 
+/**
+ * Returns the CPU time.
+ *
+ * @param   par  If zero, the CPU time will be reset to 0.
+ * @return       The CPU time in milliseconds.
+ */
 LONG TimeCPU(WORD par)
 {
 	GETIDENTITY

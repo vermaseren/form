@@ -5,7 +5,7 @@
  */
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2013 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -469,6 +469,40 @@ WORD Permute(PERM *perm, WORD first)
 
 /*
   	#] Permute : 
+  	#[ PermuteP :				WORD PermuteP(perm,first)
+
+	Like Permute, but works on an array of pointers
+*/
+
+WORD PermuteP(PERMP *perm, WORD first)
+{
+	WORD **s, *c, i, j;
+	if ( first ) {
+		perm->sign = ( perm->sign <= 1 ) ? 0: 1;
+		for ( i = 0; i < perm->n; i++ ) perm->cycle[i] = 0;
+		return(0);
+	}
+	i = perm->n;
+	while ( --i > 0 ) {
+		s = perm->objects;
+		c = s[0];
+		j = i;
+		while ( --j >= 0 ) { *s = s[1]; s++; }
+		*s = c;
+		if ( ( i & 1 ) != 0 ) perm->sign ^= 1;
+		if ( perm->cycle[i] < i ) {
+			(perm->cycle[i])++;
+			return(0);
+		}
+		else {
+			perm->cycle[i] = 0;
+		}
+	}
+	return(1);
+}
+
+/*
+  	#] PermuteP : 
   	#[ Distribute :
 */
 
@@ -2082,7 +2116,8 @@ IndAll:			i = m[1] - WILDOFFSET;
 		}
 		else if ( *m == -INDEX && m[1] >= AM.OffsetIndex+WILDOFFSET
 		&& m[1] < AM.OffsetIndex+(WILDOFFSET<<1) ) {
-			if ( *t == -VECTOR || *t == -SNUMBER ) goto IndAll;
+			if ( *t == -VECTOR ) goto IndAll;
+			if ( *t == -SNUMBER && t[1] >= 0 && t[1] < AM.OffsetIndex ) goto IndAll;
 			if ( *t == -MINVECTOR ) {
 				i = m[1] - WILDOFFSET;
 				AN.argaddress = AT.MinVecArg;

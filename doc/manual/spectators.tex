@@ -1,0 +1,153 @@
+
+\chapter{Spectators}
+\label{spectators}
+
+At times expressions contain many terms that will not be treated for many 
+modules to come. For the actions in those modules they are considered 
+spectator terms. and they may consume much computer time due to their 
+presence during the sorting. For this we have the spectator system in which 
+we can send those terms to a special file, named a spectator file, in such 
+a way that they can be picked up at a convenient time in the future. In 
+short:
+
+\noindent
+Spectators are expressions together with a \index{filename}filename. The 
+file is for storage when the spectator becomes too big. Create a spectator 
+with the statement\index{createspectator}
+\begin{verbatim}
+    CreateSpectator Exprname,"filename";
+\end{verbatim}
+The file will be made in the same directory where the temporary files are made. 
+Example:
+\begin{verbatim}
+    CreateSpectator Yintegrals,"Yfile.spec";
+\end{verbatim}
+One may send terms to a spectator with the executable 
+statement\index{tospectator}
+\begin{verbatim}
+    ToSpectator Exprname;
+\end{verbatim}
+An example would be
+\begin{verbatim}
+    if ( count(Z,1) == 0 ) ToSpectator Yintegrals;
+\end{verbatim}
+The terms are dumped into the file as they are at the moment the 
+ToSpectator statement is executed. No brackets etc.
+In the future they may be compressed. At the moment they are not.
+
+Recovery of the contents of the spectator is done with the CopySpectator
+statement as in\index{copyspectator}
+\begin{verbatim}
+    CopySpectator NewExp = Yintegrals;
+\end{verbatim}
+Currently you can only read the spectators this way. You cannot make more 
+complicated constructions. You can only do things with the terms of the 
+spectator expression after the contents have been put in your new 
+expression. The spectator file remains in existence. In later modules you 
+can still add to it. You cannot read from and add to the same spectator in 
+the same module. The CopySpectator command can be followed by executable 
+statements in the same module. This may not be economical because the 
+contents of the spectator have not been sorted. There could be identical 
+terms that occur many times or even cancel. Better sort them first.
+
+A spectator can be removed from the system with the 
+statement\index{removespectator}
+\begin{verbatim}
+    RemoveSpectator Yintegrals;
+\end{verbatim}
+It is also possible to truncate a spectator down to zero length 
+with\index{emptyspectator}
+\begin{verbatim}
+    EmptySpectator Yintegrals;
+\end{verbatim}
+You can have as many spectators as you like, but they all have some cache 
+buffers. There may also be limitations in the file system on the maximum 
+number of open files. The filename for the spectator is purely for the sake 
+of the users administration and recognition. You cannot carry the file over 
+to other programs. There is no variable administration in it as in the 
+saved files.
+
+The .global instruction makes a spectator file survive a .store. It is up 
+to the user to make sure that all the variables in it also survive the 
+.store. There is no checking!
+
+One use of the spectator system would be when integrating many different 
+terms by means of a very prolonged recursion system in which integrals of a 
+given complexity are reduced to integrals of lower complexity, but each 
+such reduction may take quite a few steps. One could have:
+\begin{verbatim}
+    #do i = `MAXCOMPLEXITY'-1,0,-1
+        CreateSpectator complex`i',"complex`i'.spec";
+    #enddo
+    Local F`MAXCOMPLEXITY' = ....;
+    #do i = `MAXCOMPLEXITY'-1,1,-1
+        #do ii = 1,1;
+    *       routine for doing a part of the recursion level `i'
+            ....
+
+            #do j = `i'-1,0,-1
+                if ( complexityofterm == `i' ) ToSpectator complex`i';
+            #enddo
+            if ( notyetfinished ) redefine ii "0";
+            .sort
+        #enddo
+        Drop F{`i'+1};
+        CopySpectator F`i' = complex`i';
+        .sort
+        RemoveSpectator complex`i';
+    #enddo
+    *
+    * and finally, assuming that complexity zero means finished:
+    *
+    Drop F1;
+    CopySpectator F0 = complex0;
+    .sort
+    RemoveSpectator complex0;
+\end{verbatim}
+Some remarks are called for here. If one works with the 
+polyratfun\index{polyratfun} concept and the rational 
+polynomials\index{rational polynomials} become rather complicated, the 
+sorting after the CopySpectator statement can have serious bottleneck 
+problems in \index{TFORM}\TFORM{} and \index{ParFORM}\ParFORM{} because the 
+addition of those polynomials can be rather expensive and much of it ends 
+up in the master processor. This can be made better with the following 
+construction (assuming the function rat was declared as polyratfun at the 
+moment of all the ToSpectator statements that wrote to the spectator):
+\begin{verbatim}
+    PolyRatFun;
+    Drop F1;
+    CopySpactator F0 = complex0;
+    ABracket+ rat;
+    .sort
+    PolyRatFun rat;
+    RemoveSpectator complex0;
+    .sort
+\end{verbatim}
+First we remove the declaration of rat as polyratfun. Then we read the 
+spectator and sort it such that all terms that should be added eventually 
+are grouped together. This sorting is very cheap as only identical terms 
+are combined. Then we declare the polyratfun again and because of the way 
+the terms are sorted nearly all additions take place inside the workers, 
+hence at maximum parallelization efficiency.
+
+The above method still contains one inefficiency: because the polyratfun is 
+declared again, the contents of the rat function need to be 'normalized' 
+again, while they were already normalized. This involves calculating a gcd 
+of the numerator and the denominator, which is an expensive operation 
+and is useless in this case. For this we have a special option in the 
+polyratfun declaration:
+\begin{verbatim}
+   PolyRatFun rat-;
+\end{verbatim}
+This will skip the normalization on the input of the module. One should 
+note however that if one uses this option under different conditions in 
+which the input rat function might not be normalized, the program might 
+crash or even give wrong answers. Hence this option should only be used 
+with the highest degree of caution! This is an option for very experienced 
+users only. No support is given concerning programs that run correctly 
+without the use of this option and fail when using it.
+
+It should be noted that in the sequential version of \FORM{} this 
+construction is not needed at all, because there is only one processor 
+anyway.
+

@@ -1,5 +1,4 @@
 #ifndef __FDECLARE__
- 
 #define __FDECLARE__
 
 /** @file declare.h
@@ -9,7 +8,7 @@
 
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2013 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -42,11 +41,14 @@
 #define MiN(x,y) ((x) < (y) ? (x): (y))
 #define ABS(x) ( (x) < 0 ? -(x): (x) )
 #define SGN(x) ( (x) > 0 ? 1 : (x) < 0 ? -1 : 0 )
-#define REDLENG(x) ((((x)<0)?((x)+1):((x)-1))>>1)
-#define INCLENG(x) (((x)<0)?(((x)<<1)-1):(((x)<<1)+1))
+#define REDLENG(x) ((((x)<0)?((x)+1):((x)-1))/2)
+#define INCLENG(x) (((x)<0)?(((x)*2)-1):(((x)*2)+1))
 #define GETCOEF(x,y) x += *x;y = x[-1];x -= ABS(y);y=REDLENG(y)
 #define GETSTOP(x,y) y=x+(*x)-1;y -= ABS(*y)-1
 #define StuffAdd(x,y)  (((x)<0?-1:1)*(y)+((y)<0?-1:1)*(x))
+ 
+#define EXCHN(t1,t2,n) { WORD a,i; for(i=0;i<n;i++){a=t1[i];t1[i]=t2[i];t2[i]=a;} }
+#define EXCH(x,y) { WORD a = (x); (x) = (y); (y) = a; }
  
 #define TOKENTOLINE(x,y) if ( AC.OutputSpaces == NOSPACEFORMAT ) { \
 		TokenToLine((UBYTE *)(y)); } else { TokenToLine((UBYTE *)(x)); }
@@ -105,7 +107,7 @@
 #define CYCLE1(t,a,i) {t iX=*a; WORD jX; for(jX=1;jX<i;jX++)a[jX-1]=a[jX]; a[i-1]=iX;}
 
 #define AddToCB(c,wx) if(c->Pointer>=c->Top) \
-		DoubleCbuffer(c-cbuf,c->Pointer); \
+		DoubleCbuffer(c-cbuf,c->Pointer,21); \
 		*(c->Pointer)++ = wx;
 
 #define EXCHINOUT { FILEHANDLE *ffFi = AR.outfile; \
@@ -161,6 +163,18 @@
 #define NEXTARG(x) if(*x>0) x += *x; else if(*x <= -FUNCTION)x++; else x += 2;
 #define COPY1ARG(s1,t1) { int ica; if ( (ica=*t1) > 0 ) { NCOPY(s1,t1,ica) } \
 		else if(*t1<=-FUNCTION){*s1++=*t1++;} else{*s1++=*t1++;*s1++=*t1++;} }
+
+/**
+ * Fills a buffer by zero in the range [begin,end).
+ *
+ * @param  w      The buffer.
+ * @param  begin  The index for the beginning of the range.
+ * @param  end    The index for the end of the range (exclusive).
+ */
+#define ZeroFillRange(w,begin,end) do { \
+	int tmp_i; \
+	for ( tmp_i = begin; tmp_i < end; tmp_i++ ) { (w)[tmp_i] = 0; } \
+} while (0)
 
 #define TABLESIZE(a,b) (((WORD)sizeof(a))/((WORD)sizeof(b)))
 #define WORDDIF(x,y) (WORD)(x-y)
@@ -261,15 +275,19 @@ extern VOID TELLFILE(int,POSITION *);
 
 #define TermMalloc(x) ( (AT.TermMemTop <= 0 ) ? TermMallocAddMemory(BHEAD0), AT.TermMemHeap[--AT.TermMemTop]: AT.TermMemHeap[--AT.TermMemTop] )
 #define NumberMalloc(x) ( (AT.NumberMemTop <= 0 ) ? NumberMallocAddMemory(BHEAD0), AT.NumberMemHeap[--AT.NumberMemTop]: AT.NumberMemHeap[--AT.NumberMemTop] )
+#define CacheNumberMalloc(x) ( (AT.CacheNumberMemTop <= 0 ) ? CacheNumberMallocAddMemory(BHEAD0), AT.CacheNumberMemHeap[--AT.CacheNumberMemTop]: AT.CacheNumberMemHeap[--AT.CacheNumberMemTop] )
 #define TermFree(TermMem,x) AT.TermMemHeap[AT.TermMemTop++] = (WORD *)(TermMem)
 #define NumberFree(NumberMem,x) AT.NumberMemHeap[AT.NumberMemTop++] = (UWORD *)(NumberMem)
+#define CacheNumberFree(NumberMem,x) AT.CacheNumberMemHeap[AT.CacheNumberMemTop++] = (UWORD *)(NumberMem)
 
 #else
 
 #define TermMalloc(x) TermMalloc2(BHEAD (char *)(x))
 #define NumberMalloc(x) NumberMalloc2(BHEAD (char *)(x))
+#define CacheNumberMalloc(x) CacheNumberMalloc2(BHEAD (char *)(x))
 #define TermFree(x,y) TermFree2(BHEAD (WORD *)(x),(char *)(y))
 #define NumberFree(x,y) NumberFree2(BHEAD (UWORD *)(x),(char *)(y))
+#define CacheNumberFree(x,y) CacheNumberFree2(BHEAD (UWORD *)(x),(char *)(y))
 
 #endif
 
@@ -292,10 +310,104 @@ extern VOID TELLFILE(int,POSITION *);
 #define MesNesting() MesPrint("&Illegal nesting of if, repeat, argument, inside, term, inexpression and do")
 
 #define MarkPolyRatFunDirty(T) {if(*T&&AR.PolyFunType==2){WORD *TP,*TT;TT=T+*T;TT-=ABS(TT[-1]);\
-TP=T+1;while(TP<TT){if(*TP==AR.PolyFun){TP[2]|=(DIRTYFLAG|CLEANPRF);}TP+=TP[1];}}}
+TP=T+1;while(TP<TT){if(*TP==AR.PolyFun){TP[2]|=(DIRTYFLAG|MUSTCLEANPRF);}TP+=TP[1];}}}
 
 /*
+	Macros for nesting input levels for #$name = ...; assign instructions.
+	Note that the level should never go below zero.
+*/
+#define PUSHPREASSIGNLEVEL AP.PreAssignLevel++; { GETIDENTITY \
+    if ( AP.PreAssignLevel >= AP.MaxPreAssignLevel ) { int i; \
+		LONG *ap = (LONG *)Malloc1(2*AP.MaxPreAssignLevel*sizeof(LONG *),"PreAssignStack"); \
+		for ( i = 0; i < AP.MaxPreAssignLevel; i++ ) ap[i] = AP.PreAssignStack[i]; \
+		M_free(AP.PreAssignStack,"PreAssignStack"); \
+		AP.MaxPreAssignLevel *= 2; AP.PreAssignStack = ap; \
+	} \
+	*AT.WorkPointer++ = AP.PreContinuation; AP.PreContinuation = 0; \
+	AP.PreAssignStack[AP.PreAssignLevel] = AC.iPointer - AC.iBuffer; }
+
+#define POPPREASSIGNLEVEL if ( AP.PreAssignLevel > 0 ) { GETIDENTITY \
+	AC.iPointer = AC.iBuffer + AP.PreAssignStack[AP.PreAssignLevel--]; \
+	AP.PreContinuation = *--AT.WorkPointer; \
+	*AC.iPointer = 0; }
+
+/*
+	MesPrint("P-level popped to %d with %d",AP.PreAssignLevel,(WORD)(AC.iPointer - AC.iBuffer));
+
   	#] Macro's : 
+  	#[ Inline functions :
+*/
+
+/*
+ * The following three functions give the unsigned absolute value of a signed
+ * integer even for the most negative integer. This is beyond the scope of
+ * the standard abs() function and its family, whose return-values are signed.
+ * In short, we should not use the unary minus operator with signed numbers
+ * unless we are sure that there are no integer overflows. Instead, we rely on
+ * two well-defined operations: (i) signed-to-unsigned conversion and
+ * (ii) unary minus of unsigned operands.
+ *
+ * See also:
+ *   https://stackoverflow.com/a/4536188   (Unary minus and signed-to-unsigned conversion)
+ *   https://stackoverflow.com/q/8026694   (C: unary minus operator behavior with unsigned operands)
+ *   https://stackoverflow.com/q/1610947   (Why does stdlib.h's abs() family of functions return a signed value?)
+ *   https://blog.regehr.org/archives/226  (A Guide to Undefined Behavior in C and C++, Part 2)
+ */
+static inline unsigned int IntAbs(int x)
+{
+	if ( x >= 0 ) return x;
+	return(-((unsigned int)x));
+}
+
+static inline UWORD WordAbs(WORD x)
+{
+	if ( x >= 0 ) return x;
+	return(-((UWORD)x));
+}
+
+static inline ULONG LongAbs(LONG x)
+{
+	if ( x >= 0 ) return x;
+	return(-((ULONG)x));
+}
+
+/*
+ * The following functions provide portable unsigned-to-signed conversions
+ * (to avoid the implementation-defined behaviour), which is expected to be
+ * optimized to a no-op.
+ *
+ * See also:
+ *   https://stackoverflow.com/a/13208789  (Efficient unsigned-to-signed cast avoiding implementation-defined behavior)
+ */
+static inline int UnsignedToInt(unsigned int x)
+{
+	extern void Terminate(int);
+	if ( x <= INT_MAX ) return(x);
+	if ( x >= (unsigned int)INT_MIN ) return((int)(x - INT_MIN) + INT_MIN);
+	Terminate(1);
+	return(0);
+}
+
+static inline WORD UWordToWord(UWORD x)
+{
+	extern void Terminate(int);
+	if ( x <= WORD_MAX_VALUE ) return(x);
+	if ( x >= (UWORD)WORD_MIN_VALUE ) return((WORD)(x - WORD_MIN_VALUE) + WORD_MIN_VALUE);
+	Terminate(1);
+	return(0);
+}
+
+static inline LONG ULongToLong(ULONG x)
+{
+	extern void Terminate(int);
+	if ( x <= LONG_MAX_VALUE ) return(x);
+	if ( x >= (ULONG)LONG_MIN_VALUE ) return((LONG)(x - LONG_MIN_VALUE) + LONG_MIN_VALUE);
+	Terminate(1);
+	return(0);
+}
+
+/*
+  	#] Inline functions : 
   	#[ Thread objects :
 */
 
@@ -412,9 +524,12 @@ extern WORD   DivRat(PHEAD UWORD *,WORD,UWORD *,WORD,UWORD *,WORD *);
 extern WORD   Divvy(PHEAD UWORD *,WORD *,UWORD *,WORD);
 extern WORD   DoDelta(WORD *);
 extern WORD   DoDelta3(PHEAD WORD *,WORD);
+extern WORD   TestPartitions(WORD *, PARTI *);
+extern WORD   DoPartitions(PHEAD WORD *,WORD);
 extern WORD   DoTableExpansion(WORD *,WORD);
 extern WORD   DoDistrib(PHEAD WORD *,WORD);
 extern WORD   DoShuffle(PHEAD WORD *,WORD,WORD,WORD);
+extern WORD   DoPermutations(PHEAD WORD *,WORD);
 extern int    Shuffle(PHEAD WORD *, WORD *, WORD *);
 extern int    FinishShuffle(PHEAD WORD *);
 extern WORD   DoStuffle(PHEAD WORD *,WORD,WORD,WORD);
@@ -512,9 +627,10 @@ extern WORD   OpenTemp(VOID);
 extern VOID   Pack(UWORD *,WORD *,UWORD *,WORD );
 extern LONG   PasteFile(PHEAD WORD,WORD *,POSITION *,WORD **,RENUMBER,WORD *,WORD);
 extern WORD   Permute(PERM *,WORD);
+extern WORD   PermuteP(PERMP *,WORD);
 extern WORD   PolyFunMul(PHEAD WORD *);
 extern WORD   PopVariables(VOID);
-extern WORD   PrepPoly(PHEAD WORD *);
+extern WORD   PrepPoly(PHEAD WORD *,WORD);
 extern WORD   Processor(VOID);
 extern WORD   Product(UWORD *,WORD *,WORD);
 extern VOID   PrtLong(UWORD *,WORD,UBYTE *);
@@ -719,6 +835,7 @@ extern int    ConWord(UBYTE *,UBYTE *);
 extern int    StrLen(UBYTE *);
 extern UBYTE *GetPreVar(UBYTE *,int);
 extern void   ToGeneral(WORD *,WORD *,WORD);
+extern WORD   ToPolyFunGeneral(PHEAD WORD *);
 extern int    ToFast(WORD *,WORD *);
 extern SETUPPARAMETERS *GetSetupPar(UBYTE *);
 extern int    RecalcSetups(VOID);
@@ -856,11 +973,11 @@ extern void   ResetVariables(int);
 extern void   AddToPreTypes(int);
 extern void   MessPreNesting(int);
 extern LONG   GetStreamPosition(STREAM *);
-extern WORD  *DoubleCbuffer(int,WORD *);
+extern WORD  *DoubleCbuffer(int,WORD *,int);
 extern WORD  *AddLHS(int);
 extern WORD  *AddRHS(int,int);
 extern int    AddNtoL(int,WORD *);
-extern int    AddNtoC(int,int,WORD *);
+extern int    AddNtoC(int,int,WORD *,int);
 extern VOID   DoubleIfBuffers(VOID);
 extern STREAM *CreateStream(UBYTE *);
 
@@ -1236,6 +1353,7 @@ extern int    PutOutputGZIP(FILEHANDLE *);
 extern int    FlushOutputGZIP(FILEHANDLE *);
 extern int    SetupAllInputGZIP(SORTING *);
 extern LONG   FillInputGZIP(FILEHANDLE *,POSITION *,UBYTE *,LONG,int);
+extern void   ClearSortGZIP(FILEHANDLE *f);
 #endif
 
 #ifdef WITHPTHREADS
@@ -1364,12 +1482,15 @@ extern int    DoRecovery(int *);
 extern void   DoCheckpoint(int);
 
 extern VOID NumberMallocAddMemory(PHEAD0);
+extern VOID CacheNumberMallocAddMemory(PHEAD0);
 extern VOID TermMallocAddMemory(PHEAD0);
 #ifndef MEMORYMACROS
 extern WORD *TermMalloc2(PHEAD char *text);
 extern VOID TermFree2(PHEAD WORD *term,char *text);
 extern UWORD *NumberMalloc2(PHEAD char *text);
+extern UWORD *CacheNumberMalloc2(PHEAD char *text);
 extern VOID NumberFree2(PHEAD UWORD *NumberMem,char *text);
+extern VOID CacheNumberFree2(PHEAD UWORD *NumberMem,char *text);
 #endif
 
 extern void ExprStatus(EXPRESSIONS);
@@ -1395,6 +1516,7 @@ extern WORD RunIsLyndon(PHEAD WORD *fun, WORD *args, int par);
 extern WORD RunToLyndon(PHEAD WORD *fun, WORD *args, int par);
 extern WORD RunDropArg(PHEAD WORD *fun, WORD *args);
 extern WORD RunSelectArg(PHEAD WORD *fun, WORD *args);
+extern WORD RunDedup(PHEAD WORD *fun, WORD *args);
 
 extern int NormPolyTerm(PHEAD WORD *);
 extern WORD ComparePoly(WORD *, WORD *, WORD);
@@ -1411,6 +1533,7 @@ extern void UpdateMaxSize(VOID);
 
 extern int CoToPolynomial(UBYTE *);
 extern int CoFromPolynomial(UBYTE *);
+extern int CoArgToExtraSymbol(UBYTE *);
 extern int CoExtraSymbols(UBYTE *);
 extern UBYTE *GetDoParam(UBYTE *, WORD **, int);
 extern WORD *GetIfDollarFactor(UBYTE **, WORD *);
@@ -1449,16 +1572,18 @@ extern int InvPoly(PHEAD WORD *,WORD,WORD);
 extern WORD TestDoLoop(PHEAD WORD *,WORD);
 extern WORD TestEndDoLoop(PHEAD WORD *,WORD);
 
-extern WORD  *poly_gcd(PHEAD WORD *, WORD *);
-extern WORD  *poly_div(PHEAD WORD *, WORD *);
-extern WORD  *poly_rem(PHEAD WORD *, WORD *);
+extern WORD  *poly_gcd(PHEAD WORD *, WORD *, WORD);
+extern WORD  *poly_div(PHEAD WORD *, WORD *, WORD);
+extern WORD  *poly_rem(PHEAD WORD *, WORD *, WORD);
 extern WORD  *poly_inverse(PHEAD WORD *, WORD *);
+extern WORD  *poly_mul(PHEAD WORD *, WORD *);
 extern WORD *poly_ratfun_add(PHEAD WORD *, WORD *);
 extern int   poly_ratfun_normalize(PHEAD WORD *);
 extern int   poly_factorize_argument(PHEAD WORD *, WORD *);
 extern WORD *poly_factorize_dollar(PHEAD WORD *);
 extern int   poly_factorize_expression(EXPRESSIONS);
 extern int   poly_unfactorize_expression(EXPRESSIONS);
+extern void  poly_free_poly_vars(PHEAD const char *);
 
 extern VOID optimize_print_code (int);
 
@@ -1512,6 +1637,9 @@ extern int InvPoly(PHEAD WORD *,WORD,WORD);
 
 extern int ReadFromScratch(FILEHANDLE *,POSITION *,UBYTE *,POSITION *);
 extern int AddToScratch(FILEHANDLE *,POSITION *,UBYTE *,POSITION *,int);
+
+extern int DoPreAppendPath(UBYTE *);
+extern int DoPrePrependPath(UBYTE *);
 
 /*
   	#] Declarations : 

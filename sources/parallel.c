@@ -10,7 +10,7 @@
  */
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2013 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -810,7 +810,7 @@ cancelled:
 /*
 					keep the left term and get the loser of right subtree
 */
-				newnlen <<= 1;
+				newnlen *= 2;
 				newclen = ( newnlen > 0 ) ? ( newnlen + 1 ) : ( newnlen - 1 );
 				if ( newnlen < 0 ) newnlen = -newnlen;
 				PF_newclen[n->lloser] = newclen;
@@ -919,7 +919,8 @@ int PF_EndSort(void)
 	if ( AR.PolyFun == 0 ) { S->PolyFlag = 0; }
 	else if ( AR.PolyFunType == 1 ) { S->PolyFlag = 1; }
 	else if ( AR.PolyFunType == 2 ) {
-		if ( AR.PolyFunExp == 2 ) S->PolyFlag = 1;
+		if ( AR.PolyFunExp == 2
+		  || AR.PolyFunExp == 3 ) S->PolyFlag = 1;
 		else                      S->PolyFlag = 2;
 	}
 	*AR.CompressPointer = 0;
@@ -1775,6 +1776,7 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 			}
 			AT.SS->GenTerms = genterms;
 			WriteStats(&PF_exprsize, 2);
+			Expressions[AR.CurExpr].size = PF_exprsize;
 		}
 		PF_Statistics(PF_stats,0);
 /*

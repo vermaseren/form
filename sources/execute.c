@@ -5,7 +5,7 @@
  */
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2013 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -148,6 +148,7 @@ WORD CleanExpr(WORD par)
 					node->number = e_out - Expressions;
 
 					e_out->onfile = e_in->onfile;
+					e_out->size = e_in->size;
 					e_out->printflag = 0;
 					if ( par ) e_out->status = STOREDEXPRESSION;
 					else e_out->status = e_in->status;
@@ -163,6 +164,7 @@ WORD CleanExpr(WORD par)
 					e_out->numdummies = e_in->numdummies;
 					e_out->numfactors = e_in->numfactors;
 					e_out->vflags = e_in->vflags;
+					e_out->sizeprototype = e_in->sizeprototype;
 				}
 #ifdef PARALLELCODE
 				e_out->partodo = 0;
@@ -281,6 +283,7 @@ WORD PopVariables()
 	AC.ThreadStats = AM.gThreadStats;
 	AC.FinalStats = AM.gFinalStats;
 	AC.OldGCDflag = AM.gOldGCDflag;
+	AC.WTimeStatsFlag = AM.gWTimeStatsFlag;
 	AC.ThreadsFlag = AM.gThreadsFlag;
 	AC.ThreadBalancing = AM.gThreadBalancing;
 	AC.ThreadSortFileSynch = AM.gThreadSortFileSynch;
@@ -413,6 +416,7 @@ VOID MakeGlobal()
 	AM.gThreadStats = AC.ThreadStats;
 	AM.gFinalStats = AC.FinalStats;
 	AM.gOldGCDflag = AC.OldGCDflag;
+	AM.gWTimeStatsFlag = AC.WTimeStatsFlag;
 	AM.gThreadsFlag = AC.ThreadsFlag;
 	AM.gThreadBalancing = AC.ThreadBalancing;
 	AM.gThreadSortFileSynch = AC.ThreadSortFileSynch;
@@ -778,13 +782,39 @@ WORD DoExecute(WORD par, WORD skip)
 			/* The user switched off the parallel execution explicitly. */
 		}
 		else if ( AC.mparallelflag & NOPARALLEL_DOLLAR ) {
-			HighWarning("This module is forced to run in sequential mode due to $-variables");
+			if ( AC.WarnFlag >= 2 ) {  /* HighWarning */
+				int i, j, k, n;
+				UBYTE *s, *s1;
+				s = strDup1((UBYTE *)"","NOPARALLEL_DOLLAR s");
+				n = 0;
+				j = NumPotModdollars;
+				for ( i = 0; i < j; i++ ) {
+					for ( k = 0; k < NumModOptdollars; k++ )
+						if ( ModOptdollars[k].number == PotModdollars[i] ) break;
+					if ( k >= NumModOptdollars ) {
+						/* global $-variable */
+						if ( n > 0 )
+							s = AddToString(s,(UBYTE *)", ",0);
+						s = AddToString(s,(UBYTE *)"$",0);
+						s = AddToString(s,DOLLARNAME(Dollars,PotModdollars[i]),0);
+						n++;
+					}
+				}
+				s1 = strDup1((UBYTE *)"This module is forced to run in sequential mode due to $-variable","NOPARALLEL_DOLLAR s1");
+				if ( n != 1 )
+					s1 = AddToString(s1,(UBYTE *)"s",0);
+				s1 = AddToString(s1,(UBYTE *)": ",0);
+				s1 = AddToString(s1,s,0);
+				HighWarning((char *)s1);
+				M_free(s,"NOPARALLEL_DOLLAR s");
+				M_free(s1,"NOPARALLEL_DOLLAR s1");
+			}
 		}
 		else if ( AC.mparallelflag & NOPARALLEL_RHS ) {
 			HighWarning("This module is forced to run in sequential mode due to RHS expression names");
 		}
 		else if ( AC.mparallelflag & NOPARALLEL_CONVPOLY ) {
-			HighWarning("This module is forced to run in sequential mode due to topolynomial/frompolynomial");
+			HighWarning("This module is forced to run in sequential mode due to conversion to extra symbols");
 		}
 		else if ( AC.mparallelflag & NOPARALLEL_SPECTATOR ) {
 			HighWarning("This module is forced to run in sequential mode due to tospectator/copyspectator");
@@ -1981,6 +2011,7 @@ WORD ContentMerge(PHEAD WORD *content, WORD *term)
 	WORD *outfill, *outb = TermMalloc("ContentMerge"), *ct;
 	WORD *t, *tstop, tsize, trsize, *told;
 	WORD *t1, *t2, *c1, *c2, i1, i2, *out1;
+	WORD didsymbol = 0, diddotp = 0, tfirst;
 	cstop = content + *content;
 	csize = cstop[-1];
 	if ( csize < 0 ) { sign = -sign; csize = -csize; }
@@ -2012,6 +2043,7 @@ WORD ContentMerge(PHEAD WORD *content, WORD *term)
 	while ( ct < cstop ) {
 		switch ( *ct ) {
 			case SYMBOL:
+				didsymbol = 1;
 				t = term+1;
 				while ( t < tstop && *t != *ct ) t += t[1];
 				if ( t >= tstop ) break;
@@ -2054,6 +2086,7 @@ WORD ContentMerge(PHEAD WORD *content, WORD *term)
 				if ( out1[1] == 2 ) outfill = out1;
 				break;
 			case DOTPRODUCT:
+				diddotp = 1;
 				t = term+1;
 				while ( t < tstop && *t != *ct ) t += t[1];
 				if ( t >= tstop ) break;
@@ -2139,25 +2172,56 @@ WORD ContentMerge(PHEAD WORD *content, WORD *term)
 			case GAMMA:
 			default:			/* Functions */
 				told = t;
-				while ( *t < *ct && t < tstop ) t += t[1];
-				if ( t >= tstop ) { t = told; }
-				else {
+				t = term+1;
+				while ( t < tstop ) {
+					if ( *t != *ct ) { t += t[1]; continue; }
+					if ( ct[1] != t[1] ) { t += t[1]; continue; }
+					if ( ct[2] != t[2] ) { t += t[1]; continue; }
 					t1 = t; t2 = ct; i1 = t1[1]; i2 = t2[1];
-					if ( i1 != i2 ) { t = told; }
-					else {
-						while ( i1 > 0 ) {
-							if ( *t1 != *t2 ) break;
-							t1++; t2++; i1--;
-						}
-						if ( i1 == 0 ) {
-							for ( i = 0; i < i2; i++ ) { *outfill++ = *t++; }
-						}
-						else { t = told; }
+					while ( i1 > 0 ) {
+						if ( *t1 != *t2 ) break;
+						t1++; t2++; i1--;
 					}
+					if ( i1 != 0 ) { t += t[1]; continue; }
+					t1 = t;
+					for ( i = 0; i < i2; i++ ) { *outfill++ = *t++; }
+/*
+					Mark as 'used'. The flags must be different!
+*/
+					t1[2] |= SUBTERMUSED1;
+					ct[2] |= SUBTERMUSED2;
+					t = told;
+					break;
 				}
 				break;
 		}
 		ct += ct[1];
+	}
+	if ( diddotp == 0 ) {
+		t = term+1; while ( t < tstop && *t != DOTPRODUCT ) t += t[1];
+		if ( t < tstop ) { /* now we need the negative powers */
+			tfirst = 1; told = outfill;
+			for ( i = 2; i < t[1]; i += 3 ) {
+				if ( t[i+2] < 0 ) {
+					if ( tfirst ) { *outfill++ = DOTPRODUCT; *outfill++ = 0; tfirst = 0; }
+					*outfill++ = t[i]; *outfill++ = t[i+1]; *outfill++ = t[i+2];
+				}
+			}
+			if ( outfill > told ) told[1] = outfill-told;
+		}
+	}
+	if ( didsymbol == 0 ) {
+		t = term+1; while ( t < tstop && *t != SYMBOL ) t += t[1];
+		if ( t < tstop ) { /* now we need the negative powers */
+			tfirst = 1; told = outfill;
+			for ( i = 2; i < t[1]; i += 2 ) {
+				if ( t[i+1] < 0 ) {
+					if ( tfirst ) { *outfill++ = SYMBOL; *outfill++ = 0; tfirst = 0; }
+					*outfill++ = t[i]; *outfill++ = t[i+1];
+				}
+			}
+			if ( outfill > told ) told[1] = outfill-told;
+		}
 	}
 /*
 	Now put the coefficient back.
@@ -2180,6 +2244,16 @@ WORD ContentMerge(PHEAD WORD *content, WORD *term)
 	NumberFree(num,"ContentMerge");
 	for ( i = 0; i < *outb; i++ ) content[i] = outb[i];
 	TermFree(outb,"ContentMerge");
+/*
+	Now we have to 'restore' the term to its original.
+	We do not restore the content, because if anything was used the
+	new content overwrites the old. 6-mar-2018 JV
+*/
+	t = term + 1;
+	while ( t < tstop ) {
+		if ( *t >= FUNCTION ) t[2] &= ~SUBTERMUSED1;
+		t += t[1];
+	}
 	return(*content);
 CalledFrom:
 	MLOCK(ErrorMessageLock);
@@ -2321,9 +2395,8 @@ LONG CountTerms1(PHEAD0)
 	for(;;) {
 		numterms++;
 		retval = GetOneTerm(BHEAD AT.WorkPointer,AR.infile,&startposition,0);
+		if ( retval >= 0 ) AR.CompressPointer = oldipointer;
 		if ( retval <= 0 ) break;
-
-		AR.CompressPointer = oldipointer;
 		t = AR.CompressPointer;
 		if ( *t < (1 + decr + ABS(*(t+*t-1))) ) break;
 		t++;

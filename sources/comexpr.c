@@ -7,7 +7,7 @@
 
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2013 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -30,7 +30,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */ 
+/* #] License : */
 
 /*
   	#[ Includes : compi2.c
@@ -59,35 +59,35 @@ static struct id_options {
 };
 
 /*
-  	#] Includes : 
+  	#] Includes :
   	#[ CoLocal :
 */
 
 int CoLocal(UBYTE *inp) { return(DoExpr(inp,LOCALEXPRESSION,0)); }
 
 /*
-  	#] CoLocal : 
+  	#] CoLocal :
   	#[ CoGlobal :
 */
 
 int CoGlobal(UBYTE *inp) { return(DoExpr(inp,GLOBALEXPRESSION,0)); }
 
 /*
-  	#] CoGlobal : 
+  	#] CoGlobal :
   	#[ CoLocalFactorized :
 */
 
 int CoLocalFactorized(UBYTE *inp) { return(DoExpr(inp,LOCALEXPRESSION,1)); }
 
 /*
-  	#] CoLocalFactorized : 
+  	#] CoLocalFactorized :
   	#[ CoGlobalFactorized :
 */
 
 int CoGlobalFactorized(UBYTE *inp) { return(DoExpr(inp,GLOBALEXPRESSION,1)); }
 
 /*
-  	#] CoGlobalFactorized : 
+  	#] CoGlobalFactorized :
   	#[ DoExpr:
 
 
@@ -139,6 +139,10 @@ int DoExpr(UBYTE *inp, int type, int par)
 								*w = DROPLEXPRESSION;
 							else if ( *w == GLOBALEXPRESSION || *w == SKIPGEXPRESSION )
 								*w = DROPGEXPRESSION;
+							else if ( *w == HIDDENLEXPRESSION )
+								*w = DROPHLEXPRESSION;
+							else if ( *w == HIDDENGEXPRESSION )
+								*w = DROPHGEXPRESSION;
 						}
 						AC.TransEname = Expressions[c2].name;
 						j = EntVar(CEXPRESSION,0,type,0,0,0);
@@ -257,6 +261,7 @@ int DoExpr(UBYTE *inp, int type, int par)
 				error = -1;
 			}
 			else {
+				Expressions[j].sizeprototype = OldWork[2];
 				OldWork[2] = 4+SUBEXPSIZE;
 				OldWork[4] = SUBEXPSIZE;
 				OldWork[5] = i;
@@ -272,7 +277,11 @@ int DoExpr(UBYTE *inp, int type, int par)
 				AR.outfile->POfull = AR.outfile->POfill;
 			}
 			OldWork[2] = j;
+/*
+			Seems unnecessary (13-feb-2018)
+
 			AddNtoL(OldWork[1],OldWork);
+*/
 			AT.WorkPointer = OldWork;
 			if ( AC.dumnumflag ) Add2Com(TYPEDETCURDUM)
 		}
@@ -318,6 +327,9 @@ int DoExpr(UBYTE *inp, int type, int par)
 						case INTOHIDEGEXPRESSION:
 							*w = INTOHIDELEXPRESSION;
 							break;
+						case DROPHGEXPRESSION:
+							*w = DROPHLEXPRESSION;
+							break;
 					}
 				}
 				else if ( type == GLOBALEXPRESSION ) {
@@ -343,6 +355,9 @@ int DoExpr(UBYTE *inp, int type, int par)
 						case INTOHIDELEXPRESSION:
 							*w = INTOHIDEGEXPRESSION;
 							break;
+						case DROPHLEXPRESSION:
+							*w = DROPHGEXPRESSION;
+							break;
 					}
 				}
 /*
@@ -362,7 +377,7 @@ int DoExpr(UBYTE *inp, int type, int par)
 }
 
 /*
-  	#] DoExpr: 
+  	#] DoExpr:
   	#[ CoIdOld :
 */
 
@@ -373,7 +388,7 @@ int CoIdOld(UBYTE *inp)
 }
 
 /*
-  	#] CoIdOld : 
+  	#] CoIdOld :
   	#[ CoId :
 */
 
@@ -384,7 +399,7 @@ int CoId(UBYTE *inp)
 }
 
 /*
-  	#] CoId : 
+  	#] CoId :
   	#[ CoIdNew :
 */
 
@@ -395,7 +410,7 @@ int CoIdNew(UBYTE *inp)
 }
 
 /*
-  	#] CoIdNew : 
+  	#] CoIdNew :
   	#[ CoDisorder :
 */
 
@@ -406,7 +421,7 @@ int CoDisorder(UBYTE *inp)
 }
 
 /*
-  	#] CoDisorder : 
+  	#] CoDisorder :
   	#[ CoMany :
 */
 
@@ -417,7 +432,7 @@ int CoMany(UBYTE *inp)
 }
 
 /*
-  	#] CoMany : 
+  	#] CoMany :
   	#[ CoMulti :
 */
 
@@ -428,7 +443,7 @@ int CoMulti(UBYTE *inp)
 }
 
 /*
-  	#] CoMulti : 
+  	#] CoMulti :
   	#[ CoIfMatch :
 */
 
@@ -439,7 +454,7 @@ int CoIfMatch(UBYTE *inp)
 }
 
 /*
-  	#] CoIfMatch : 
+  	#] CoIfMatch :
   	#[ CoIfNoMatch :
 */
 
@@ -450,7 +465,7 @@ int CoIfNoMatch(UBYTE *inp)
 }
 
 /*
-  	#] CoIfNoMatch : 
+  	#] CoIfNoMatch :
   	#[ CoOnce :
 */
 
@@ -461,7 +476,7 @@ int CoOnce(UBYTE *inp)
 }
 
 /*
-  	#] CoOnce : 
+  	#] CoOnce :
   	#[ CoOnly :
 */
 
@@ -472,7 +487,7 @@ int CoOnly(UBYTE *inp)
 }
 
 /*
-  	#] CoOnly : 
+  	#] CoOnly :
   	#[ CoSelect :
 */
 
@@ -483,7 +498,7 @@ int CoSelect(UBYTE *inp)
 }
 
 /*
-  	#] CoSelect : 
+  	#] CoSelect :
   	#[ CoIdExpression :
 
 	First finish dealing with secondary keywords
@@ -805,6 +820,7 @@ IllLeft:MesPrint("&Illegal LHS");
 		return(1);
 	}
 	if ( error == 0 ) {
+		WORD oldpolyfun = AR.PolyFun;
 		if ( NewSort(BHEAD0) || NewSort(BHEAD0) ) {
 			if ( !error ) error = 1;
 			return(error);
@@ -815,13 +831,15 @@ IllLeft:MesPrint("&Illegal LHS");
 		while ( --i >= 0 ) *ww++ = *mm++; AT.WorkPointer = ww;
 		AC.lhdollarflag = 0; oldEside = AR.Eside; AR.Eside = LHSIDE;
 		AR.Cnumlhs = C->numlhs;
+		AR.PolyFun = 0;
 		if ( Generator(BHEAD ow,C->numlhs) ) {
 			AR.Eside = oldEside;
-			LowerSortLevel(); LowerSortLevel(); goto IllLeft;
+			LowerSortLevel(); LowerSortLevel(); AR.PolyFun = oldpolyfun; goto IllLeft;
 		}
 		AR.Eside = oldEside;
 		AT.WorkPointer = w;
-		if ( EndSort(BHEAD w,0) < 0 ) { LowerSortLevel(); goto IllLeft; }
+		if ( EndSort(BHEAD w,0) < 0 ) { LowerSortLevel(); AR.PolyFun = oldpolyfun; goto IllLeft; }
+		AR.PolyFun = oldpolyfun;
 		if ( *w == 0 || *(w+*w) != 0 ) {
 			MesPrint("&LHS must be one term");
 			AC.lhdollarflag = 0;
@@ -843,6 +861,7 @@ IllLeft:MesPrint("&Illegal LHS");
 	C->numlhs--;
 
 	m = w + *w - 3;
+	AC.vectorlikeLHS = 0;
 	if ( !error ) {
 	  if ( m[2] != 3 || m[1] != 1 || *m != 1 ) {
 		if ( *m == 1 && m[1] == 1 && m[2] == -3 ) {
@@ -875,6 +894,7 @@ IllLeft:MesPrint("&Illegal LHS");
 		w[3] = c1;
 		w[4] = AC.DumNum + WILDOFFSET;
 		OldWork[idhead+1] = w - OldWork - idhead;
+		AC.vectorlikeLHS = 1;
 	  }
 	  else {
 		AC.DumNum = 0;
@@ -1001,7 +1021,7 @@ AllDone:
 }
 
 /*
-  	#] CoIdExpression : 
+  	#] CoIdExpression :
   	#[ CoMultiply :
 */
 
@@ -1041,7 +1061,7 @@ int CoMultiply(UBYTE *inp)
 }
 
 /*
-  	#] CoMultiply : 
+  	#] CoMultiply :
   	#[ CoFill :
 
 	Special additions for tablebase-like tables added 12-aug-2002
@@ -1308,7 +1328,7 @@ redef:;
 }
 
 /*
-  	#] CoFill : 
+  	#] CoFill :
   	#[ CoFillExpression :
 
 	Syntax: FillExpression table = expression(x1,...,xn);
@@ -1508,7 +1528,7 @@ int CoFillExpression(UBYTE *inp)
 					if ( weneedit ) {
 						m += m[1] - 1;
 						*m = *term - (m-term);
-						AddNtoC(AC.cbufnum,*m,m);
+						AddNtoC(AC.cbufnum,*m,m,3);
 						numdummies = DetCurDum(BHEAD term) - AM.IndDum;
 						if ( numdummies > T->numdummies ) T->numdummies = numdummies;
 					}
@@ -1516,7 +1536,7 @@ int CoFillExpression(UBYTE *inp)
 				}
 			}
 			if ( weneedit ) {
-				AddNtoC(AC.cbufnum,1,&zero);	/* Terminate old bracket */
+				AddNtoC(AC.cbufnum,1,&zero,4);	/* Terminate old bracket */
 				numcommu = numcommute(C->rhs[curelement],&(C->NumTerms[curelement]));
 				C->CanCommu[curelement] = numcommu;
 			}
@@ -1668,12 +1688,12 @@ Wrong!!!!			C->rhs[T->tablepointers[sum]] = C->Pointer;
 newentry:	if ( *m == HAAKJE ) { m += m[1] - 1; }
 			else m--;
 			*m = *term - (m-term);
-			AddNtoC(AC.cbufnum,*m,m);
+			AddNtoC(AC.cbufnum,*m,m,5);
 			curelement = T->tablepointers[sum];
 nextterm:;
 		}
 		if ( weneedit ) {
-			AddNtoC(AC.cbufnum,1,&zero);	/* Terminate old bracket */
+			AddNtoC(AC.cbufnum,1,&zero,6);	/* Terminate old bracket */
 			numcommu = numcommute(C->rhs[curelement],&(C->NumTerms[curelement]));
 			C->CanCommu[curelement] = numcommu;
 		}
@@ -1698,7 +1718,7 @@ noway:
 }
 
 /*
-  	#] CoFillExpression : 
+  	#] CoFillExpression :
   	#[ CoPrintTable :
 
 	Syntax
@@ -1875,7 +1895,7 @@ finally:
 }
 
 /*
-  	#] CoPrintTable : 
+  	#] CoPrintTable :
   	#[ CoAssign :
 
 	This statement has an easy syntax:
@@ -1934,7 +1954,7 @@ nolhs:	MesPrint("&assign statement should have a dollar variable in the LHS");
 }
 
 /*
-  	#] CoAssign : 
+  	#] CoAssign :
   	#[ CoDeallocateTable :
 
 	Syntax: DeallocateTable tablename(s);
@@ -1998,7 +2018,7 @@ int CoDeallocateTable(UBYTE *inp)
 }
 
 /*
-  	#] CoDeallocateTable : 
+  	#] CoDeallocateTable :
   	#[ CoFactorCache :
 */
 /**
@@ -2025,5 +2045,5 @@ int CoFactorCache(UBYTE *inp)
 */
 
 /*
-  	#] CoFactorCache : 
+  	#] CoFactorCache :
 */

@@ -8,7 +8,7 @@
  */
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2013 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -55,7 +55,7 @@
 	changing are marked by "[12oct2005 mt]"
 */
 
-#define PF_PACKSIZE 1000
+#define PF_PACKSIZE 1600
 
 /*
 	Size in bytes, will be initialized soon as
@@ -1001,10 +1001,10 @@ int PF_Broadcast(void)
 	In parallel.c, they are used for the communication from slaves to the
 	master. In this case, this problem does not occur because the master always
 	has enough buffer.
-	The maximum size that PF_LongMultiBroadcast can broadcast is limited
-	around 125kB because the current implementation tries to pack all
+	The maximum size that PF_LongMultiBroadcast can broadcast is limited to
+	around 320kB because the current implementation tries to pack all
 	information of chained buffers into one buffer, whose size is PF_packsize
-	= 1000B.
+	= 1600B.
 
  		#] Explanations : 
  		#[ Variables :

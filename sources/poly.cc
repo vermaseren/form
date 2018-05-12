@@ -5,7 +5,7 @@
  */
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2013 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -374,7 +374,13 @@ const poly & poly::normalize() {
 
 	// find and sort all monomials
 	// terms[0]/num_vars+3 is an upper bound for number of terms in a
-	WORD **p = (WORD **)Malloc1(terms[0]/(AN.poly_num_vars+3) * sizeof(WORD*), "poly::normalize");
+
+    LONG poffset = AT.pWorkPointer;
+    WantAddPointers((terms[0]/(AN.poly_num_vars+3)));
+    AT.pWorkPointer += terms[0]/(AN.poly_num_vars+3);
+    #define p (&(AT.pWorkSpace[poffset]))
+
+//	WORD **p = (WORD **)Malloc1(terms[0]/(AN.poly_num_vars+3) * sizeof(WORD*), "poly::normalize");
 	
 	int nterms = 0;
 	for (int i=1; i<terms[0]; i+=terms[i])
@@ -433,12 +439,15 @@ const poly & poly::normalize() {
 	tmp[0] = j;
 	WCOPY(terms,tmp,tmp[0]);
 
-	M_free(p, "poly::normalize");
+//	M_free(p, "poly::normalize");
 	
 	if (size_of_terms == AM.MaxTer/(LONG)sizeof(WORD))
 		TermFree(tmp, "poly::normalize");
 	else
 		M_free(tmp, "poly::normalize");
+
+	AT.pWorkPointer = poffset;
+	#undef p
 
 	return *this;
 }
@@ -454,10 +463,6 @@ WORD poly::last_monomial_index () const {
 	return terms[0] - ABS(terms[terms[0]-1]) - AN.poly_num_vars - 2;
 }
 
-/*
-	#] last_monomial_index : 
-	#[ last_monomial :
-*/
 
 // pointer to the last monomial (the constant term)
 WORD * poly::last_monomial () const {
@@ -465,8 +470,8 @@ WORD * poly::last_monomial () const {
 }
 
 /*
-		#] last_monomial_index : 
-		#[ compare_degree_vector :
+  	#] last_monomial_index : 
+  	#[ compare_degree_vector :
 */
 
 int poly::compare_degree_vector(const poly & b) const {
@@ -1346,7 +1351,7 @@ void poly::divmod_one_term (const poly &a, const poly &b, poly &q, poly &r, bool
 	q[0]=qi;
 	r[0]=ri;
 	
-	if (q.modp!=0) NumberFree(ltbinv,"poly::div_one_term");
+	if (q.modp!=0 || ltbinv != NULL) NumberFree(ltbinv,"poly::div_one_term");
 }	
 
 /*
@@ -1528,7 +1533,7 @@ void poly::divmod_univar (const poly &a, const poly &b, poly &q, poly &r, int va
 	NumberFree(s,"poly::div_univar");
 	NumberFree(t,"poly::div_univar");
 
-	if (q.modp!=0) NumberFree(ltbinv,"poly::div_univar");
+	if (q.modp!=0 || ltbinv!=NULL) NumberFree(ltbinv,"poly::div_univar");
 }
 
 /*
@@ -1571,6 +1576,7 @@ void poly::divmod_heap (const poly &a, const poly &b, poly &q, poly &r, bool onl
 	
 	WORD nltbinv=0;
 	UWORD *ltbinv=NULL;
+	LONG oldpWorkPointer = AT.pWorkPointer;
 	
 	bool both_mod_small=false;
 	
@@ -1584,7 +1590,7 @@ void poly::divmod_heap (const poly &a, const poly &b, poly &q, poly &r, bool onl
 		else {
 			RaisPowCached(BHEAD q.modp,q.modn,&modq,&nmodq);
 		}
-		ltbinv = NumberMalloc("poly::div_heap");
+		ltbinv = NumberMalloc("poly::div_heap-a");
 
 		if (both_mod_small) {
 			WORD ltb = b[b[1]]*b[2+AN.poly_num_vars];
@@ -1599,9 +1605,10 @@ void poly::divmod_heap (const poly &a, const poly &b, poly &q, poly &r, bool onl
 	int nb=b.number_of_terms();
 	WantAddPointers(nb);
 	WORD **heap = AT.pWorkSpace + AT.pWorkPointer;
+	AT.pWorkPointer += nb;
 	
 	for (int i=0; i<nb; i++) 
-		heap[i] = (WORD *) NumberMalloc("poly::div_heap");
+		heap[i] = (WORD *) NumberMalloc("poly::div_heap-b");
 	int nheap = 1;
 	heap[0][0] = 1;
 	heap[0][1] = 0;
@@ -1612,7 +1619,7 @@ void poly::divmod_heap (const poly &a, const poly &b, poly &q, poly &r, bool onl
 	int qi=1, ri=1;
 
 	int s = nb;
-	WORD *t = (WORD *) NumberMalloc("poly::div_heap");
+	WORD *t = (WORD *) NumberMalloc("poly::div_heap-c");
 
 	// insert contains element that still have to be inserted to the heap
 	// (exists to avoid code duplication).
@@ -1805,11 +1812,12 @@ void poly::divmod_heap (const poly &a, const poly &b, poly &q, poly &r, bool onl
 	r[0] = ri;
 
 	for (int i=0; i<nb; i++)
-		NumberFree(heap[i],"poly::div_heap");
+		NumberFree(heap[i],"poly::div_heap-b");
 
-	NumberFree(t,"poly::div_heap");
+	NumberFree(t,"poly::div_heap-c");
 
-	if (q.modp!=0) NumberFree(ltbinv,"poly::div_heap");
+	if (q.modp!=0||ltbinv!=NULL) NumberFree(ltbinv,"poly::div_heap-a");
+	AT.pWorkPointer = oldpWorkPointer;
 }
 
 /*
@@ -2419,9 +2427,19 @@ void poly::get_variables (PHEAD vector<WORD *> es, bool with_arghead, bool sort_
 	}
 
 	// AN.poly_vars will be deleted in calling functions from polywrap.c
-	if (AN.poly_num_vars > 0) 
-		AN.poly_vars = (WORD *)Malloc1(AN.poly_num_vars*sizeof(WORD), "AN.poly_vars");
-	
+	// For that we use the function poly_free_poly_vars
+	// We add one to the allocation to avoid copying in poly_divmod
+
+	if ( (AN.poly_num_vars+1)*sizeof(WORD) > (size_t)(AM.MaxTer) ) {
+		// This can happen only in expressions with excessively many variables.
+		AN.poly_vars = (WORD *)Malloc1((AN.poly_num_vars+1)*sizeof(WORD), "AN.poly_vars");
+		AN.poly_vars_type = 1;
+	}
+	else {
+		AN.poly_vars = TermMalloc("AN.poly_vars");
+		AN.poly_vars_type = 0;
+	}
+
 	for (int i=0; i<AN.poly_num_vars; i++)
 		AN.poly_vars[i] = vars[i];
 
@@ -2615,11 +2633,95 @@ void poly::poly_to_argument (const poly &a, WORD *res, bool with_arghead) {
 
 /*
   	#] poly_to_argument : 
+  	#[ poly_to_argument_with_den :
+*/
+
+// converts a polynomial class "poly" divided by a number (nden, den) to a form expression
+// cf. poly::poly_to_argument()
+void poly::poly_to_argument_with_den (const poly &a, WORD nden, const UWORD *den, WORD *res, bool with_arghead) {
+
+	POLY_GETIDENTITY(a);
+
+	// special case: a=0
+	if (a[0]==1) {
+		if (with_arghead) {
+			res[0] = -SNUMBER;
+			res[1] = 0;
+		}
+		else {
+			res[0] = 0;
+		}
+		return;
+	}
+
+	if (with_arghead) {
+		res[1] = AN.poly_num_vars>1 ? DIRTYFLAG : 0; // dirty flag
+		for (int i=2; i<ARGHEAD; i++)
+			res[i] = 0;                                // remainder of arghead
+	}
+
+	WORD nden1;
+	UWORD *den1 = (UWORD *)NumberMalloc("poly_to_argument_with_den");
+
+	int L = with_arghead ? ARGHEAD : 0;
+
+	for (int i=1; i!=a[0]; i+=a[i]) {
+
+		res[L]=1; // length
+
+		bool first=true;
+
+		for (int j=0; j<AN.poly_num_vars; j++)
+			if (a[i+1+j] > 0) {
+				if (first) {
+					first=false;
+					res[L+1] = 1; // symbols
+					res[L+2] = 2; // length
+				}
+				res[L+1+res[L+2]++] = AN.poly_vars[j]; // symbol
+				res[L+1+res[L+2]++] = a[i+1+j];  // power
+			}
+
+		if (!first)	res[L] += res[L+2]; // fix length
+
+		// numerator
+		WORD nc = a[i+a[i]-1];
+		WCOPY(&res[L+res[L]], &a[i+a[i]-1-ABS(nc)], ABS(nc));
+
+		// denominator
+		nden1 = nden;
+		WCOPY(den1, den, ABS(nden));
+
+		if (nden != 1 || den[0] != 1) {
+			// remove gcd(num,den)
+			Simplify(BHEAD (UWORD *)&res[L+res[L]], &nc, den1, &nden1);
+		}
+
+		Pack((UWORD *)&res[L+res[L]], &nc, den1, nden1);  // format
+		res[L] += 2*ABS(nc)+1;                            // fix length
+		res[L+res[L]-1] = SGN(nc)*(2*ABS(nc)+1);          // length of coefficient
+		L += res[L];                                      // fix length
+	}
+
+	NumberFree(den1, "poly_to_argument_with_den");
+
+	if (with_arghead) {
+		res[0] = L;
+		// convert to fast notation if possible
+		ToFast(res,res);
+	}
+	else {
+		res[L] = 0;
+	}
+}
+
+/*
+  	#] poly_to_argument_with_den : 
   	#[ size_of_form_notation :
 */
 
 // the size of the polynomial in form notation (without argheads and fast notation)
-int poly::size_of_form_notation () {
+int poly::size_of_form_notation () const {
 	
 	POLY_GETIDENTITY(*this);
 
@@ -2642,6 +2744,36 @@ int poly::size_of_form_notation () {
 
 /*
   	#] size_of_form_notation : 
+  	#[ size_of_form_notation_with_den :
+*/
+
+// the size of the polynomial divided by a number (its size is given by nden)
+// in form notation (without argheads and fast notation)
+// cf. poly::size_of_form_notation()
+int poly::size_of_form_notation_with_den (WORD nden) const {
+
+	POLY_GETIDENTITY(*this);
+
+	// special case: a=0
+	if (terms[0]==1) return 0;
+
+	nden = ABS(nden);
+	int len = 0;
+
+	for (int i=1; i!=terms[0]; i+=terms[i]) {
+		len++;
+		int npow = 0;
+		for (int j=0; j<AN.poly_num_vars; j++)
+			if (terms[i+1+j] > 0) npow++;
+		if (npow > 0) len += 2*npow + 2;
+		len += 2 * MaX(ABS(terms[i+terms[i]-1]), nden) + 1;
+	}
+
+	return len;
+}
+
+/*
+  	#] size_of_form_notation_with_den : 
   	#[ to_coefficient_list :
 */
 

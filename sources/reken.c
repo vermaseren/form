@@ -10,7 +10,7 @@
  */
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2013 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -216,7 +216,7 @@ WORD AddRat(PHEAD UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 		WORD i;
 		*nc = nb;
 		if ( nb < 0 ) nb = -nb;
-		nb <<= 1;
+		nb *= 2;
 		for ( i = 0; i < nb; i++ ) *c++ = *b++;
 		return(0);
 	}
@@ -224,7 +224,7 @@ WORD AddRat(PHEAD UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 		WORD i;
 		*nc = na;
 		if ( na < 0 ) na = -na;
-		na <<= 1;
+		na *= 2;
 		for ( i = 0; i < na; i++ ) *c++ = *a++;
 		return(0);
 	}
@@ -382,13 +382,13 @@ WORD MulRat(PHEAD UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 	if ( *b == 1 && b[1] == 1 ) {
 		if ( nb == 1 ) {
 			*nc = na;
-			i = ABS(na); i <<= 1;
+			i = ABS(na); i *= 2;
 			while ( --i >= 0 ) *c++ = *a++;
 			return(0);
 		}
 		else if ( nb == -1 ) {
 			*nc = - na;
-			i = ABS(na); i <<= 1;
+			i = ABS(na); i *= 2;
 			while ( --i >= 0 ) *c++ = *a++;
 			return(0);
 		}
@@ -396,13 +396,13 @@ WORD MulRat(PHEAD UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 	if ( *a == 1 && a[1] == 1 ) {
 		if ( na == 1 ) {
 			*nc = nb;
-			i = ABS(nb); i <<= 1;
+			i = ABS(nb); i *= 2;
 			while ( --i >= 0 ) *c++ = *b++;
 			return(0);
 		}
 		else if ( na == -1 ) {
 			*nc = - nb;
-			i = ABS(nb); i <<= 1;
+			i = ABS(nb); i *= 2;
 			while ( --i >= 0 ) *c++ = *b++;
 			return(0);
 		}
@@ -906,7 +906,7 @@ WORD MulLong(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 	}
 #endif
 /*
-  	#] GMP stuff : 
+  	#] GMP stuff :
 */
 	do { *ic++ = 0; } while ( --i > 0 );
 	do {
@@ -1092,7 +1092,7 @@ WORD DivLong(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c,
 		}
 #endif
 /*
- 		#] GMP stuff : 
+ 		#] GMP stuff :
 */
 		/* Start with normalization operation */
  
@@ -1232,12 +1232,12 @@ WORD RaisPow(PHEAD UWORD *a, WORD *na, UWORD b)
 	c = b;
 	for ( i = 0; i < BITSINWORD; i++ ) {
 		if ( !c ) break;
-		c >>= 1;
+		c /= 2;
 	}
 	i--;
 	c = 1 << i;
 	while ( --i >= 0 ) {
-		c >>= 1;
+		c /= 2;
 		if(MulLong(is,ns,is,ns,it,&nt)) goto RaisOvl;
 		if ( b & c ) {
 			if ( MulLong(it,nt,a,*na,is,&ns) ) goto RaisOvl;
@@ -1330,10 +1330,33 @@ VOID RaisPowCached (PHEAD WORD x, WORD n, UWORD **c, WORD *nc) {
 	ID = x * AT.small_power_maxn + n;
 
 	if (AT.small_power[ID] == NULL) {
-		AT.small_power[ID] = NumberMalloc("RaisPowCached");
-		AT.small_power_n[ID] = 1;
-		AT.small_power[ID][0] = x;
-		RaisPow(BHEAD AT.small_power[ID],&AT.small_power_n[ID],n);
+#ifdef OLDRAISPOWCACHED
+        AT.small_power[ID] = NumberMalloc("RaisPowCached");
+        AT.small_power_n[ID] = 1;
+        AT.small_power[ID][0] = x;
+        RaisPow(BHEAD AT.small_power[ID],&AT.small_power_n[ID],n);
+#else
+        UWORD *c = NumberMalloc("RaisPowCached");
+        WORD i, k = 1;
+		c[0] = x;
+        RaisPow(BHEAD c,&k,n);
+/*
+        And now get the proper amount.
+*/
+        if ( AT.InNumMem < k ) {    /* We should start a new buffer */
+            AT.InNumMem = 5*AM.MaxTal;
+            AT.NumMem = (UWORD *)Malloc1(AT.InNumMem*sizeof(UWORD),"RaisPowCached");
+/*
+			MesPrint("  Got an extra %l UWORDS in RaisPowCached",AT.InNumMem);
+*/
+        }
+        for ( i = 0; i < k; i++ ) AT.NumMem[i] = c[i];
+        AT.small_power[ID] = AT.NumMem;
+        AT.small_power_n[ID] = k;
+        AT.NumMem += k;
+        AT.InNumMem -= k;
+        NumberFree(c,"RaisPowCached");
+#endif
 	}
 
 	/* return the result */
@@ -1352,7 +1375,7 @@ WORD RaisPowMod (WORD x, WORD n, WORD m) {
 	while (n) {
 		if (n&1) { y*=z; y%=m; }
 		z*=z; z%=m;
-		n>>=1;
+		n /= 2;
 	}
 	return (WORD)y;
 }
@@ -1783,6 +1806,8 @@ WORD GetLong(UBYTE *s, UWORD *a, WORD *na)
 	See Knuth, sec 4.5.2 algorithm L.
 
 	We assume that both numbers are positive
+
+	NOTE!!!!!. NumberMalloc gets called and it may not be freed
 */
 
 #ifdef EXTRAGCD
@@ -2286,7 +2311,7 @@ WORD GcdLong(PHEAD UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 		while ( a[0] == 0 ) { a++; ana--; tcounta1++; }
 		for ( ii = 0; ii < ana; ii++ ) { *uw++ = *a++; }
 		if ( ( ana & 1 ) != 0 ) { *uw = 0; ana++; }
-		ana >>= 1;
+		ana /= 2;
 
 		u2 = uw = NumberMalloc("GcdLong");
 		upb = (mp_limb_t *)u2;
@@ -2294,7 +2319,7 @@ WORD GcdLong(PHEAD UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 		while ( b[0] == 0 ) { b++; anb--; tcountb1++; }
 		for ( ii = 0; ii < anb; ii++ ) { *uw++ = *b++; }
 		if ( ( anb & 1 ) != 0 ) { *uw = 0; anb++; }
-		anb >>= 1;
+		anb /= 2;
 
 		xx = upa[0]; tcounta = 0;
 		while ( ( xx & 15 ) == 0 ) { tcounta += 4; xx >>= 4; }
@@ -2384,7 +2409,7 @@ WORD GcdLong(PHEAD UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 		return(0);
 	}
 /*
-  	#] Easy cases : 
+  	#] Easy cases :
 */
 	GLscrat6 = NumberMalloc("GcdLong"); GLscrat7 = NumberMalloc("GcdLong");
 	GLscrat8 = NumberMalloc("GcdLong");
@@ -2429,7 +2454,7 @@ restart:;
 		}
 	}
 /*
-  	#] Easy cases : 
+  	#] Easy cases :
   	#[ Original code :
 */
 	else if ( na < GCDMAX || nb < GCDMAX || na != nb ) {
@@ -2479,7 +2504,7 @@ restart:;
 		NCOPY(c,x1,i);
 	}
 /*
-  	#] Original code : 
+  	#] Original code :
   	#[ New code :
 */
 	else {
@@ -2606,7 +2631,7 @@ newtrick:;
 		}
 		goto restart;
 /*
-  	#] New code : 
+  	#] New code :
 */
 	}
 normalend:
@@ -3081,7 +3106,7 @@ WORD Modulus(WORD *term)
 		return(0);
 	}
 	else if ( n1 > 0 ) {
-		n1 <<= 1;
+		n1 *= 2;
 		t += n1;		/* Note that n1 >= 0 */
 		n1++;
 	}
@@ -3297,7 +3322,7 @@ WORD TakeNormalModulus (UWORD *a, WORD *na, UWORD *c, WORD nc, WORD par)
 	WCOPY(halfc,c,nc);
 
 	for (n=0; n<nhalfc; n++) {
-		halfc[n] >>= 1;
+		halfc[n] /= 2;
 		if (n+1<nc) halfc[n] |= c[n+1] << (BITSINWORD-1);
 	}
 
@@ -3368,11 +3393,11 @@ WORD MakeModTable()
 		UWORD *MMscrat7 = NumberMalloc("MakeModTable"), *MMscratC = NumberMalloc("MakeModTable");
 		*MMscratC = 1;
 		nScrat = 1;
-		j = size << 1;
+		j = size * 2;
 		for ( i = 0; i < j; i+=2 ) { AC.modpowers[i] = 0; AC.modpowers[i+1] = 0; }
 		for ( i = 0; i < size; i++ ) {
 			j = *MMscratC + (((LONG)MMscratC[1])<<BITSINWORD);
-			j <<= 1;
+			j *= 2;
 			AC.modpowers[j] = (WORD)(i & WORDMASK);
 			AC.modpowers[j+1] = (WORD)(i >> BITSINWORD);
 			MulLong((UWORD *)MMscratC,nScrat,(UWORD *)AC.powmod,
@@ -3381,7 +3406,7 @@ WORD MakeModTable()
 			*MMscratC = *MMscrat7; MMscratC[1] = MMscrat7[1]; nScrat = n2;
 		}
 		NumberFree(MMscrat7,"MakeModTable"); NumberFree(MMscratC,"MakeModTable");
-		j = size << 1;
+		j = size * 2;
 		for ( i = 4; i < j; i+=2 ) {
 			if ( AC.modpowers[i] == 0 && AC.modpowers[i+1] == 0 ) {
 				MLOCK(ErrorMessageLock);
@@ -3736,7 +3761,7 @@ void iniwranf(PHEAD0)
 		pow = offset; accu = 1;
 		while ( i ) {
 			if ( ( i & 1 ) != 0 ) accu *= pow;
-			i >>= 1; pow = pow*pow;
+			i /= 2; pow = pow*pow;
 		}
 		offset = accu;
 	}
@@ -3757,7 +3782,7 @@ void iniwranf(PHEAD0)
 	for ( i = 0; i <= (ULONG)(imax); i++ ) {
 		ii = (AR.wranfnpair1*i)%AR.wranfnpair2;
 		AR.wranfia[ii] = k;
-		k = j - k;
+		k = ULongToLong((ULONG)j - (ULONG)k);
 		if ( k < 0 ) k += (LONG)1 << (2*BITSINWORD-2);
 		j = AR.wranfia[ii];
 	}

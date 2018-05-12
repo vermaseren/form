@@ -638,6 +638,7 @@ assert result("G") =~ expr("
     Factarg,(-1),f3;
     Print;
     .end
+	assert succeeded?
 	assert result("F") =~ expr("
           f(a,b,-1,3) + f(a,b,3) + 2*f1(a*b) + f2(a*b,-1,3) + f2(a*b,3)
           + f3(a*b,-3) + f3(a*b,3)
@@ -974,6 +975,22 @@ assert result("F") =~ expr("
       assert result("F", 1) =~ expr("12345678")
     end
 *--#] Fun_makerational_1 :
+*--#[ Fun_perm_1 :
+    CFunction f;
+    Symbols x1,...,x3;
+    Local F = perm_(f,x1,x2,x3);
+    Print +s;
+    .end
+    assert succeeded?
+    assert result("F") =~ expr("""
+       + f(x1,x2,x3)
+       + f(x1,x3,x2)
+       + f(x2,x1,x3)
+       + f(x2,x3,x1)
+       + f(x3,x1,x2)
+       + f(x3,x2,x1)
+    """)
+*--#] Fun_perm_1 :
 *--#[ Fun_prime_1 :
     Symbols x1,x2,x3,x4;
     ON highfirst;
@@ -1799,7 +1816,10 @@ Print;
 # This gives Valgrind errors (3 memory leaks) on Travis CI
 # (osx-gcc-valgrind-parvorm), but cleanly works on Linux with mpich 3.2.
 # Might be an OS- or implementation-specific bug.
-#pend_if valgrind? && mac?
+# Update (22 Sep 2017): Now I see even for Linux (both on Travis CI and
+# a desktop PC) each child process leads to 1 memory leak. Best to skip this
+# test for Valgrind.
+#pend_if valgrind?
 	assert succeeded?
 	assert result("aPLUSbTO2") =~ expr("b^2 + 2*a*b + a^2")
 	assert result("aPLUSbTO3") =~ expr("b^3 + 3*a*b^2 + 3*a^2*b + a^3")

@@ -6,7 +6,7 @@
 
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2013 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -277,17 +277,20 @@ HaveTodo:
 				}
 				else if ( type == TYPENORM || type == TYPENORM2 || type == TYPENORM3 || type == TYPENORM4 ) {
 					if ( *r < 0 ) {
-						if ( *r != -SNUMBER || r[1] == 1 || r[1] == 0 ) continue;
+						WORD rone;
+						if ( *r == -MINVECTOR ) { rone = -1; *r = -INDEX; }
+						else if ( *r != -SNUMBER || r[1] == 1 || r[1] == 0 ) continue;
+						else { rone = r[1]; r[1] = 1; }
 /*
 						Now we must multiply the general coefficient by r[1]
 */
 						if ( scale && ( factor == 0 || *factor ) ) {
 							action = 1;
 							v[2] |= DIRTYFLAG;
-							if ( r[1] < 0 ) {
+							if ( rone < 0 ) {
 								if ( type == TYPENORM3 ) k = 1;
 								else k = -1;
-								r[1] = -r[1];
+								rone = -rone;
 							}
 							else k = 1;
 							r1 = term + *term;
@@ -295,13 +298,13 @@ HaveTodo:
 							size = REDLENG(size);
 							if ( scale > 0 ) {
 								for ( jj = 0; jj < scale; jj++ ) {
-									if ( Mully(BHEAD (UWORD *)rstop,&size,(UWORD *)(r+1),k) )
+									if ( Mully(BHEAD (UWORD *)rstop,&size,(UWORD *)(&rone),k) )
 										goto execargerr;
 								}
 							}
 							else {
 								for ( jj = 0; jj > scale; jj-- ) {
-									if ( Divvy(BHEAD (UWORD *)rstop,&size,(UWORD *)(r+1),k) )
+									if ( Divvy(BHEAD (UWORD *)rstop,&size,(UWORD *)(&rone),k) )
 										goto execargerr;
 								}
 							}
@@ -310,7 +313,6 @@ HaveTodo:
 							rstop[k-1] = size;
 							*term = (WORD)(rstop - term) + k;
 						}
-						r[1] = 1;
 						continue;
 					}
 /*
@@ -524,9 +526,9 @@ ScaledVariety:;
 					argument sucessively
 */
 					r4 = AddRHS(AT.ebufnum,1);
-					while ( (r4+j+12) > CC->Top ) r4 = DoubleCbuffer(AT.ebufnum,r4);
+					while ( (r4+j+12) > CC->Top ) r4 = DoubleCbuffer(AT.ebufnum,r4,3);
 					*r4++ = j+1;
-					i = (j-1)>>1;
+					i = (j-1)/2;  /* was (j-1)*2  ????? 17-oct-2017 */
 					for ( k = 0; k < i; k++ ) *r4++ = r3[i+k];
 					for ( k = 0; k < i; k++ ) *r4++ = r3[k];
 					if ( ( type == TYPENORM3 ) || ( type == TYPENORM4 ) ) *r4++ = j*sign;
@@ -536,6 +538,102 @@ ScaledVariety:;
 					CC->Pointer = r4;
 					AT.mulpat[5] = CC->numrhs;
 					AT.mulpat[7] = AT.ebufnum;
+				}
+				else if ( type == TYPEARGTOEXTRASYMBOL ) {
+					WORD n;
+					if ( r[0] < 0 ) {
+						/* The argument is in the fast notation. */
+						WORD tmp[MaX(9,FUNHEAD+5)];
+						switch ( r[0] ) {
+							case -SNUMBER:
+								if ( r[1] == 0 ) {
+									tmp[0] = 0;
+								}
+								else {
+									tmp[0] = 4;
+									tmp[1] = ABS(r[1]);
+									tmp[2] = 1;
+									tmp[3] = r[1] > 0 ? 3 : -3;
+									tmp[4] = 0;
+								}
+								break;
+							case -SYMBOL:
+								tmp[0] = 8;
+								tmp[1] = SYMBOL;
+								tmp[2] = 4;
+								tmp[3] = r[1];
+								tmp[4] = 1;
+								tmp[5] = 1;
+								tmp[6] = 1;
+								tmp[7] = 3;
+								tmp[8] = 0;
+								break;
+							case -INDEX:
+							case -VECTOR:
+							case -MINVECTOR:
+								tmp[0] = 7;
+								tmp[1] = INDEX;
+								tmp[2] = 3;
+								tmp[3] = r[1];
+								tmp[4] = 1;
+								tmp[5] = 1;
+								tmp[6] = r[0] != -MINVECTOR ? 3 : -3;
+								tmp[7] = 0;
+								break;
+							default:
+								if ( r[0] <= -FUNCTION ) {
+									tmp[0] = FUNHEAD+4;
+									tmp[1] = -r[0];
+									tmp[2] = FUNHEAD;
+									ZeroFillRange(tmp,3,1+FUNHEAD);
+									tmp[FUNHEAD+1] = 1;
+									tmp[FUNHEAD+2] = 1;
+									tmp[FUNHEAD+3] = 3;
+									tmp[FUNHEAD+4] = 0;
+									break;
+								}
+								else {
+									MLOCK(ErrorMessageLock);
+									MesPrint("Unknown fast notation found (TYPEARGTOEXTRASYMBOL)");
+									MUNLOCK(ErrorMessageLock);
+									return(-1);
+								}
+						}
+						n = FindSubexpression(tmp);
+					}
+					else {
+						/*
+						 * NOTE: writing to r[r[0]] is legal. As long as we work
+						 * in a part of the term, at least the coefficient of
+						 * the term must follow.
+						 */
+						WORD old_rr0 = r[r[0]];
+						r[r[0]] = 0;  /* zero-terminated */
+						n = FindSubexpression(r+ARGHEAD);
+						r[r[0]] = old_rr0;
+					}
+					/* Put the new argument in the work space. */
+					if ( AT.WorkPointer+2 > AT.WorkTop ) {
+						MLOCK(ErrorMessageLock);
+						MesWork();
+						MUNLOCK(ErrorMessageLock);
+						return(-1);
+					}
+					r1 = AT.WorkPointer;
+					if ( scale ) {  /* means "tonumber" */
+						r1[0] = -SNUMBER;
+						r1[1] = n;
+					}
+					else {
+						r1[0] = -SYMBOL;
+						r1[1] = MAXVARIABLES-n;
+					}
+					/* We need r2, r3, m and k to shift the data. */
+					r2 = r + (r[0] > 0 ? r[0] : r[0] <= -FUNCTION ? 1 : 2);
+					r3 = r;
+					m = r1+ARGHEAD+2;
+					k = 2;
+					goto do_shift;
 				}
 				r3 = r;
 				AR.DeferFlag = 0;
@@ -593,7 +691,7 @@ ScaledVariety:;
 					if ( *AT.WorkPointer <= -FUNCTION ) k = 1;
 					else k = 2;
 				}
-				
+do_shift:
 				if ( *r3 > 0 ) j = k - *r3;
 				else if ( *r3 <= -FUNCTION ) j = k - 1;
 				else j = k - 2;
@@ -1632,7 +1730,7 @@ WORD execterm(PHEAD WORD *term, WORD level)
 	WORD *buffer1 = 0;
 	WORD *oldworkpointer = AT.WorkPointer;
 	WORD *t1, i;
-	WORD olddeferflag = AR.DeferFlag;
+	WORD olddeferflag = AR.DeferFlag, tryterm = 0;
 	AR.DeferFlag = 0;
 	do {
 		AR.Cnumlhs = C->lhs[level][3];
@@ -1662,10 +1760,13 @@ WORD execterm(PHEAD WORD *term, WORD level)
 			if ( Generator(BHEAD term,level) ) goto exectermerr;
 		}
 		if ( buffer1 ) {
-			M_free((void *)buffer1,"buffer in sort statement");
+			if ( tryterm ) { TermFree(buffer1,"buffer in sort statement"); tryterm = 0; }
+			else { M_free((void *)buffer1,"buffer in sort statement"); }
 			buffer1 = 0;
 		}
+		AN.tryterm = 1;
 		if ( EndSort(BHEAD (WORD *)((VOID *)(&buffer1)),2) < 0 ) goto exectermerr;
+		tryterm = AN.tryterm; AN.tryterm = 0;
 		level = AR.Cnumlhs;
 	} while ( AR.Cnumlhs < maxisat );
 	AR.Cnumlhs = oldnumlhs;
@@ -1677,7 +1778,9 @@ WORD execterm(PHEAD WORD *term, WORD level)
 		AT.WorkPointer = t1;
 		if ( Generator(BHEAD oldworkpointer,level) ) goto exectermerr;
 	}
-	M_free(buffer1,"buffer in term statement");
+	if ( tryterm ) { TermFree(buffer1,"buffer in term statement"); tryterm = 0; }
+	else { M_free(buffer1,"buffer in term statement"); }
+	buffer1 = 0;
 	AT.WorkPointer = oldworkpointer;
 	return(0);
 exectermerr:
@@ -2396,11 +2499,11 @@ WORD InsertArg(PHEAD WORD *argin, WORD *argout,int par)
 	}
 	else { return(-1); }
 	AddRHS(bufnum,1);
-	AddNtoC(bufnum,*argin,argin);
+	AddNtoC(bufnum,*argin,argin,1);
 	AddToCB(C,0)
 	a = argout; while ( *a ) NEXTARG(a);
 	i = a - argout;
-	AddNtoC(bufnum,i,argout);
+	AddNtoC(bufnum,i,argout,2);
 	AddToCB(C,0)
 	return(InsTree(bufnum,C->numrhs));
 }

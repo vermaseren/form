@@ -9,7 +9,7 @@
  */
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2013 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -714,7 +714,7 @@ IllDollarExp:
 								k = -t[1]-NMIN4SHIFT;
 								k = ExtraSymbol(k,1,nsym,ppsym,&ncoef);
 								nsym += k;
-								ppsym += (k << 1);
+								ppsym += (k * 2);
 							}
 							else if ( t[1] == 0 ) goto NormZero;
 							else {
@@ -858,11 +858,14 @@ MulIn:
 			case COUNTFUNCTION:
 				if ( AN.cTerm ) {
 					k = CountFun(AN.cTerm,t);
-					if ( k == 0 ) goto NormZero;
-					if ( k > 0 ) { *((UWORD *)lnum) = k; nnum = 1; }
-					else { *((UWORD *)lnum) = -k; nnum = -1; }
-					goto MulIn;
 				}
+				else {
+					k = CountFun(term,t);
+				}
+				if ( k == 0 ) goto NormZero;
+				if ( k > 0 ) { *((UWORD *)lnum) = k; nnum = 1; }
+				else { *((UWORD *)lnum) = -k; nnum = -1; }
+				goto MulIn;
 				break;
 			case MAKERATIONAL:
 				if ( t[FUNHEAD] == -SNUMBER && t[FUNHEAD+2] == -SNUMBER
@@ -1739,7 +1742,7 @@ gcdcalc:					if ( GcdLong(BHEAD (UWORD *)num1,size1,(UWORD *)num2,size2
 							for ( iii = 2; iii < t1[1]; iii += 2 ) {
 								change = ExtraSymbol(t1[iii],t1[iii+1],nsym,ppsym,&ncoef);
 								nsym += change;
-								ppsym += change << 1;
+								ppsym += change * 2;
 							}
 						}
 						t1 = gcd + *gcd;
@@ -1774,7 +1777,7 @@ gcdcalc:					if ( GcdLong(BHEAD (UWORD *)num1,size1,(UWORD *)num2,size2
 						LONG size = AT.WorkPointer - gcd;
 
 						ss = AddRHS(AT.ebufnum,1);
-						while ( (ss + size + 10) > C->Top ) ss = DoubleCbuffer(AT.ebufnum,ss);
+						while ( (ss + size + 10) > C->Top ) ss = DoubleCbuffer(AT.ebufnum,ss,13);
 						tt = gcd;
 						NCOPY(ss,tt,size);
 						C->rhs[C->numrhs+1] = ss;
@@ -2568,7 +2571,7 @@ TryAgain:;
 				t += FUNHEAD+1;
 				change = ExtraSymbol(*t,-1,nsym,ppsym,&ncoef);
 				nsym += change;
-				ppsym += change << 1;
+				ppsym += change * 2;
 				goto DropDen;
 			}
 			else if ( t[FUNHEAD] == -SNUMBER ) {
@@ -2618,7 +2621,7 @@ TryAgain:;
 								WORD change;
 								change = ExtraSymbol(*t,-t[1],nsym,ppsym,&ncoef);
 								nsym += change;
-								ppsym += change << 1;
+								ppsym += change * 2;
 								t += 2;
 							}
 						}
@@ -2691,7 +2694,7 @@ WithFix:				shortnum = k;
 						WORD change;
 						change = ExtraSymbol((WORD)(-k),(WORD)1,nsym,ppsym,&ncoef);
 						nsym += change;
-						ppsym += change << 1;
+						ppsym += change * 2;
 	   				}
 					t[1] = pdel[ndel-1];
 					t[0] = pdel[ndel-2];
@@ -3213,7 +3216,7 @@ NextI:;
 						k = *mm; NCOPY(tt,mm,k)
 					}
 					*t = AR.PolyFun;
-/*					t[2] |= CLEANPRF; */
+					t[2] |= MUSTCLEANPRF;
 					goto regularratfun;
 				}
 			}
@@ -3416,7 +3419,7 @@ regularratfun:;
 								tt = ma+2;
 								n = *tt - ARGHEAD;
 								tt += ARGHEAD;
-								while ( (ss + n + 10) > C->Top ) ss = DoubleCbuffer(AT.ebufnum,ss);
+								while ( (ss + n + 10) > C->Top ) ss = DoubleCbuffer(AT.ebufnum,ss,14);
 								while ( --n >= 0 ) *ss++ = *tt++;
 								*ss++ = 0;
 								C->rhs[C->numrhs+1] = ss;
@@ -3492,7 +3495,7 @@ regularratfun:;
 								n = *w - ARGHEAD;
 								w += ARGHEAD;
 								while ( (mm + n + 10) > C->Top )
-									mm = DoubleCbuffer(AT.ebufnum,mm);
+									mm = DoubleCbuffer(AT.ebufnum,mm,15);
 								while ( --n >= 0 ) *mm++ = *w++;
 								*mm++ = 0;
 								C->rhs[C->numrhs+1] = mm;
@@ -3502,7 +3505,7 @@ regularratfun:;
 								n = *w - ARGHEAD;
 								w += ARGHEAD;
 								while ( (mm + n + 13) > C->Top )
-									mm = DoubleCbuffer(AT.ebufnum,mm);
+									mm = DoubleCbuffer(AT.ebufnum,mm,16);
 								sstop = w + n;
 								while ( w < sstop ) {
 									tt = w + *w; ttstop = tt - ABS(tt[-1]);
@@ -5099,9 +5102,6 @@ int TestFunFlag(PHEAD WORD *tfun)
   	#] TestFunFlag : 
   	#[ BracketNormalize :
 */
-
-#define EXCHN(t1,t2,n) { WORD a,i; for(i=0;i<n;i++){x=t1[i];t1[i]=t2[i];t2[i]=a;}
-#define EXCH(x,y) { WORD a = (x); (x) = (y); (y) = a; }
 
 WORD BracketNormalize(PHEAD WORD *term)
 {

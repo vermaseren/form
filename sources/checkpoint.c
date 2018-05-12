@@ -53,7 +53,7 @@
   	#] Explanations : 
   	#[ License :
  *
- *   Copyright (C) 1984-2013 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -772,6 +772,8 @@ static void print_M()
 	MesPrint("%d", AM.ggProcessStats);
 	MesPrint("%d", AM.gOldParallelStats);
 	MesPrint("%d", AM.ggOldParallelStats);
+	MesPrint("%d", AM.gWTimeStatsFlag);
+	MesPrint("%d", AM.ggWTimeStatsFlag);
 	MesPrint("%d", AM.maxFlevels);
 	MesPrint("--MARK  6");
 	MesPrint("%d", AM.resetTimeOnClear);
@@ -1065,6 +1067,7 @@ static void print_C()
 	MesPrint("%d", AC.ThreadSortFileSynch);
 	MesPrint("%d", AC.ProcessStats);
 	MesPrint("%d", AC.OldParallelStats);
+	MesPrint("%d", AC.WTimeStatsFlag);
 	MesPrint("%d", AC.BracketNormalize);
 	MesPrint("%d", AC.maxtermlevel);
 	MesPrint("%d", AC.dumnumflag);
@@ -1491,6 +1494,11 @@ int DoRecovery(int *moduletype)
 	R_SET(AM.SizeForSpectatorFiles,int);
     R_SET(AM.gOldGCDflag,int);
     R_SET(AM.ggOldGCDflag,int);
+	R_SET(AM.gWTimeStatsFlag, int);
+
+	R_FREE(AM.Path);
+	R_SET(AM.Path,UBYTE *);
+	R_COPY_S(AM.Path,UBYTE *);
 
 #ifdef PRINTDEBUG
 	print_M();
@@ -2154,6 +2162,7 @@ int DoRecovery(int *moduletype)
 	R_COPY_S(AP.procedureExtension,UBYTE*);
 	R_COPY_S(AP.cprocedureExtension,UBYTE*);
 
+	R_COPY_B(AP.PreAssignStack,AP.MaxPreAssignLevel*(LONG)sizeof(LONG),LONG*);
 	R_COPY_B(AP.PreIfStack, AP.MaxPreIfLevel*(LONG)sizeof(int), int*);
 	R_COPY_B(AP.PreSwitchModes, (AP.NumPreSwitchStrings+1)*(LONG)sizeof(int), int*);
 	R_COPY_B(AP.PreTypes, (AP.MaxPreTypes+1)*(LONG)sizeof(int), int*);
@@ -2388,7 +2397,7 @@ int DoRecovery(int *moduletype)
 		for ( i = 0; i < AO.NumDictionaries; i++ ) {
 			R_SET(l,LONG)
 			AO.Dictionaries[i] = DictFromBytes(p);
-			p += l;
+			p = (char *)p + l;
 		}
 	}
 	/*#] AO :*/ 
@@ -2555,6 +2564,10 @@ static int DoSnapshot(int moduletype)
 	S_WRITE_B(&AM.SizeForSpectatorFiles,sizeof(int));
     S_WRITE_B(&AM.gOldGCDflag,sizeof(int));
     S_WRITE_B(&AM.ggOldGCDflag,sizeof(int));
+	S_WRITE_B(&AM.gWTimeStatsFlag, sizeof(int));
+
+	S_WRITE_B(&AM.Path,sizeof(UBYTE *));
+	S_WRITE_S(AM.Path);
 
 	/*#] AM :*/ 
 	/*#[ AC :*/
@@ -2872,6 +2885,7 @@ static int DoSnapshot(int moduletype)
 	S_WRITE_S(AP.procedureExtension);
 	S_WRITE_S(AP.cprocedureExtension);
 
+	S_WRITE_B(AP.PreAssignStack, AP.MaxPreAssignLevel*(LONG)sizeof(LONG));
 	S_WRITE_B(AP.PreIfStack, AP.MaxPreIfLevel*(LONG)sizeof(int));
 	S_WRITE_B(AP.PreSwitchModes, (AP.NumPreSwitchStrings+1)*(LONG)sizeof(int));
 	S_WRITE_B(AP.PreTypes, (AP.MaxPreTypes+1)*(LONG)sizeof(int));

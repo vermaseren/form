@@ -7,7 +7,7 @@
  */
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2013 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -67,7 +67,18 @@
 #ifdef HAVE_CONFIG_H
 	/* We have also version.h. */
 	#include "version.h"
-	#define VERSIONSTR FORMNAME " " REPO_VERSION " (" REPO_DATE ", " REPO_REVISION ")"
+	#ifndef REPO_VERSION
+		#define REPO_VERSION STRINGIFY(REPO_MAJOR_VERSION) "." STRINGIFY(REPO_MINOR_VERSION)
+	#endif
+	#ifndef REPO_DATE
+		/* The build date, instead of the repo date. */
+		#define REPO_DATE __DATE__
+	#endif
+	#ifdef REPO_REVISION
+		#define VERSIONSTR FORMNAME " " REPO_VERSION " (" REPO_DATE ", " REPO_REVISION ")"
+	#else
+		#define VERSIONSTR FORMNAME " " REPO_VERSION " (" REPO_DATE ")"
+	#endif
 	#define MAJORVERSION REPO_MAJOR_VERSION
 	#define MINORVERSION REPO_MINOR_VERSION
 #else
@@ -212,11 +223,7 @@ int DoTail(int argc, UBYTE **argv)
 	AM.LogType = -1;
 	AM.HoldFlag = AM.qError = AM.Interact = AM.FileOnlyFlag = 0;
 	AM.InputFileName = AM.LogFileName = AM.IncDir = AM.TempDir = AM.TempSortDir =
-#ifdef WITHMPI
-	AM.SetupDir = AM.SetupFile = 0;
-#else
 	AM.SetupDir = AM.SetupFile = AM.Path = 0;
-#endif
 	if ( argc < 1 ) {
 		onlyversion = 0;
 		goto printversion;
@@ -278,6 +285,9 @@ int DoTail(int argc, UBYTE **argv)
 							}
 /*							if ( threadnum == 1 ) threadnum = 0; */
 							threadnum++;
+							break;
+				case 'W': /* Print the wall-clock time on the master. */
+							AM.ggWTimeStatsFlag = 1;
 							break;
 /*
 				case 'n':
@@ -449,6 +459,13 @@ NoFile:
 		errorflag++;
 	}
 	if ( AM.Path == 0 ) AM.Path = (UBYTE *)getenv("FORMPATH");
+	if ( AM.Path ) {
+		/*
+		 * AM.Path is taken from argv or getenv. Reallocate it to avoid invalid
+		 * frees when AM.Path has to be changed.
+		 */
+		AM.Path = strDup1(AM.Path,"DoTail Path");
+	}
 	return(errorflag);
 }
 
@@ -852,6 +869,7 @@ VOID StartVariables()
 	AM.gLineLength = 79;
 	AM.OutBufSize = 80;
 	AM.MaxStreamSize = MAXFILESTREAMSIZE;
+	AP.MaxPreAssignLevel = 4;
 	AC.iBufferSize = 512;
 	AP.pSize = 128;
 	AP.MaxPreIfLevel = 10;
@@ -964,6 +982,7 @@ VOID StartVariables()
 	AT.fbufnum = inicbufs();		/* Buffer for caching in factorization */
 	AT.allbufnum = inicbufs();		/* Buffer for id,all */
 	AT.aebufnum = inicbufs();		/* Buffer for id,all */
+	AN.tryterm = 0;
 #else
 	AS.MasterSort = 0;
 #endif
@@ -977,10 +996,10 @@ VOID StartVariables()
 		WORD zero = 0;
 		AddRHS(AM.zbufnum,1);
 		AM.zerorhs = C->numrhs;
-		AddNtoC(AM.zbufnum,1,&zero);
+		AddNtoC(AM.zbufnum,1,&zero,17);
 		AddRHS(AM.zbufnum,1);
 		AM.onerhs = C->numrhs;
-		AddNtoC(AM.zbufnum,5,one);
+		AddNtoC(AM.zbufnum,5,one,17);
 	}
 	AP.inside.inscbuf = inicbufs();	/* For the #inside instruction */
 /*
@@ -1140,6 +1159,7 @@ VOID StartVariables()
 	AC.OldParallelStats = AM.gOldParallelStats = AM.ggOldParallelStats = 0;
 	AC.OldFactArgFlag = AM.gOldFactArgFlag = AM.ggOldFactArgFlag = NEWFACTARG;
 	AC.OldGCDflag = AM.gOldGCDflag = AM.ggOldGCDflag = 1;
+	AC.WTimeStatsFlag = AM.gWTimeStatsFlag = AM.ggWTimeStatsFlag = 0;
 	AM.gcNumDollars = AP.DollarList.num;
 	AC.SizeCommuteInSet = AM.gSizeCommuteInSet = 0;
 	AC.CommuteInSet = 0;
@@ -1224,10 +1244,14 @@ WORD IniVars()
 #endif
 	WORD *fi, i, one = 1;
 	CBUF *C = cbuf+AC.cbufnum;
-	UBYTE buf[32];
 
+#ifdef WITHPTHREADS
+	UBYTE buf[32];
 	sprintf((char*)buf,"%d",AM.totalnumberofthreads);
 	PutPreVar((UBYTE *)"NTHREADS_",buf,0,1);
+#else
+	PutPreVar((UBYTE *)"NTHREADS_",(UBYTE *)"1",0,1);
+#endif
 
 	AC.ShortStats = 0;
 	AC.WarnFlag = 1;
@@ -1271,6 +1295,8 @@ WORD IniVars()
 	AM.gOutNumberType = RATIONALMODE;
 #ifdef WITHZLIB
 	AR.gzipCompress = GZIPDEFAULT;
+	AR.FoStage4[0].ziobuffer = 0;
+	AR.FoStage4[1].ziobuffer = 0;
 #endif
 	AR.BracketOn = 0;
 	AC.bracketindexflag = 0;
@@ -1485,7 +1511,7 @@ VOID setSignalHandlers()
 	setNewSig(SIGHUP,onErrSig);
 	setNewSig(SIGALRM,onErrSig);
 	setNewSig(SIGVTALRM,onErrSig);
-	setNewSig(SIGPROF,onErrSig);
+/*	setNewSig(SIGPROF,onErrSig); */  /* Why did Tentukov forbid profilers?? */
 }
 
 #endif
@@ -1796,14 +1822,18 @@ LONG GetRunningTime()
 #if defined(WITHPTHREADS) && (defined(WITHPOSIXCLOCK) || defined(WINDOWS))
 	LONG mastertime;
 	if ( AB[0] != 0 ) {
+/* 
 #if ( defined(APPLE64) || defined(APPLE32) )
 		mastertime = AM.SumTime + TimeCPU(1);
 		return(mastertime);
 #else
+*/
 		LONG workertime = GetWorkerTimes();
 		mastertime = AM.SumTime + TimeCPU(1);
 		return(mastertime+workertime);
+/*
 #endif
+*/
 	}
 	else {
 		return(AM.SumTime + TimeCPU(1));

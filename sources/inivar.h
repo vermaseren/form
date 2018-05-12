@@ -6,7 +6,7 @@
 
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2013 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -228,6 +228,9 @@ static struct fixedfun {
 	,{"inverse_"    ,0 ,0             ,0               ,0} /* INVERSEFUNCTION */
 	,{"id_"         ,1 ,0             ,0               ,0} /* IDFUNCTION */
 	,{"putfirst_"   ,1 ,0             ,0               ,0} /* PUTFIRST */
+	,{"perm_"       ,1 ,0             ,0               ,0} /* PERMUTATIONS */
+	,{"partitions_" ,1 ,0             ,0               ,0} /* PARTITIONS */
+	,{"mul_"        ,0 ,0             ,0               ,0} /* MULFUNCTION */
 };
 
 FIXEDSET fixedsets[] = {

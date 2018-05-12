@@ -5,7 +5,7 @@
  */
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2013 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -791,7 +791,7 @@ WORD FindSubterm(WORD *subterm)
 
 	oldCpointer = C->Pointer-C->Buffer; /* Offset of course !!!!!*/
 	AddRHS(AM.sbufnum,1);
-	AddNtoC(AM.sbufnum,*term,term);
+	AddNtoC(AM.sbufnum,*term,term,8);
 	AddToCB(C,0)
 /*
 		See whether we have this one already. If not, insert it in the tree.
@@ -874,7 +874,7 @@ WORD FindLocalSubterm(PHEAD WORD *subterm, WORD startebuf)
 	Now we have to add it to cbuf[AT.ebufnum]
 */
 	AddRHS(AT.ebufnum,1);
-	AddNtoC(AT.ebufnum,*term,term);
+	AddNtoC(AT.ebufnum,*term,term,9);
 	AddToCB(C,0)
 	number = C->numrhs-startebuf+numxsymbol;
 wearehappy:
@@ -1094,21 +1094,23 @@ WORD FindSubexpression(WORD *subexpr)
 {
 	WORD *term, number;
 	CBUF *C = cbuf + AM.sbufnum;
-	LONG oldCpointer = C->Pointer-C->Buffer; /* Offset of course !!!!!*/
+	LONG oldCpointer;
+
+	term = subexpr;
+	while ( *term ) term += *term;
+	number = term - subexpr;
 /*
 		We may have to add the subexpression to the tree.
 		This requires a lock.
 */
 	LOCK(AM.sbuflock);
 
+	oldCpointer = C->Pointer-C->Buffer; /* Offset of course !!!!!*/
 	AddRHS(AM.sbufnum,1);
-	term = subexpr;
-	while ( *term ) term += *term;
-	number = term - subexpr;
 /*
 		Add the terms to the compiler buffer. Paste on a zero.
 */
-	AddNtoC(AM.sbufnum,number,subexpr);
+	AddNtoC(AM.sbufnum,number,subexpr,10);
 	AddToCB(C,0)
 /*
 		See whether we have this one already. If not, insert it in the tree.

@@ -8,7 +8,7 @@
 
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2013 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -31,7 +31,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */ 
+/* #] License : */
  
 /**
  *	The next macros were introduced when TFORM was programmed. In the case of
@@ -455,8 +455,15 @@ typedef int (*TFUN1)();
 #define INVERSEFUNCTION 100
 #define IDFUNCTION 101
 #define PUTFIRST 102
+#define PERMUTATIONS 103
+#define PARTITIONS 104
+#define MULFUNCTION 105
+#define TOPOLOGIES 106
+#define DIAGRAMS 107
+#define VERTEX 108
+#define EDGE 109
 
-#define MAXBUILTINFUNCTION 102
+#define MAXBUILTINFUNCTION 109
 #define FIRSTUSERFUNCTION 150
 
 /*
@@ -562,6 +569,8 @@ typedef int (*TFUN1)();
 #define TYPEDROPSYMBOLS 76
 #define TYPEPUTINSIDE 77
 #define TYPETOSPECTATOR 78
+#define TYPEARGTOEXTRASYMBOL 79
+#define TYPECANONICALIZE 80
 /*
 	The codes for the 'operations' that are part of TYPEOPERATION.
 */
@@ -612,11 +621,10 @@ typedef int (*TFUN1)();
 #define CLEANFLAG 0
 #define DIRTYFLAG 1
 #define DIRTYSYMFLAG 2
+#define MUSTCLEANPRF 4
+#define SUBTERMUSED1 8
+#define SUBTERMUSED2 16
 #define ALLDIRTY (DIRTYFLAG|DIRTYSYMFLAG)
-/*
-#define CLEANPRF 1
-*/
-#define CLEANPRF 4
 
 #define ARGHEAD 2
 #define FUNHEAD 3
@@ -660,6 +668,8 @@ typedef int (*TFUN1)();
 #define INTOHIDEGEXPRESSION 18
 #define SPECTATOREXPRESSION 19
 #define DROPSPECTATOREXPRESSION 20
+#define SKIPUNHIDELEXPRESSION 21
+#define SKIPUNHIDEGEXPRESSION 22
 
 #define PRINTOFF 0
 #define PRINTON 1
@@ -969,6 +979,7 @@ typedef int (*TFUN1)();
 #define MULTIPLYARG 18
 #define DROPARG     19
 #define SELECTARG   20
+#define DEDUPARG    21
 
 #define BASECODE 1
 #define YESLYNDON 1

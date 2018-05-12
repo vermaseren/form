@@ -6,6 +6,103 @@
 #endif
 .end
 
+*--#[ partitions_ :
+* Test partitions function
+#-
+V p1,p2,p3,p4,p5,p6;
+CF f1,f2,f3;
+
+L F1 = partitions_(3,f1,2,f1,2,f1,2,p1,p2,p3,p4,p5,p6) - dd_(p1,p2,p3,p4,p5,p6);
+L F2 = partitions_(0,f1,2,p1,p2,p3,p4,p5,p6) - dd_(p1,p2,p3,p4,p5,p6);
+L F3 = partitions_(4,f1,2,f1,2,f2,1,f3,1,p1,p1,p1,p1,p1,p1) - 90*f1(p1,p1)^2*f2(p1)*f3(p1);
+L F4 = partitions_(2,f1,2,f2,0,p1,p2,p3,p4,p5,p6) - distrib_(1,2,f1,f2,p1,p2,p3,p4,p5,p6);
+id p1?.p2? = f1(p1,p2); * for dd_
+
+P;
+.end
+assert succeeded?
+assert result("F1")  =~ expr("0")
+assert result("F2")  =~ expr("0")
+assert result("F3")  =~ expr("0")
+assert result("F4")  =~ expr("0")
+*--#] partitions_ :
+*--#[ AppendPath :
+#include foo/foo1.h
+* foo/bar/p1.prc
+#call p1
+P;
+.end
+#:path foo:bar
+#include foo1.h
+* foo/bar/p2.prc
+#call p2
+P;
+.end
+#:path foo:bar
+#include foo2.h
+* bar/p1.prc
+#call p1
+P;
+.end
+#prepare write "foo/foo1.h", "#prependpath bar\n"
+#prepare write "foo/foo2.h", "#appendpath bar\n"
+#prepare write "foo/bar/p1.prc", "#procedure p1()\nL F=1234;\n#endprocedure\n"
+#prepare write "foo/bar/p2.prc", "#procedure p2()\nL G=5678;\n#endprocedure\n"
+#prepare write "bar/p1.prc", "#procedure p1()\nL H=9012;\n#endprocedure\n"
+assert succeeded?
+assert result("F") =~ expr("1234")
+assert result("G") =~ expr("5678")
+assert result("H") =~ expr("9012")
+*--#] AppendPath :
+*--#[ dedup :
+* Test deduplication
+#-
+Auto S n;
+Auto V p;
+CF f1,f2,f3,f,g;
+T t1,t2,t3;
+
+L F1 =
+#do i = 1,20
+  +ranperm_(f,<p1,p1>,...,<p50,p50>)
+#enddo
+;
+
+L F2 = f1(1,2,3,p,1,1,2,2,p);
+L F3 = f2(1,2,3,p,1,1,2,2,p);
+L F4 = f3(1,2,3,p,1,1,2,2,p);
+L F5 = t1(1,2,3,p,1,1,2,2,p);
+L F6 = t2(1,2,3,p,1,1,2,2,p);
+L F7 = t3(1,2,3,p,1,1,2,2,p);
+L F8 = f1(1,2,1,100000000,n^4,100,n^4,n^5,-10000,p1.p2,p6,p1.p2);
+
+id f(?a) = f(?a)*g(?a);
+transform f,dedup(1,last);
+repeat id g(?a,p?,?b,p?,?c) = g(?a,p,?b,?c);
+id f(?a)*g(?a) = 0;
+
+* Test functions
+transform f1,dedup(1,last);
+transform f2,dedup(3,last);
+transform f3,dedup(1,5);
+
+* Test tensors
+transform t1,dedup(1,last);
+transform t2,dedup(3,last);
+transform t3,dedup(1,5);
+
+P;
+.end
+assert succeeded?
+assert result("F1")  =~ expr("0")
+assert result("F2")  =~ expr("f1(1,2,3,p)")
+assert result("F3")  =~ expr("f2(1,2,3,p,1,2)")
+assert result("F4")  =~ expr("f3(1,2,3,p,1,2,2,p)")
+assert result("F5")  =~ expr("t1(1,2,3,p)")
+assert result("F6")  =~ expr("t2(1,2,3,p,1,2)")
+assert result("F7")  =~ expr("t3(1,2,3,p,1,2,2,p)")
+assert result("F8")  =~ expr("f1(1,2,100000000,n^4,100,n^5,-10000,p1.p2,p6)")
+*--#] dedup :
 *--#[ CoToTensor :
 V p1,p2,q1,q2,nosquare;
 Set pp:p1,p2;
@@ -107,6 +204,22 @@ assert result("F6") == result("F61")
 assert result("F71") =~ expr("f(nosquare,q2)*functions(p1,p2,q2,N1_?,N1_?)")
 assert result("F72") =~ expr("f(N1_?,q2)*functions(p1,p2,q2,N1_?)*nosquare.nosquare")
 *--#] CoToTensor :
+*--#[ Issue49 :
+* Add mul_ function for polynomial multiplications
+Symbols x,y,z;
+#$p = (1+x+y+z)^4;
+#$q = $p+1;
+#$r = mul_($p,$q);
+L r1 = $r;
+L r2 = $p^2 + $p;
+.sort
+Drop;
+L Zero = r1 - r2;
+P;
+.end
+assert succeeded?
+assert result("Zero") =~ expr("0")
+*--#] Issue49 : 
 *--#[ Issue72 :
 * "Setups: PATHVALUE not yet implemented"
 #:incdir foo
@@ -346,3 +459,251 @@ assert result("test") =~ expr("
           )
 ")
 *--#] Issue87 :
+*--#[ Issue135_1 :
+* "Assign instructions cannot occur inside statements" without inside statements
+L F =
+  #do i=1,10
+    #$x = `i';
+    + `$x'
+  #enddo
+;
+P;
+.end
+assert succeeded?
+assert result("F") =~ expr("55")
+*--#] Issue135_1 :
+*--#[ Issue135_2 :
+S a1,...,a10;
+L F =
+  #do i = 1,10
+    #$x = `i'*a`i'
+          +2;
+    +`$x'
+  #enddo
+;
+P;
+.end
+assert succeeded?
+assert result("F") =~ expr("
+      20 + 10*a10 + 9*a9 + 8*a8 + 7*a7 + 6*a6 + 5*a5 + 4*a4 + 3*a3 + 2*a2 + a1
+")
+*--#] Issue135_2 :
+*--#[ Issue135_3 :
+S a1,...,a10,x;
+CF f;
+CTable sparse,tab(1);
+
+#do i=1,10
+  Fill tab(`i') = f(`i'*a`i') + 2;
+#enddo
+
+L F =
+  #do i = 1,10
+    #$tmp = tab(`i');
+    #inside $tmp
+      id f(x?) = x;
+    #endinside
+    + (`$tmp')
+  #enddo
+;
+P;
+.end
+assert succeeded?
+assert result("F") =~ expr("
+      20 + 10*a10 + 9*a9 + 8*a8 + 7*a7 + 6*a6 + 5*a5 + 4*a4 + 3*a3 + 2*a2 + a1
+")
+*--#] Issue135_3 :
+*--#[ Issue137_1 :
+* New command: ArgToExtraSymbol (,ToNumber)
+S a,b;
+CF f;
+L F = f(1) + f(a) + f(b) + f(a+b);
+ArgToExtraSymbol f;
+P;
+.end
+assert succeeded?
+assert result("F") =~ expr("f(Z4_) + f(Z3_) + f(Z2_) + f(Z1_)")
+*--#] Issue137_1 :
+*--#[ Issue137_2 :
+S a,b;
+CF f;
+L F = f(1) + f(a) + f(b) + f(a+b);
+ArgToExtraSymbol,ToNumber,f;
+P;
+.end
+assert succeeded?
+assert result("F") =~ expr("f(1) + f(2) + f(3) + f(4)")
+*--#] Issue137_2 :
+*--#[ Issue137_3 :
+CF f;
+S s;
+I i;
+V v;
+* Fast notation.
+L F = f(0) + f(1) + f(-1) + f(s) + f(i) + f(v) + f(-v) + f(f);
+argtoextrasymbol;
+P;
+.end
+assert succeeded?
+assert result("F") =~ expr("
+         f(Z8_) + f(Z7_) + f(Z6_) + f(Z5_) + f(Z4_) + f(Z3_) + f(Z2_) + f(Z1_)
+")
+*--#] Issue137_3 :
+*--#[ Issue137_4 :
+#:threadbucketsize 10
+#:processbucketsize 10
+CF f;
+Auto S x;
+
+* NOTE: Large N gives another problem with ParFORM (#141).
+#define N "500"
+L F0 =
+  #do i=1,`N'
+    + f(1+x`i') * f(1+x{`i'+100}) * f(1+x{`i'+200})
+  #enddo
+;
+.sort
+Hide;
+
+L F1 = F0;
+.sort
+
+* If all workers fail to share an unique mapping in a consistent way,
+* the following code gives a non-zero result or a crash.
+argtoextrasymbol;
+.sort
+argument;
+  frompolynomial;
+endargument;
+.sort
+
+Drop;
+
+L ZERO = F1 - F0;
+P;
+.end
+assert succeeded?
+assert result("ZERO") =~ expr("0")
+*--#] Issue137_4 :
+*--#[ Issue175_1 :
+* Loop over currently active expressions #175
+L FF = 1;
+L [FF|a,b] = 1;
+L [FF,[GG]] = 1;
+#do e={`activeexprnames_'}
+  L `e' = `e' + 1;
+#enddo
+L N = `numactiveexprs_';
+P;
+.end
+assert succeeded?
+assert result("FF") =~ expr("2")
+assert result("[FF|a,b]") =~ expr("2")
+assert result("[FF,[GG]]") =~ expr("2")
+assert result("N") =~ expr("3")
+*--#] Issue175_1 :
+*--#[ Issue175_2 :
+L F1 = 1;
+L F2 = 1;
+L F3 = 1;
+
+L F1 = 1;  * redefine in the same module!
+
+*.sort  ;* workaround
+
+#message `numactiveexprs_'
+#message `activeexprnames_'
+
+#do e={`activeexprnames_'}
+  L `e' = `e' + 1;
+#enddo
+
+P;
+.end
+assert succeeded?
+assert result("F1") =~ expr("2")
+assert result("F2") =~ expr("2")
+assert result("F3") =~ expr("2")
+*--#] Issue175_2 :
+*--#[ Issue175_3 :
+L F1 = 1;
+L F2 = 1;
+L F3 = 1;
+
+.sort
+
+L F1 = 1;  * replace an existing expression!
+
+*.sort  ;* workaround
+
+#message `numactiveexprs_'
+#message `activeexprnames_'
+
+#do e={`activeexprnames_'}
+  L `e' = `e' + 1;
+#enddo
+
+P;
+.end
+assert succeeded?
+assert result("F1") =~ expr("2")
+assert result("F2") =~ expr("2")
+assert result("F3") =~ expr("2")
+*--#] Issue175_3 :
+*--#[ Issue175_4 :
+CF F1,F2,F3;
+
+L [F1(1,1,1,1)] = F1(1,1,1,1);
+L [F2(-1,1,1,1)] = F2(-1,1,1,1);
+.sort
+
+* Redefine.
+Local [F1(1,1,1,1)] = F1(1,1,1,1);
+.sort
+
+#message `numactiveexprs_'
+#message `activeexprnames_'
+
+#do e={`activeexprnames_'}
+  L `e' = `e' + 1;
+#enddo
+
+P;
+.end
+assert succeeded?
+assert result("[F1(1,1,1,1)]") =~ expr("1 + F1(1,1,1,1)")
+assert result("[F2(-1,1,1,1)]") =~ expr("1 + F2(-1,1,1,1)")
+*--#] Issue175_4 :
+*--#[ Issue187 :
+* What is the fastest equivalent of Foreach in FORM?
+
+* distrib_ generates combinations in lexicographical order (in the given
+* arguments.)
+
+S x1,...,x5;
+CF f;
+L F = f(x2,x5,x3,x1,x4);
+#$counter = 0;
+id f(?a$a) = 1;
+term;
+  multiply distrib_(1,3,f,dummy_,$a);
+  $counter = $counter + 1;
+  id f(?a) = f($counter,?a);
+endterm;
+P +s;
+ModuleOption noparallel;
+.end
+assert succeeded?
+assert result("F") =~ expr("
+       + f(1,x2,x5,x3)
+       + f(2,x2,x5,x1)
+       + f(3,x2,x5,x4)
+       + f(4,x2,x3,x1)
+       + f(5,x2,x3,x4)
+       + f(6,x2,x1,x4)
+       + f(7,x5,x3,x1)
+       + f(8,x5,x3,x4)
+       + f(9,x5,x1,x4)
+       + f(10,x3,x1,x4)
+")
+*--#] Issue187 : 

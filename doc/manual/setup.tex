@@ -253,9 +253,16 @@ on\index{on} statement in \ref{substaon}.}
 \leftvitem{4.0cm}{TempDir\index{setup!tempdir}\index{tempdir}}
 \rightvitem{12.6cm}{This variable should contain the name of a directory 
 that is the directory in which \FORM\ should make its temporary files. If the 
--t (or -T) option is used when \FORM\ is started, the TempDir variable in the 
+-t option is used when \FORM\ is started, the TempDir variable in the 
 setup file is ignored. \FORM\ can create a number of different temporary 
 files.}
+
+\leftvitem{4.0cm}{TempSortDir\index{setup!tempsortdir}\index{tempsortdir}}
+\rightvitem{12.6cm}{This variable should contain the name of a directory 
+that is the directory in which \FORM{} should make its temporary sort files. 
+If the -ts option is used when \FORM{} is started, the TempSortDir variable in 
+the setup file is ignored. If TempSortDir is not specified, then the value of 
+TempDir is used also for sort files.}
  
 \leftvitem{4.0cm}{ThreadBucketSize\index{setup!threadbucketsize}\index{threadbucketsize}}
 \rightvitem{12.6cm}{Only relevant for \TFORM. The size of the number of 
@@ -311,6 +318,10 @@ in the command tail when \FORM\ is started (see \ref{running}).}
 processor when it is evaluating the substitution tree. It will contain 
 terms, half finished terms and other information. The size of the workspace 
 may be a limitation on the depth of a substitution tree.}
+
+\leftvitem{4.0cm}{WTimeStats\index{setup!wtimestats}\index{wtimestats}}
+\rightvitem{12.6cm}{Turns on the wall-clock time mode in the statistics. 
+See the `\texttt{On wtimestats}' statement~\ref{substaon}.}
 
 Variables that take a path\index{path} for their value expect a sequence of 
 directories, separated by colon characters as in the UNIX\index{UNIX} way 
@@ -468,6 +479,7 @@ subsmallsize &          500000        & 500000 \\
 subsortiosize &         32768         & 32768 \\
 subtermsinsmall &       10000         & 10000 \\
 tempdir &               .             & . \\
+tempsortdir &           .             & . \\
 termsinsmall &          100000        & 100000 \\
 threadbucketsize &      500           & 500 \\
 threadloadbalancing &   ON            & ON \\
@@ -486,8 +498,8 @@ expect that a serious \FORM\ user has at least 64 Mbytes available. If it is
 considerably less one should define a setup file with smaller settings.
 
 More recently a new notation for large numbers has been allowed. One can 
-use the characters K, M and G to indicate kilo (three zeroes), mega (6 
-zeroes) and giga (9 zeroes) as in 10M for 10000000.
+use the characters K, M, G and T to indicate kilo (three zeroes), mega (6 
+zeroes), giga (9 zeroes) and tera (12 zeros) as in 10M for 10000000.
 
 To find out what the setup values are, one can use the `ON,setup;' 
 statement (\ref{substaon}).

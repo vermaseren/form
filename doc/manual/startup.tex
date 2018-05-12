@@ -55,6 +55,8 @@ alphabetic characters. They are:
 \item[-si] Same as -q.
 \item[-S] Next argument/option is the name of a setup file.
 \item[-t] Next argument/option is the path of a directory for temporary files.
+\item[-ts] Next argument/option is the path of a directory for temporary sort 
+     files.
 \item[-T] Puts\index{totalsize} \FORM\ in a mode in which the maximum 
      totalsize is measured and printed at the end of the program. For more 
      information see the "On TotalSize;" statement~\ref{ontotalsize}.
@@ -65,6 +67,8 @@ alphabetic characters. They are:
      versions of \FORM\ ignore this parameter. It should be noted that \TFORM\ 
      is a different program. For more information, please consult 
      chapter~\ref{parallel}.
+\item[-W] Turn on the wall-clock time mode in the statistics. 
+     See the `\texttt{On wtimestats}' statement~\ref{substaon}.
 \item[-y] Run only the preprocessor and dump its output.
 \end{description}
 
@@ -96,6 +100,8 @@ procedures and header files, assuming it cannot find them in the current
 directory.
 \item[FORMTMP]\index{FORMTMP} The directory in which \FORM\ will make its 
 temporary files\index{file!temporary}.
+\item[FORMTMPSORT]\index{FORMTMPSORT} The directory in which \FORM{} will make 
+its temporary sort files.
 \item[FORMSETUP]\index{FORMSETUP} The full path and name of a setup 
 file\index{file!setup}.
 \end{description}

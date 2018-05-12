@@ -4,7 +4,7 @@
  */
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2013 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -209,14 +209,23 @@ InVe:
 		else if ( ( *v == VECTOR || *v == INDEX ) && *t == DOTPRODUCT ) {
 			m = t+2; mstop = t+t[1];
 			while ( m < mstop ) {
-				if ( v[1] == t[0] || v[1] == t[1] ) return(1);
-				t += 3;
+				if ( v[1] == m[0] || v[1] == m[1] ) return(1);
+				m += 3;
 			}
 		}
 		else if ( *t >= FUNCTION ) {
 			if ( *v == FUNCTION && v[1] == *t ) return(1);
-			fstop = t + t[1]; f = t + FUNHEAD;
-			while ( f < fstop ) { /* Do the arguments one by one */
+			if ( functions[*t-FUNCTION].spec > 0 ) {
+			  if ( *v == VECTOR || *v == INDEX ) { /* we need to check arguments */
+				int i;
+				for ( i = FUNHEAD; i < t[1]; i++ ) {
+					if ( v[1] == t[i] ) return(1);
+				}
+			  }
+			}
+			else {
+			  fstop = t + t[1]; f = t + FUNHEAD;
+			  while ( f < fstop ) { /* Do the arguments one by one */
 				if ( *f <= 0 ) {
 					switch ( *f ) {
 						case -SYMBOL:
@@ -248,6 +257,7 @@ InVe:
 					}
 					f = astop;
 				}
+			  }
 			}
 		}
 		t += t[1];

@@ -719,6 +719,22 @@ function is left untouched.
 $+[(p+1)/2]$.
 
 %--#] mod2_ : 
+%--#[ mul_ :
+
+\section{mul\_}\index{mul\_}\index{function!mul\_}
+\label{funmul}
+\noindent \verb|mul_(x,y)| is replaced by \verb|x*y|, but internally
+the multiplication is performed via polynomial routines introduced in
+\FORM{} version 4. This can be faster than the normal way of multiplications
+for big polynomials: e.g., \verb|mul_($x,$y)| where the \$-variables \verb|$x|
+and \verb|$y| store big polynomials.
+
+A drawback is, because the polynomial routines accept only symbols, all
+non-symbolic objects in the operands are temporarily translated to (commuting)
+extra symbols. This process breaks the ordering of non-commutative objects
+in the result.
+
+%--#] mul_ : 
 %--#[ nargs_ :
 
 \section{nargs\_}\index{nargs\_}\index{function!nargs\_}
@@ -747,6 +763,61 @@ name of an expression or a dollar variable. If the expression or dollar
 variable has not been factorized, the function returns zero.
 
 %--#] numfactors_ : 
+%--#[ partitions_ :
+
+\section{partitions\_}\index{partitions\_}\index{function!partitions\_}
+\label{funpartitions}
+\noindent This function generates all partitions of a list of arguments into
+$n$ parts. Each part consists of a function name and a size.
+This function exploits symmetries of the arguments to make sure that no argument
+is generated twice. Instead, a combinatorial prefactor is computed.
+
+The syntax distinguishes three cases:
+\begin{verbatim}
+1] partitions_(n,[function,n1,]_1,...,[function,nn,]_n,arguments)
+2] partitions_(n,[function,n1,]_1,...,[function,0],arguments)
+3] partitions_(0,function,n1,arguments)
+\end{verbatim}
+In the first case, the first entry specifies the number of partitions $n$.
+It should be followed by $n$ parts, defined by a function name
+and the number of arguments for that function. The final entries are the arguments
+that will be distributed over the functions.
+The number of arguments should be the same as the sum of
+all the function argument sizes.
+There are no restrictions on the type of arguments.
+
+The second case is the same as the first, except that the last partition
+has a 0 for the size. This means that any leftover arguments are collected
+in this term. Thus \path{partitions_(2,f1,3,f2,0,arguments)} yields the same
+as \texttt{distrib\_(1,3,f1,f2,arguments)}.
+
+The third case, determined by a 0 for the number of partitions followed by one part, spreads
+the arguments over a repeated instance of that part. Thus \path{partitions_(0,f1,2,arguments)} is similar to \texttt{dd\_(arguments)}.
+
+In case of a deviation from the above rules, no action will be taken.
+Some examples are given below:
+\begin{verbatim}
+partitions_(2,f1,2,f2,1,x1,x1,x3) =
+       + f1(x1,x1)*f2(x3) + 2*f1(x1,x3)*f2(x1)
+       ;
+partitions_(3,f1,2,f2,1,f3,0,x1,x1,x1,x2,x2,x2) =
+       + 3*f1(x1,x1)*f2(x1)*f3(x2,x2,x2)
+       + 9*f1(x1,x1)*f2(x2)*f3(x1,x2,x2)
+       + 18*f1(x1,x2)*f2(x1)*f3(x1,x2,x2)
+       + 18*f1(x1,x2)*f2(x2)*f3(x1,x1,x2)
+       + 9*f1(x2,x2)*f2(x1)*f3(x1,x1,x2)
+       + 3*f1(x2,x2)*f2(x2)*f3(x1,x1,x1)
+      ;
+partitions_(0,f1,3,x1,x1,x1,x4,x5,x6) =
+       + f1(x1,x1,x1)*f1(x4,x5,x6)
+       + 3*f1(x1,x1,x4)*f1(x1,x5,x6)
+       + 3*f1(x1,x1,x5)*f1(x1,x4,x6)
+       + 3*f1(x1,x1,x6)*f1(x1,x4,x5)
+      ;
+\end{verbatim}
+
+
+%--#] partitions_ : 
 %--#[ pattern_ :
 
 \section{pattern\_}\index{pattern\_}\index{function!pattern\_}
@@ -754,6 +825,42 @@ variable has not been factorized, the function returns zero.
 \noindent Currently not active. Replaced automatically by 1.
 
 %--#] pattern_ : 
+%--#[ perm_ :
+
+\section{perm\_}\index{perm\_}\index{function!perm\_}
+\label{funperm}
+\noindent Generates all permutations of the arguments, with exception 
+of the first argument which should be the name of a function. This function 
+will then have the permuted arguments as in:
+\begin{verbatim}
+    CFunction f;
+    Symbols x1,...,x3;
+    Local F = perm_(f,x1,x2,x3);
+    Print +s;
+    .end
+
+   F =
+       + f(x1,x2,x3)
+       + f(x1,x3,x2)
+       + f(x2,x1,x3)
+       + f(x2,x3,x1)
+       + f(x3,x1,x2)
+       + f(x3,x2,x1)
+       ;
+\end{verbatim}
+The permutations are generated with an algorithm that takes subsequent 
+cyclic permutations. If one puts a nonzero integer before the function 
+argument the output terms will be multiplied by -1 when the permutation is 
+odd.
+
+When the function name is the only argument the answer will be just this 
+function without arguments. One could argue that technically the answer 
+should be zero, but this way the attention of the user may be attracted to 
+the occurrence which might not be the case when the term 'just vanishes'. 
+It is however rather simple to add a statement that makes such a function 
+zero.
+
+%--#] perm_ : 
 %--#[ poly_ :
 
 \section{poly\_}\index{poly\_}\index{function!poly\_}

@@ -12,7 +12,7 @@
  */
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2013 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -387,7 +387,7 @@ NextInDot:
 */
 		else {
 			MLOCK(ErrorMessageLock);
-			MesPrint("Error in pattern");
+			MesPrint("Error in pattern(1)");
 			MUNLOCK(ErrorMessageLock);
 			Terminate(-1);
 		}
@@ -930,7 +930,7 @@ OnceL8a:						mt -= 2*MAXPOWER;
 */
 		else {
 			MLOCK(ErrorMessageLock);
-			MesPrint("Error in pattern");
+			MesPrint("Error in pattern(2)");
 			MUNLOCK(ErrorMessageLock);
 			Terminate(-1);
 		}
@@ -1050,7 +1050,7 @@ WORD FindMulti(PHEAD WORD *term, WORD *pattern)
 */
 		else {
 			MLOCK(ErrorMessageLock);
-			MesPrint("Error in pattern");
+			MesPrint("Error in pattern(3)");
 			MUNLOCK(ErrorMessageLock);
 			Terminate(-1);
 		}
