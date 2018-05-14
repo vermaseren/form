@@ -811,7 +811,7 @@ extern int    GetPosFile(int,fpos_t *);
 extern int    SetPosFile(int,fpos_t *);
 extern VOID   SynchFile(int);
 extern VOID   TruncateFile(int);
-extern int    GetChannel(char *);
+extern int    GetChannel(char *,int);
 extern int    GetAppendChannel(char *);
 extern int    CloseChannel(char *);
 extern VOID   inictable(VOID);

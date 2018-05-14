@@ -3719,7 +3719,7 @@ int DoPreCreate(UBYTE *s)
 		}
 		s++;
 		*to = 0;
-		if ( *name ) { GetChannel((char *)name); }
+		if ( *name ) { GetChannel((char *)name,0); }
 		else goto improper;
 	}
 	else {
@@ -5793,7 +5793,7 @@ UBYTE *defineChannel(UBYTE *s, HANDLERS *h)
 	s++;
 	*to = 0;
 	if ( *name ) {
-		h->newhandle = GetChannel((char *)name);
+		h->newhandle = GetChannel((char *)name,0);
 		h->newlogonly = 1;
 	}
 	else if ( AC.LogHandle >= 0 ) {

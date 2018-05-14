@@ -954,23 +954,51 @@ int CoMetric(UBYTE *s)
 int DoPrint(UBYTE *s, int par)
 {
 	int i, error = 0, numdol = 0, type;
+	WORD handle = -1;
 	UBYTE *name, c, *t;
 	EXPRESSIONS e;
-	WORD numexpr, tofile = 0, *w;
+	WORD numexpr, tofile = 0, *w, par2 = 0;
 	CBUF *C = cbuf + AC.cbufnum;
 	while ( *s == ',' ) s++;
-/*	if ( s[-1] == '+' || s[-1] == '-' ) s--; */
 	if ( ( *s == '+' || *s == '-' ) && ( s[1] == 'f' || s[1] == 'F' ) ) {
 		t = s + 2; while ( *t == ' ' || *t == ',' ) t++;
 		if ( *t == '"' ) {
-			if ( *s == '+' ) tofile = 1;
+			if ( *s == '+' ) { tofile = 1; handle = AC.LogHandle; }
 			s = t;
 		}
 	}
+	else if ( *s == '<' ) {
+		UBYTE *filename;
+		s++; filename = s;
+		while ( *s && *s != '>' ) s++;
+		if ( *s == 0 ) {
+			MesPrint("&Improper filename in print statement");
+			return(1);
+		}
+		*s++ = 0;
+		tofile = 1;
+		if ( ( handle = GetChannel((char *)filename,1) ) < 0 ) return(1);
+		SKIPBLANKS(s) if ( *s == ',' ) s++; SKIPBLANKS(s)
+		if ( *s == '+' && ( s[1] == 's' || s[1] == 'S' ) ) {
+			s += 2;
+			par2 |= PRINTONETERM;
+			if ( *s == 's' || *s == 'S' ) {
+				s++;
+				par2 |= PRINTONEFUNCTION;
+				if ( *s == 's' || *s == 'S' ) {
+					s++;
+					par2 |= PRINTALL;
+				}
+			}
+			SKIPBLANKS(s) if ( *s == ',' ) s++; SKIPBLANKS(s)
+		}
+	}
 	if ( par == PRINTON && *s == '"' ) {
-		WORD code;
-		if ( tofile == 1 ) code = TYPEFPRINT;
-		else code = TYPEPRINT;
+		WORD code[3];
+		if ( tofile == 1 ) code[0] = TYPEFPRINT;
+		else code[0] = TYPEPRINT;
+		code[1] = handle;
+		code[2] = par2;
 		s++; name = s;
 		while ( *s && *s != '"' ) {
 			if ( *s == '\\' ) s++;
@@ -982,7 +1010,7 @@ int DoPrint(UBYTE *s, int par)
 			return(1);
 		}
 		*s = 0;
-		AddComString(1,&code,name,1);
+		AddComString(3,code,name,1);
 		*s++ = '"';
 		while ( *s == ',' ) {
 			s++;

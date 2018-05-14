@@ -1431,10 +1431,11 @@ VOID TruncateFile(int handle)
  		#[ GetChannel :
 
 		Checks whether we have this file already. If so, we return its
-		handle. If not, we open the file first and add it to the buffers.
+		handle. If not and mode == 0, we open the file first and add it
+		to the buffers.
 */
 
-int GetChannel(char *name)
+int GetChannel(char *name,int mode)
 {
 	CHANNEL *ch;
 	int i;
@@ -1442,6 +1443,11 @@ int GetChannel(char *name)
 	for ( i = 0; i < NumOutputChannels; i++ ) {
 		if ( channels[i].name == 0 ) continue;
 		if ( StrCmp((UBYTE *)name,(UBYTE *)(channels[i].name)) == 0 ) return(channels[i].handle);
+	}
+	if ( mode == 1 ) {
+		MesPrint("&File %s in print statement is not open",name);
+		MesPrint("   You should open it first with a #write or #append instruction");
+		return(-1);		
 	}
 	for ( i = 0; i < NumOutputChannels; i++ ) {
 		if ( channels[i].name == 0 ) break;
@@ -1661,6 +1667,20 @@ int StrICont(UBYTE *s1, UBYTE *s2)
 
 /*
  		#] StrICont : 
+ 		#[ CmpArray :
+*/
+
+int CmpArray(WORD *t1, WORD *t2, WORD n)
+{
+	int i,x;
+	for ( i = 0; i < n; i++ ) {
+		if ( ( x = (int)(t1[i]-t2[i]) ) != 0 ) return(x);
+	}
+	return(0);
+}
+
+/*
+ 		#] CmpArray : 
  		#[ ConWord :
 */
 

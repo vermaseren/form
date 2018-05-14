@@ -3421,18 +3421,19 @@ CommonEnd:
 					break;
 				  case TYPEPRINT:
 					AN.currentTerm = term;
-					AN.numlistinprint = (C->lhs[level][1] - C->lhs[level][2] - 3)/2;
-					AN.listinprint = C->lhs[level]+3+C->lhs[level][2];
+					AN.numlistinprint = (C->lhs[level][1] - C->lhs[level][4] - 5)/2;
+					AN.listinprint = C->lhs[level]+5+C->lhs[level][4];
 					MLOCK(ErrorMessageLock);
 					AO.ErrorBlock = 1;
-					MesPrint((char *)(C->lhs[level]+3));
+					MesPrint((char *)(C->lhs[level]+5));
 					AO.ErrorBlock = 0;
 					MUNLOCK(ErrorMessageLock);
 					break;
 				  case TYPEFPRINT:
 					{
 					int oldFOflag;
-					WORD oldPrintType;
+					WORD oldPrintType, oldLogHandle = AC.LogHandle;
+					AC.LogHandle = C->lhs[level][2];
 					MLOCK(ErrorMessageLock);
 					oldFOflag = AM.FileOnlyFlag;
 					oldPrintType = AO.PrintType;
@@ -3440,13 +3441,15 @@ CommonEnd:
 						AM.FileOnlyFlag = 1;
 						AO.PrintType |= PRINTLFILE;
 					}
+					AO.PrintType |= C->lhs[level][3];
 					AN.currentTerm = term;
-					AN.numlistinprint = (C->lhs[level][1] - C->lhs[level][2] - 3)/2;
-					AN.listinprint = C->lhs[level]+3+C->lhs[level][2];
-					MesPrint((char *)(C->lhs[level]+3));
+					AN.numlistinprint = (C->lhs[level][1] - C->lhs[level][4] - 5)/2;
+					AN.listinprint = C->lhs[level]+5+C->lhs[level][4];
+					MesPrint((char *)(C->lhs[level]+5));
 					AO.PrintType = oldPrintType;
 					AM.FileOnlyFlag = oldFOflag;
 					MUNLOCK(ErrorMessageLock);
+					AC.LogHandle = oldLogHandle;
 					}
 					break;
 				  case TYPEREDEFPRE:
