@@ -166,3 +166,4 @@
 #define NPAIR2 89
 
 #define MAXLINELENGTH 256
+#define MINALLOC 32
