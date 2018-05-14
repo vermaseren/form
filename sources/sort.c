@@ -66,6 +66,8 @@ extern LONG nummallocs;
 extern LONG numfrees;
 #endif
 
+LONG numcompares;
+
 /*
   	#] Includes : 
 	#[ SortUtilities :
@@ -604,6 +606,9 @@ WORD NewSort(PHEAD0)
 		AN.FunSorts = newFS; AN.NumFunSorts = newsize;
 	}
 	if ( AR.sLevel == 0 ) {
+
+		numcompares = 0;
+
 		AN.FunSorts[0] = AT.S0;
 		if ( AR.PolyFun == 0 ) { AT.S0->PolyFlag = 0; }
 		else if ( AR.PolyFunType == 1 ) { AT.S0->PolyFlag = 1; }
@@ -713,9 +718,29 @@ LONG EndSort(PHEAD WORD *buffer, int par)
 */
 	S->PolyWise = 0;
 	*(S->PoinFill) = 0;
-
-	SplitMerge(BHEAD S->sPointer,S->sTerms);
-
+	/*
+	{
+		LONG millitime;
+		WORD timepart;
+		millitime = TimeCPU(1);
+		timepart = (WORD)(millitime%1000);
+		millitime /= 1000;
+		timepart /= 10;
+		MesPrint(" Before SplitMerge: %7l.%2is",millitime,timepart);
+	}
+	*/
+	S->sPointer[SplitMerge(BHEAD S->sPointer,S->sTerms)] = 0;
+	/*
+	{
+		LONG millitime;
+		WORD timepart;
+		millitime = TimeCPU(1);
+		timepart = (WORD)(millitime%1000);
+		millitime /= 1000;
+		timepart /= 10;
+		MesPrint(" After  SplitMerge: %7l.%2is",millitime,timepart);
+	}
+	*/
 	sSpace = 0;
 	tover = over = S->sTerms;
 	ss = S->sPointer;
@@ -736,7 +761,7 @@ LONG EndSort(PHEAD WORD *buffer, int par)
 				}
 				else {
 					LONG allocsp = sSpace+1;
-					if ( allocsp < 20 ) allocsp = 20;
+					if ( allocsp < MINALLOC ) allocsp = MINALLOC;
 					allocsp = ((allocsp+7)/8)*8;
 					to = (WORD *)Malloc1(allocsp*sizeof(WORD),"$-sort space");
 					if ( AN.tryterm > 0 ) AN.tryterm = 0;
@@ -785,7 +810,6 @@ LONG EndSort(PHEAD WORD *buffer, int par)
 #ifdef WITHZLIB
 			{ int oldgzipCompress = AR.gzipCompress;
 				AR.gzipCompress = 0;
-				/* SetupOutputGZIP(fout); */
 #endif
 			if ( tover > 0 ) {
 				ss = S->sPointer;
@@ -953,7 +977,7 @@ TooLarge:
 							}
 							else {
 								LONG allocsp = jj+2;
-								if ( allocsp < 20 ) allocsp = 20;
+								if ( allocsp < MINALLOC ) allocsp = MINALLOC;
 								allocsp = ((allocsp+7)/8)*8;
 								to = (WORD *)Malloc1(allocsp*sizeof(WORD),"$-sort space");
 								if ( AN.tryterm > 0 ) AN.tryterm = 0;
@@ -1191,7 +1215,7 @@ RetRetval:
 				}
 				else {
 					LONG allocsp = wsiz+2;
-					if ( allocsp < 20 ) allocsp = 20;
+					if ( allocsp < MINALLOC ) allocsp = MINALLOC;
 					allocsp = ((allocsp+7)/8)*8;
 					to = (WORD *)Malloc1(allocsp*sizeof(WORD),"$-buffer reading");
 					if ( AN.tryterm > 0 ) AN.tryterm = 0;
@@ -1212,6 +1236,11 @@ RetRetval:
 			newout = 0;
 		}
 	}
+/*
+	if ( AR.sLevel < 0 ) {
+		MesPrint(" number of calls to compare was %l",numcompares);
+	}
+*/
 	return(retval);
 WorkSpaceError:
 	MLOCK(ErrorMessageLock);
@@ -2528,7 +2557,11 @@ WORD Compare1(PHEAD WORD *term1, WORD *term2, WORD level)
 	WORD c1, c2;
 	WORD prevorder;
 	WORD count = -1, localPoly, polyhit = -1;
-	
+
+	if ( AR.sLevel == 0 ) {
+		numcompares++;
+	}
+
 	if ( S->PolyFlag ) {
 /*
 		if ( S->PolyWise != 0 ) {
@@ -3221,6 +3254,116 @@ LONG SplitMerge(PHEAD WORD **Pointer, LONG number)
 	GETBIDENTITY
 	SORTING *S = AT.SS;
 	WORD **pp3, **pp1, **pp2;
+	LONG i, newleft, newright, split;
+
+	if ( number < 2 ) return(number);
+	if ( number == 2 ) {
+		pp1 = Pointer; pp2 = pp1 + 1;
+		if ( ( i = CompareTerms(BHEAD *pp1,*pp2,(WORD)0) ) < 0 ) {
+			pp3 = (WORD **)(*pp1); *pp1 = *pp2; *pp2 = (WORD *)pp3;
+		}
+		else if ( i == 0 ) {
+		  number--;
+		  if ( S->PolyWise ) { if ( AddPoly(BHEAD pp1,pp2) == 0 ) number = 0; }
+		  else               { if ( AddCoef(BHEAD pp1,pp2) == 0 ) number = 0; }
+		}
+		return(number);
+	}
+	split = number/2;
+	newleft  = SplitMerge(BHEAD Pointer,split);
+	newright = SplitMerge(BHEAD Pointer+split,number-split);
+	if ( newright == 0 ) return(newleft);
+/*
+	We compare the last of the left with the first of the right
+	If they are already in order, we will be done quickly.
+	We may have to compactify the buffer because the recursion may
+	have created holes. Also this compare may result in equal terms.
+	Addition of 23-jul-1999. It makes things a bit faster.
+*/
+	if ( newleft > 0 && newright > 0 &&
+	( i = CompareTerms(BHEAD Pointer[newleft-1],Pointer[split],(WORD)0) ) >= 0 ) {
+		pp2 = Pointer+split; pp1 = Pointer+newleft-1;
+		if ( i == 0 ) {
+		  if ( S->PolyWise ) {
+			if ( AddPoly(BHEAD pp1,pp2) > 0 ) pp1++;
+			else newleft--;
+		  }
+		  else {               
+			if ( AddCoef(BHEAD pp1,pp2) > 0 ) pp1++;
+			else newleft--;
+		  }
+		  pp2++; newright--;
+		}
+		else pp1++;
+		newleft += newright;
+		if ( pp1 < pp2 ) {
+			while ( --newright >= 0 ) *pp1++ = *pp2++;
+		}
+		return(newleft);
+	}
+
+	if ( split >= AN.SplitScratchSize ) {
+		AN.SplitScratchSize = (split*3)/2+100;
+		if ( AN.SplitScratchSize > S->Terms2InSmall/2 )
+			 AN.SplitScratchSize = S->Terms2InSmall/2;
+		if ( AN.SplitScratch ) M_free(AN.SplitScratch,"AN.SplitScratch");
+		AN.SplitScratch = (WORD **)Malloc1(AN.SplitScratchSize*sizeof(WORD *),"AN.SplitScratch");
+	}
+	pp3 = AN.SplitScratch; pp1 = Pointer;
+	for ( i = 0; i < newleft; i++ ) *pp3++ = *pp1++;
+	AN.InScratch = newleft;
+	pp1 = AN.SplitScratch; pp2 = Pointer + split; pp3 = Pointer;
+/*
+		An improvement in the style of Timsort
+*/
+	while ( newleft > 8 ) {
+		LONG nnleft = newleft/2;
+		if ( ( i = CompareTerms(BHEAD pp1[nnleft],*pp2,(WORD)0) ) < 0 ) break;
+		pp3 += nnleft+1;
+		pp1 += nnleft+1;
+		newleft -= nnleft+1;
+		if ( i == 0 ) {
+			if ( S->PolyWise ) { i = AddPoly(BHEAD pp3-1,pp2); }
+			else               { i = AddCoef(BHEAD pp3-1,pp2); }
+			if ( i == 0 ) pp3--;
+			pp2++;
+			newright--;
+			break;
+		}
+	}
+
+	while ( newleft > 0 && newright > 0 ) {
+		if ( ( i = CompareTerms(BHEAD *pp1,*pp2,(WORD)0) ) < 0 ) {
+			*pp3++ = *pp2++;
+			newright--;
+		}
+		else if ( i > 0 ) {
+			*pp3++ = *pp1++;
+			newleft--;
+		}
+		else {
+		  if ( S->PolyWise ) { if ( AddPoly(BHEAD pp1,pp2) > 0 ) *pp3++ = *pp1; }
+		  else {               if ( AddCoef(BHEAD pp1,pp2) > 0 ) *pp3++ = *pp1; }
+		  pp1++; pp2++; newleft--; newright--;
+		}
+	}
+	for ( i = 0; i < newleft; i++ ) *pp3++ = *pp1++;
+	if ( pp3 == pp2 ) {
+		pp3 += newright;
+	} else {
+		for ( i = 0; i < newright; i++ ) *pp3++ = *pp2++;
+	}
+	AN.InScratch = 0;
+	return(pp3 - Pointer);
+}
+
+#else
+
+LONG SplitMerge(PHEAD WORD **Pointer, LONG number)
+{
+	GETBIDENTITY
+	SORTING *S = AT.SS;
+	WORD **pp3, **pp1, **pp2;
 	LONG nleft, nright, i, newleft, newright;
 	WORD **pptop;
 
@@ -3305,70 +3448,6 @@ LONG SplitMerge(PHEAD WORD **Pointer, LONG number)
 	while ( pp3 < pptop ) *pp3++ = 0;
 	AN.InScratch = 0;
 	return(nleft);
-}
-
-#else
-
-VOID SplitMerge(PHEAD WORD **Pointer, LONG number)
-{
-	GETBIDENTITY
-	SORTING *S = AT.SS;
-	WORD **pp3, **pp1, **pp2;
-	LONG nleft, nright, i;
-	WORD **pptop;
-
-	if ( number < 2 ) return;
-	if ( number == 2 ) {
-		pp1 = Pointer; pp2 = pp1 + 1;
-		if ( ( i = CompareTerms(BHEAD *pp1,*pp2,(WORD)0) ) < 0 ) {
-			pp3 = (WORD **)(*pp1); *pp1 = *pp2; *pp2 = (WORD *)pp3;
-		}
-		else if ( i == 0 ) {
-		  if ( S->PolyWise ) { if ( !AddPoly(BHEAD pp1,pp2) ) { *pp1 = 0; } }
-		  else {               if ( !AddCoef(BHEAD pp1,pp2) ) { *pp1 = 0; } }
-		  *pp2 = 0;
-		}
-		return;
-	}
-	pptop = Pointer + number;
-	nleft = number >> 1; nright = number - nleft;
-	SplitMerge(BHEAD Pointer,nleft);
-	SplitMerge(BHEAD Pointer+nleft,nright);
-	if ( nleft > AN.SplitScratchSize ) {
-		AN.SplitScratchSize = (nleft*3)/2+100;
-		if ( AN.SplitScratchSize > S->Terms2InSmall/2 )
-			 AN.SplitScratchSize = S->Terms2InSmall/2;
-		if ( AN.SplitScratch ) M_free(AN.SplitScratch,"AN.SplitScratch");
-		AN.SplitScratch = (WORD **)Malloc1(AN.SplitScratchSize*sizeof(WORD *),"AN.SplitScratch");
-	}
-	pp3 = AN.SplitScratch; pp1 = Pointer; i = nleft;
-	do { *pp3++ = *pp1; *pp1++ = 0; } while ( *pp1 && --i > 0 );
-	if ( i > 0 ) { *pp3 = 0; i--; }
-	AN.InScratch = nleft - i;
-	pp1 = AN.SplitScratch; pp2 = Pointer + nleft; pp3 = Pointer;
-	while ( *pp1 && *pp2 && nleft > 0 && nright > 0 ) {
-		if ( ( i = CompareTerms(BHEAD *pp1,*pp2,(WORD)0) ) < 0 ) {
-			*pp3++ = *pp2;
-			*pp2++ = 0;
-			nright--;
-		}
-		else if ( i > 0 ) {
-			*pp3++ = *pp1;
-			*pp1++ = 0;
-			nleft--;
-		}
-		else {
-		  if ( S->PolyWise ) { if ( AddPoly(BHEAD pp1,pp2) > 0 ) *pp3++ = *pp1; }
-		  else {               if ( AddCoef(BHEAD pp1,pp2) > 0 ) *pp3++ = *pp1; }
-		  *pp1++ = 0; *pp2++ = 0; nleft--; nright--;
-		}
-	}
-	while ( *pp1 && --nleft  >= 0 ) { *pp3++ = *pp1; *pp1++ = 0; }
-	while ( *pp2 && --nright >= 0 ) { *pp3++ = *pp2++; }
-	while ( pp3 < pptop ) *pp3++ = 0;
-	AN.InScratch = 0;
-
-	return;
 }
 
 #endif
@@ -3748,7 +3827,6 @@ ConMer:
 			#define FRONTSIZE (2*AM.MaxTer)
 			WORD *copybuf = (WORD *)(((UBYTE *)(S->sBuffer)) + FRONTSIZE);
 			WORD *copytop;
-/*			SetupOutputGZIP(fout); */
 			SetupAllInputGZIP(S);
 			m1 = m2 = copybuf;
 			position2 = S->iPatches[0];
@@ -4292,10 +4370,9 @@ WORD StoreTerm(PHEAD WORD *term)
 /*
 		PrintTime();
 */
-		SplitMerge(BHEAD ss,over);
+		ss[SplitMerge(BHEAD ss,over)] = 0;
 		sSpace = 0;
 		if ( over > 0 ) {
-			ss[over] = 0;
 			sSpace = ComPress(ss,&RetCode);
 			S->TermsLeft -= over - RetCode;
 		}
