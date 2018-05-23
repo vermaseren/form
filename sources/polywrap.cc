@@ -48,6 +48,9 @@
 #include "mytime.h"
 #endif
 
+// denompower is increased by this factor when divmod_heap fails
+const int POLYWRAP_DENOMPOWER_INCREASE_FACTOR = 2;
+
 using namespace std;
 
 /*
@@ -205,7 +208,6 @@ WORD *poly_divmod(PHEAD WORD *a, WORD *b, int divmod, WORD fit) {
 
 	// add extra variables to keep track of denominators
 	const int DENOMSYMBOL = MAXPOSITIVE;
-	const int DENOMPOWER  = MAXPOSITIVE;
 	
 //	WORD *new_poly_vars = (WORD *)Malloc1((AN.poly_num_vars+1)*sizeof(WORD), "AN.poly_vars");
 //	WCOPY(new_poly_vars, AN.poly_vars, AN.poly_num_vars);
@@ -242,7 +244,8 @@ WORD *poly_divmod(PHEAD WORD *a, WORD *b, int divmod, WORD fit) {
 
 	// determine lcoeff(b)
 	poly lcoeffb(pb.integer_lcoeff());
-	int denompower = 0;
+
+	poly pres(BHEAD 0);
 
 	if (!lcoeffb.is_one()) {
 
@@ -250,45 +253,75 @@ WORD *poly_divmod(PHEAD WORD *a, WORD *b, int divmod, WORD fit) {
 			// the original polynomial is multivariate (one dummy variable has
 			// been added), so it is not trivial to determine which power of
 			// lcoeff(b) can be in the answer
-			
-			// multiply a by DENOMSYMBOL^DENOMPOWER
-			poly modifya(poly::simple_poly(BHEAD AN.poly_num_vars-1,0,DENOMPOWER));
-			pa *= modifya;
-			
-			// replace lcoeff(b) by DENOMSYMBOL		
-			poly modifyb(BHEAD 1);
-			for (int i=0; i<AN.poly_num_vars; i++)
-				modifyb[2+i] = pb[2+i];
-			modifyb *= poly::simple_poly(BHEAD AN.poly_num_vars-1,0,1) - lcoeffb;
-			pb += modifyb;
-			
-			// divide and determine the power
-			poly ppow(pa/pb);
-			for (int i=1; i<ppow[0]; i+=ppow[i])
-				denompower = max(denompower, DENOMPOWER - ppow[i+AN.poly_num_vars]);
 
-			// restore a,b
-			pb -= modifyb;	
-			pa /= poly::simple_poly(BHEAD AN.poly_num_vars-1,0,DENOMPOWER);			
+			int denompower = 0, prevdenompower = 0;
+			poly pq(BHEAD 0);
+			poly pr(BHEAD 0);
+
+			// try denompower = 0, if this fails increase denompower until division succeeds
+			bool div_fail = true;
+			do
+			{
+				if(denompower < prevdenompower)
+				{
+					// denompower increased beyond INT_MAX
+					MLOCK(ErrorMessageLock);
+					MesPrint ((char*)"ERROR: pseudo-division failed in poly_divmod (denompower > INT_MAX)");
+					MUNLOCK(ErrorMessageLock);
+					Terminate(1);
+				}
+
+				if(denompower != 0)
+				{
+					// multiply a by lcoeffb^(denompower-prevdenompower)
+					WORD n = lcoeffb[lcoeffb[1]];
+					RaisPow(BHEAD (UWORD *)&lcoeffb[2+AN.poly_num_vars], &n, denompower-prevdenompower);
+					lcoeffb[1] = 2 + AN.poly_num_vars + ABS(n);
+					lcoeffb[0] = 1 + lcoeffb[1];
+					lcoeffb[lcoeffb[1]] = n;
+
+					pa *= lcoeffb;
+					denres *= lcoeffb;
+				}
+
+				// try division
+				poly ppow(BHEAD 0);
+				poly::divmod_heap(pa,pb,pq,pr,false,true,div_fail); // sets div_fail
+
+				// increase denompower for next iteration
+				prevdenompower = denompower;
+				denompower = (denompower==0 ? 1 : denompower*POLYWRAP_DENOMPOWER_INCREASE_FACTOR+1 ); // generates 2^n-1 when POLYWRAP_DENOMPOWER_INCREASE_FACTOR = 2
+			}
+			while(div_fail);
+
+			pres = (divmod==0 ? pq : pr);
+
 		}
 		else {
 			// one variable, so the power is the difference of the degrees
-			
-			denompower = MaX(0, pa.degree(0) - pb.degree(0) + 1);
+
+			int denompower = MaX(0, pa.degree(0) - pb.degree(0) + 1);
+
+			// multiply a by that power
+			WORD n = lcoeffb[lcoeffb[1]];
+			RaisPow(BHEAD (UWORD *)&lcoeffb[2+AN.poly_num_vars], &n, denompower);
+			lcoeffb[1] = 2 + AN.poly_num_vars + ABS(n);
+			lcoeffb[0] = 1 + lcoeffb[1];
+			lcoeffb[lcoeffb[1]] = n;
+
+			pa *= lcoeffb;
+			denres *= lcoeffb;
+
+			pres = (divmod==0 ? pa/pb : pa%pb);
+
 		}
 
-		// multiply a by that power
-		WORD n = lcoeffb[lcoeffb[1]];
-		RaisPow(BHEAD (UWORD *)&lcoeffb[2+AN.poly_num_vars], &n, denompower);
-		lcoeffb[1] = 2 + AN.poly_num_vars + ABS(n);
-		lcoeffb[0] = 1 + lcoeffb[1];
-		lcoeffb[lcoeffb[1]] = n;
-
-		pa *= lcoeffb;
-		denres *= lcoeffb;
 	}
+	else {
 
-	poly pres(divmod==0 ? pa/pb : pa%pb);
+		pres = (divmod==0 ? pa/pb : pa%pb);
+
+	}
 
 	// convert to Form notation
 	// NOTE: this part can be rewritten with poly::size_of_form_notation_with_den()
