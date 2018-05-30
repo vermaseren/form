@@ -157,7 +157,7 @@ public:
 
 	static void divmod_one_term (const poly &, const poly &, poly &, poly &, bool);
 	static void divmod_univar (const poly &, const poly &, poly &, poly &, int, bool);
-	static void divmod_heap (const poly &, const poly &, poly &, poly &, bool);
+	static void divmod_heap (const poly &, const poly &, poly &, poly &, bool, bool, bool&);
 	
 	static void push_heap (PHEAD WORD **, int);
 	static void pop_heap (PHEAD WORD **, int);

@@ -1550,6 +1550,13 @@ void poly::divmod_univar (const poly &a, const poly &b, poly &q, poly &r, int va
  *   the product of the maximum power in all variables is small, a
  *   hash table is used to add equal terms for extra speed.
  *
+ *   If the input flag check_div is set then if the result of any
+ *   coefficient division results in a non-zero remainder (indicating
+ *   that division has failed over the integers) the output flag div_fail
+ *   will be set and the division will be terminated early (q, r
+ *   will be incorrect). If check_div is not set then non-zero remainders
+ *   from coefficient division will be written into r.
+ *
  *   A heap element h is formatted as follows:
  *   - h[0] = index in a
  *   - h[1] = index in b
@@ -1565,10 +1572,11 @@ void poly::divmod_univar (const poly &a, const poly &b, poly &q, poly &r, int va
  *   For details, see M. Monagan, "Polynomial Division using Dynamic
  *   Array, Heaps, and Packed Exponent Vectors"
  */
-void poly::divmod_heap (const poly &a, const poly &b, poly &q, poly &r, bool only_divides) {
+void poly::divmod_heap (const poly &a, const poly &b, poly &q, poly &r, bool only_divides, bool check_div, bool &div_fail) {
 
 	POLY_GETIDENTITY(a);
 
+	div_fail = false;
 	q[0] = r[0] = 1;
 	
 	WORD nmodq=0;
@@ -1759,6 +1767,12 @@ void poly::divmod_heap (const poly &a, const poly &b, poly &q, poly &r, bool onl
 								(UWORD *)&b[2+AN.poly_num_vars], b[b[1]],
 								(UWORD *)&q[qi+1+AN.poly_num_vars], &nq,
 								(UWORD *)&r[ri+1+AN.poly_num_vars], &nr);
+				if(check_div && nr != 0)
+				{
+					// non-zero remainder from coefficient division => result not expressible in integers
+					div_fail = true;
+					break;
+				}
 			}
 			else {
 				// if both polynomials are modulo p^1, use integer calculus
@@ -1870,7 +1884,8 @@ void poly::divmod (const poly &a, const poly &b, poly &q, poly &r, bool only_div
 		divmod_univar(a,b,q,r,MaX(vara,varb),only_divides);
 	}
 	else {
-		divmod_heap(a,b,q,r,only_divides);
+		bool div_fail;
+		divmod_heap(a,b,q,r,only_divides,false,div_fail);
 	}
 }
 
