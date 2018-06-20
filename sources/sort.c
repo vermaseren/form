@@ -108,7 +108,7 @@ VOID WriteStats(POSITION *plspace, WORD par)
 		if ( Expressions == 0 ) return;
 
 		if ( par == 0 ) {
-/*			if ( AC.ShortStatsMax == 0 ) return; */
+			if ( AC.ShortStatsMax == 0 ) return;
 			AR.ShortSortCount++;
 			if ( AR.ShortSortCount < AC.ShortStatsMax ) return;
 		}
