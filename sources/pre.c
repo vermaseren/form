@@ -329,6 +329,93 @@ higherlevel:
 						PutPreVar(namebuf,s,(UBYTE *)"?a",1);
 						goto dostream;
 					}
+					else if ( StrICmp(namebuf,(UBYTE *)"strlen_") == 0 ) {
+						/*
+						 * `strlen_(STRING)' gives the number of characters in
+						 * STRING.
+						 */
+						char buf[41];  /* up to 128-bit */
+						LONG len = i-(s-namebuf)-2;
+						LongCopy(len,buf);
+						PutPreVar(namebuf,(UBYTE *)buf,(UBYTE *)"?a",1);
+						goto dostream;
+					}
+					else if ( StrICmp(namebuf,(UBYTE *)"substr_") == 0 ) {
+						/*
+						 * `substr_(STRING,POS,LEN)' gives the substring of
+						 * STRING starting from POS (the first character is
+						 * at POS=1) and with the length of LEN.
+						 */
+						LONG len = i-(s-namebuf)-2;
+						/*
+						 * Find two "," from the end.
+						 */
+						UBYTE *ss1, *ss2;
+						ss2 = s+len-1;
+						while ( ss2 >= s && *ss2 != ',' ) ss2--;
+						ss1 = ss2-1;
+						while ( ss1 >= s && *ss1 != ',' ) ss1--;
+						if ( ss1 < s ) {
+							/*
+							 * Not found.
+							 */
+							goto substr_error;
+						}
+						else {
+							/*
+							 * Parse the last two parameters as numbers.
+							 */
+							LONG n1, n2;
+							len = ss1-s;
+							*ss1++ = 0;
+							*ss2++ = 0;
+							if ( *ss1 == 0 || *ss2 == 0 ) {
+								goto substr_error;
+							}
+							ParseSignedNumber(n1,ss1);
+							ParseSignedNumber(n2,ss2);
+							if ( *ss1 != 0 || *ss2 != 0 ) {
+								goto substr_error;
+							}
+							/*
+							 * Non-positive POS parameter.
+							 */
+							if ( n1 <= 0 ) {
+								n1 = len+n1+1;
+							}
+							/*
+							 * Negative LEN parameter.
+							 */
+							if ( n2 < 0 ) {
+								n2 = len+n2+1;
+							}
+							/*
+							 * Constraints on the parameters.
+							 */
+							if ( n1 < 1 ) {
+								n1 = 1;
+							}
+							else if ( n1 > len+1 ) {
+								n1 = len+1;
+							}
+							if ( n2 < 0 ) {
+								n2 = 0;
+							}
+							else if ( n2 > len-n1+1 ) {
+								n2 = len-n1+1;
+							}
+							/*
+							 * Take the substring.
+							 */
+							memmove(s,s+n1-1,n2);
+							s[n2] = 0;
+							PutPreVar(namebuf,s,(UBYTE *)"?a",1);
+							goto dostream;
+						}
+substr_error:
+						MesPrint("@Illegal use of arguments in substr_");
+						Terminate(-1);
+					}
 					while ( *s ) {
 						if ( *s == '\\' ) s++;
 						if ( *s == ',' ) { *s = 0; nargs++; }
