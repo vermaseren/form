@@ -175,7 +175,7 @@ case $host_cpu in
 esac
 
 # Check for C compiler vendor. We assume that all compilers (CC, CXX, MPICC and
-# MPICXX) have the same vender and the same version. Clang most likely works
+# MPICXX) have the same vendor and the same version. Clang most likely works
 # as GCC.
 vendors="
 intel:     __ICC,__ECC,__INTEL_COMPILER
@@ -610,8 +610,26 @@ AS_IF([test "x$enable_parform" = xyes && test "x$enable_debug" = xyes], [build_p
 AM_CONDITIONAL([BUILD_PARFORM], [test "x$build_parform" = xyes])
 AM_CONDITIONAL([BUILD_PARVORM], [test "x$build_parvorm" = xyes])
 
-# Check for ftime
-AC_SEARCH_LIBS([ftime], [compat], [], [])
+
+# Check for wall-clock time
+ok=no
+AS_IF([test $ok != yes],
+	[AC_SEARCH_LIBS([clock_gettime], [rt],
+		[AC_DEFINE([HAVE_CLOCK_GETTIME], [1], [Define to 1 if you have clock_gettime.])
+		ok=yes])])
+AS_IF([test $ok != yes],
+	# TODO: gettimeofday is also deprecated.
+	[AC_SEARCH_LIBS([gettimeofday], [],
+		[AC_DEFINE([HAVE_GETTIMEOFDAY], [1], [Define to 1 if you have gettimeofday.])
+		ok=yes])])
+AS_IF([test $ok != yes],
+	# Fallback: ftime. Available also on Windows. Some BSDs require -lcompat.
+	[AC_SEARCH_LIBS([ftime], [compat],
+		[AC_DEFINE([HAVE_FTIME], [1], [Define to 1 if you have ftime.])
+		ok=yes])])
+AS_IF([test $ok != yes],
+[AC_MSG_FAILURE([Wall-clock time not available])])
+
 
 # Check for static linking
 STATIC_LDFLAGS=

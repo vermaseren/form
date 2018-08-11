@@ -3381,7 +3381,15 @@ argerror:
  		#[ TimeWallClock :
 */
 
-#include <sys/timeb.h>
+#ifdef HAVE_CLOCK_GETTIME
+#include <time.h> /* for clock_gettime() */
+#else
+#ifdef HAVE_GETTIMEOFDAY
+#include <sys/time.h> /* for gettimeofday() */
+#else
+#include <sys/timeb.h> /* for ftime() */
+#endif
+#endif
 
 /**
  * Returns the wall-clock time.
@@ -3394,8 +3402,39 @@ LONG TimeWallClock(WORD par)
 	/*
 	 * NOTE: this function is not thread-safe. Operations on tp are not atomic.
 	 */
+
+#ifdef HAVE_CLOCK_GETTIME
+	struct timespec ts;
+	clock_gettime(CLOCK_MONOTONIC, &ts);
+
+	if ( par ) {
+		return(((LONG)(ts.tv_sec)-AM.OldSecTime)*100 +
+			((LONG)(ts.tv_nsec / 1000000)-AM.OldMilliTime)/10);
+	}
+	else {
+		AM.OldSecTime   = (LONG)(ts.tv_sec);
+		AM.OldMilliTime = (LONG)(ts.tv_nsec / 1000000);
+		return(0L);
+	}
+#else
+#ifdef HAVE_GETTIMEOFDAY
+	struct timeval t;
+	LONG sec, msec;
+	gettimeofday(&t, NULL);
+	sec = (LONG)t.tv_sec;
+	msec = (LONG)(t.tv_usec/1000);
+	if ( par ) {
+		return (sec-AM.OldSecTime)*100 + (msec-AM.OldMilliTime)/10;
+	}
+	else {
+		AM.OldSecTime   = sec;
+		AM.OldMilliTime = msec;
+		return(0L);
+	}
+#else
 	struct timeb tp;
 	ftime(&tp);
+
 	if ( par ) {
 		return(((LONG)(tp.time)-AM.OldSecTime)*100 + 
 			((LONG)(tp.millitm)-AM.OldMilliTime)/10);
@@ -3405,6 +3444,8 @@ LONG TimeWallClock(WORD par)
 		AM.OldMilliTime = (LONG)(tp.millitm);
 		return(0L);
 	}
+#endif
+#endif
 }
 
 /*
