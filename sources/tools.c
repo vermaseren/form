@@ -2324,6 +2324,7 @@ VOID *Malloc1(LONG size, const char *messageifwrong)
 #ifndef MALLOCDEBUG
 		MLOCK(ErrorMessageLock);
 #endif
+		MesPrint("Attempted to allocate %l bytes.", size);
 		Error1("No memory while allocating ",(UBYTE *)messageifwrong);
 #ifndef MALLOCDEBUG
 		MUNLOCK(ErrorMessageLock);
