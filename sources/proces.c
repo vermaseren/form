@@ -2593,7 +2593,7 @@ ComAct:		if ( t < u ) do { *m++ = *t++; } while ( t < u );
 			*termout = WORDDIF(m,termout);
 			if ( (*termout)*((LONG)sizeof(WORD)) > AM.MaxTer ) {
 				MLOCK(ErrorMessageLock);
-				MesPrint("Term too complex during substitution. MaxTermSize of %l is too small",AM.MaxTer);
+				MesPrint("Term too complex during substitution: %l words. MaxTermSize of %l words is too small", *termout, AM.MaxTer/(LONG)sizeof(WORD) );
 				goto InsCall2;
 			}
 			AT.WorkPointer = coef;
@@ -5453,7 +5453,7 @@ retry:
 	*AT.WorkPointer = n1 = WORDDIF(t,AT.WorkPointer);
 	if ( n1*((LONG)sizeof(WORD)) > AM.MaxTer ) {
 		MLOCK(ErrorMessageLock);
-		MesPrint("Term too complex. Maybe increasing MaxTermSize can help");
+		MesPrint("Term too complex: %d words. Maybe increasing MaxTermSize (%d words) can help", n1, AM.MaxTer/(LONG)sizeof(WORD) );
 		goto PolyCall2;
 	}
 	m = term; t = AT.WorkPointer;

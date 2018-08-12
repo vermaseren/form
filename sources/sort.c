@@ -995,7 +995,12 @@ TooLarge:
 							to = buffer;
 							if ( to >= AT.WorkSpace && to < AT.WorkTop && to+j > AT.WorkTop )
 								goto WorkSpaceError;
-							if ( j > AM.MaxTer ) goto TooLarge;
+							if ( j > AM.MaxTer ) {
+								MLOCK(ErrorMessageLock);
+								MesPrint("Encountered term of size: %d words.", j/(LONG)sizeof(WORD) );
+								MUNLOCK(ErrorMessageLock);
+								goto TooLarge;
+							}
 							NCOPY(to,t,j);
 						}
 					}
