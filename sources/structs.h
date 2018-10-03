@@ -1320,6 +1320,7 @@ typedef struct {
 	WORD iflevel;
 	WORD whilelevel;
 	WORD nestingsum;
+    WORD padding;
 } SWITCH;
 
 /*
