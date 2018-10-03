@@ -1,0 +1,152 @@
+
+\chapter{Diagram generation}
+\label{diagrams}
+
+For an accurate calculation of particle reactions a good, fast and flexible 
+diagram generator is a necessity. It was noticed that the fastest available 
+generator is the one by Toshiaki Kaneko, which was constructed for the 
+Grace system. Hence he was asked whether he would be willing to provide a 
+version that could be implemented into Form, thereby making intermediate 
+files with diagrams superfluous. He gracefully accepted.
+
+In the current version the diagram generator is not complete yet. 
+Effectively it only accepts one type of scalar particles, but one can have 
+any number of particles at the vertices. Hence it can be used as a fast 
+topology generator. Because all source code is present and has been 
+commented it will be possible to extend the user interface on demand.
+
+The completion of the full diagram generator is planned for late-2018/ 
+early-2019, depending on the availability of time. The source code of the 
+generator is in C++, which makes it rather accesible from Form and possibly 
+from other programs as well. For more information about that one should 
+contact Prof. Toshiaki Kaneko directly.
+
+The current interface is rather simple, due to the fact that one can 
+generate only 'topologies'. First one needs two sets of vectors, one for 
+the momenta of the external particles and one for the momenta of internal 
+particles. The call is then with the function topologies\_ as in
+\begin{verbatim}
+    Vectors Q1,Q2,p1,...,p8;
+    Set QQ:Q1,Q2;
+    Set PP:p1,...,p8;
+    #define LOOPS "2"
+    Local F = topologies_(`LOOPS',2,{3,},QQ,PP);
+    Print +f +s;
+    .end
+
+   F =
+       + node_(0,-Q1)*node_(1,-Q2)*node_(2,Q1,-p1,-p2)*node_(3,Q2,p1,-p3)*
+      node_(4,p2,-p4,-p5)*node_(5,p3,p4,p5)
+       + node_(0,-Q1)*node_(1,-Q2)*node_(2,Q1,-p1,-p2)*node_(3,p1,-p3,-p4)*
+      node_(4,p2,p3,-p5)*node_(5,Q2,p4,p5)
+      ;
+\end{verbatim}
+Here the second parameter indicates the number of external legs, the third 
+parameter is a set that tells, in this case, that 3-point vertices are 
+allowed, QQ is the set of external momenta and PP is the set of internal 
+momenta. The function node\_ is a built-in function to indicate the 
+vertices.
+
+If one would like to allow more types of vertices one may change 
+the third parameter:
+\begin{verbatim}
+    Vectors Q1,Q2,p1,...,p8;
+    Set QQ:Q1,Q2;
+    Set PP:p1,...,p8;
+    #define LOOPS "2"
+    Local F = topologies_(`LOOPS',2,{3,4},QQ,PP);
+    Print +f +s;
+    .end
+
+   F =
+       + node_(0,-Q1)*node_(1,-Q2)*node_(2,Q1,Q2,-p1,-p2)*node_(3,p1,p2,-p3,p3
+      )
+       + node_(0,-Q1)*node_(1,-Q2)*node_(2,Q1,-p1,-p2)*node_(3,Q2,p1,-p3)*
+      node_(4,p2,p3,-p4,p4)
+       + node_(0,-Q1)*node_(1,-Q2)*node_(2,Q1,-p1,-p2)*node_(3,Q2,p1,-p3)*
+      node_(4,p2,-p4,-p5)*node_(5,p3,p4,p5)
+       + node_(0,-Q1)*node_(1,-Q2)*node_(2,Q1,-p1,-p2)*node_(3,Q2,-p3,-p4)*
+      node_(4,p1,p2,p3,p4)
+       + node_(0,-Q1)*node_(1,-Q2)*node_(2,Q1,-p1,-p2)*node_(3,p1,-p3,-p4)*
+      node_(4,Q2,p2,p3,p4)
+       + node_(0,-Q1)*node_(1,-Q2)*node_(2,Q1,-p1,-p2)*node_(3,p1,-p3,-p4)*
+      node_(4,p2,p3,-p5)*node_(5,Q2,p4,p5)
+       + node_(0,-Q1)*node_(1,-Q2)*node_(2,Q1,-p1,-p2,-p3)*node_(3,Q2,p1,p2,p3
+      )
+       + node_(0,-Q1)*node_(1,-Q2)*node_(2,-p1,-p2,-p3)*node_(3,Q2,p1,-p4)*
+      node_(4,Q1,p2,p3,p4)
+       + node_(0,-Q1)*node_(1,-Q2)*node_(2,-p1,-p2,-p3)*node_(3,p1,p2,-p4)*
+      node_(4,Q1,Q2,p3,p4)
+      ;
+\end{verbatim}
+and suddenly there are 9 topologies.
+
+In the above configuration the program sees the external lines as 
+different. If there is however a symmetry between the two external lines of 
+a propagator-like diagram (as is the case with boson propagators) one can 
+indicate this by putting a minus sign in front of the number 2:
+\begin{verbatim}
+    Vectors Q1,Q2,p1,...,p8;
+    Set QQ:Q1,Q2;
+    Set PP:p1,...,p8;
+    #define LOOPS "2"
+    Local F = topologies_(`LOOPS',-2,{3,4},QQ,PP);
+    Print +f +s;
+    .end
+
+   F =
+       + node_(0,-Q1)*node_(1,-Q2)*node_(2,Q1,Q2,-p1,-p2)*node_(3,p1,p2,-p3,p3
+      )
+       + node_(0,-Q1)*node_(1,-Q2)*node_(2,Q1,-p1,-p2)*node_(3,Q2,p1,-p3)*
+      node_(4,p2,p3,-p4,p4)
+       + node_(0,-Q1)*node_(1,-Q2)*node_(2,Q1,-p1,-p2)*node_(3,Q2,p1,-p3)*
+      node_(4,p2,-p4,-p5)*node_(5,p3,p4,p5)
+       + node_(0,-Q1)*node_(1,-Q2)*node_(2,Q1,-p1,-p2)*node_(3,Q2,-p3,-p4)*
+      node_(4,p1,p2,p3,p4)
+       + node_(0,-Q1)*node_(1,-Q2)*node_(2,Q1,-p1,-p2)*node_(3,Q2,-p3,-p4)*
+      node_(4,p1,p3,-p5)*node_(5,p2,p4,p5)
+       + node_(0,-Q1)*node_(1,-Q2)*node_(2,Q1,-p1,-p2)*node_(3,p1,-p3,-p4)*
+      node_(4,Q2,p2,p3,p4)
+       + node_(0,-Q1)*node_(1,-Q2)*node_(2,Q1,-p1,-p2,-p3)*node_(3,Q2,p1,p2,p3
+      )
+       + node_(0,-Q1)*node_(1,-Q2)*node_(2,-p1,-p2,-p3)*node_(3,p1,p2,-p4)*
+      node_(4,Q1,Q2,p3,p4)
+      ;
+\end{verbatim}
+Now the program assumes this symmetry and one notices only 8 topologies 
+remaining.
+
+In the case of the topologies\_ function there are no combinatorics 
+factors. This will of course be different with the future function 
+diagrams\_.
+
+That this function is very fast can be seen when one generates all 
+topologies of a 6-loop propagator with only 3-point vertices:
+\begin{verbatim}
+    Vectors Q1,Q2,p1,...,p17;
+    Set QQ:Q1,Q2;
+    Set PP:p1,...,p17;
+    #define LOOPS "6"
+    Local F = topologies_(`LOOPS',-2,{3,},QQ,PP);
+    .end
+
+Time =       1.75 sec    Generated terms =       2793
+               F         Terms in output =       2793
+                         Bytes used      =     347156
+\end{verbatim}
+or without the symmetry
+\begin{verbatim}
+    Vectors Q1,Q2,p1,...,p17;
+    Set QQ:Q1,Q2;
+    Set PP:p1,...,p17;
+    #define LOOPS "6"
+    Local F = topologies_(`LOOPS',2,{3,},QQ,PP);
+    .end
+
+Time =       0.63 sec    Generated terms =       4999
+               F         Terms in output =       4999
+                         Bytes used      =     616180
+\end{verbatim}
+This is very much faster than the program that is used most widely.
+
+To be continued.....
