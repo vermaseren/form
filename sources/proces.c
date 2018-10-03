@@ -1445,6 +1445,7 @@ Important: we may not have enough spots here
 				else if ( todo && numargs == 3 ) {
 					if ( *t == DIVFUNCTION ) AN.TeInFun = -9;
 					else if ( *t == REMFUNCTION ) AN.TeInFun = -10;
+					else if ( *t == GCDFUNCTION ) AN.TeInFun = -8;
 					AN.TeSuOut = 0;
 					AR.TePos = -1;
 					return(1);
