@@ -462,6 +462,7 @@ typedef int (*TFUN1)();
 #define DIAGRAMS 107
 #define VERTEX 108
 #define EDGE 109
+#define ALLWILD 109
 
 #define MAXBUILTINFUNCTION 109
 #define FIRSTUSERFUNCTION 150
@@ -571,6 +572,9 @@ typedef int (*TFUN1)();
 #define TYPETOSPECTATOR 78
 #define TYPEARGTOEXTRASYMBOL 79
 #define TYPECANONICALIZE 80
+#define TYPESWITCH 81
+#define TYPEENDSWITCH 82
+
 /*
 	The codes for the 'operations' that are part of TYPEOPERATION.
 */
@@ -1045,3 +1049,9 @@ typedef int (*TFUN1)();
 
 #define READSPECTATORFLAG 3
 #define GLOBALSPECTATORFLAG 1
+
+#define ORDEREDSET 1
+
+#define DENSETABLE 1
+#define SPARSETABLE 0
+

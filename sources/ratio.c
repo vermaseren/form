@@ -2790,7 +2790,7 @@ int DIVfunction(PHEAD WORD *term,WORD level,int par)
 	GETBIDENTITY
 	WORD *t, *tt, *r, *arg1 = 0, *arg2 = 0, *arg3 = 0, *termout;
 	WORD *tstop, *tend, *r3, *rr, *rstop, tlength, rlength, newlength;
-	WORD *proper1, *proper2, *proper3 = 0;
+	WORD *proper1, *proper2, *proper3 = 0, numdol = -1;
 	int numargs = 0, type1, type2, actionflag1, actionflag2;
 	WORD startebuf = cbuf[AT.ebufnum].numrhs;
 	int division = ( par <= 2 );  /* false for mul_ */
@@ -2812,10 +2812,12 @@ int DIVfunction(PHEAD WORD *term,WORD level,int par)
 		while ( r < tt ) {
 			if ( numargs == 0 ) { arg1 = r; }
 			if ( numargs == 1 ) { arg2 = r; }
+			if ( numargs == 2 && *r == -DOLLAREXPRESSION ) { numdol = r[1]; }
 			numargs++;
 			NEXTARG(r);
 		}
 		if ( numargs == 2 ) break;
+		if ( division && numargs == 3 ) break;
 		t = tt;
 	}
 	if ( t >= tstop ) {
@@ -2835,6 +2837,7 @@ zerozero:;
 			MUNLOCK(ErrorMessageLock);
 			Terminate(-1);
 		}
+		if ( numdol >= 0 ) PutTermInDollar(0,numdol);
 		return(0);
 	}
 	if ( division && *arg2 == -SNUMBER && arg2[1] == 0 ) {
@@ -2860,6 +2863,7 @@ divzero:;
 		}
 		M_free(arg2,"DIVfunction");
 		M_free(arg1,"DIVfunction");
+		if ( numdol >= 0 ) PutTermInDollar(0,numdol);
 		return(0);
 	}
 	if ( division && *arg2 == 0 ) {

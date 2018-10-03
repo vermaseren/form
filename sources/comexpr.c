@@ -30,7 +30,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */
+/* #] License : */ 
 
 /*
   	#[ Includes : compi2.c
@@ -59,35 +59,35 @@ static struct id_options {
 };
 
 /*
-  	#] Includes :
+  	#] Includes : 
   	#[ CoLocal :
 */
 
 int CoLocal(UBYTE *inp) { return(DoExpr(inp,LOCALEXPRESSION,0)); }
 
 /*
-  	#] CoLocal :
+  	#] CoLocal : 
   	#[ CoGlobal :
 */
 
 int CoGlobal(UBYTE *inp) { return(DoExpr(inp,GLOBALEXPRESSION,0)); }
 
 /*
-  	#] CoGlobal :
+  	#] CoGlobal : 
   	#[ CoLocalFactorized :
 */
 
 int CoLocalFactorized(UBYTE *inp) { return(DoExpr(inp,LOCALEXPRESSION,1)); }
 
 /*
-  	#] CoLocalFactorized :
+  	#] CoLocalFactorized : 
   	#[ CoGlobalFactorized :
 */
 
 int CoGlobalFactorized(UBYTE *inp) { return(DoExpr(inp,GLOBALEXPRESSION,1)); }
 
 /*
-  	#] CoGlobalFactorized :
+  	#] CoGlobalFactorized : 
   	#[ DoExpr:
 
 
@@ -377,7 +377,7 @@ int DoExpr(UBYTE *inp, int type, int par)
 }
 
 /*
-  	#] DoExpr:
+  	#] DoExpr: 
   	#[ CoIdOld :
 */
 
@@ -388,7 +388,7 @@ int CoIdOld(UBYTE *inp)
 }
 
 /*
-  	#] CoIdOld :
+  	#] CoIdOld : 
   	#[ CoId :
 */
 
@@ -399,7 +399,7 @@ int CoId(UBYTE *inp)
 }
 
 /*
-  	#] CoId :
+  	#] CoId : 
   	#[ CoIdNew :
 */
 
@@ -410,7 +410,7 @@ int CoIdNew(UBYTE *inp)
 }
 
 /*
-  	#] CoIdNew :
+  	#] CoIdNew : 
   	#[ CoDisorder :
 */
 
@@ -421,7 +421,7 @@ int CoDisorder(UBYTE *inp)
 }
 
 /*
-  	#] CoDisorder :
+  	#] CoDisorder : 
   	#[ CoMany :
 */
 
@@ -432,7 +432,7 @@ int CoMany(UBYTE *inp)
 }
 
 /*
-  	#] CoMany :
+  	#] CoMany : 
   	#[ CoMulti :
 */
 
@@ -443,7 +443,7 @@ int CoMulti(UBYTE *inp)
 }
 
 /*
-  	#] CoMulti :
+  	#] CoMulti : 
   	#[ CoIfMatch :
 */
 
@@ -454,7 +454,7 @@ int CoIfMatch(UBYTE *inp)
 }
 
 /*
-  	#] CoIfMatch :
+  	#] CoIfMatch : 
   	#[ CoIfNoMatch :
 */
 
@@ -465,7 +465,7 @@ int CoIfNoMatch(UBYTE *inp)
 }
 
 /*
-  	#] CoIfNoMatch :
+  	#] CoIfNoMatch : 
   	#[ CoOnce :
 */
 
@@ -476,7 +476,7 @@ int CoOnce(UBYTE *inp)
 }
 
 /*
-  	#] CoOnce :
+  	#] CoOnce : 
   	#[ CoOnly :
 */
 
@@ -487,7 +487,7 @@ int CoOnly(UBYTE *inp)
 }
 
 /*
-  	#] CoOnly :
+  	#] CoOnly : 
   	#[ CoSelect :
 */
 
@@ -498,7 +498,7 @@ int CoSelect(UBYTE *inp)
 }
 
 /*
-  	#] CoSelect :
+  	#] CoSelect : 
   	#[ CoIdExpression :
 
 	First finish dealing with secondary keywords
@@ -1021,7 +1021,7 @@ AllDone:
 }
 
 /*
-  	#] CoIdExpression :
+  	#] CoIdExpression : 
   	#[ CoMultiply :
 */
 
@@ -1061,7 +1061,7 @@ int CoMultiply(UBYTE *inp)
 }
 
 /*
-  	#] CoMultiply :
+  	#] CoMultiply : 
   	#[ CoFill :
 
 	Special additions for tablebase-like tables added 12-aug-2002
@@ -1328,7 +1328,7 @@ redef:;
 }
 
 /*
-  	#] CoFill :
+  	#] CoFill : 
   	#[ CoFillExpression :
 
 	Syntax: FillExpression table = expression(x1,...,xn);
@@ -1718,7 +1718,7 @@ noway:
 }
 
 /*
-  	#] CoFillExpression :
+  	#] CoFillExpression : 
   	#[ CoPrintTable :
 
 	Syntax
@@ -1895,7 +1895,7 @@ finally:
 }
 
 /*
-  	#] CoPrintTable :
+  	#] CoPrintTable : 
   	#[ CoAssign :
 
 	This statement has an easy syntax:
@@ -1954,7 +1954,7 @@ nolhs:	MesPrint("&assign statement should have a dollar variable in the LHS");
 }
 
 /*
-  	#] CoAssign :
+  	#] CoAssign : 
   	#[ CoDeallocateTable :
 
 	Syntax: DeallocateTable tablename(s);
@@ -2018,7 +2018,7 @@ int CoDeallocateTable(UBYTE *inp)
 }
 
 /*
-  	#] CoDeallocateTable :
+  	#] CoDeallocateTable : 
   	#[ CoFactorCache :
 */
 /**
@@ -2045,5 +2045,5 @@ int CoFactorCache(UBYTE *inp)
 */
 
 /*
-  	#] CoFactorCache :
+  	#] CoFactorCache : 
 */

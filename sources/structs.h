@@ -490,7 +490,8 @@ typedef struct SeTs {
 	WORD	node;
 	WORD	namesize;
 	WORD	dimension;			/* For dimensionality checks */
-	PADLONG(0,6,0);
+    WORD    flags;              /* Like: ordered */
+	PADLONG(0,7,0);
 } *SETS;
 
 /**
@@ -1300,6 +1301,27 @@ typedef struct {
     int ranges;
 } DICTIONARY;
 
+typedef struct {
+	WORD ncase;
+	WORD value;
+	WORD compbuffer;
+} SWITCHTABLE;
+
+typedef struct {
+	SWITCHTABLE *table;
+	SWITCHTABLE defaultcase;
+	SWITCHTABLE endswitch;
+	WORD typetable;
+	WORD maxcase;
+	WORD mincase;
+	WORD numcases;
+	WORD tablesize;
+	WORD caseoffset;
+	WORD iflevel;
+	WORD whilelevel;
+	WORD nestingsum;
+} SWITCH;
+
 /*
   	#] Varia : 
     #[ A :
@@ -1362,6 +1384,7 @@ struct M_const {
     LONG    ggThreadBucketSize;    /* (C) */
     LONG    SumTime;               /*     Used in .clear */
     LONG    SpectatorSize;         /*     Size of the buffer in bytes */
+    LONG    TimeLimit;             /*     Limit in sec to the total real time */
     int     FileOnlyFlag;          /* (M) Writing only to file */
     int     Interact;              /* (M) Interactive mode flag */
     int     MaxParLevel;           /* (M) Maximum nesting of parantheses */
@@ -1423,6 +1446,7 @@ struct M_const {
     int     ggOldGCDflag;
     int     gWTimeStatsFlag;
     int     ggWTimeStatsFlag;
+    int     jumpratio;
     WORD    MaxTal;                /* (M) Maximum number of words in a number */
     WORD    IndDum;                /* (M) Basis value for dummy indices */
     WORD    DumInd;                /* (M) */
@@ -1479,11 +1503,13 @@ struct M_const {
     WORD    zerorhs;
     WORD    onerhs;
     WORD    havesortdir;
+    WORD    vectorzero;            /* p0_ */
+    WORD    ClearStore;
     WORD    BracketFactors[8];
 #ifdef WITHPTHREADS
-	PADPOSITION(17,25,61,81,sizeof(pthread_rwlock_t)+sizeof(pthread_mutex_t)*2);
+	PADPOSITION(17,26,62,82,sizeof(pthread_rwlock_t)+sizeof(pthread_mutex_t)*2);
 #else
-	PADPOSITION(17,23,61,81,0);
+	PADPOSITION(17,24,62,83,0);
 #endif
 };
 /*
@@ -1605,6 +1631,8 @@ struct C_const {
     STREAM  *Streams;              /**< [D] The input streams. */
     STREAM  *CurrentStream;        /**< (C) The current input stream.
                                        Streams are: do loop, file, prevariable. points into Streams memory. */
+    SWITCH  *SwitchArray;
+    WORD    *SwitchHeap;
     LONG    *termstack;            /**< [D] Last term statement {offset} */
     LONG    *termsortstack;        /**< [D] Last sort statement {offset} */
     UWORD   *cmod;                 /**< [D] Local setting of modulus. Pointer to value. */
@@ -1768,6 +1796,9 @@ struct C_const {
     WORD    DidClean;              /* (C) Test whether nametree needs cleaning */
     WORD    IfLevel;               /* (C) */
     WORD    WhileLevel;            /* (C) */
+    WORD    SwitchLevel;
+    WORD    SwitchInArray;
+    WORD    MaxSwitch;
     WORD    LogHandle;             /* (C) The Log File */
     WORD    LineLength;            /* (C) */
     WORD    StoreHandle;           /* (C) Handle of .str file */
@@ -1791,11 +1822,11 @@ struct C_const {
     UBYTE   Commercial[COMMERCIALSIZE+2]; /* (C) Message to be printed in statistics */
     UBYTE   debugFlags[MAXFLAGS+2];    /* On/Off Flag number(s) */
 #if defined(WITHPTHREADS)
-	PADPOSITION(47,8+3*MAXNEST,72,45+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17+sizeof(pthread_mutex_t));
+	PADPOSITION(49,8+3*MAXNEST,72,47+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17+sizeof(pthread_mutex_t));
 #elif defined(WITHMPI)
-	PADPOSITION(47,8+3*MAXNEST,72,46+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17);
+	PADPOSITION(49,8+3*MAXNEST,72,47+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17);
 #else
-	PADPOSITION(45,8+3*MAXNEST,70,45+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17);
+	PADPOSITION(47,8+3*MAXNEST,70,46+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17);
 #endif
 };
 /*
@@ -1984,6 +2015,8 @@ struct T_const {
     WORD    **ListPoly;
     WORD    *ListSymbols;
     UWORD   *NumMem;
+    WORD    *TopologiesTerm;
+    WORD    *TopologiesStart;
     PARTI   partitions;
     LONG    sBer;                  /* (T) Size of the bernoullis buffer */
     LONG    pWorkPointer;          /* (R) Offset-pointer in pWorkSpace */
@@ -2046,14 +2079,18 @@ struct T_const {
 	WORD    inprimelist;
 	WORD    sizeprimelist;
     WORD    fromindex;             /* Tells the compare routine whether call from index */
+    WORD    setinterntopo;         /* Set of internal momenta for topogen */
+    WORD    setexterntopo;         /* Set of external momenta for topogen */
+    WORD    TopologiesLevel;
+    WORD    TopologiesOptions[2];
 #ifdef WITHPTHREADS
 #ifdef WITHSORTBOTS
-	PADPOINTER(5,27,100+SUBEXPSIZE*4+FUNHEAD*2+ARGHEAD*2,0);
+	PADPOINTER(5,27,105+SUBEXPSIZE*4+FUNHEAD*2+ARGHEAD*2,0);
 #else
-	PADPOINTER(5,25,100+SUBEXPSIZE*4+FUNHEAD*2+ARGHEAD*2,0);
+	PADPOINTER(5,25,105+SUBEXPSIZE*4+FUNHEAD*2+ARGHEAD*2,0);
 #endif
 #else
-	PADPOINTER(5,23,100+SUBEXPSIZE*4+FUNHEAD*2+ARGHEAD*2,0);
+	PADPOINTER(5,23,105+SUBEXPSIZE*4+FUNHEAD*2+ARGHEAD*2,0);
 #endif
 };
 /*

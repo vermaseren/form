@@ -462,6 +462,7 @@ NextSymbol:;
 			case VECTOR :
 				t += 2;
 				do {
+					if ( t[0] == AM.vectorzero ) goto NormZero;
 					if ( t[1] == FUNNYVEC ) {
 						pind[nind++] = *t;
 						t += 2;
@@ -469,7 +470,8 @@ NextSymbol:;
 					else if ( t[1] < 0 ) {
 						if ( *t == NOINDEX && t[1] == NOINDEX ) t += 2;
 						else {
-						*ppdot++ = *t++; *ppdot++ = *t++; *ppdot++ = 1; ndot++; 
+							if ( t[1] == AM.vectorzero ) goto NormZero;
+							*ppdot++ = *t++; *ppdot++ = *t++; *ppdot++ = 1; ndot++; 
 						}
 					}
 					else { *ppvec++ = *t++; *ppvec++ = *t++; nvec += 2; }
@@ -484,6 +486,10 @@ NextSymbol:;
 						ppdot[-1] += t[2];
 						t += 3;
 						if ( ppdot[-1] == 0 ) { ppdot -= 3; ndot--; }
+					}
+					else if ( t[0] == AM.vectorzero || t[1] == AM.vectorzero ) {
+						if ( t[2] > 0 ) goto NormZero;
+						goto NormInf;
 					}
 					else {
 						*ppdot++ = *t++; *ppdot++ = *t++;
@@ -2046,7 +2052,7 @@ ScanCont:		while ( t < r ) {
 			case INDEX :
 				t += 2;
 				do {
-					if ( *t == 0 ) goto NormZero;
+					if ( *t == 0 || *t == AM.vectorzero ) goto NormZero;
 					if ( *t > 0 && *t < AM.OffsetIndex ) {
 						lnum[0] = *t++;
 						nnum = 1;
@@ -2455,6 +2461,7 @@ doflags:
 					if ( *t >= GAMMA && *t <= GAMMASEVEN ) t++;
 					t += FUNHEAD;
 					while ( t < r ) {
+						if ( *t == AM.vectorzero ) goto NormZero;
 						if ( *t >= AM.OffsetIndex && ( *t >= AM.DumInd
 						|| ( *t < AM.WilInd && indices[*t-AM.OffsetIndex].dimension ) ) ) {
 							pcon[ncon++] = t;

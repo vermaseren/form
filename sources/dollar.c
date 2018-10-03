@@ -1,7 +1,7 @@
 /** @file dollar.c
  * 
- *	The routines that deal with the dollar variables.
- *	The name administration is to be found in the file names.c
+ *  The routines that deal with the dollar variables.
+ *  The name administration is to be found in the file names.c
  */
 /* #[ License : */
 /*
@@ -137,7 +137,7 @@ int CatchDollar(int par)
 		if ( (error = PF_BroadcastPreDollar(&dbuffer, &newsize, &numterms)) != 0 )
 			goto onerror;
 #endif
-	if ( newsize < 32 ) newsize = 32;
+	if ( newsize < MINALLOC ) newsize = MINALLOC;
 	newsize = ((newsize+7)/8)*8;
 	if ( numterms == 0 ) {
 		d->type = DOLZERO;
@@ -303,10 +303,10 @@ NoChangeZero:;
 		if ( dtype > 0 ) {
 /*			LOCK(d->pthreadslockwrite); */
 			LOCK(d->pthreadslockread);
-			if ( d->size < 32 ) {
+			if ( d->size < MINALLOC ) {
 				WORD oldsize, *oldwhere, i;
 				oldsize = d->size; oldwhere = d->where;
-				d->size = 32;
+				d->size = MINALLOC;
 				d->where = (WORD *)Malloc1(d->size*sizeof(WORD),"dollar contents");
 				cbuf[AM.dbufnum].rhs[numdollar] = d->where;
 				if ( oldsize > 0 ) {
@@ -374,9 +374,9 @@ NoChangeOne:;
 /*
  		#] Thread version : 
 */
-		if ( d->size < 32 ) {
+		if ( d->size < MINALLOC ) {
 			if ( d->where && d->where != &(AM.dollarzero) ) M_free(d->where,"dollar contents");
-			d->size = 32;
+			d->size = MINALLOC;
 			d->where = (WORD *)Malloc1(d->size*sizeof(WORD),"dollar contents");
 			cbuf[AM.dbufnum].rhs[numdollar] = d->where;
 		}
@@ -814,7 +814,7 @@ void TermAssign(WORD *term)
 			&& t[FUNHEAD] == -DOLLAREXPRESSION ) {
 				d = Dollars + t[FUNHEAD+1];
 				newsize = *term - FUNHEAD - 1;
-				if ( newsize < 32 ) newsize = 32;
+				if ( newsize < MINALLOC ) newsize = MINALLOC;
 				newsize = ((newsize+7)/8)*8;
 				if ( d->size > 2*newsize && d->size > 1000 ) {
 					if ( d->where && d->where != &(AM.dollarzero) ) M_free(d->where,"dollar contents");
@@ -855,6 +855,34 @@ void TermAssign(WORD *term)
 
 /*
   	#] TermAssign : 
+  	#[ PutTermInDollar :
+
+	We assume here that the dollar is local.
+*/
+
+int PutTermInDollar(WORD *term, WORD numdollar)
+{
+	DOLLARS d = Dollars+numdollar;
+	WORD i;
+	if ( term == 0 || *term == 0 ) {
+		d->type = DOLZERO;
+		return(0);
+	}
+	if ( d->size < *term || d->size > 2*term[0] || d->where == 0 ) {
+		if ( d->size > 0 && d->where ) {
+			M_free(d->where,"dollar contents");
+		}
+		d->where = Malloc1((term[0]+1)*sizeof(WORD),"dollar contents");
+		d->size = term[0]+1;
+	}
+	d->type = DOLTERMS;
+	for ( i = 0; i < term[0]; i++ ) d->where[i] = term[i];
+	d->where[i] = 0;
+	return(0);
+}
+
+/*
+  	#] PutTermInDollar : 
   	#[ WildDollars :
 
 	Note that we cannot upload wildcards into dollar variables when WITHPTHREADS.
@@ -957,10 +985,10 @@ void WildDollars(PHEAD WORD *term)
 				}
 				break;
 			default:
-				weneed = 32;
+				weneed = MINALLOC;
 				break;
 		}
-		if ( weneed < 32 ) weneed = 32;
+		if ( weneed < MINALLOC ) weneed = MINALLOC;
 		weneed = ((weneed+7)/8)*8;
 		if ( d->size > 2*weneed && d->size > 1000 ) {
 			if ( d->where && d->where != &(AM.dollarzero) ) M_free(d->where,"dollarspace");
@@ -1347,7 +1375,7 @@ WORD DolToSymbol(PHEAD WORD numdollar)
 
 /*
   	#] DolToSymbol : 
-  	#[ DolToIndex :	   with LOCK
+  	#[ DolToIndex :     with LOCK
 */
 
 WORD DolToIndex(PHEAD WORD numdollar)
@@ -1398,7 +1426,7 @@ WORD DolToIndex(PHEAD WORD numdollar)
 	else if ( d->type == DOLNUMBER && d->where[0] == 4 && d->where[2] == 1
 	&& d->where[3] == 3 && d->where[4] == 0 && d->where[1] < AM.OffsetIndex ) {
 		retval = d->where[1];
-	}
+	} 
 	else if ( d->type == DOLWILDARGS && d->where[0] == 1
 	&& d->where[1] >= 0 ) {
 		retval = d->where[1];
@@ -2480,7 +2508,7 @@ int DollarRaiseLow(UBYTE *name, LONG value)
 	if ( value < 0 ) { value = -value; sgn = -1; }
 	if ( d->type == DOLZERO ) {
 		if ( d->where ) M_free(d->where,"DollarRaiseLow");
-		d->size = 32;
+		d->size = MINALLOC;
 		d->where = (WORD *)Malloc1(d->size*sizeof(WORD),"DollarRaiseLow");
 		if ( ( value & AWORDMASK ) != 0 ) {
 			d->where[0] = 6; d->where[1] = value >> BITSINWORD;
@@ -2529,7 +2557,7 @@ int DollarRaiseLow(UBYTE *name, LONG value)
 		if ( i+2 > d->size ) {
 			M_free(d->where,"DollarRaiseLow");
 			d->size = i+2;
-			if ( d->size < 32 ) d->size = 32;
+			if ( d->size < MINALLOC ) d->size = MINALLOC;
 			d->size = ((d->size+7)/8)*8;
 			d->where = (WORD *)Malloc1(d->size*sizeof(WORD),"DollarRaiseLow");
 		}
@@ -2713,9 +2741,9 @@ WORD TestDoLoop(PHEAD WORD *lhsbuf, WORD level)
 	}
 #endif
 
-	if ( d->size < 32 ) {
+	if ( d->size < MINALLOC ) {
 		if ( d->where && d->where != &(AM.dollarzero) ) M_free(d->where,"dollar contents");
-		d->size = 32;
+		d->size = MINALLOC;
 		d->where = (WORD *)Malloc1(d->size*sizeof(WORD),"dollar contents");
 	}
 	if ( start > 0 ) {
@@ -2814,9 +2842,9 @@ WORD TestEndDoLoop(PHEAD WORD *lhsbuf, WORD level)
 		 ( finish == start && value == finish ) ) {}
 	else level = lhsbuf[3];
 
-	if ( d->size < 32 ) {
+	if ( d->size < MINALLOC ) {
 		if ( d->where && d->where != &(AM.dollarzero) ) M_free(d->where,"dollar contents");
-		d->size = 32;
+		d->size = MINALLOC;
 		d->where = (WORD *)Malloc1(d->size*sizeof(WORD),"dollar contents");
 	}
 	if ( value > 0 ) {

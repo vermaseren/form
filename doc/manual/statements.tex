@@ -412,6 +412,50 @@ exists for case that the user would like to overrule such a mechanism).
 \vspace{10mm}
 
 %--#] bracket : 
+%--#[ break :
+%
+\section{break}
+\label{substabreak}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & break; \\
+\\ See also & case (\ref{substacase}), switch (\ref{substaswitch}),
+		 default(\ref{substadefault}), endswitch (\ref{substaendswitch}).
+\end{tabular} \vspace{4mm}
+
+\noindent When a break statement is reached in a switch construction the 
+next statement to be executed is the first statement after the 
+corresponding endswitch statement.
+
+\vspace{10mm}
+%
+%--#] break : 
+%--#[ case :
+%
+\section{case}
+\label{substacase}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & case,number; \\
+\\ See also & switch (\ref{substaswitch}), break (\ref{substabreak}),
+		 default(\ref{substadefault}), endswitch (\ref{substaendswitch}).
+\end{tabular} \vspace{4mm}
+
+\noindent The cases in a switch construction are marked by a number. This 
+number must be an interger that can be represented inside a {\FORM} word. 
+On a 64-bit processor this would be an integer in the range $-2^{31}$ to 
+$2^{31}-1$. If the dollar variable in the switch statement has the same 
+value as the integer in the case statement, the next statement to be 
+executed is the first statement after the case statement. Usually cases are 
+terminated by break statements, but if there is no break statement 'fall 
+through' may occur in which execution continues with the first statement 
+after the next case statement or default statement.
+
+\vspace{10mm}
+%
+%--#] case : 
 %--#[ cfunctions :
 
 \section{cfunctions}
@@ -883,6 +927,23 @@ when they take too much memory. This can be the case when a big tablebase
 has been used. \vspace{10mm}
 
 %--#] deallocatetable : 
+%--#[ default :
+%
+\section{default}
+\label{substadefault}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & default; \\
+\\ See also & case (\ref{substacase}), break (\ref{substabreak}),
+		 switch(\ref{substaswitch}), endswitch (\ref{substaendswitch}).
+\end{tabular} \vspace{4mm}
+
+\noindent This is the default case in a switch construction.
+
+\vspace{10mm}
+%
+%--#] default : 
 %--#[ delete :
 
 \section{delete}
@@ -1355,6 +1416,29 @@ Repeat environments can be nested with all other environments (and other
 repeat environments). \vspace{10mm}
 
 %--#] endrepeat : 
+%--#[ endswitch :
+%
+\section{endswitch}
+\label{substaendswitch}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & endswitch; \\
+\\ See also & case (\ref{substacase}), break (\ref{substabreak}),
+		 default(\ref{substadefault}), switch (\ref{substaswitch}).
+\end{tabular} \vspace{4mm}
+
+\noindent Ends a switch construction. It collects the various cases, puts 
+them in order and decides whether the lookup of cases should be done by 
+means of a jumptable, or by binary searching. The ratio (spread in 
+cases)/(number of cases) determines whether a jumptable is constructed. The 
+default value below which a jumptable is constructed is 4. This value can 
+be changed in the setups (see the section on the setups \ref{setup}) with 
+the variable jumpratio.
+
+\vspace{10mm}
+%
+%--#] endswitch : 
 %--#[ endterm :
 
 \section{endterm}
@@ -4863,7 +4947,7 @@ is just a shorthand notation for
 
 \noindent \begin{tabular}{ll}
 Type & Declaration statement\\
-Syntax & set {\tt<}set to be declared{\tt>}:{\tt<}element{\tt>} [{\tt<}more elements{\tt>}];
+Syntax & set {\tt<}set to be declared{\tt>}[(option)]:{\tt<}element{\tt>} [{\tt<}more elements{\tt>}];
 \end{tabular} \vspace{4mm}
 
 \noindent Declares a single set\index{set} and specifies its 
@@ -4878,7 +4962,17 @@ will keep the type of the set unfixed. This can change either when the next
 element is a symbolic index or a number that cannot be a fixed index (like 
 a negative number). If the status does not get resolved the set can be used 
 in the wildcarding of both symbols and indices. Normally sets of numbers 
-can be used only in the wildcarding of symbols. \vspace{10mm}
+can be used only in the wildcarding of symbols.
+
+Currently the only option is the ordered 
+set\index{set!ordered}\index{ordered set}, indicated by
+\begin{verbatim}
+    Set name(ordered):x4,x3,x1,x6,x2;
+\end{verbatim}
+which would be stored as x1,x2,x3,x4,x6 if that would be the order of 
+declaration.
+
+\vspace{10mm}
 
 %--#] set : 
 %--#[ setexitflag :
@@ -5235,6 +5329,53 @@ id\index{id} statements.
 \vspace{10mm}
 
 %--#] sum : 
+%--#[ switch :
+%
+\section{switch}
+\label{substaswitch}
+
+\noindent \begin{tabular}{ll}
+Type & Executable statement\\
+Syntax & switch,\$-variable; \\
+\\ See also & case (\ref{substacase}), break (\ref{substabreak}),
+		 default(\ref{substadefault}), endswitch (\ref{substaendswitch}).
+\end{tabular} \vspace{4mm}
+
+\noindent The argument of the switch statement should be a dollar variable 
+which evaluates into an integer that first inside a {\FORM} word.
+On a 64-bit processor this would be an integer in the range $-2^{31}$ to 
+$2^{31}-1$. The switch statement should be paired with an endswitch 
+statement. Between the two there will be a number of cases, each marked by 
+an integer. If the value of the dollar variable corresponds to the value of 
+one of these cases, execution will continue with the first statement after 
+the corresponding case statement. Example:
+\begin{verbatim}
+    id  f(x?$x) = f(x);
+    switch $x;
+      case -1;
+        some statements
+      break;
+      case 3;
+        more statements
+      break;
+      case 4;
+      case 5;
+        and a few more
+      break;
+      default;
+        and the default action
+      break;
+    endswitch;
+\end{verbatim}
+In principle the action is the same as in any computer language that has a 
+switch construction, including the fall-through between case 4 and case 5. 
+Whether the selection of the cases goes by binary search in a sorted list 
+or by jumptable is determined by the endswitch statement.
+
+
+\vspace{10mm}
+%
+%--#] switch : 
 %--#[ symbols :
  
 \section{symbols}
@@ -6016,7 +6157,7 @@ it is faster by more than a factor 100.
 
 \vspace{10mm}
 
-%--#] transform :
+%--#] transform : 
 %--#[ tryreplace :
 
 \section{tryreplace}

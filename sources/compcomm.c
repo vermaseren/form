@@ -7005,4 +7005,224 @@ int DoPutInside(UBYTE *inp, int par)
 
 /*
   	#] DoPutInside : 
+  	#[ CoSwitch :
+
+	Syntax: Switch $var;
+	Be carefull with illegal nestings with repeat, if, while.
+*/
+
+int CoSwitch(UBYTE *s)
+{
+	WORD numdollar;
+	SWITCH *sw;
+	if ( *s == '$' ) {
+		if ( GetName(AC.dollarnames,s+1,&numdollar,NOAUTO) != CDOLLAR ) {
+			MesPrint("&%s is undefined in switch statement",s);
+			numdollar = AddDollar(s+1,DOLINDEX,&one,1);
+			return(1);
+		}
+		s = SkipAName(s+1);
+		if ( *s != 0 ) {
+			MesPrint("&Switch should have a single $variable for its argument");
+			return(1);
+		}
+/*		AddPotModdollar(numdollar);  */
+	}
+	else {
+		MesPrint("&%s is not a $-variable in switch statement",s);
+		return(1);
+	}
+/*
+	Now create the switch table. We will add to it each time we run
+	into a new case. It will all be sorted out the moment we run into
+	the endswitch statement.
+*/
+	AC.SwitchLevel++;
+	if ( AC.SwitchInArray >= AC.MaxSwitch ) DoubleSwitchBuffers();
+	AC.SwitchHeap[AC.SwitchLevel] = AC.SwitchInArray;
+	sw = AC.SwitchArray + AC.SwitchInArray;
+
+	sw->iflevel = AC.IfLevel;
+	sw->whilelevel = AC.WhileLevel;
+	sw->nestingsum = NestingChecksum();
+ 
+	Add4Com(TYPESWITCH,numdollar,AC.SwitchInArray);
+
+	AC.SwitchInArray++;
+	return(0);
+}
+
+/*
+  	#] CoSwitch : 
+  	#[ CoCase :
+*/
+
+int CoCase(UBYTE *s)
+{
+	SWITCH *sw = AC.SwitchArray + AC.SwitchHeap[AC.SwitchLevel];
+	WORD x = 0, sign = 1;
+	while ( *s == ',' ) s++;
+	SKIPBLANKS(s);
+	while ( *s == '-' || *s == '+' ) {
+		if ( *s == '-' ) sign = -sign;
+		s++;
+	}
+	while ( FG.cTable[*s] == 1 ) { x = 10*x + *s++ - '0'; }
+	x = sign*x;
+
+	if ( sw->iflevel != AC.IfLevel || sw->whilelevel != AC.WhileLevel
+		|| sw->nestingsum != NestingChecksum() ) {
+		MesPrint("&Illegal nesting of switch/case/default with if/while/repeat/loop/argument/term/...");
+		return(-1);
+	}
+/*
+	Now add a case to the table with the current 'address'.
+*/
+	if ( sw->numcases >= sw->tablesize ) {
+		int i;
+		SWITCHTABLE *newtable;
+		WORD newsize;
+		if ( sw->tablesize == 0 ) newsize = 10;
+		else                  newsize = 2*sw->tablesize;
+		newtable = (SWITCHTABLE *)Malloc1(newsize*sizeof(SWITCHTABLE),"Switch table");
+		if ( sw->table ) {
+			for ( i = 0; i < sw->tablesize; i++ ) newtable[i] = sw->table[i];
+			M_free(sw->table,"Switch table");
+		}
+		sw->table = newtable;
+		sw->tablesize = newsize;
+	}
+	if ( sw->numcases == 0 ) { sw->mincase = sw->maxcase = x; }
+	else if ( x > sw->maxcase ) sw->maxcase = x;
+	else if ( x < sw->mincase ) sw->mincase = x;
+	sw->table[sw->numcases].ncase = x;
+	sw->table[sw->numcases].value = cbuf[AC.cbufnum].numlhs;
+	sw->table[sw->numcases].compbuffer = AC.cbufnum;
+	sw->numcases++;
+	return(0);
+}
+
+/*
+  	#] CoCase : 
+  	#[ CoBreak :
+*/
+
+int CoBreak(UBYTE *s)
+{
+/*
+	This involves a 'postponed' jump to the end. This can be done
+	in a special routine during execution.
+	That routine should also pop the switch level.
+*/
+	SWITCH *sw = AC.SwitchArray + AC.SwitchHeap[AC.SwitchLevel];
+	if ( sw->iflevel != AC.IfLevel || sw->whilelevel != AC.WhileLevel
+		|| sw->nestingsum != NestingChecksum() ) {
+		MesPrint("&Illegal nesting of switch/case/default with if/while/repeat/loop/argument/term/...");
+		return(-1);
+	}
+	if ( *s ) {
+		MesPrint("&No parameters allowed in Break statement");
+		return(-1);
+	}
+	Add3Com(TYPEENDSWITCH,AC.SwitchHeap[AC.SwitchLevel]);
+	return(0);
+}
+
+/*
+  	#] CoBreak : 
+  	#[ CoDefault :
+*/
+
+int CoDefault(UBYTE *s)
+{
+/*
+	A bit like case, except that the address gets stored directly in the
+	SWITCH struct.
+*/
+	SWITCH *sw = AC.SwitchArray + AC.SwitchHeap[AC.SwitchLevel];
+	if ( sw->iflevel != AC.IfLevel || sw->whilelevel != AC.WhileLevel
+		|| sw->nestingsum != NestingChecksum() ) {
+		MesPrint("&Illegal nesting of switch/case/default with if/while/repeat/loop/argument/term/...");
+		return(-1);
+	}
+	if ( *s ) {
+		MesPrint("&No parameters allowed in Default statement");
+		return(-1);
+	}
+	sw->defaultcase.ncase = 0;
+	sw->defaultcase.value = cbuf[AC.cbufnum].numlhs;
+	sw->defaultcase.compbuffer = AC.cbufnum;
+	return(0);
+}
+
+/*
+  	#] CoDefault : 
+  	#[ CoEndSwitch :
+*/
+
+int CoEndSwitch(UBYTE *s)
+{
+/*
+	We store this address in the SWITCH struct.
+	Next we sort the table by ncase.
+	Then we decide whether the table is DENSE or SPARSE.
+	If it is dense we change the allocation and spread the cases is necessary.
+	Finally we pop levels.
+*/
+	SWITCH *sw = AC.SwitchArray + AC.SwitchHeap[AC.SwitchLevel];
+	WORD i;
+	WORD totcases = sw->maxcase-sw->mincase+1;
+	while ( *s == ',' ) s++;
+	SKIPBLANKS(s)
+	if ( *s ) {
+		MesPrint("&No parameters allowed in EndSwitch statement");
+		return(-1);
+	}
+	if ( sw->iflevel != AC.IfLevel || sw->whilelevel != AC.WhileLevel
+		|| sw->nestingsum != NestingChecksum() ) {
+		MesPrint("&Illegal nesting of switch/case/default with if/while/repeat/loop/argument/term/...");
+		return(-1);
+	}
+	if ( sw->defaultcase.value == 0 ) CoDefault(s);
+	if ( totcases > sw->numcases*AM.jumpratio ) { /* The factor is experimental */
+		sw->caseoffset = 0;
+		sw->typetable = SPARSETABLE;
+/*
+		Now we need to sort sw->table
+*/
+		SwitchSplitMerge(sw->table,sw->numcases);
+	}
+	else {	/* DENSE */
+		SWITCHTABLE *ntable;
+		sw->caseoffset = sw->mincase;
+		sw->typetable = DENSETABLE;
+		ntable = (SWITCHTABLE *)Malloc1(totcases*sizeof(SWITCHTABLE),"Switch table");
+		for ( i = 0; i < totcases; i++ ) {
+			ntable[i].ncase = i+sw->caseoffset;
+			ntable[i].value = sw->defaultcase.value;
+			ntable[i].compbuffer = sw->defaultcase.compbuffer;
+		}
+		for ( i = 0; i < sw->numcases; i++ ) {
+			ntable[sw->table[i].ncase-sw->caseoffset] = sw->table[i];
+		}
+		M_free(sw->table,"Switch table");
+		sw->table = ntable;
+		sw->numcases = totcases;
+	}
+	sw->endswitch.ncase = 0;
+	sw->endswitch.value = cbuf[AC.cbufnum].numlhs;
+	sw->endswitch.compbuffer = AC.cbufnum;
+	if ( sw->defaultcase.value == 0 ) {
+		sw->defaultcase = sw->endswitch;
+	}
+	Add3Com(TYPEENDSWITCH,AC.SwitchHeap[AC.SwitchLevel]);
+/*
+	Now we need to pop.
+*/
+	AC.SwitchLevel--;
+	return(0);
+}
+
+/*
+  	#] CoEndSwitch : 
 */

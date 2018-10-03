@@ -639,6 +639,10 @@ WORD DoExecute(WORD par, WORD skip)
 			}
 		}
 	}
+	if ( AC.SwitchLevel > 0 ) {
+		MesPrint(" %d endswitch statement(s) missing",AC.SwitchLevel);
+		RetCode = 1;
+	}
 	if ( AC.dolooplevel > 0 ) {
 		MesPrint(" %d enddo statement(s) missing",AC.dolooplevel);
 		RetCode = 1;
@@ -934,6 +938,34 @@ WORD DoExecute(WORD par, WORD skip)
 	NumModOptdollars = 0;
 
 skipexec:
+/*
+	Clean up the switch information.
+	We keep the switch array and heap.
+*/
+if ( AC.SwitchInArray > 0 ) {
+	for ( i = 0; i < AC.SwitchInArray; i++ ) {
+		SWITCH *sw = AC.SwitchArray + i;
+		if ( sw->table ) M_free(sw->table,"Switch table");
+		sw->table = 0;
+		sw->defaultcase.ncase = 0;
+		sw->defaultcase.value = 0;
+		sw->defaultcase.compbuffer = 0;
+		sw->endswitch.ncase = 0;
+		sw->endswitch.value = 0;
+		sw->endswitch.compbuffer = 0;
+		sw->typetable = 0;
+		sw->maxcase = 0;
+		sw->mincase = 0;
+		sw->numcases = 0;
+		sw->tablesize = 0;
+		sw->caseoffset = 0;
+		sw->iflevel = 0;
+		sw->whilelevel = 0;
+		sw->nestingsum = 0;
+	}
+	AC.SwitchInArray = 0;
+	AC.SwitchLevel = 0;
+}
 #ifdef PARALLELCODE
 	AC.numpfirstnum = 0;
 #endif

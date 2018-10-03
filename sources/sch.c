@@ -784,13 +784,13 @@ UBYTE *WrtPower(UBYTE *Out, WORD Power)
  		#[ PrintTime :
 */
 
-void PrintTime()
+void PrintTime(UBYTE *mess)
 {
 	LONG millitime = TimeCPU(1);
 	WORD timepart = (WORD)(millitime%1000);
 	millitime /= 1000;
 	timepart /= 10;
-	MesPrint("Time = %7l.%2i sec",millitime,timepart);
+	MesPrint("At %s: Time = %7l.%2i sec",mess,millitime,timepart);
 }
 
 /*
@@ -1477,6 +1477,9 @@ VOID WriteArgument(WORD *t)
 	}
 	else if ( *t == -EXPRESSION ) {
 		StrCopy(EXPRNAME(t[1]),Out);
+	}
+	else if ( *t == -SETSET ) {
+		StrCopy(VARNAME(Sets,t[1]),Out);
 	}
 	else if ( *t <= -FUNCTION ) {
 		StrCopy(FindFunction(-*t),Out);

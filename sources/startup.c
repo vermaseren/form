@@ -220,6 +220,8 @@ int DoTail(int argc, UBYTE **argv)
 	UBYTE *s, *t, *copy;
 	int threadnum = 0;
 	argc--; argv++;
+	AM.ClearStore = 0;
+	AM.TimeLimit = 0;
 	AM.LogType = -1;
 	AM.HoldFlag = AM.qError = AM.Interact = AM.FileOnlyFlag = 0;
 	AM.InputFileName = AM.LogFileName = AM.IncDir = AM.TempDir = AM.TempSortDir =
@@ -388,6 +390,14 @@ printversion:;
 							goto NoFile;
 				case 'y': /* Preprocessor dumps output. No compilation. */
 							AP.PreDebug = PREPROONLY;   break;
+				case 'z': /* The number following is a time limit in sec. */
+							t = s++;
+							AM.TimeLimit = 0;
+							while ( *s >= '0' && *s <= '9' )
+								AM.TimeLimit = 10*AM.TimeLimit + *s++ - '0';
+							break;
+				case 'Z': /* Removes the .str file on crash, no matter its contents */
+							AM.ClearStore = 1;   break;
 				default:
 						if ( FG.cTable[*s] == 1 ) {
 							AM.SkipClears = 0; t = s;
@@ -1108,6 +1118,7 @@ VOID StartVariables()
 	PutPreVar((UBYTE *)"optimscheme_",(UBYTE *)("0"),0,0);
 	PutPreVar((UBYTE *)"tolower_",(UBYTE *)("0"),(UBYTE *)("?a"),0);
 	PutPreVar((UBYTE *)"toupper_",(UBYTE *)("0"),(UBYTE *)("?a"),0);
+	PutPreVar((UBYTE *)"SYSTEMERROR_",(UBYTE *)("0"),0,0);
 	{
 		char buf[41];  /* up to 128-bit */
 		LONG pid;
@@ -1601,6 +1612,7 @@ int main(int argc, char **argv)
 	PrintHeader(1);
 	IniVars();
 	Globalize(1);
+	if ( AM.TimeLimit > 0 ) alarm(AM.TimeLimit);
 	TimeCPU(0);
 	TimeChildren(0);
 	TimeWallClock(0);
@@ -1656,13 +1668,13 @@ VOID CleanUp(WORD par)
 			}
 		}
 		CloseFile(AC.StoreHandle);
-		if ( par >= 0 || AR.StoreData.Handle < 0 ) {
+		if ( par >= 0 || AR.StoreData.Handle < 0 || AM.ClearStore ) {
 			remove(FG.fname);
 		}
 dontremove:;
 #else
 		CloseFile(AC.StoreHandle);
-		if ( par >= 0 || AR.StoreData.Handle < 0 ) {
+		if ( par >= 0 || AR.StoreData.Handle < 0 || AM.ClearStore > 0 ) {
 			remove(FG.fname);
 		}
 #endif

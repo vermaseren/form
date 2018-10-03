@@ -8,6 +8,7 @@ SRCBASE = \
 	comtool.c \
 	comtool.h \
 	declare.h \
+	diagrams.c \
 	dict.c \
 	dollar.c \
 	execute.c \
@@ -18,6 +19,8 @@ SRCBASE = \
 	fsizes.h \
 	ftypes.h \
 	function.c \
+	gentopo.cc \
+	gentopo.h \
 	if.c \
 	index.c \
 	inivar.h \
@@ -58,6 +61,7 @@ SRCBASE = \
 	tables.c \
 	token.c \
 	tools.c \
+	topowrap.cc \
 	transform.c \
 	variable.h \
 	wildcard.c \

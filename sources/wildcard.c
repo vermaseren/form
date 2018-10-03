@@ -2116,6 +2116,10 @@ TestSet:
 		WORD k;
 		s = w;							
 		j = w[2]; n2 = w[3];
+/*
+			if SETTONUM:  x?j[n2]
+			if FROMSET:   x?j?n2    or x?j and n2 = -WOLDOFFSET.
+*/
 		if ( j > WILDOFFSET ) {
 			j -= 2*WILDOFFSET;
 			notflag = 1;
@@ -2216,10 +2220,39 @@ NoMnot:
 			}
 			goto NoMnot;
 		}
+/*
+		Now we have to determine which set element
+*/
 		w = SetElements + Sets[j].first;
 		m = SetElements + Sets[j].last;
+		if ( ( Sets[j].flags & ORDEREDSET ) == ORDEREDSET ) {
+/*
+			We search first and ask questions later
+*/
+			i = BinarySearch(w,Sets[j].last-Sets[j].first,newnumber);
+			if ( i < 0 ) {	/* no matter what, it is not in the set. */
+				goto NoMnot;
+			}
+			else {
+/*
+				We can set the proper parameters now to make only the
+				checks for the given set element.
+				After that we jump into the appropriate loop.
+*/
+				w = m = SetElements + i;
+				i++;
+				if ( Sets[j].type == -1 || Sets[j].type == CNUMBER ) {
+					goto insideloop1;
+				}
+				else {
+					goto insideloop2;
+				}
+			}
+		}
 		i = 1;
-		if ( Sets[j].type == -1 || Sets[j].type == CNUMBER ) { do {
+		if ( Sets[j].type == -1 || Sets[j].type == CNUMBER ) {
+		  do {
+			insideloop1:
 			if ( notflag ) {
 				switch ( type ) {
 					case SYMTOSYM:
@@ -2275,8 +2308,11 @@ NoMnot:
 				return(0);
 			}
 			i++;
-		} while ( ++w < m ); }
-		else { do {
+		  } while ( ++w < m );
+		}
+		else {
+		  do {
+			insideloop2:
 			inset = *w;
 			if ( notflag ) {
 			switch ( type ) {
@@ -2450,7 +2486,8 @@ NoMnot:
 			  }
 			}
 			i++;
-		} while ( ++w < m ); }
+		  } while ( ++w < m );
+		}
 		if ( notflag ) return(0);
 		AN.oldtype = old2; AN.oldvalue = oldval; goto NoMatch;
 	}

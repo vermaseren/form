@@ -66,6 +66,7 @@ SETUPPARAMETERS setupparameters[] =
 	,{(UBYTE *)"incdir",                     PATHVALUE, 0, (LONG)curdirp}
 	,{(UBYTE *)"indentspace",           NUMERICALVALUE, 0, (LONG)INDENTSPACE}
 	,{(UBYTE *)"insidefirst",               ONOFFVALUE, 0, (LONG)1}
+	,{(UBYTE *)"jumpratio",             NUMERICALVALUE, 0, (LONG)JUMPRATIO}
 	,{(UBYTE *)"largepatches",          NUMERICALVALUE, 0, (LONG)MAXPATCHES}
 	,{(UBYTE *)"largesize",             NUMERICALVALUE, 0, (LONG)LARGEBUFFER}
 	,{(UBYTE *)"maxnumbersize",         NUMERICALVALUE, 0, (LONG)0}
@@ -673,6 +674,8 @@ int AllocSetups()
 	AO.NoSpacesInNumbers = AM.gNoSpacesInNumbers = AM.ggNoSpacesInNumbers = sp->value;
 	sp = GetSetupPar((UBYTE *)"indentspace");
 	AO.IndentSpace = AM.gIndentSpace = AM.ggIndentSpace = sp->value;
+	sp = GetSetupPar((UBYTE *)"jumpratio");
+	AM.jumpratio = sp->value;
 	sp = GetSetupPar((UBYTE *)"nwritestatistics");
 	AC.StatsFlag = AM.gStatsFlag = AM.ggStatsFlag = 1-sp->value;
 	sp = GetSetupPar((UBYTE *)"nwritefinalstatistics");

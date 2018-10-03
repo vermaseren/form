@@ -2028,6 +2028,34 @@ return value that \FORM\ gives to the shell program from which it was run. If
 no return value is specified, the value -1 will be returned.
 
 %--#] terminate : 
+%--#[ timeoutafter :
+ 
+\section{\#timeoutafter}
+\label{pretimeoutafter}
+
+\noindent Syntax:
+
+\#timeoutafter $<$Number of seconds$>$
+ 
+\noindent This instruction starts a timer. When the given time expires the 
+current program will be terminated, unless the timer is reset before this 
+time. Resetting the timer is dome with the "\#timeoutafter 0" instruction.
+
+The purpose of this instruction is to prevent runaway programs, because a 
+given subpart takes much more time than it should. Example:
+\begin{verbatim}
+    .sort
+	#timeoutafter 1000
+	#call problematicprocedure
+	.sort
+	#timeoutafter 0
+\end{verbatim}
+If one runs many diagrams with a make-like facility like minos, diagrams 
+that behave in an unexpected way can be killed this way and minos can 
+continue with the next diagram. Later one can see which diagrams caused 
+problems and one may study what the problem was.
+
+%--#] timeoutafter : 
 %--#[ toexternal :
 
 \section{\#toexternal}

@@ -718,29 +718,13 @@ LONG EndSort(PHEAD WORD *buffer, int par)
 */
 	S->PolyWise = 0;
 	*(S->PoinFill) = 0;
-	/*
-	{
-		LONG millitime;
-		WORD timepart;
-		millitime = TimeCPU(1);
-		timepart = (WORD)(millitime%1000);
-		millitime /= 1000;
-		timepart /= 10;
-		MesPrint(" Before SplitMerge: %7l.%2is",millitime,timepart);
-	}
-	*/
+#ifdef SPLITTIME
+		PrintTime((UBYTE *)"EndSort, before SplitMerge");
+#endif
 	S->sPointer[SplitMerge(BHEAD S->sPointer,S->sTerms)] = 0;
-	/*
-	{
-		LONG millitime;
-		WORD timepart;
-		millitime = TimeCPU(1);
-		timepart = (WORD)(millitime%1000);
-		millitime /= 1000;
-		timepart /= 10;
-		MesPrint(" After  SplitMerge: %7l.%2is",millitime,timepart);
-	}
-	*/
+#ifdef SPLITTIME
+		PrintTime((UBYTE *)"Endsort,  after SplitMerge");
+#endif
 	sSpace = 0;
 	tover = over = S->sTerms;
 	ss = S->sPointer;
@@ -4367,10 +4351,13 @@ WORD StoreTerm(PHEAD WORD *term)
 		tover = over = S->sTerms;
 		ss = S->sPointer;
 		ss[over] = 0;
-/*
-		PrintTime();
-*/
+#ifdef SPLITTIME
+		PrintTime((UBYTE *)"Before SplitMerge");
+#endif
 		ss[SplitMerge(BHEAD ss,over)] = 0;
+#ifdef SPLITTIME
+		PrintTime((UBYTE *)"After SplitMerge");
+#endif
 		sSpace = 0;
 		if ( over > 0 ) {
 			sSpace = ComPress(ss,&RetCode);
@@ -4828,5 +4815,76 @@ Illegal:
 
 /*
  		#] PolyRatFunSpecial : 
+ 		#[ SimpleSplitMerge :
+
+		Sorts an array of WORDs. No adding of equal objects.
+*/
+
+VOID SimpleSplitMergeRec(WORD *array,WORD num,WORD *auxarray)
+{
+	WORD n1,n2,i,j,k,*t1,*t2;
+	if ( num < 2 ) return;
+	if ( num == 2 ) {
+		if ( array[0] > array[1] ) {
+			EXCH(array[0],array[1])
+		}
+		return;
+	}
+	n1 = num/2;
+	n2 = num - n1;
+	SimpleSplitMergeRec(array,n1,auxarray);
+	SimpleSplitMergeRec(array+n1,n2,auxarray);
+	if ( array[n1-1] <= array[n1] ) return;
+
+	t1 = array; t2 = auxarray; i = n1; NCOPY(t2,t1,i);
+	i = 0; j = n1; k = 0;
+	while ( i < n1 && j < num ) {
+		if ( auxarray[i] <= array[j] ) { array[k++] = auxarray[i++]; }
+		else { array[k++] = array[j++]; }
+	}
+	while ( i < n1 ) array[k++] = auxarray[i++];
+/*
+	Remember: remnants of j are still in place!
+*/
+}
+
+VOID SimpleSplitMerge(WORD *array,WORD num)
+{
+	WORD *auxarray = Malloc1(sizeof(WORD)*num/2,"SimpleSplitMerge");
+	SimpleSplitMergeRec(array,num,auxarray);
+	M_free(auxarray,"SimpleSplitMerge");
+}
+
+/*
+ 		#] SimpleSplitMerge : 
+ 		#[ BinarySearch :
+
+		Searches in the sorted array with length num for the object x.
+		If x is in the list, it returns the number of the array element
+		that matched. If it is not in the list, it returns -1.
+		If there are identical objects in the list, which one will
+		match is quasi random.
+*/
+
+WORD BinarySearch(WORD *array,WORD num,WORD x)
+{
+	WORD i, bot, top, med;
+	if ( num < 8 ) {
+		for ( i = 0; i < num; i++ ) if ( array[i] == x ) return(i);
+		return(-1);
+	}
+	if ( array[0] > x || array[num-1] < x ) return(-1);
+	bot = 0; top = num-1; med = (top+bot)/2;
+	do {
+		if ( array[med] == x ) return(med);
+		if ( array[med] < x ) { bot = med+1; }
+		else { top = med-1; }
+		med = (top+bot)/2;
+	} while ( med >= bot && med <= top );
+	return(-1);
+}
+
+/*
+ 		#] BinarySearch : 
 	#] SortUtilities :
 */

@@ -111,6 +111,9 @@ static KEYWORD com2commands[] = {
 	,{"assign",         (TFUN)CoAssign,           STATEMENT,    PARTEST}
 	,{"auto",           (TFUN)CoAuto,             DECLARATION,  PARTEST}
 	,{"autodeclare",    (TFUN)CoAuto,             DECLARATION,  PARTEST}
+	,{"break",          (TFUN)CoBreak,            STATEMENT,    PARTEST}
+	,{"canonicalize",   (TFUN)CoCanonicalize,     STATEMENT,    PARTEST}
+	,{"case",           (TFUN)CoCase,             STATEMENT,    PARTEST}
 	,{"chainin",        (TFUN)CoChainin,          STATEMENT,    PARTEST}
 	,{"chainout",       (TFUN)CoChainout,         STATEMENT,    PARTEST}
 	,{"chisholm",       (TFUN)CoChisholm,         STATEMENT,    PARTEST}
@@ -122,6 +125,7 @@ static KEYWORD com2commands[] = {
 	,{"createspectator",(TFUN)CoCreateSpectator,  DECLARATION,  PARTEST}
 	,{"ctable",         (TFUN)CoCTable,           DECLARATION,  PARTEST}
 	,{"deallocatetable",(TFUN)CoDeallocateTable,  DECLARATION,  PARTEST}
+	,{"default",        (TFUN)CoDefault,          STATEMENT,    PARTEST}
 	,{"delete",         (TFUN)CoDelete,           SPECIFICATION,PARTEST}
 	,{"denominators",   (TFUN)CoDenominators,     STATEMENT,    PARTEST}
 	,{"disorder",       (TFUN)CoDisorder,         STATEMENT,    PARTEST}
@@ -138,6 +142,7 @@ static KEYWORD com2commands[] = {
 	,{"endinexpression",(TFUN)CoEndInExpression,  STATEMENT,    PARTEST}
 	,{"endinside",      (TFUN)CoEndInside,        STATEMENT,    PARTEST}
 	,{"endrepeat",      (TFUN)CoEndRepeat,        STATEMENT,    PARTEST}
+	,{"endswitch",      (TFUN)CoEndSwitch,        STATEMENT,    PARTEST}
 	,{"endterm",        (TFUN)CoEndTerm,          STATEMENT,    PARTEST}
 	,{"endwhile",       (TFUN)CoEndWhile,         STATEMENT,    PARTEST}
 	,{"exit",           (TFUN)CoExit,             STATEMENT,    PARTEST}
@@ -205,6 +210,7 @@ static KEYWORD com2commands[] = {
 	,{"splitlastarg",   (TFUN)CoSplitLastArg,     STATEMENT,    PARTEST}
 	,{"stuffle",        (TFUN)CoStuffle,          STATEMENT,    PARTEST}
 	,{"sum",            (TFUN)CoSum,              STATEMENT,    PARTEST}
+	,{"switch",         (TFUN)CoSwitch,           STATEMENT,    PARTEST}
 	,{"table",          (TFUN)CoTable,            DECLARATION,  PARTEST}
 	,{"tablebase",      (TFUN)CoTableBase,        DECLARATION,  PARTEST}
 	,{"tb",             (TFUN)CoTableBase,        DECLARATION,  PARTEST}
@@ -1340,6 +1346,10 @@ dofunction:			firstsumarg = 1;
 								*t++ = -SYMBOL; *t++ = x2; break;
 							case TFUNCTION:
 								*t++ = -x2-FUNCTION;
+								break;
+							case TSET:
+								*t++ = -SETSET;
+								*t++ = x2;
 								break;
 							case TWILDARG:
 								*t++ = -ARGWILD; *t++ = x2; break;

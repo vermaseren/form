@@ -56,6 +56,11 @@
 #include <algorithm>
 #include <iostream>
 
+#ifdef APPLE64
+#define HAVE_UNORDERED_MAP
+#define HAVE_UNORDERED_SET
+#endif
+
 #ifdef HAVE_UNORDERED_MAP
 	#include <unordered_map>
 	using std::unordered_map;

@@ -306,7 +306,7 @@ extern VOID TELLFILE(int,POSITION *);
  * using increment/decrement operators on it in the left-hand side may be
  * confusing.
  */
-#define NestingChecksum() (AC.IfLevel + AC.RepLevel + AC.arglevel + AC.insidelevel + AC.termlevel + AC.inexprlevel + AC.dolooplevel)
+#define NestingChecksum() (AC.IfLevel + AC.RepLevel + AC.arglevel + AC.insidelevel + AC.termlevel + AC.inexprlevel + AC.dolooplevel +AC.SwitchLevel)
 #define MesNesting() MesPrint("&Illegal nesting of if, repeat, argument, inside, term, inexpression and do")
 
 #define MarkPolyRatFunDirty(T) {if(*T&&AR.PolyFunType==2){WORD *TP,*TT;TT=T+*T;TT-=ABS(TT[-1]);\
@@ -889,6 +889,7 @@ extern int    DoSetRandom(UBYTE *);
 extern int    DoOptimize(UBYTE *);
 extern int    DoClearOptimize(UBYTE *);
 extern int    DoSkipExtraSymbols(UBYTE *);
+extern int    DoTimeOutAfter(UBYTE *);
 extern int    DoMessage(UBYTE *);
 extern int    DoPreOut(UBYTE *);
 extern int    DoPreAppend(UBYTE *);
@@ -1152,6 +1153,11 @@ extern int    CoVector(UBYTE *);
 extern int    CoWhile(UBYTE *);
 extern int    CoWrite(UBYTE *);
 extern int    CoAuto(UBYTE *);
+extern int    CoSwitch(UBYTE *);
+extern int    CoCase(UBYTE *);
+extern int    CoBreak(UBYTE *);
+extern int    CoDefault(UBYTE *);
+extern int    CoEndSwitch(UBYTE *);
 extern int    CoTBaddto(UBYTE *);
 extern int    CoTBaudit(UBYTE *);
 extern int    CoTBcleanup(UBYTE *);
@@ -1267,6 +1273,9 @@ extern FILEHANDLE *AllocFileHandle(WORD,char *);
 extern VOID   DeAllocFileHandle(FILEHANDLE *);
 extern VOID   LowerSortLevel(VOID);
 extern WORD  *PolyRatFunSpecial(PHEAD WORD *, WORD *);
+extern VOID   SimpleSplitMergeRec(WORD *,WORD,WORD *);
+extern VOID   SimpleSplitMerge(WORD *,WORD);
+extern WORD   BinarySearch(WORD *,WORD,WORD);
 extern int    InsideDollar(PHEAD WORD *,WORD);
 extern DOLLARS DolToTerms(PHEAD WORD);
 extern WORD   EvalDoLoopArg(PHEAD WORD *,WORD);
@@ -1295,7 +1304,7 @@ extern void   UpdatePositions(VOID);
 extern void   M_check(VOID);
 extern void   M_print(VOID);
 extern void   M_check1(VOID);
-extern void   PrintTime(VOID);
+extern void   PrintTime(UBYTE *);
 
 extern POSITION *FindBracket(WORD,WORD *);
 extern VOID   PutBracketInIndex(PHEAD WORD *,POSITION *);
@@ -1647,6 +1656,14 @@ extern int AddToScratch(FILEHANDLE *,POSITION *,UBYTE *,POSITION *,int);
 
 extern int DoPreAppendPath(UBYTE *);
 extern int DoPrePrependPath(UBYTE *);
+
+extern int DoSwitch(PHEAD WORD *, WORD *);
+extern int DoEndSwitch(PHEAD WORD *, WORD *);
+extern SWITCHTABLE *FindCase(WORD, WORD);
+extern VOID SwitchSplitMergeRec(SWITCHTABLE *, WORD, SWITCHTABLE *);
+extern VOID SwitchSplitMerge(SWITCHTABLE *, WORD);
+extern int DoubleSwitchBuffers(VOID);
+
 
 /*
   	#] Declarations : 

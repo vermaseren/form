@@ -1039,4 +1039,161 @@ VOID DoubleIfBuffers()
 /*
  		#] DoubleIfBuffers : 
   	#] If statement : 
+  	#[ Switch statement :
+ 		#[ DoSwitch :
+*/
+
+int DoSwitch(PHEAD WORD *term, WORD *lhs)
+{
+/*
+	For the moment we ignore the compiler buffer problems.
+*/
+	WORD numdollar = lhs[2];
+	WORD ncase = DolToNumber(BHEAD numdollar);
+	SWITCHTABLE *swtab = FindCase(lhs[3],ncase);
+	return(Generator(BHEAD term,swtab->value));
+}
+
+/*
+ 		#] DoSwitch : 
+ 		#[ DoEndSwitch :
+*/
+
+int DoEndSwitch(PHEAD WORD *term, WORD *lhs)
+{
+	SWITCH *sw = AC.SwitchArray+lhs[2];
+	return(Generator(BHEAD term,sw->endswitch.value+1));
+}
+
+/*
+ 		#] DoEndSwitch : 
+ 		#[ FindCase :
+*/
+
+SWITCHTABLE *FindCase(WORD nswitch, WORD ncase)
+{
+/*
+	First find the switch table and determine how we have to search.
+*/
+	SWITCH *sw = AC.SwitchArray+nswitch;
+	WORD hi, lo, med;
+	if ( sw->typetable == DENSETABLE ) {
+		med = ncase - sw->caseoffset;
+		if ( med >= sw->numcases || med < 0 ) return(&sw->defaultcase);
+	}
+	else {
+/*
+		We need a binary search in the table.
+*/
+		if ( ncase > sw->maxcase || ncase < sw->mincase ) return(&sw->defaultcase);
+		hi = sw->numcases-1; lo = 0;
+		for(;;) {
+			med = (hi+lo)/2;
+			if ( ncase == sw->table[med].ncase ) break;
+            else if ( ncase > sw->table[med].ncase ) {
+				lo = med+1;
+				if ( lo > hi ) return(&sw->defaultcase);
+			}
+			else {
+				hi = med-1;
+				if ( hi < lo ) return(&sw->defaultcase);
+			}
+		}
+	}
+	return(&sw->table[med]);
+}
+
+/*
+ 		#] FindCase : 
+ 		#[ DoubleSwitchBuffers :
+*/
+
+int DoubleSwitchBuffers()
+{
+	int newmax, i;
+	SWITCH *newarray;
+	WORD *newheap;
+	if ( AC.MaxSwitch == 0 ) newmax = 10;
+	else                     newmax = 2*AC.MaxSwitch;
+	newarray = (SWITCH *)Malloc1(sizeof(SWITCH)*(newmax+1),"SwitchArray");
+	newheap = (WORD *)Malloc1(sizeof(WORD)*(newmax+1),"SwitchHeap");
+	if ( AC.MaxSwitch ) {
+		for ( i = 0; i < AC.MaxSwitch; i++ ) {
+			newarray[i] = AC.SwitchArray[i];
+			newheap[i] = AC.SwitchHeap[i];
+		}
+		M_free(AC.SwitchHeap,"AC.SwitchHeap");
+		M_free(AC.SwitchArray,"AC.SwitchArray");
+	}
+	for ( i = AC.MaxSwitch; i <= newmax; i++ ) {
+		newarray[i].table = 0;
+		newarray[i].tablesize = 0;
+		newarray[i].defaultcase.ncase = 0;
+		newarray[i].defaultcase.value = 0;
+		newarray[i].defaultcase.compbuffer = 0;
+		newarray[i].endswitch.ncase = 0;
+		newarray[i].endswitch.value = 0;
+		newarray[i].endswitch.compbuffer = 0;
+		newarray[i].typetable = 0;
+		newarray[i].mincase = 0;
+		newarray[i].maxcase = 0;
+		newarray[i].numcases = 0;
+		newarray[i].caseoffset = 0;
+		newarray[i].iflevel = 0;
+		newarray[i].whilelevel = 0;
+		newarray[i].nestingsum = 0;
+		newheap[i] = 0;
+	}
+	AC.SwitchArray = newarray;
+	AC.SwitchHeap = newheap;
+	AC.MaxSwitch = newmax;
+	return(0);
+}
+
+/*
+ 		#] DoubleSwitchBuffers : 
+ 		#[ SwitchSplitMerge :
+
+		Sorts an array of WORDs. No adding of equal objects.
+*/
+
+VOID SwitchSplitMergeRec(SWITCHTABLE *array,WORD num,SWITCHTABLE *auxarray)
+{
+	WORD n1,n2,i,j,k;
+	SWITCHTABLE *t1,*t2, t;
+	if ( num < 2 ) return;
+	if ( num == 2 ) {
+		if ( array[0].ncase > array[1].ncase ) {
+			t = array[0]; array[0] = array[1]; array[1] = t;
+		}
+		return;
+	}
+	n1 = num/2;
+	n2 = num - n1;
+	SwitchSplitMergeRec(array,n1,auxarray);
+	SwitchSplitMergeRec(array+n1,n2,auxarray);
+	if ( array[n1-1].ncase <= array[n1].ncase ) return;
+
+	t1 = array; t2 = auxarray; i = n1; NCOPY(t2,t1,i);
+	i = 0; j = n1; k = 0;
+	while ( i < n1 && j < num ) {
+		if ( auxarray[i].ncase <= array[j].ncase ) { array[k++] = auxarray[i++]; }
+		else { array[k++] = array[j++]; }
+	}
+	while ( i < n1 ) array[k++] = auxarray[i++];
+/*
+	Remember: remnants of j are still in place!
+*/
+}
+
+VOID SwitchSplitMerge(SWITCHTABLE *array,WORD num)
+{
+	SWITCHTABLE *auxarray = (SWITCHTABLE *)Malloc1(sizeof(SWITCHTABLE)*num/2,"SwitchSplitMerge");
+	SwitchSplitMergeRec(array,num,auxarray);
+	M_free(auxarray,"SwitchSplitMerge");
+}
+
+/*
+ 		#] SwitchSplitMerge : 
+  	#] Switch statement : 
 */

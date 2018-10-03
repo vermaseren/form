@@ -1177,6 +1177,31 @@ Important: we may not have enough spots here
 					}
 				}
 			}
+			else if ( *t == TOPOLOGIES ) {
+/*
+				Syntax:
+				topologies_(nloops,nlegs,setvertexsizes,setext,setint[,options])
+*/
+				t1 = t+FUNHEAD; t2 = t+t[1];
+				if ( *t1 == -SNUMBER && t1[1] >= 0 &&
+					t1[2] == -SNUMBER && ( t1[3] >= 0 || t1[3] == -2 ) &&
+					t1[4] == -SETSET && Sets[t1[5]].type == CNUMBER &&
+					t1[6] == -SETSET && Sets[t1[7]].type == CVECTOR &&
+					t1[8] == -SETSET && Sets[t1[9]].type == CVECTOR &&
+					t1+10 <= t2 ) {
+					if ( t1+10 == t2 || ( t1+12 <= t2 && ( t1[10] == -SNUMBER ||
+						( t1[10] == -SETSET &&
+							Sets[t1[5]].last-Sets[t1[5]].first ==
+							Sets[t1[11]].last-Sets[t1[11]].first ) ) ) ) {
+						AN.TeInFun = -15;
+						AN.TeSuOut = 0;
+						AR.TePos = -1;
+						return(1);
+					}
+				}
+			}
+			else if ( *t == DIAGRAMS ) {
+			}
 			if ( functions[funnum-FUNCTION].spec == 0
 				|| ( t[2] & (DIRTYFLAG|MUSTCLEANPRF) ) != 0 ) { funflag = 1; }
 			if ( *t <= MAXBUILTINFUNCTION ) {
@@ -1413,6 +1438,13 @@ Important: we may not have enough spots here
 					else if ( *t == INVERSEFUNCTION ) AN.TeInFun = -11;
 					else if ( *t == MULFUNCTION ) AN.TeInFun = -14;
 					else if ( *t == GCDFUNCTION ) AN.TeInFun = -8;
+					AN.TeSuOut = 0;
+					AR.TePos = -1;
+					return(1);
+				}
+				else if ( todo && numargs == 3 ) {
+					if ( *t == DIVFUNCTION ) AN.TeInFun = -9;
+					else if ( *t == REMFUNCTION ) AN.TeInFun = -10;
 					AN.TeSuOut = 0;
 					AR.TePos = -1;
 					return(1);
@@ -3678,6 +3710,20 @@ CommonEnd:
 				  case TYPETOSPECTATOR:
 					if ( PutInSpectator(term,C->lhs[level][2]) < 0 ) goto GenCall;
 					goto Return0;
+				  case TYPECANONICALIZE:
+					AT.WorkPointer = term + *term;
+					if ( DoCanonicalize(BHEAD term,C->lhs[level]) ) goto GenCall;
+					AT.WorkPointer = term + *term;
+					if ( *term == 0 ) goto Return0;
+					break;
+				  case TYPESWITCH:
+					AT.WorkPointer = term + *term;
+					if ( DoSwitch(BHEAD term,C->lhs[level]) ) goto GenCall;
+					goto Return0;
+				  case TYPEENDSWITCH:
+					AT.WorkPointer = term + *term;
+					if ( DoEndSwitch(BHEAD term,C->lhs[level]) ) goto GenCall;
+					goto Return0;
 				}
 				goto SkipCount;
 /*
@@ -3752,6 +3798,12 @@ AutoGen:	i = *AT.TMout;
 					break;
 				case -14:
 					if ( DIVfunction(BHEAD term,level,3) < 0 ) goto GenCall;
+					break;
+				case -15:
+					if ( GenTopologies(BHEAD term,level) < 0 ) goto GenCall;
+					break;
+				case -16:
+					if ( GenDiagrams(BHEAD term,level) < 0 ) goto GenCall;
 					break;
 			}
 		}

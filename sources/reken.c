@@ -906,7 +906,7 @@ WORD MulLong(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 	}
 #endif
 /*
-  	#] GMP stuff :
+  	#] GMP stuff : 
 */
 	do { *ic++ = 0; } while ( --i > 0 );
 	do {
@@ -1092,7 +1092,7 @@ WORD DivLong(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c,
 		}
 #endif
 /*
- 		#] GMP stuff :
+ 		#] GMP stuff : 
 */
 		/* Start with normalization operation */
  
@@ -2409,7 +2409,7 @@ WORD GcdLong(PHEAD UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 		return(0);
 	}
 /*
-  	#] Easy cases :
+  	#] Easy cases : 
 */
 	GLscrat6 = NumberMalloc("GcdLong"); GLscrat7 = NumberMalloc("GcdLong");
 	GLscrat8 = NumberMalloc("GcdLong");
@@ -2454,7 +2454,7 @@ restart:;
 		}
 	}
 /*
-  	#] Easy cases :
+  	#] Easy cases : 
   	#[ Original code :
 */
 	else if ( na < GCDMAX || nb < GCDMAX || na != nb ) {
@@ -2504,7 +2504,7 @@ restart:;
 		NCOPY(c,x1,i);
 	}
 /*
-  	#] Original code :
+  	#] Original code : 
   	#[ New code :
 */
 	else {
@@ -2631,7 +2631,7 @@ newtrick:;
 		}
 		goto restart;
 /*
-  	#] New code :
+  	#] New code : 
 */
 	}
 normalend:

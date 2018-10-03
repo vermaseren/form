@@ -1021,6 +1021,7 @@ int simp2token(SBYTE *s)
 						|| v[1] == DENOMINATORSYMBOL ) && v[2] < 0 ) {
 							*fill++ = *s++; break;
 						}
+					case TSET:
 					case TVECTOR:
 					case TINDEX:
 					case TFUNCTION:

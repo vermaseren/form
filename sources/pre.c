@@ -99,6 +99,7 @@ static KEYWORD precommands[] = {
 	,{"switch"       , DoPreSwitch    , 0, 0}
 	,{"system"       , DoSystem       , 0, 0}
 	,{"terminate"    , DoTerminate    , 0, 0}
+	,{"timeoutafter" , DoTimeOutAfter , 0, 0}
 	,{"toexternal"   , DoToExternal   , 0, 0}
 	,{"undefine"     , DoUndefine     , 0, 0}
 	,{"usedictionary", DoPreUseDictionary,0,0}
@@ -4096,6 +4097,12 @@ int DoPreShow(UBYTE *s)
  		#[ DoSystem :
 */
 
+/*
+ * A macro for translating the contents of `x' into a string after expanding.
+ */
+#define STRINGIFY(x)  STRINGIFY__(x)
+#define STRINGIFY__(x) #x
+
 int DoSystem(UBYTE *s)
 {
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
@@ -4104,7 +4111,20 @@ int DoSystem(UBYTE *s)
 #ifdef WITHSYSTEM
 	FLUSHCONSOLE;
 	while ( *s == ' ' || *s == '\t' ) s++;
-	if ( system((char *)s) ) {
+	if ( *s == '-' && s[1] == 'e' ) {
+		LONG err;
+		UBYTE str[24];
+		s += 2;
+		if ( *s != ' ' ) {
+			MesPrint("@Syntax error in #system command.");
+			return(-1);
+		}
+		while ( *s == ' ' || *s == '\t' ) s++;
+		err = system((char *)s);
+		NumToStr(str,err);
+		PutPreVar((UBYTE *)"SYSTEMERROR_",str,0,1);
+	}
+	else if ( system((char *)s) ) {
 		MesPrint("@System call returned with error condition");
 		Terminate(-1);
 	}
@@ -6904,5 +6924,33 @@ int DoPrePrependPath(UBYTE *s)
 
 /*
  		#] DoPrePrependPath : 
+ 		#[ DoTimeOutAfter :
+
+		Executes the #timeoutafter number
+*/
+
+int DoTimeOutAfter(UBYTE *s)
+{
+	ULONG x;
+	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
+	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
+	while ( *s == ' ' || *s == '\t' ) s++;
+	x = 0;
+	while ( FG.cTable[*s] == 1 ) {
+		x = 10*x + (*s++-'0');
+	}
+	while ( *s == ' ' || *s == '\t' ) s++;
+	if ( *s  == 0 ) {
+		alarm(x);
+		return(0);
+	}
+	else {
+		MesPrint("@proper syntax is #TimeoutAfter number");
+		return(-1);
+	}
+}
+
+/*
+ 		#] DoTimeOutAfter : 
  	# ] PreProcessor :
 */
