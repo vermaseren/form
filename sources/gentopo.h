@@ -28,6 +28,7 @@ class EEdge {
     int  momn;
     char momc[2];       // no more used
     // momentum is printed like: ("%s%d", (enode.ext)?"Q":"p", enode.momn)
+	char padding[6];
 };
 
 class EGraph {
@@ -139,6 +140,7 @@ class MGraph {
     int *bidef;
     int *bilow;
     int  bicount;
+	int  padding;
 
     void   printAdjMat(MNodeClass *cl);
     int    isConnected(void);

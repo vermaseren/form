@@ -45,7 +45,7 @@ extern "C" {
 
 typedef struct ToPoTyPe {
 	int cldeg[MAXPOINTS], clnum[MAXPOINTS], clext[MAXPOINTS];
-	int ncl, nloops, nlegs;
+	int ncl, nloops, nlegs, npadding;
 	WORD *vert;
 	WORD *vertmax;
 	WORD nvert;
