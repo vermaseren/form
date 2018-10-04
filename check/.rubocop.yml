@@ -85,8 +85,11 @@ Metrics/PerceivedComplexity:
 
 # For now.
 
+Style/FormatStringToken:
+  EnforcedStyle: unannotated
+
 Style/PerlBackrefs:
   Enabled: false
 
 Style/SpecialGlobalVars:
-  Enabled: false
+  EnforcedStyle: use_perl_names

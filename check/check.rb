@@ -82,6 +82,7 @@ class TempDir
       if !FileTest.directory?(@root)
         return
       end
+
       sleep(0.1)
       FileUtils.rm_rf(@root)
     end
@@ -220,7 +221,7 @@ module FormTest
     cleanup_files
     @tmpdir = TempDir.mktmpdir(self.class.name + "_")
     nfiles.times do |i|
-      open(File.join(@tmpdir, "#{i + 1}.frm"), "w") do |file|
+      File.open(File.join(@tmpdir, "#{i + 1}.frm"), "w") do |file|
         file.write(info.sources[i])
       end
     end
@@ -417,6 +418,11 @@ module FormTest
       stdout.pop
     end
 
+    # We exclude the Valgrind warnings "Warning: set address range perms: ..."
+    # from the standard output, which can happen when the program allocates
+    # big memory chunks.
+    stdout = stdout.reject { |l| l =~ /Warning: set address range perms/ }
+
     @stdout += stdout.join
     @stderr += stderr.join
   end
@@ -477,6 +483,7 @@ module FormTest
   def exact_result(exprname, index = -1)
     matches = @stdout.scan(/^[ \t]+#{Regexp.escape(exprname)}\s*=(.+?);/m)
     return matches[index].first if !matches.empty? && !matches[index].nil?
+
     ""
   end
 
@@ -485,6 +492,7 @@ module FormTest
   def result(exprname, index = -1)
     r = exact_result(exprname, index)
     return r.gsub(/\s+/, "") if !r.nil?
+
     ""
   end
 
@@ -493,13 +501,14 @@ module FormTest
   def bytesize(exprname, index = -1)
     matches = @stdout.scan(/^[ \t]+#{exprname}\s*Terms in output\s*=\s*\d+\s*Bytes used\s*=\s*(\d+)/m)
     return matches[index].first.to_i if !matches.empty? && !matches[index].nil?
+
     -1
   end
 
   # The file contents as a string (in the working directory).
   def file(filename)
     begin
-      open(File.join(@tmpdir, filename), "r") do |f|
+      File.open(File.join(@tmpdir, filename), "r") do |f|
         return f.read
       end
     rescue StandardError
@@ -517,7 +526,7 @@ module FormTest
   def write(filename, text)
     fname = File.join(@tmpdir, filename)
     FileUtils.mkdir_p(File.dirname(fname))
-    open(fname, "w") do |f|
+    File.open(fname, "w") do |f|
       f.write(text)
     end
   end
@@ -573,6 +582,7 @@ module FormTest
         if @stderr.empty?
           return true
         end
+
         @stdout += "!!! stderr is not empty"
         return false
       end
@@ -680,8 +690,8 @@ class TestCases
 
     outname = File.join(TempDir.root, outname)
 
-    open(filename, "r") do |infile|
-      open(outname, "w") do |outfile|
+    File.open(filename, "r") do |infile|
+      File.open(outname, "w") do |outfile|
         lineno = 0
         level = 0
         classname = nil
@@ -899,6 +909,7 @@ class TestCases
     if !ok
       return false
     end
+
     # check --execlude NAME
     if !@exclude_patterns.empty?
       @exclude_patterns.each do |pat|
@@ -920,6 +931,7 @@ class TestCases
       if !@classes.include?(s)
         break
       end
+
       i += 1
       s = prefix + "_" + i.to_s
     end
@@ -975,6 +987,7 @@ class FormConfig
       # OK.
       return
     end
+
     if name == bin
       fatal("executable '#{name}' not found")
     else
@@ -995,12 +1008,12 @@ class FormConfig
     tmpdir = TempDir.mktmpdir("ver_")
     begin
       frmname = File.join(tmpdir, "ver.frm")
-      open(frmname, "w") do |f|
+      File.open(frmname, "w") do |f|
         f.write(<<-'TEST_FRM')
   #-
   Off finalstats;
   .end
-  TEST_FRM
+        TEST_FRM
       end
       @head = `#{@form_bin} #{frmname} 2>/dev/null`.split("\n").first
       @is_serial = false
@@ -1078,6 +1091,7 @@ def add_path(oldpath, newpath)
   if oldpath.nil?
     return newpath
   end
+
   newpath + ":" + oldpath
 end
 
@@ -1086,6 +1100,7 @@ def parse_def(pat)
   if pat =~ /^TEST=(.*)/
     return $1
   end
+
   nil
 end
 
@@ -1093,6 +1108,7 @@ end
 def search_file(file, opts)
   f = file
   return f if File.exist?(f)
+
   if !opts.dir.nil?
     f = File.join(opts.dir, file)
     return f if File.exist?(f)
@@ -1108,6 +1124,7 @@ end
 def search_dir(dir, opts)
   d = dir
   return d if File.directory?(d)
+
   if !opts.dir.nil?
     d = File.join(opts.dir, dir)
     return d if File.directory?(d)
@@ -1307,12 +1324,12 @@ def lpad(str, len)
 end
 
 # Return a string for a bar chart.
-def bar_str(n, nmax, len)
-  bar_body_width = len - 2
-  bar = " " * len
+def bar_str(value, max_value, bar_width)
+  bar_body_width = bar_width - 2
+  bar = " " * bar_width
   bar[0] = "|"
-  bar[len - 1] = "|"
-  pos = (Float(n) / nmax * bar_body_width).round
+  bar[bar_width - 1] = "|"
+  pos = (Float(value) / max_value * bar_body_width).round
   if pos < 0
     pos = 0
   elsif pos > bar_body_width
@@ -1327,10 +1344,12 @@ def bar_str(n, nmax, len)
 end
 
 # Format an elapsed time.
-def format_time(t, tmax)
-  overflow = t > tmax
+def format_time(time, max_time)
+  overflow = time > max_time
   if overflow
-    t = tmax
+    t = max_time
+  else
+    t = time
   end
   t = Float(t)
   h = Integer(t / 3600)

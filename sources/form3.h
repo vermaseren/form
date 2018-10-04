@@ -89,6 +89,8 @@
 #define WITHZLIB
 #define WITHGMP
 #define WITHPOSIXCLOCK
+#define HAVE_UNORDERED_MAP
+#define HAVE_UNORDERED_SET
 #endif
 
 #ifdef CYGWIN32

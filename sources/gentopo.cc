@@ -1,5 +1,12 @@
 // { ( [
 
+#ifdef HAVE_CONFIG_H
+#ifndef CONFIG_H_INCLUDED
+#define CONFIG_H_INCLUDED
+#include <config.h>
+#endif
+#endif
+
 #include <iostream>
 #include <iomanip>
 #include <sstream>
