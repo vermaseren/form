@@ -244,10 +244,10 @@ class MNodeClass {
     int   nNodes;                  // the number of nodes
     int   nClasses;                // the number of classes
     int  *clist;                   // the number of nodes in each class
-    int   maxdeg;                  // maximal value of degree(node)
     int  *ndcl;                    // node --> class
     int **clmat;                   // matrix used for classification
     int  *flist;                   // the first node in each class
+    int   maxdeg;                  // maximal value of degree(node)
 
     MNodeClass(int nnodes, int ncl);
     ~MNodeClass();

@@ -33,8 +33,8 @@ class EEdge {
 
 class EGraph {
   public:
-    int  pId;
     long gId;
+    int  pId;
     int nNodes;
     int nEdges;
     int maxdeg;
@@ -91,8 +91,8 @@ class MGraph {
     int nEdges;            // the number of edges
     int nLoops;            // the number of loops
     MNode **nodes;          // table of MNode object
-    int nClasses;          // the number of initial classes
     int *clist;             // list of initial classes
+    int nClasses;          // the number of initial classes
     // int ndcl;              // node --> initial class number
     int mindeg;            // minimum value of degree of nodes
     int maxdeg;            // maximum value of degree of nodes
@@ -105,10 +105,10 @@ class MGraph {
     int  nBridges;          // the number of bridges
   
     // the current graph
+    int c1PI;               // the number of 1PI components
     int **adjMat;           // adjacency matrix
     BigInt nsym;               // symmetry factor from nodes
     BigInt esym;               // symmetry factor from edges
-    int c1PI;               // the number of 1PI components
     Fraction wsum;         // weighted sum of graphs
     Fraction wsopi;        // weighted sum of 1PI graphs
     MNodeClass *curcl;      // the current 'MNodeClass' object
