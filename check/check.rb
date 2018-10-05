@@ -593,6 +593,7 @@ module FormTest
            !@stderr.include?("Mismatched free") &&
            !@stderr.include?("Use of uninitialised value") &&
            !@stderr.include?("Conditional jump or move depends on uninitialised value") &&
+           !@stderr.include?("points to unaddressable byte") &&
            !@stderr.include?("points to uninitialised byte") &&
            !@stderr.include?("contains uninitialised byte") &&
            !@stderr.include?("Source and destination overlap in memcpy") &&
