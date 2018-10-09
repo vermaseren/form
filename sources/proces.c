@@ -1717,7 +1717,8 @@ redosize:
 						goto ReStart;
 					}
 					else if ( *t == -DOLLAREXPRESSION ) {
-						if ( *t1 == TERMSINEXPR && t1[1] == FUNHEAD+2 ) {}
+						if ( ( *t1 == TERMSINEXPR || *t1 == SIZEOFFUNCTION )
+								 && t1[1] == FUNHEAD+2 ) {}
 						else {
 							if ( AR.Eside != LHSIDE ) {
 								AN.TeInFun = 1; AR.TePos = 0;

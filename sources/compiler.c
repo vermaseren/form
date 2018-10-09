@@ -1085,6 +1085,8 @@ doexpr:					s += 2;
 								MesPrint("&Problems with argument of FirstTerm_");
 							else if ( x1 == TERMSINEXPR )
 								MesPrint("&Problems with argument of TermsIn_");
+							else if ( x1 == SIZEOFFUNCTION )
+								MesPrint("&Problems with argument of SizeOf_");
 							else if ( x1 == NUMFACTORS )
 								MesPrint("&Problems with argument of NumFactors_");
 							else
@@ -1096,7 +1098,7 @@ doexpr:					s += 2;
 						goto fin;
 					}
 				}
-				else if ( x1 == TERMSINEXPR || x1 == FACTORIN
+				else if ( x1 == TERMSINEXPR || x1 == SIZEOFFUNCTION || x1 == FACTORIN
 				 || x1 == NUMFACTORS || x1 == FIRSTTERM || x1 == CONTENTTERM ) {
 					if ( s[0] == TFUNOPEN && s[1] == TEXPRESSION ) goto doexpr;
 					if ( s[0] == TFUNOPEN && s[1] == TDOLLAR ) {
@@ -1108,6 +1110,8 @@ doexpr:					s += 2;
 						if ( *s != TFUNCLOSE ) {
 							if ( x1 == TERMSINEXPR )
 								MesPrint("&Problems with argument of TermsIn_");
+							else if ( x1 == SIZEOFFUNCTION )
+								MesPrint("&Problems with argument of SizeOf_");
 							else if ( x1 == NUMFACTORS )
 								MesPrint("&Problems with argument of NumFactors_");
 							else

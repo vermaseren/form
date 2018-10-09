@@ -235,6 +235,7 @@ static struct fixedfun {
 	,{"diagrams_"   ,0 ,0             ,0               ,0} /* DIAGRAMS */
 	,{"node_"       ,0 ,0             ,0               ,0} /* VERTEX */
 	,{"edge_"       ,0 ,0             ,0               ,0} /* EDGE */
+    ,{"sizeof_"     ,0 ,0             ,0               ,0} /* SIZEOFFUNCTION */
 };
 
 FIXEDSET fixedsets[] = {

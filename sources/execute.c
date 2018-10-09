@@ -2308,6 +2308,18 @@ LONG TermsInExpression(WORD num)
 
 /*
  		#] TermsInExpression : 
+ 		#[ SizeOfExpression :
+*/
+
+LONG SizeOfExpression(WORD num)
+{
+	LONG x = (LONG)(DIVPOS(Expressions[num].size,sizeof(WORD)));
+	if ( x >= 0 ) return(x);
+	return(-1);
+}
+
+/*
+ 		#] SizeOfExpression : 
  		#[ UpdatePositions :
 */
 

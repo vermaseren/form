@@ -943,6 +943,7 @@ int simp2token(SBYTE *s)
 						}
 						else if ( ( n == (FIRSTBRACKET-FUNCTION)
 						|| n == (TERMSINEXPR-FUNCTION)
+						|| n == (SIZEOFFUNCTION-FUNCTION)
 						|| n == (NUMFACTORS-FUNCTION)
 						|| n == (GCDFUNCTION-FUNCTION)
 						|| n == (DIVFUNCTION-FUNCTION)

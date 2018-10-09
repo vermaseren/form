@@ -1903,6 +1903,58 @@ LONG TermsInDollar(WORD num)
 
 /*
   	#] TermsInDollar : 
+  	#[ SizeOfDollar :
+*/
+
+LONG SizeOfDollar(WORD num)
+{
+	GETIDENTITY
+	DOLLARS d = Dollars + num;
+	WORD *t;
+	LONG n;
+#ifdef WITHPTHREADS
+	int nummodopt, dtype = -1;
+	if ( AS.MultiThreaded && ( AC.mparallelflag == PARALLELFLAG ) ) {
+		for ( nummodopt = 0; nummodopt < NumModOptdollars; nummodopt++ ) {
+			if ( num == ModOptdollars[nummodopt].number ) break;
+		}
+		if ( nummodopt < NumModOptdollars ) {
+			dtype = ModOptdollars[nummodopt].type;
+			if ( dtype == MODLOCAL ) {
+				d = ModOptdollars[nummodopt].dstruct+AT.identity;
+			}
+			else {
+				LOCK(d->pthreadslockread);
+			}
+		}
+	}
+#endif
+	if ( d->type == DOLTERMS ) {
+		t = d->where;
+		while ( *t ) t += *t;
+		t++;
+		n = (LONG)(t - d->where);
+	}
+	else if ( d->type == DOLWILDARGS ) {
+		n = 0;
+		if ( d->where[0] == 0 ) {
+			t = d->where+1;
+			while ( *t != 0 ) { NEXTARG(t); n++; }
+			t++;
+			n = (LONG)(t - d->where);
+		}
+		else if ( d->where[0] == 1 ) n = 1;
+	}
+	else if ( d->type == DOLZERO ) n = 0;
+	else n = 1;
+#ifdef WITHPTHREADS
+	if ( dtype > 0 && dtype != MODLOCAL ) { UNLOCK(d->pthreadslockread); }
+#endif
+	return(n);
+}
+
+/*
+  	#] SizeOfDollar : 
   	#[ PreIfDollarEval :
 
 	Routine is invoked in #if etc after $( is encountered.

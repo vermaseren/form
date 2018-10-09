@@ -216,7 +216,7 @@ WORD Normalize(PHEAD WORD *term)
 	WORD *fillsetexp;
 	CBUF *C = cbuf+AT.ebufnum;
 	WORD *ANsc = 0, *ANsm = 0, *ANsr = 0, PolyFunMode;
-	LONG oldcpointer = 0;
+	LONG oldcpointer = 0, x;
 	n_coef = TermMalloc("NormCoef");
 	n_llnum = TermMalloc("n_llnum");
 	lnum = n_llnum+1;
@@ -1128,7 +1128,7 @@ PasteIn:;
 				}
 				break;
 			case TERMSINEXPR:
-				{ LONG x;
+				{
 				if ( ( t[1] == FUNHEAD+2 ) && t[FUNHEAD] == -EXPRESSION ) {
 					x = TermsInExpression(t[FUNHEAD+1]);
 multermnum:			if ( x == 0 ) goto NormZero;
@@ -1152,6 +1152,19 @@ multermnum:			if ( x == 0 ) goto NormZero;
 				}
 				else if ( ( t[1] == FUNHEAD+2 ) && t[FUNHEAD] == -DOLLAREXPRESSION ) {
 					x = TermsInDollar(t[FUNHEAD+1]);
+					goto multermnum;
+				}
+				else { pcom[ncom++] = t; }
+				}
+				break;
+			case SIZEOFFUNCTION:
+				{
+				if ( ( t[1] == FUNHEAD+2 ) && t[FUNHEAD] == -EXPRESSION ) {
+					x = SizeOfExpression(t[FUNHEAD+1]);
+					goto multermnum;
+				}
+				else if ( ( t[1] == FUNHEAD+2 ) && t[FUNHEAD] == -DOLLAREXPRESSION ) {
+					x = SizeOfDollar(t[FUNHEAD+1]);
 					goto multermnum;
 				}
 				else { pcom[ncom++] = t; }

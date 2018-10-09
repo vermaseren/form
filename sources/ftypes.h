@@ -462,9 +462,10 @@ typedef int (*TFUN1)();
 #define DIAGRAMS 107
 #define VERTEX 108
 #define EDGE 109
-#define ALLWILD 109
+/*#define ALLWILD 109 ???? */
+#define SIZEOFFUNCTION 110
 
-#define MAXBUILTINFUNCTION 109
+#define MAXBUILTINFUNCTION 110
 #define FIRSTUSERFUNCTION 150
 
 /*

@@ -960,6 +960,7 @@ SORTING *AllocSort(LONG LargeSize, LONG SmallSize, LONG SmallEsize, LONG TermsIn
 	sort->cBuffer = 0;
 	sort->cBufferSize = 0;
 	sort->f = 0;
+	sort->PolyWise = 0;
 
 	return(sort);
 }

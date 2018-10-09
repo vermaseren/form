@@ -635,6 +635,7 @@ WORD NewSort(PHEAD0)
 	S->GenTerms = S->TermsLeft = S->GenSpace = S->SpaceLeft = 0;
 	S->PoinFill = S->sPointer;
 	*S->PoinFill = S->sFill;
+	if ( AR.sLevel > 0 ) { S->PolyWise = 0; }
 	PUTZERO(S->SizeInFile[0]); PUTZERO(S->SizeInFile[1]); PUTZERO(S->SizeInFile[2]);
 	S->sTerms = 0;
 	PUTZERO(S->file.POposition);
@@ -4452,6 +4453,25 @@ VOID StageSort(FILEHANDLE *fout)
 	SORTING *S = AT.SS;
 	if ( S->fPatchN >= S->MaxFpatches ) {
 		POSITION position;
+		if ( S != AT.S0 ) {
+/*
+			There are no proper provisions for stage 4 or higher sorts
+			for function arguments and $ variables. The reason:
+			The current code maps out the patches, based on the size of
+			the buffers in the FoStage4 structs, while they are used
+			inside the S->file struct that may have far smaller buffers.
+			By itself that might still be repairable, but it goes completely
+			wrong when during the sort polyRatFuns have to be added and they
+			would go into stage4 (very rare but possible).
+			The only really correct solution would be to put FoStage4 structs
+			in all sort levels. Messy. (JV 8-oct-2018).
+*/
+			MLOCK(ErrorMessageLock);
+			MesPrint("Currently Stage 4 sorts are not allowed for function arguments or $ variables.");
+			MesPrint("Please increase correspondingsorting parameters (sub-) in the setup.");
+			MUNLOCK(ErrorMessageLock);
+			Terminate(-1);
+		}
 		PUTZERO(position);
 		MLOCK(ErrorMessageLock);
 #ifdef WITHPTHREADS

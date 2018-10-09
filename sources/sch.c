@@ -2634,13 +2634,14 @@ AboWrite:
 		Writes one expression from the preprocessor
 */
 
-WORD WriteOne(UBYTE *name, int alreadyinline, int nosemi)
+WORD WriteOne(UBYTE *name, int alreadyinline, int nosemi, WORD plus)
 {
 	GETIDENTITY
 	WORD number;
 	WORD lbrac, first;
 	POSITION pos;
 	FILEHANDLE *f;
+	WORD prf;
 
 	if ( GetName(AC.exprnames,name,&number,NOAUTO) != CEXPRESSION ) {
 		MesPrint("@%s is not an expression",name);
@@ -2684,6 +2685,8 @@ WORD WriteOne(UBYTE *name, int alreadyinline, int nosemi)
 */
 	if ( AR.GetFile == 2 ) f = AR.hidefile;
 	else f = AR.infile;
+	prf = Expressions[number].printflag;
+	if ( plus ) prf |= PRINTONETERM;
 /*
 		Now position the file
 */
@@ -2740,10 +2743,20 @@ WORD WriteOne(UBYTE *name, int alreadyinline, int nosemi)
 				IniLine(0);
 				startinline = alreadyinline;
 				AO.OutFill = AO.OutputLine + startinline;
+				if ( WriteTerm(AO.termbuf,&lbrac,first,0,0) )
+					goto AboWrite;
+				first = 0;
 			}
-			if ( WriteTerm(AO.termbuf,&lbrac,first,0,0) )
-				goto AboWrite;
-			first = 0;
+			else {
+				if ( ( prf & PRINTONETERM ) != 0 ) first = 1;
+				if ( first ) {
+					FiniLine();
+					IniLine(0);
+				}
+				first = 0;
+				if ( WriteTerm(AO.termbuf,&lbrac,first,0,0) )
+					goto AboWrite;
+			}
 		}
 		if ( first ) {
 			IniLine(0);

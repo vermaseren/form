@@ -4570,10 +4570,13 @@ illend:
 	if ( chartype[*t] == 0 ) {	/* Special operators and strings without "" */
 		do { t++; } while ( chartype[*t] <= 1 );
 		if ( *t == '(' ) {
+			WORD ttype;
 			c = *t; *t = 0;
 			if ( StrICmp(s,(UBYTE *)"termsin") == 0 ) {
 				UBYTE *tt;
 				WORD numdol, numexp;
+				ttype = 0;
+together:
 				*t++ = c;
 				while ( *t == ' ' || *t == '\t' || *t == '\n' || *t == '\r' ) t++;
 				if ( *t == '$' ) {
@@ -4581,7 +4584,12 @@ illend:
 					c = *tt; *tt = 0;
 					if ( ( numdol = GetDollar(t) ) > 0 ) {
 						*tt = c;
-						x = TermsInDollar(numdol);
+						if ( ttype == 1 ) {
+							x = SizeOfDollar(numdol);
+						}
+						else {
+							x = TermsInDollar(numdol);
+						}
 					}
 					else {
 						MesPrint("@$%s has not (yet) been defined",t);
@@ -4599,7 +4607,12 @@ illend:
 					}
 					else {
 						*tt = c;
-						x = TermsInExpression(numexp);
+						if ( ttype == 1 ) {
+							x = SizeOfExpression(numexp);
+						}
+						else {
+							x = TermsInExpression(numexp);
+						}
 					}
 				}
 				while ( *tt == ' ' || *tt == '\t'
@@ -4612,6 +4625,10 @@ illend:
 				s = tt+1;
 				*val2 = x;
 				return(s);
+			}
+			else if ( StrICmp(s,(UBYTE *)"sizeof") == 0 ) {
+				ttype = 1;
+				goto together;
 			}
 			else if ( StrICmp(s,(UBYTE *)"exists") == 0 ) {
 				UBYTE *tt;
@@ -5832,8 +5849,10 @@ int writeToChannel(int wtype, UBYTE *s, HANDLERS *h)
 {
 	UBYTE *to, *fstring, *ss, *sss, *s1, c, c1;
 	WORD  num, number, nfac;
+	WORD oldOptimizationLevel;
 	UBYTE Out[MAXLINELENGTH+14], *stopper;
 	int nosemi, i;
+	int plus = 0;
 
 /*
 	Now determine the format string
@@ -5903,6 +5922,8 @@ int writeToChannel(int wtype, UBYTE *s, HANDLERS *h)
 			else *to++ = *fstring++;
 		}
 		else if ( *fstring == '%' ) {
+			plus = 0;
+retry:
 			fstring++;
 			if ( *fstring == 'd' ) {
 				int sign,dig;
@@ -6215,9 +6236,9 @@ noexpr:				MesPrint("@expression name expected in #write instruction");
 				num = to - Out;
 				if ( num > 0 ) WriteUnfinString(wtype,Out,num);
 				to = Out;
-				WORD oldOptimizationLevel = AO.OptimizationLevel;
+				oldOptimizationLevel = AO.OptimizationLevel;
 				AO.OptimizationLevel = 0;
-				if ( WriteOne(ss,(int)num,nosemi) < 0 ) {
+				if ( WriteOne(ss,(int)num,nosemi,plus) < 0 ) {
 					AM.FileOnlyFlag = h->oldlogonly;
 					AC.LogHandle = h->oldhandle;
 					AO.PrintType = h->oldprinttype;
@@ -6332,6 +6353,9 @@ noexpr:				MesPrint("@expression name expected in #write instruction");
 				else {
 					goto IllegControlSequence;
 				}
+			}
+			else if ( *fstring == '+' ) {
+				plus = 1; goto retry;
 			}
 			else if ( *fstring == 0 ) {
 				*to++ = 0;

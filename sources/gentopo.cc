@@ -552,6 +552,7 @@ MGraph::MGraph(int pid, int ncl, int *cldeg, int *clnum, int *clext, Bool sopi)
     bidef = newArray(nNodes, 0);
     bilow = newArray(nNodes, 0);
     bicount = 0;
+	DUMMYUSE(padding);
 
 #if DEBUGM
     printf("+++ new    MGraph %d\n", ++countMG);
