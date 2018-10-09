@@ -235,6 +235,11 @@ And the user can of course also influence their settings as explained in
 the chapter on the setup \ref{setup}. This chapter gives also all default 
 values.
 
+There is one restriction on the sorting of function arguments and 
+\$-expressions: They are not allowed to go into the stage4 sorting. Any 
+such attempt will result in an error message and the suggestion to raise 
+the size of the buffers for this type of sorting.
+
 When \FORM\ is running in parallel mode (either \TFORM\ or \ParFORM) each worker 
 will need its own buffers. In \ParFORM\ in which the processors each control 
 their own memory, the size of each of these buffers are the same as for the 

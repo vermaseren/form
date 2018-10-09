@@ -1106,6 +1106,18 @@ numerical argument that is greater or equal to zero.
 integer.
 
 %--#] sign_ : 
+%--#[ sizeof_ :
+
+\section{sizeof\_}\index{sizeof\_}\index{function!sizeof\_}
+\label{funsizeof}
+\noindent If there is a single argument and this argument is the name of an 
+active (or previously active during the current job) expression, the 
+function is replaced by the number\index{number of \FORM words} of \FORM 
+words in this expression. Stored expressions that were entered via a load 
+statement (see \ref{substaload}) are excluded from this because for them 
+this information is not readily available.
+
+%--#] sizeof_ : 
 %--#[ sum_ :
 
 \section{sum\_}\index{sum\_}\index{function!sum\_}
@@ -1247,7 +1259,7 @@ nothing is done.
 \noindent For a description of this function, please see the section on 
 diagrams~\ref{diagrams}.
 
-%--#] topologies_ :
+%--#] topologies_ : 
 
 %--#[ Reserved names :
 

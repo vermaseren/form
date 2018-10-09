@@ -1227,6 +1227,11 @@ symbol as it has been declared. If no minimum power has been set in the
 declaration of the symbol, the general minimum power for symbols is 
 returned (see \ref{substasymbols}).}
  
+\leftvitem{3cm}{sizeof()}
+\rightvitem{13cm}{The argument of termsin\index{termsin} is the name of an 
+expression or a \$-variable. This function then evaluates into the number 
+of \FORM words in that expression or variable.}
+ 
 \leftvitem{3cm}{termsin()}
 \rightvitem{13cm}{The argument of termsin\index{termsin} is the name of an 
 expression or a \$-variable. This function then evaluates into the number 
@@ -2160,8 +2165,12 @@ expression will be printed without its name and there will also be no
 current output format is fortran\index{fortran} output there is an extra option. After the 
 name of the expression one should put between parentheses the name to be 
 used when there are too many continuation cards.
+\item[\%+e] Like \%e, but like the +s option in the Print 
+statement\ref{substaprint} where each term starts on a new line.
 \item[\%E] Like \%e, but whereas the \%e terminates the expression with a 
 ;, the \%E does not give this trailing semicolon\index{semicolon}.
+\item[\%+E] Like \%E, but like the +s option in the Print 
+statement\ref{substaprint} where each term starts on a new line.
 \item[\%s] A string\index{string}. The string should be 
 given in the list of variables and be enclosed between double quotes. Each 
 occurrence of \%s will look for the next variable in the list.
