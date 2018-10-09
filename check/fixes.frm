@@ -1827,44 +1827,45 @@ P;
 assert succeeded?
 *--#] Issue219 : 
 *--#[ Issue211 :
-*
-*	Check disabled. Entered in many cases stage 4 for functions.
-*	Has been disallowed for now.
-*
-** Unexpected code in ReNumber
-*#: TermsInSmall 128
-*#: LargePatches 16
-*#: FilePatches 4
-*#: SubTermsInSmall 64
-*#: SubLargePatches 8
-*#: SubFilePatches 2
-*
-*CFunction f,g;
-*Symbol x,y;
-*
-** 128*16=2048 terms cause a sort of the large buffer to disk.
-** multiples of 2048*4=8192 terms cause a stage 4 sort
-*#define NTERMS "40001"
-*
-*#define ARGNTERMS "2001"
-*
-*Local test1 = <f(1)>+...+<f(`NTERMS')>;
-*Local test2 = g(<f(1)>+...+<f(`ARGNTERMS')>);
-*.sort
-*
-** Cancel all terms, but keep distance so that most terms only cancel in the final sort
-*Identify f(x?) = f(x) - f(`NTERMS'-x+1);
-*Argument g;
-*  Identify f(x?) = f(x) - f(`ARGNTERMS'-x+1);
-*EndArgument;
-*
-*Print;
-*.end
-*# Only for 64-bit systems. Otherwise "Output term too large".
-*#require wordsize == 4
-*assert succeeded?
-*assert result("test1") =~ expr("0")
-*assert result("test2") =~ expr("g(0)")
+* Unexpected code in ReNumber
+#: TermsInSmall 128
+#: LargePatches 16
+#: FilePatches 4
+#: SubTermsInSmall 64
+#: SubLargePatches 8
+#: SubFilePatches 2
+
+CFunction f,g;
+Symbol x,y;
+
+* 128*16=2048 terms cause a sort of the large buffer to disk.
+* multiples of 2048*4=8192 terms cause a stage 4 sort
+#define NTERMS "40001"
+
+#define ARGNTERMS "2001"
+
+Local test1 = <f(1)>+...+<f(`NTERMS')>;
+Local test2 = g(<f(1)>+...+<f(`ARGNTERMS')>);
+.sort
+
+* Cancel all terms, but keep distance so that most terms only cancel in the final sort
+Identify f(x?) = f(x) - f(`NTERMS'-x+1);
+Argument g;
+  Identify f(x?) = f(x) - f(`ARGNTERMS'-x+1);
+EndArgument;
+
+Print;
+.end
+# Only for 64-bit systems. Otherwise "Output term too large".
+#require wordsize == 4
+# For now it fails because
+#   "Currently Stage 4 sorts are not allowed for function arguments or $ variables."
+assert runtime_error?
+# Runtime errors may freeze ParFORM.
+#pend_if mpi?
+#assert succeeded?
+#assert result("test1") =~ expr("0")
+#assert result("test2") =~ expr("g(0)")
 *--#] Issue211 : 
 *--#[ Issue222 :
 * accessing #factdollar factors causes program termination
