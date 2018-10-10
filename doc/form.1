@@ -1,4 +1,4 @@
-.TH FORM 1 "2017-07-06"
+.TH FORM 1 "2018-10-04"
 .SH NAME
 FORM \- Symbolic manipulation system
 .SH SYNOPSIS
@@ -97,6 +97,14 @@ FORM ignore this parameter.
 .TP
 .BR "-W"
 Turn on the wall-clock time mode in the statistics.
+.TP
+.BR "-z"
+The number following is a timelimit for the program in second.
+.TP
+.BR "-Z"
+Removes the \fB.str\fR file on crash, whatever its contents. Under
+ordinary circumstances at a crash a \fB.str\fR file will not be removed if
+it has a nonzero content.
 .TP
 .BR "-y"
 Run only the preprocessor and dump its output.
