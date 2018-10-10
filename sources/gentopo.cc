@@ -104,10 +104,10 @@ EGraph::~EGraph()
     int j;
 
     for (j = 0; j < nNodes; j++) {
-      delete nodes[j].edges;
+      delete[] nodes[j].edges;
     }
-    delete nodes;
-    delete edges;
+    delete[] nodes;
+    delete[] edges;
 #if DEBUGM
     printf("+++ delete EGraph %d\n", countEG--);
 #endif
@@ -281,10 +281,10 @@ MNodeClass::MNodeClass(int nnodes, int ncl)
 
 MNodeClass::~MNodeClass()
 {
-    delete clist;
-    delete ndcl;
+    delete[] clist;
+    delete[] ndcl;
     deleteMat(clmat, nNodes, nClasses);
-    delete flist;
+    delete[] flist;
 
 #if DEBUGM
     printf("+++ delete MNodeClass %d\n", countNMC--);
@@ -577,8 +577,8 @@ MGraph::~MGraph()
     for (j = 0; j < nNodes; j++) {
       delete nodes[j];
     }
-    delete nodes;
-    delete clist;
+    delete[] nodes;
+    delete[] clist;
 
 #if DEBUGM
     printf("+++ delete MGraph %d\n", countMG++);
@@ -1465,7 +1465,7 @@ Local int   *newArray(int size, int val)
 
 Local void deletArray(int *a)
 {
-    delete a;
+    delete[] a;
 }
 
 Local void copyArray(int size, int *a0, int *a1)
@@ -1495,7 +1495,7 @@ Local void  deleteMat(int **m, int n0, int n1)
     for (j = 0; j < n0; j++) {
         deletArray(m[j]);
     }
-    delete m;
+    delete[] m;
 }
 
 //==============================================================
