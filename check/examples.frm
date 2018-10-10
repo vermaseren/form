@@ -1824,3 +1824,97 @@ Print;
 	assert result("aPLUSbTO2") =~ expr("b^2 + 2*a*b + a^2")
 	assert result("aPLUSbTO3") =~ expr("b^3 + 3*a*b^2 + 3*a^2*b + a^3")
 *--#] ExtComm_1 :
+*--#[ Diagrams_1 :
+    Vectors Q1,Q2,p1,...,p8;
+    Set QQ:Q1,Q2;
+    Set PP:p1,...,p8;
+    #define LOOPS "2"
+    Local F = topologies_(`LOOPS',2,{3,},QQ,PP);
+    Print +f +s;
+    .end
+    assert succeeded?
+    assert result("F") =~ expr("
+       + node_(0,-Q1)*node_(1,-Q2)*node_(2,Q1,-p1,-p2)*node_(3,Q2,p1,-p3)*
+      node_(4,p2,-p4,-p5)*node_(5,p3,p4,p5)
+       + node_(0,-Q1)*node_(1,-Q2)*node_(2,Q1,-p1,-p2)*node_(3,p1,-p3,-p4)*
+      node_(4,p2,p3,-p5)*node_(5,Q2,p4,p5)
+    ")
+*--#] Diagrams_1 : 
+*--#[ Diagrams_2 :
+    Vectors Q1,Q2,p1,...,p8;
+    Set QQ:Q1,Q2;
+    Set PP:p1,...,p8;
+    #define LOOPS "2"
+    Local F = topologies_(`LOOPS',2,{3,4},QQ,PP);
+    Print +f +s;
+    .end
+    assert succeeded?
+    assert result("F") =~ expr("
+       + node_(0,-Q1)*node_(1,-Q2)*node_(2,Q1,Q2,-p1,-p2)*node_(3,p1,p2,-p3,p3
+      )
+       + node_(0,-Q1)*node_(1,-Q2)*node_(2,Q1,-p1,-p2)*node_(3,Q2,p1,-p3)*
+      node_(4,p2,p3,-p4,p4)
+       + node_(0,-Q1)*node_(1,-Q2)*node_(2,Q1,-p1,-p2)*node_(3,Q2,p1,-p3)*
+      node_(4,p2,-p4,-p5)*node_(5,p3,p4,p5)
+       + node_(0,-Q1)*node_(1,-Q2)*node_(2,Q1,-p1,-p2)*node_(3,Q2,-p3,-p4)*
+      node_(4,p1,p2,p3,p4)
+       + node_(0,-Q1)*node_(1,-Q2)*node_(2,Q1,-p1,-p2)*node_(3,p1,-p3,-p4)*
+      node_(4,Q2,p2,p3,p4)
+       + node_(0,-Q1)*node_(1,-Q2)*node_(2,Q1,-p1,-p2)*node_(3,p1,-p3,-p4)*
+      node_(4,p2,p3,-p5)*node_(5,Q2,p4,p5)
+       + node_(0,-Q1)*node_(1,-Q2)*node_(2,Q1,-p1,-p2,-p3)*node_(3,Q2,p1,p2,p3
+      )
+       + node_(0,-Q1)*node_(1,-Q2)*node_(2,-p1,-p2,-p3)*node_(3,Q2,p1,-p4)*
+      node_(4,Q1,p2,p3,p4)
+       + node_(0,-Q1)*node_(1,-Q2)*node_(2,-p1,-p2,-p3)*node_(3,p1,p2,-p4)*
+      node_(4,Q1,Q2,p3,p4)
+    ")
+*--#] Diagrams_2 : 
+*--#[ Diagrams_3 :
+    Vectors Q1,Q2,p1,...,p8;
+    Set QQ:Q1,Q2;
+    Set PP:p1,...,p8;
+    #define LOOPS "2"
+    Local F = topologies_(`LOOPS',-2,{3,4},QQ,PP);
+    Print +f +s;
+    .end
+    assert succeeded?
+    assert result("F") =~ expr("
+       + node_(0,-Q1)*node_(1,-Q2)*node_(2,Q1,Q2,-p1,-p2)*node_(3,p1,p2,-p3,p3
+      )
+       + node_(0,-Q1)*node_(1,-Q2)*node_(2,Q1,-p1,-p2)*node_(3,Q2,p1,-p3)*
+      node_(4,p2,p3,-p4,p4)
+       + node_(0,-Q1)*node_(1,-Q2)*node_(2,Q1,-p1,-p2)*node_(3,Q2,p1,-p3)*
+      node_(4,p2,-p4,-p5)*node_(5,p3,p4,p5)
+       + node_(0,-Q1)*node_(1,-Q2)*node_(2,Q1,-p1,-p2)*node_(3,Q2,-p3,-p4)*
+      node_(4,p1,p2,p3,p4)
+       + node_(0,-Q1)*node_(1,-Q2)*node_(2,Q1,-p1,-p2)*node_(3,Q2,-p3,-p4)*
+      node_(4,p1,p3,-p5)*node_(5,p2,p4,p5)
+       + node_(0,-Q1)*node_(1,-Q2)*node_(2,Q1,-p1,-p2)*node_(3,p1,-p3,-p4)*
+      node_(4,Q2,p2,p3,p4)
+       + node_(0,-Q1)*node_(1,-Q2)*node_(2,Q1,-p1,-p2,-p3)*node_(3,Q2,p1,p2,p3
+      )
+       + node_(0,-Q1)*node_(1,-Q2)*node_(2,-p1,-p2,-p3)*node_(3,p1,p2,-p4)*
+      node_(4,Q1,Q2,p3,p4)
+    ")
+*--#] Diagrams_3 : 
+*--#[ Diagrams_4 :
+    Vectors Q1,Q2,p1,...,p17;
+    Set QQ:Q1,Q2;
+    Set PP:p1,...,p17;
+    #define LOOPS "6"
+    Local F = topologies_(`LOOPS',-2,{3,},QQ,PP);
+    .end
+    assert succeeded?
+    assert nterms("F") == 2793
+*--#] Diagrams_4 : 
+*--#[ Diagrams_5 :
+    Vectors Q1,Q2,p1,...,p17;
+    Set QQ:Q1,Q2;
+    Set PP:p1,...,p17;
+    #define LOOPS "6"
+    Local F = topologies_(`LOOPS',2,{3,},QQ,PP);
+    .end
+    assert succeeded?
+    assert nterms("F") == 4999
+*--#] Diagrams_5 : 
