@@ -500,6 +500,7 @@ notgoodvertex:
 		else if ( momenta[i] == -MINVECTOR && momenta[i+3] == -VECTOR
 			 && momenta[i+1] == momenta[i+4] ) {
 			flips[nflips++] = momenta[i+1];
+			DUMMYUSE(flips[nflips-1]);
 		}
 		else { /* something wrong with the momenta */
 			MLOCK(ErrorMessageLock);

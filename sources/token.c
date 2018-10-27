@@ -1752,7 +1752,8 @@ int simp4token(SBYTE *s)
 		if ( *s != TSYMBOL && *s != TDOLLAR ) {
 			MesPrint("&Set index in RHS is not a wildcard symbol or $-variable");
 			error = 1;
-			while ( s1 < s ) *fill++ = *s1++; continue;
+			while ( s1 < s ) *fill++ = *s1++;
+			continue;
 		}
 		settype = ( *s == TDOLLAR );
 		s++; nsym = 0; s2 = s;
@@ -1760,7 +1761,8 @@ int simp4token(SBYTE *s)
 		if ( *s != RBRACE ) {
 			MesPrint("&Improper set argument in RHS");
 			error = 1;
-			while ( s1 < s ) *fill++ = *s1++; continue;
+			while ( s1 < s ) *fill++ = *s1++;
+			continue;
 		}
 		s++;
 /*
@@ -1845,7 +1847,8 @@ int simp4token(SBYTE *s)
 					fill--;
 					MesPrint("&Set index in RHS is not a wildcard symbol");
 					error = 1;
-					while ( s1 < s ) *fill++ = *s1++; continue;
+					while ( s1 < s ) *fill++ = *s1++;
+					continue;
 				}
 			}
 		}

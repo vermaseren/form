@@ -81,7 +81,7 @@ const string factorized_poly::tostring () const {
 	// modulo p^n
 	if (factor[0].modp>0) {
 		res += " (mod ";
-		char tmp[10];
+		char tmp[12];
 		sprintf (tmp,"%i",factor[0].modp);
 		res += tmp;
 		if (factor[0].modn > 1) {

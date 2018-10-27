@@ -1254,8 +1254,10 @@ redef:;
 		inp1 = fake;
 /*		AT.WorkPointer += T->numind; */
 	}
-	else
-	inp1 = ++p; c = 0;
+	else {
+		inp1 = ++p;
+	}
+	c = 0;
 /*
 	Now we have the indices and p points to the rhs.
 */

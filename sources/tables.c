@@ -992,7 +992,8 @@ int CoTBenter(UBYTE *s)
 	  while ( *s ) {
 		basenumber++;
 		tablename = s; while ( *s ) s++; s++;
-		while ( *s ) s++; s++;
+		while ( *s ) s++;
+		s++;
 		if ( ( GetVar(tablename,&type,&funnum,CFUNCTION,NOAUTO) == NAMENOTFOUND )
 			|| ( T = functions[funnum].tabl ) == 0 ) {
 			MesPrint("&%s should be a previously declared table",tablename);
@@ -1145,7 +1146,10 @@ int CheckTableDeclarations(DBASE *d)
 			 || ( T->sparse == 0 ) ) {
 			MesPrint("&%s has been declared previously, but not as a sparse table.",s);
 			error = 1;
-			while ( *s ) s++; s++; while ( *s ) s++; s++;
+			while ( *s ) s++;
+			s++;
+			while ( *s ) s++;
+			s++;
 		}
 		else {
 /*
@@ -1153,12 +1157,14 @@ int CheckTableDeclarations(DBASE *d)
 			We are not going to rename arguments when reading the elements.
 */
 			ss = s;
-			while ( *s ) s++; s++;
+			while ( *s ) s++;
+			s++;
 			if ( StrCmp(s,T->argtail) ) {
 				MesPrint("&Declaration of table %s in %s different from previous declaration",ss,d->name);
 				error = 1;
 			}
-			while ( *s ) s++; s++;
+			while ( *s ) s++;
+			s++;
 		}
 	}
 	if ( command ) { M_free(command,"table command"); }
@@ -1197,7 +1203,11 @@ int CoTBload(UBYTE *ss)
 		while ( *s ) {
 			num++;
 			if ( StrCmp(s,name) ) {
-				while ( *s ) s++; s++; while ( *s ) s++; s++; num++;
+				while ( *s ) s++;
+				s++; 
+				while ( *s ) s++;
+				s++;
+				num++;
 				continue;
 			}
 			name = s; while ( *s ) s++; ns = s-name; s++;
@@ -1210,7 +1220,8 @@ int CoTBload(UBYTE *ss)
 				for ( j = 0; j < NUMOBJECTS; j++ ) {
 					if ( d->iblocks[i]->objects[j].tablenumber == num ) {
 						t = arguments = (UBYTE *)(d->iblocks[i]->objects[j].element);
-						while ( *t ) t++; es = t - arguments;
+						while ( *t ) t++;
+						es = t - arguments;
 						cs = 2*es + 2*ns + ts + 10;
 						if ( cs > commandsize )	{
 							commandsize = 2*cs;
@@ -1270,7 +1281,8 @@ int CoTBload(UBYTE *ss)
 				for ( j = 0; j < NUMOBJECTS; j++ ) {
 					if ( d->iblocks[i]->objects[j].tablenumber == num ) {
 						t = arguments = (UBYTE *)(d->iblocks[i]->objects[j].element);
-						while ( *t ) t++; es = t - arguments;
+						while ( *t ) t++;
+						es = t - arguments;
 						cs = 2*es + 2*ns + ts + 10;
 						if ( cs > commandsize )	{
 							commandsize = 2*cs;
@@ -1621,8 +1633,11 @@ int CoTBuse(UBYTE *s)
 	  s = (UBYTE *)(d->tablenames); basenumber = 0;
 	  while ( *s ) {
 		basenumber++;
-		tablename = s; while ( *s ) s++; s++;
-		while ( *s ) s++; s++;
+		tablename = s;
+		while ( *s ) s++;
+		s++;
+		while ( *s ) s++;
+		s++;
 		if ( ( GetVar(tablename,&type,&funnum,CFUNCTION,NOAUTO) == NAMENOTFOUND )
 			|| ( T = functions[funnum].tabl ) == 0 ) {
 			MesPrint("&%s should be a previously declared table",tablename);

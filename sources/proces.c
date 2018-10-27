@@ -2978,7 +2978,9 @@ NoWild:				r = accum;
 								i = t[1] - SUBEXPSIZE;
 								u = r + SUBEXPSIZE; v = t + SUBEXPSIZE;
 								while ( i > 0 ) {
-									 if ( *v++ != *u++ ) break; i--; }
+									if ( *v++ != *u++ ) break;
+									i--;
+								}
 								if ( i <= 0 ) {
 									u = r;
 									r[3] += t[3];

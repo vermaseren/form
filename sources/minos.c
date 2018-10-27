@@ -1294,8 +1294,10 @@ char *ReadObject(DBASE *d,MLONG tablenumber,char *arguments)
 	s = d->tablenames; i = 1;
 	while ( *s ) {
 		if ( i == tablenumber ) break;
-		while ( *s ) s++; s++;
-		while ( *s ) s++; s++;
+		while ( *s ) s++;
+		s++;
+		while ( *s ) s++;
+		s++;
 		i++;
 	}
 	MesPrint("%s(%s) not found in tablebase %s\n",s,arguments,d->name);

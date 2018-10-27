@@ -1028,7 +1028,8 @@ MulIn:
 						r2 = termout + *termout; r2 -= ABS(r2[-1]);
 						while ( r < r1 ) *r2++ = *r++;
 						r3 = termout + 1;
-						while ( r3 < r2 ) *t++ = *r3++; *term = t - term;
+						while ( r3 < r2 ) *t++ = *r3++;
+						*term = t - term;
 						if ( AT.WorkPointer > term && AT.WorkPointer < t )
 							AT.WorkPointer = t;
 						goto Restart;

@@ -4411,10 +4411,10 @@ WORD ReadSaveVariables(UBYTE *buffer, UBYTE *top, LONG *size, LONG *outsize,\
 				AO.CheckPower(in);
 				AO.ResizeWORD(in, out); in += lenW;
 				if ( *((WORD *)out) == -AO.mpower ) *((WORD *)out) = -MAXPOWER;
-				                                    out += sizeof(WORD); /* minpower */
+				out += sizeof(WORD);									 /* minpower */
 				AO.ResizeWORD(in, out); in += lenW;
 				if ( *((WORD *)out) == AO.mpower ) *((WORD *)out) = MAXPOWER;
-				                                    out += sizeof(WORD); /* maxpower */
+				out += sizeof(WORD);									 /* maxpower */
 				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD); /* complex  */
 				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD); /* number   */
 				AO.ResizeWORD(in, out); in += lenW; out += sizeof(WORD); /* flags    */

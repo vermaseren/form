@@ -364,7 +364,8 @@ higherlevel:
 						Now we can make the assignments
 */
 					s = namebuf;
-					while ( *s ) s++; s++;
+					while ( *s ) s++;
+					s++;
 					t = p->argnames;
 					for ( j = 0; j < p->nargs; j++ ) {
 						if ( ( nargs == p->nargs-1 ) && ( *t == '?' ) ) {
@@ -372,9 +373,11 @@ higherlevel:
 						}
 						else {
 							PutPreVar(t,s,0,0);
-							while ( *s ) s++; s++;
+							while ( *s ) s++;
+							s++;
 						}
-						while ( *t ) t++; t++;
+						while ( *t ) t++;
+						t++;
 					}
 				}
 dostream:;
@@ -681,7 +684,8 @@ int PutPreVar(UBYTE *name, UBYTE *value, UBYTE *args, int mode)
 			if ( value && p->value ) {
 				s = value;
 				t = p->value;
-				while ( *s ) *t++ = *s++; *t = 0;
+				while ( *s ) *t++ = *s++;
+				*t = 0;
 			}
 			else p->value = 0;
 			return(i);
@@ -2870,7 +2874,8 @@ int DoDo(UBYTE *s)
 		u = loop->dollarname;
 		*u++ = '$'; t = loop->name; while ( *t ) *u++ = *t++;
 		*u++ = '_'; uu = u; *u++ = '='; t = loop->vars;
-		while ( *t ) *u++ = *t++; *t = 0; *u = 0;
+		while ( *t ) *u++ = *t++;
+		*t = 0; *u = 0;
 /*
 		Compile and put in dollar variable.
 		Note that we remember the dollar by name and that this name ends in _
