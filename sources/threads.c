@@ -1449,6 +1449,7 @@ bucketstolen:;
 				Entry for when we work with sortbots
 */
 #ifdef WITHSORTBOTS
+				/* fall through */
 			case FINISHEXPRESSION2:
 #endif
 /*

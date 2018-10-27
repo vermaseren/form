@@ -1185,6 +1185,7 @@ dotensor:
 									if ( x2 >= 0 && x2 < AM.OffsetIndex ) {
 										*t++ = x2; break;
 									}
+									/* fall through */
 								default:
 									MesPrint("&Illegal type of set inside tensor");
 									error = 1;
@@ -1359,6 +1360,7 @@ dofunction:			firstsumarg = 1;
 								*t++ = -ARGWILD; *t++ = x2; break;
 							case TSETDOL:
 								x2 = -x2;
+								/* fall through */
 							case TSETNUM:
 								if ( inset == 0 ) {
 									w1 = t; t += 2; w2 = t;
@@ -1523,6 +1525,7 @@ dofunction:			firstsumarg = 1;
 								*t++ = INDEX; *t++ = 3; *t++ = x2; break;
 							case TSETDOL:
 								x2 = -x2;
+								/* fall through */
 							case TSETNUM:
 								if ( inset == 0 ) {
 									w1 = t; t += 2; w2 = t;

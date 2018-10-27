@@ -1036,6 +1036,7 @@ void PrintExtraSymbol(int num, WORD *terms,int par)
 /*				out = StrCopy(VARNAME(symbols,num),out); */
 				break;
 			}
+			/* fall through */
 		case EXTRASYMBOL:
 			out = StrCopy(FindExtraSymbol(num),out);
 /*

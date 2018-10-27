@@ -1014,6 +1014,7 @@ int simp2token(SBYTE *s)
 							else *fill++ = *s++;
 							break;
 						}
+						/* fall through */
 					case TSETNUM:
 						v++; while ( *v >= 0 ) v++;
 						goto tcommon;
@@ -1022,6 +1023,7 @@ int simp2token(SBYTE *s)
 						|| v[1] == DENOMINATORSYMBOL ) && v[2] < 0 ) {
 							*fill++ = *s++; break;
 						}
+						/* fall through */
 					case TSET:
 					case TVECTOR:
 					case TINDEX:

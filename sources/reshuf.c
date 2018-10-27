@@ -162,6 +162,7 @@ VOID FunLevel(PHEAD WORD *term)
 				break;
 			case GAMMA:
 				t += FUNHEAD-2;
+				/* fall through */
   			case DELTA:
 			case INDEX:
 				t += 2;

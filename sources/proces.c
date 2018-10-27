@@ -292,6 +292,7 @@ WORD Processor()
 				AR.hidefile->POfill = AR.hidefile->POfull;
 */
 				SetEndHScratch(AR.hidefile,&position);
+				/* fall through */
 			case LOCALEXPRESSION:
 			case GLOBALEXPRESSION:
 				AR.GetFile = 0;
@@ -2170,6 +2171,7 @@ WORD InFunction(PHEAD WORD *term, WORD *termout)
 								else *m++ = -d->where[1];
 								break;
 							}
+							/* fall through */
 						case DOLTERMS:
 /*
 							Here we have the special case of the PolyRatFun

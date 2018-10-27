@@ -547,6 +547,7 @@ WORD DoIfStatement(PHEAD WORD *ifcode, WORD *term)
 								break;
 							}
 							d->index = d->where[2];
+							/* fall through */
 						case DOLINDEX:
 							if ( d->index == 0 ) {
 								ncoef2 = coef2[0] = 0; coef2[1] = 1;
@@ -582,6 +583,7 @@ WORD DoIfStatement(PHEAD WORD *ifcode, WORD *term)
 								ncoef2 = coef2[0] = 0; coef2[1] = 1;
 								break;
 							}
+							/* fall through */
 						case DOLARGUMENT:
 							if ( d->where[0] == -SNUMBER ) {
 								if ( d->where[1] == 0 ) {

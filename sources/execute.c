@@ -80,6 +80,7 @@ WORD CleanExpr(WORD par)
 						ClearBracketIndex(e_in-Expressions);
 					break;
 				}
+				/* fall through */
 			case GLOBALEXPRESSION:
 			case HIDDENGEXPRESSION:
 				if ( par ) {
@@ -135,7 +136,7 @@ WORD CleanExpr(WORD par)
 					if ( e_in->status != HIDDENGEXPRESSION )
 						ClearBracketIndex(e_in-Expressions);
 				}
-				/* Fall through is intentional */
+				/* fall through */
 			case SKIPLEXPRESSION:
 			case DROPLEXPRESSION:
 			case DROPHLEXPRESSION:

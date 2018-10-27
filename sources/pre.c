@@ -71,8 +71,8 @@ static KEYWORD precommands[] = {
 	,{"factdollar"   , DoFactDollar   , 0, 0}
 	,{"fromexternal" , DoFromExternal , 0, 0}
 	,{"if"           , DoIf           , 0, 0}
-	,{"ifdef"        , (TFUN)DoIfdef  , 1, 0}
-	,{"ifndef"       , (TFUN)DoIfdef  , 2, 0}
+	,{"ifdef"        , (TFUN)(void *)DoIfdef  , 1, 0}
+	,{"ifndef"       , (TFUN)(void *)DoIfdef  , 2, 0}
 	,{"include"      , DoInclude      , 0, 0}
 	,{"inside"       , DoInside       , 0, 0}
 	,{"message"      , DoMessage      , 0, 0}
@@ -1157,7 +1157,7 @@ retry:;
 		while ( ( t[-1] == ';' ) && ( t[-2] != '\\' ) ) {
 			t--; *t = 0;
 		}
-		if ( key->type ) return(((TFUN1)key->func)(s,key->type));
+		if ( key->type ) return(((TFUN1)(void *)key->func)(s,key->type));
 		else return((key->func)(s));
 	}
 	return(0);
@@ -4377,6 +4377,7 @@ UBYTE *PreIfEval(UBYTE *s, int *value)
 			case '|':
 				if ( *s != '|' ) goto illoper;
 				s++;
+				/* fall through */
 			case ')':
 				if ( cmplevel ) {
 					if ( type == 0 || cmptype == 0 ) goto illobject;
@@ -5537,7 +5538,7 @@ int DoRmExternal(UBYTE *s)
 			return(0);
 		case -1:/*number is not specified - try current*/
 			n=AX.currentExternalChannel;
-			/*No break!*/
+			/* fall through */
 		default:
 			closeExternalChannel(n);/*No reaction for possible error*/
 	}

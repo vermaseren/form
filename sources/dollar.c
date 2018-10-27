@@ -1516,6 +1516,7 @@ ShortArgument:
 				w = AT.WorkPointer;
 				break;
 			}
+			/* fall through */
 		case DOLNUMBER:
 		case DOLTERMS:
 			t = d->where;
@@ -1562,6 +1563,7 @@ ShortArgument:
 			MesPrint("Trying to use an undefined $ in an expression");
 			MUNLOCK(ErrorMessageLock);
 			Terminate(-1);
+			/* fall through */
 		case DOLZERO:
 			if ( d->where ) { d->where[0] = 0; }
 			else d->where = &(AM.dollarzero);

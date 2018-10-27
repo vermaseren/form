@@ -2998,9 +2998,13 @@ void ToGeneral(WORD *r, WORD *m, WORD par)
 				else if ( *r == 0 ) { m--; }
 				else          { *m++ = -*r; *m++ = 1; *m++ = -3; }
 				goto MakeSize;
-			case MINVECTOR: k = -k;
+			case MINVECTOR:
+				k = -k;
+				/* fall through */
 			case INDEX:
-			case VECTOR: *m++ = INDEX; *m++ = 3; *m++ = *r++; break;
+			case VECTOR:
+				*m++ = INDEX; *m++ = 3; *m++ = *r++;
+				break;
 		}
 	}
 	*m++ = 1; *m++ = 1; *m++ = k;

@@ -799,6 +799,7 @@ VOID WriteSetup()
 					MesPrint("   %s: '%s'",sp->parameter,(UBYTE *)(AM.IncDir));
 					break;
 				}
+				/* fall through */
 			case STRINGVALUE:
 				if ( StrICmp(sp->parameter,(UBYTE *)"tempdir") == 0 && AM.TempDir ) {
 					MesPrint("   %s: '%s'",sp->parameter,(UBYTE *)(AM.TempDir));

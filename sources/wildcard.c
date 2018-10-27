@@ -2322,6 +2322,7 @@ NoMnot:
 					|| ( type == SYMTONUM && *w-2*MAXPOWER == newnumber ) ) {
 						goto NoMatch;
 					}
+					/* fall through */
 				case SYMTOSUB:
 					if ( *w < 0 ) {
 						WORD *mm = AT.WildMask, *mmm, *part;
@@ -2358,8 +2359,10 @@ NoMnot:
 						if ( inset >= AM.OffsetVector ) { i++; continue; }
 						inset += WILDMASK;
 					}
+					/* fall through */
 				case VECTOVEC:
 					if ( inset == newnumber ) goto NoMatch;
+					/* fall through */
 				case VECTOSUB:
 					if ( inset - WILDOFFSET >= AM.OffsetVector ) {
 						WORD *mm = AT.WildMask, *mmm, *part;
@@ -2393,6 +2396,7 @@ NoMnot:
 					break;
 				case INDTOIND:
 					if ( *w == newnumber ) goto NoMatch;
+					/* fall through */
 				case INDTOSUB:
 					if ( *w - (WORD)WILDMASK >= AM.OffsetIndex ) {
 						WORD *mm = AT.WildMask, *mmm, *part;
