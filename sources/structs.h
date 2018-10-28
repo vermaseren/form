@@ -226,6 +226,18 @@ typedef struct {
 } KEYWORD;
 
 /**
+ *	The KEYWORDV struct defines names of commands/statements and the variable
+ *	to be affected when they are encountered by the compiler or preprocessor.
+ */
+
+typedef struct {
+	char *name;
+	int *var;
+	int type;
+	int flags;
+} KEYWORDV;
+
+/**
  *  The names of variables are kept in an array. Elements of type #NAMENODE
  *  define a tree (that is kept balanced) that make it easy and fast to look for
  *  variables. See also #NAMETREE.
@@ -914,6 +926,10 @@ typedef struct {
   	#[ Varia :
 */
 
+typedef WORD (*FINISHUFFLE)(WORD *);
+typedef WORD (*DO_UFFLE)(WORD *,WORD,WORD,WORD);
+typedef WORD (*COMPARE)(WORD *,WORD *,WORD);
+
 /**
  *  The CBUF struct is used by the compiler. It is a compiler buffer of which
  *  since version 3.0 there can be many.
@@ -1212,8 +1228,8 @@ typedef struct {
     WORD    *stop2;
     WORD    *ststop1;
     WORD    *ststop2;
-    void    *finishuf;
-    void    *do_uffle;
+    FINISHUFFLE finishuf;
+    DO_UFFLE	do_uffle;
     LONG    combilast;
     WORD    nincoef;
     WORD    level;
@@ -1322,6 +1338,11 @@ typedef struct {
 	WORD nestingsum;
     WORD padding;
 } SWITCH;
+
+/*
+	The next typedef comes originally from declare.h but because new compilers
+	do not like casting from void * to a function address we have to put it here
+*/
 
 /*
   	#] Varia : 
@@ -1902,7 +1923,7 @@ struct R_const {
     WORD    *CompressBuffer;       /* (M) */
     WORD    *ComprTop;             /* (M) */
     WORD    *CompressPointer;      /* (R) */
-    VOID    *CompareRoutine;
+    COMPARE CompareRoutine;
     ULONG   *wranfia;
 
     LONG    OldTime;               /* (R) Zero time. Needed in timer. */
@@ -2453,6 +2474,18 @@ typedef struct AllGlobals {
     #] A : 
   	#[ FG :
 */
+
+#ifdef WITHPTHREADS
+#define PHEAD  ALLPRIVATES *B,
+#define PHEAD0 ALLPRIVATES *B
+#define BHEAD  B,
+#define BHEAD0 B
+#else
+#define PHEAD
+#define PHEAD0 VOID
+#define BHEAD
+#define BHEAD0
+#endif
 
 #ifdef ANSI
 typedef WORD (*WCN)(PHEAD WORD *,WORD *,WORD,WORD);

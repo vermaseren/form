@@ -19,6 +19,12 @@
 
 using namespace std;
 
+//	The next limitation is imposed by the fact that the latest compilers
+//	can give warnings on declarations like "int dtcl1[nNodes]"
+//	With a bit of overkil there should be no real problems.
+#define MAXNODES 100
+#define MAXNCLASSES 100
+
 // Generate scalar connected Feynman graphs.
 
 //==============================================================
@@ -396,7 +402,8 @@ void MNodeClass::incMat(int nd, int td, int val)
 //  Check whether the configuration satisfies the ordering condition or not.
 Bool MNodeClass::chkOrd(int nd, int ndc, MNodeClass *cl, int *dtcl)
 {
-    Bool tcl[cl->nClasses];
+    Bool tcl[MAXNCLASSES];
+//    Bool tcl[cl->nClasses];
     int  tn, tc, mxn, cmp, n;
 	DUMMYUSE(nd);
 
@@ -734,7 +741,7 @@ MNodeClass *MGraph::refineClass(MNodeClass *cl, int cn)
     MNodeClass *ccl = cl;
     int         ccn = cn;
     MNodeClass *ncl = NULL;
-    int         ucl[nNodes];
+    int         ucl[MAXNODES];
     int         nucl, nce;
     int         td, cmp;
 
@@ -902,7 +909,7 @@ int MGraph::count1PI(void)
 long MGraph::generate(void)
 {
     MNodeClass *cl;
-    int dscl[nNodes];
+    int dscl[MAXNODES];
     int n;
 
     for (n = 0; n < nNodes; n++) {
@@ -1024,7 +1031,7 @@ void MGraph::connectClass(MNodeClass *cl, int *dscl)
 void MGraph::connectNode(int sc, int ss, MNodeClass *cl, int *dscl)
 {
     int sn;
-    int dtcl[nNodes];
+    int dtcl[MAXNODES];
 
     if (DEBUG0) {
       printf("connectNode:begin:(%d,%d)", sc, ss);
@@ -1067,7 +1074,7 @@ void MGraph::connectNode(int sc, int ss, MNodeClass *cl, int *dscl)
 void MGraph::connectLeg(int sc, int sn, int tc, int ts, MNodeClass *cl, int *dscl, int* dtcl)
 {
     int tn, maxself, nc2, nc, maxcon, ts1, wc, ncm;
-    int dtcl1[nNodes];
+    int dtcl1[MAXNODES];
 
     if (DEBUG0) {
       printf("connectLeg:begin:(%d,%d,%d,%d)", sc, sn, tc, ts);

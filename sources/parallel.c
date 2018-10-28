@@ -683,7 +683,7 @@ newright:
 		}
 	}
 	if ( n->lloser > 0 && n->rloser > 0 ) {
-		comp = CompareTerms(BHEAD PF_term[n->lloser],PF_term[n->rloser],(WORD)0);
+		comp = CompareTerms(PF_term[n->lloser],PF_term[n->rloser],(WORD)0);
 		if ( comp > 0 )     return(n->lloser);
 		else if (comp < 0 ) return(n->rloser);
 		else {
@@ -2447,7 +2447,7 @@ static inline int compare_two_expressions(const WORD *e1, const WORD *e2)
 	}
 	/* The expressions are not so simple. Define the order by each term. */
 	while ( e1[0] && e2[0] ) {
-		int c = CompareTerms(BHEAD (WORD *)e1, (WORD *)e2, 1);
+		int c = CompareTerms((WORD *)e1, (WORD *)e2, 1);
 		if ( c < 0 )
 			return(-1);
 		else if ( c > 0 )

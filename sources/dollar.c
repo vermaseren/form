@@ -2471,7 +2471,7 @@ int TwoExprCompare(WORD *buf1, WORD *buf2, int oprtr)
 	WORD *t1, *t2, cond;
 	t1 = buf1; t2 = buf2;
 	while ( *t1 && *t2 ) {
-		cond = CompareTerms(BHEAD t1,t2,1);
+		cond = CompareTerms(t1,t2,1);
 		if ( cond != 0 ) {
 			if ( cond > 0 ) { /* t1 comes first */
 				switch ( oprtr ) {  /* t1 is less */
@@ -3512,7 +3512,7 @@ getout2:			AR.SortType = oldsorttype;
 nextj1:;
 				s1 = *(fac[j1]); s2 = *(fac[j2]);
 				while ( *s1 && *s2 ) {
-					if ( ( ret = CompareTerms(BHEAD s2, s1, (WORD)2) ) == 0 ) {
+					if ( ( ret = CompareTerms(s2, s1, (WORD)2) ) == 0 ) {
 						s1 += *s1; s2 += *s2;
 					}
 					else if ( ret > 0 ) goto nextj;

@@ -2439,7 +2439,7 @@ twogen:
 		oldPolyFlag = AT.SS->PolyFlag;
 		AT.SS->PolyFlag = 0;
 		while ( s1 < tstop1 && s2 < tstop2 ) {
-			i1 = CompareTerms(BHEAD s1,s2,(WORD)(-1));
+			i1 = CompareTerms(s1,s2,(WORD)(-1));
 			if ( i1 > 0 ) {
 				i2 = *s1;
 				NCOPY(m,s1,i2);
@@ -2532,9 +2532,9 @@ twogen:
  *	        <0	term2 comes first.
  */
 
-WORD Compare1(PHEAD WORD *term1, WORD *term2, WORD level)
+WORD Compare1(WORD *term1, WORD *term2, WORD level)
 {
-	GETBIDENTITY
+	GETIDENTITY
 	SORTING *S = AT.SS;
 	WORD *stopper1, *stopper2, *t2;
 	WORD *s1, *s2, *t1;
@@ -2915,7 +2915,7 @@ NoPoly:
 								if ( s2 >= stopex2 ) {
 									S->PolyFlag = oldpolyflag; return(PREV(-1));
 								}
-								if ( ( c2 = CompareTerms(BHEAD s1,s2,(WORD)1) ) != 0 ) {
+								if ( ( c2 = CompareTerms(s1,s2,(WORD)1) ) != 0 ) {
 									S->PolyFlag = oldpolyflag; return(PREV(c2));
 								}
 								s1 += *s1;
@@ -2972,8 +2972,9 @@ NoPoly:
  *	to that of Compare1 which is the regular compare routine in sort.c
  */
 
-int CompareSymbols(PHEAD WORD *term1, WORD *term2, WORD par)
+int CompareSymbols(WORD *term1, WORD *term2, WORD par)
 {
+	GETIDENTITY
 	int sum1, sum2;
 	WORD *t1, *t2, *tt1, *tt2;
 	int low, high;
@@ -3015,8 +3016,9 @@ int CompareSymbols(PHEAD WORD *term1, WORD *term2, WORD par)
  *	to that of Compare1 which is the regular compare routine in sort.c
  */
 
-int CompareHSymbols(PHEAD WORD *term1, WORD *term2, WORD par)
+int CompareHSymbols(WORD *term1, WORD *term2, WORD par)
 {
+	GETIDENTITY
 	WORD *t1, *t2, *tt1, *tt2, *ttt1, *ttt2;
 	DUMMYUSE(par);
 	DUMMYUSE(AT.WorkPointer);
@@ -3244,7 +3246,7 @@ LONG SplitMerge(PHEAD WORD **Pointer, LONG number)
 	if ( number < 2 ) return(number);
 	if ( number == 2 ) {
 		pp1 = Pointer; pp2 = pp1 + 1;
-		if ( ( i = CompareTerms(BHEAD *pp1,*pp2,(WORD)0) ) < 0 ) {
+		if ( ( i = CompareTerms(*pp1,*pp2,(WORD)0) ) < 0 ) {
 			pp3 = (WORD **)(*pp1); *pp1 = *pp2; *pp2 = (WORD *)pp3;
 		}
 		else if ( i == 0 ) {
@@ -3266,7 +3268,7 @@ LONG SplitMerge(PHEAD WORD **Pointer, LONG number)
 	Addition of 23-jul-1999. It makes things a bit faster.
 */
 	if ( newleft > 0 && newright > 0 &&
-	( i = CompareTerms(BHEAD Pointer[newleft-1],Pointer[split],(WORD)0) ) >= 0 ) {
+	( i = CompareTerms(Pointer[newleft-1],Pointer[split],(WORD)0) ) >= 0 ) {
 		pp2 = Pointer+split; pp1 = Pointer+newleft-1;
 		if ( i == 0 ) {
 		  if ( S->PolyWise ) {
@@ -3303,7 +3305,7 @@ LONG SplitMerge(PHEAD WORD **Pointer, LONG number)
 */
 	while ( newleft > 8 ) {
 		LONG nnleft = newleft/2;
-		if ( ( i = CompareTerms(BHEAD pp1[nnleft],*pp2,(WORD)0) ) < 0 ) break;
+		if ( ( i = CompareTerms(pp1[nnleft],*pp2,(WORD)0) ) < 0 ) break;
 		pp3 += nnleft+1;
 		pp1 += nnleft+1;
 		newleft -= nnleft+1;
@@ -3318,7 +3320,7 @@ LONG SplitMerge(PHEAD WORD **Pointer, LONG number)
 	}
 
 	while ( newleft > 0 && newright > 0 ) {
-		if ( ( i = CompareTerms(BHEAD *pp1,*pp2,(WORD)0) ) < 0 ) {
+		if ( ( i = CompareTerms(*pp1,*pp2,(WORD)0) ) < 0 ) {
 			*pp3++ = *pp2++;
 			newright--;
 		}
@@ -3355,7 +3357,7 @@ LONG SplitMerge(PHEAD WORD **Pointer, LONG number)
 	if ( number < 2 ) return(number);
 	if ( number == 2 ) {
 		pp1 = Pointer; pp2 = pp1 + 1;
-		if ( ( i = CompareTerms(BHEAD *pp1,*pp2,(WORD)0) ) < 0 ) {
+		if ( ( i = CompareTerms(*pp1,*pp2,(WORD)0) ) < 0 ) {
 			pp3 = (WORD **)(*pp1); *pp1 = *pp2; *pp2 = (WORD *)pp3;
 		}
 		else if ( i == 0 ) {
@@ -3377,7 +3379,7 @@ LONG SplitMerge(PHEAD WORD **Pointer, LONG number)
 	Addition of 23-jul-1999. It makes things a bit faster.
 */
 	if ( newleft > 0 && newright > 0 &&
-	( i = CompareTerms(BHEAD Pointer[newleft-1],Pointer[nleft],(WORD)0) ) >= 0 ) {
+	( i = CompareTerms(Pointer[newleft-1],Pointer[nleft],(WORD)0) ) >= 0 ) {
 		pp2 = Pointer+nleft; pp1 = Pointer+newleft-1;
 		if ( i == 0 ) {
 		  if ( S->PolyWise ) {
@@ -3411,7 +3413,7 @@ LONG SplitMerge(PHEAD WORD **Pointer, LONG number)
 	AN.InScratch = nleft - i;
 	pp1 = AN.SplitScratch; pp2 = Pointer + nleft; pp3 = Pointer;
 	while ( nleft > 0 && nright > 0 && *pp1 && *pp2 ) {
-		if ( ( i = CompareTerms(BHEAD *pp1,*pp2,(WORD)0) ) < 0 ) {
+		if ( ( i = CompareTerms(*pp1,*pp2,(WORD)0) ) < 0 ) {
 			*pp3++ = *pp2;
 			*pp2++ = 0;
 			nright--;
@@ -3949,7 +3951,7 @@ OneTerm:
 */
 		while ( i >>= 1 ) {
 			if ( S->tree[i] > 0 ) {
-				if ( ( c = CompareTerms(BHEAD poin[S->tree[i]],poin[k],(WORD)0) ) > 0 ) {
+				if ( ( c = CompareTerms(poin[S->tree[i]],poin[k],(WORD)0) ) > 0 ) {
 /*
 					S->tree[i] is the smaller. Exchange and go on.
 */

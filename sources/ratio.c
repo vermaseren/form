@@ -1314,8 +1314,8 @@ WORD *MultiplyWithTerm(PHEAD WORD *in, WORD *term, WORD par)
 	WORD *termout, *t, *tt, *tstop, *ttstop;
 	WORD length, length1, length2;
 	WORD oldsorttype = AR.SortType;
-	void *oldcompareroutine = AR.CompareRoutine;
-	AR.CompareRoutine = (void *)&CompareSymbols;
+	COMPARE oldcompareroutine = AR.CompareRoutine;
+	AR.CompareRoutine = &CompareSymbols;
 
 	if ( par == 0 || par == 2 ) AR.SortType = SORTHIGHFIRST;
 	else            AR.SortType = SORTLOWFIRST;
@@ -2269,9 +2269,9 @@ int ReadPolyRatFun(PHEAD WORD *term)
 	WORD *term1, *term2, *confree1, *confree2, *gcd, *num1, *den1, move, *newnum, *newden;
 	WORD *tstop, *m1, *m2;
 	WORD oldsorttype = AR.SortType;
-	void *oldcompareroutine = AR.CompareRoutine;
+	COMPARE oldcompareroutine = AR.CompareRoutine;
 	AR.SortType = SORTHIGHFIRST;
-	AR.CompareRoutine = (void *)&CompareSymbols;
+	AR.CompareRoutine = &CompareSymbols;
 
 	tstop = term + *term; tstop -= ABS(tstop[-1]);
 	if ( term + *term == AT.WorkPointer ) flag = 1;
@@ -2960,9 +2960,9 @@ WORD *MULfunc(PHEAD WORD *p1, WORD *p2)
 	UWORD *num1, *num2, *num3;
 	int i;
 	WORD oldsorttype = AR.SortType;
-	void *oldcompareroutine = AR.CompareRoutine;
+	COMPARE oldcompareroutine = AR.CompareRoutine;
 	AR.SortType = SORTHIGHFIRST;
-	AR.CompareRoutine = (void *)&CompareSymbols;
+	AR.CompareRoutine = &CompareSymbols;
 	num3 = NumberMalloc("MULfunc");
 	prod = TermMalloc("MULfunc");
 	NewSort(BHEAD0);

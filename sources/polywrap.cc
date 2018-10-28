@@ -560,22 +560,22 @@ void poly_sort(PHEAD WORD *a) {
 	cout << "*** [" << thetime() << "]  CALL : poly_sort" << endl;
 #endif
 	if (NewSort(BHEAD0)) { Terminate(-1); }
-	AR.CompareRoutine = (void *)&CompareSymbols;
+	AR.CompareRoutine = &CompareSymbols;
 	
 	for (int i=ARGHEAD; i<a[0]; i+=a[i]) {
 		if (SymbolNormalize(a+i)<0 || StoreTerm(BHEAD a+i)) {
-			AR.CompareRoutine = (void *)&Compare1;
+			AR.CompareRoutine = &Compare1;
 			LowerSortLevel();
 			Terminate(-1);
 		}
 	}
 	
 	if (EndSort(BHEAD a+ARGHEAD,1) < 0) {
-		AR.CompareRoutine = (void *)&Compare1;
+		AR.CompareRoutine = &Compare1;
 		Terminate(-1);
 	}
 	
-	AR.CompareRoutine = (void *)&Compare1;
+	AR.CompareRoutine = &Compare1;
 	a[1] = 0; // set dirty flag to zero
 }
 

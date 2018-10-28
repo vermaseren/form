@@ -259,6 +259,6 @@ UBYTE BufferForOutput[MAXLINELENGTH+14];
 char *setupfilename = "form.set";
 
 #ifdef WITHPTHREADS
-INILOCK(ErrorMessageLock);
-INILOCK(FileReadLock);
+INILOCK(ErrorMessageLock)
+INILOCK(FileReadLock)
 #endif

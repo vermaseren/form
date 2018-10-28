@@ -69,8 +69,8 @@ static int identityofthreads = 0;
 static int *listofavailables;
 static int topofavailables = 0;
 static pthread_key_t identitykey;
-static INILOCK(numberofthreadslock);
-static INILOCK(availabilitylock);
+static INILOCK(numberofthreadslock)
+static INILOCK(availabilitylock)
 static pthread_t *threadpointers = 0;
 static pthread_mutex_t *wakeuplocks;
 static pthread_mutex_t *wakeupmasterthreadlocks;
@@ -78,12 +78,12 @@ static pthread_cond_t *wakeupconditions;
 static pthread_condattr_t *wakeupconditionattributes;
 static int *wakeup;
 static int *wakeupmasterthread;
-static INILOCK(wakeupmasterlock);
+static INILOCK(wakeupmasterlock)
 static pthread_cond_t wakeupmasterconditions = PTHREAD_COND_INITIALIZER;
 static pthread_cond_t *wakeupmasterthreadconditions;
 static int wakeupmaster = 0;
 static int identityretval;
-/* static INILOCK(clearclocklock); */
+/* static INILOCK(clearclocklock) */
 static LONG *timerinfo;
 static LONG *sumtimerinfo;
 static int numberclaimed;
@@ -94,14 +94,14 @@ static int numberoffullbuckets;
 
 /* static int numberbusy = 0; */
 
-INILOCK(dummylock);
-INIRWLOCK(dummyrwlock);
+INILOCK(dummylock)
+INIRWLOCK(dummyrwlock)
 static pthread_cond_t dummywakeupcondition = PTHREAD_COND_INITIALIZER;
 
 #ifdef WITHSORTBOTS
 static POSITION SortBotPosition;
 static int numberofsortbots;
-static INILOCK(wakeupsortbotlock);
+static INILOCK(wakeupsortbotlock)
 static pthread_cond_t wakeupsortbotconditions = PTHREAD_COND_INITIALIZER;
 static int topsortbotavailables = 0;
 static LONG numberofterms;
@@ -3550,7 +3550,7 @@ SortBotOut(PHEAD WORD *term)
  *	comes from the workers. It is similar to MergePatches in sort.c from which
  *	it takes much code.
  *	The important concept here is that we want the master to be working as
- *	much as possible because it constitutes the bottleneck.
+ *	little as possible because it constitutes the bottleneck.
  *	The workers fill the buffers of the master. These buffers are divided
  *	into parts for each worker as is done with the file patches in MergePatches
  *	but now also each worker part is divided into blocks. This allows the
@@ -3712,7 +3712,10 @@ OneTerm:
 */
 	while ( i >>= 1 ) {
 		if ( S->tree[i] > 0 ) {
-			if ( ( c = CompareTerms(B0,poin[S->tree[i]],poin[k],(WORD)0) ) > 0 ) {
+/*
+			In the old setup we had here B0 for the first argument
+*/
+			if ( ( c = CompareTerms(poin[S->tree[i]],poin[k],(WORD)0) ) > 0 ) {
 /*
 				S->tree[i] is the smaller. Exchange and go on.
 */
@@ -4187,7 +4190,7 @@ int SortBotMerge(PHEAD0)
 	Now the main loop. Keep going until one of the two hits the end.
 */
 	while ( *term1 && *term2 ) {
-		if ( ( c = CompareTerms(BHEAD term1,term2,(WORD)0) ) > 0 ) {
+		if ( ( c = CompareTerms(term1,term2,(WORD)0) ) > 0 ) {
 /*
 			#[ One is smallest :
 */

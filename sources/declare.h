@@ -420,7 +420,7 @@ static inline LONG ULongToLong(ULONG x)
 #ifdef WITHPTHREADS
 
 #define EXTERNLOCK(x) extern pthread_mutex_t x;
-#define INILOCK(x)    pthread_mutex_t x = PTHREAD_MUTEX_INITIALIZER
+#define INILOCK(x)    pthread_mutex_t x = PTHREAD_MUTEX_INITIALIZER;
 #define EXTERNRWLOCK(x) extern pthread_rwlock_t x;
 #define INIRWLOCK(x)    pthread_rwlock_t x = PTHREAD_RWLOCK_INITIALIZER;
 #ifdef DEBUGGINGLOCKS
@@ -508,7 +508,7 @@ extern WORD   DoesCommu(WORD *);
 extern int    CompArg(WORD *,WORD *);
 extern WORD   CompCoef(WORD *, WORD *);
 extern WORD   CompGroup(PHEAD WORD,WORD **,WORD *,WORD *,WORD);
-extern WORD   Compare1(PHEAD WORD *,WORD *,WORD);
+extern WORD   Compare1(WORD *,WORD *,WORD);
 extern WORD   CountDo(WORD *,WORD *);
 extern WORD   CountFun(WORD *,WORD *);
 extern WORD   DimensionSubterm(WORD *);
@@ -535,13 +535,13 @@ extern int    DoShattering(PHEAD WORD *,WORD *,WORD *,WORD);
 extern WORD   GenerateTopologies(PHEAD WORD,WORD,WORD,WORD);
 extern WORD   DoTableExpansion(WORD *,WORD);
 extern WORD   DoDistrib(PHEAD WORD *,WORD);
-extern WORD   DoShuffle(PHEAD WORD *,WORD,WORD,WORD);
+extern WORD   DoShuffle(WORD *,WORD,WORD,WORD);
 extern WORD   DoPermutations(PHEAD WORD *,WORD);
-extern int    Shuffle(PHEAD WORD *, WORD *, WORD *);
-extern int    FinishShuffle(PHEAD WORD *);
-extern WORD   DoStuffle(PHEAD WORD *,WORD,WORD,WORD);
-extern int    Stuffle(PHEAD WORD *, WORD *, WORD *);
-extern int    FinishStuffle(PHEAD WORD *);
+extern int    Shuffle(WORD *, WORD *, WORD *);
+extern int    FinishShuffle(WORD *);
+extern WORD   DoStuffle(WORD *,WORD,WORD,WORD);
+extern int    Stuffle(WORD *, WORD *, WORD *);
+extern int    FinishStuffle(WORD *);
 extern WORD  *StuffRootAdd(WORD *, WORD *, WORD *);
 extern WORD   TestUse(WORD *,WORD);
 extern DBASE *FindTB(UBYTE *);
@@ -906,6 +906,8 @@ extern int    DoSystem(UBYTE *);
 extern int    DoPipe(UBYTE *);
 extern VOID   StartPrepro(VOID);
 extern int    DoIfdef(UBYTE *,int);
+extern int    DoIfydef(UBYTE *);
+extern int    DoIfndef(UBYTE *);
 extern int    DoElse(UBYTE *);
 extern int    DoElseif(UBYTE *);
 extern int    DoEndif(UBYTE *);
@@ -1446,13 +1448,10 @@ typedef int (*GETCFROMEXTCHANNEL)(VOID);
 typedef int (*SETTERMINATORFOREXTERNALCHANNEL)(char *);
 typedef int (*SETKILLMODEFOREXTERNALCHANNEL)(int,int);
 typedef LONG (*WRITEFILE)(int,UBYTE *,LONG);
-typedef WORD (*COMPARE)(PHEAD WORD *,WORD *,WORD);
 typedef WORD (*GETTERM)(PHEAD WORD *);
-typedef WORD (*FINISHUFFLE)(PHEAD WORD *);
-typedef WORD (*DO_UFFLE)(PHEAD WORD *,WORD,WORD,WORD);
 
 #define CompareTerms ((COMPARE)AR.CompareRoutine)
-#define FiniShuffle ((FINISHUFFLE)AN.SHvar.finishuf)
+#define FiniShuffle AN.SHvar.finishuf
 #define DoShtuffle ((DO_UFFLE)AN.SHvar.do_uffle)
 
 extern UBYTE *defineChannel(UBYTE*, HANDLERS*);
@@ -1473,8 +1472,8 @@ extern int    ReleaseTB(VOID);
 
 extern int    SymbolNormalize(WORD *);
 extern int    TestFunFlag(PHEAD WORD *);
-extern int    CompareSymbols(PHEAD WORD *,WORD *,WORD);
-extern int    CompareHSymbols(PHEAD WORD *,WORD *,WORD);
+extern int    CompareSymbols(WORD *,WORD *,WORD);
+extern int    CompareHSymbols(WORD *,WORD *,WORD);
 extern WORD   NextPrime(PHEAD WORD);
 extern UWORD  wranf(PHEAD0);
 extern UWORD  iranf(PHEAD UWORD);

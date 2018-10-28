@@ -71,8 +71,8 @@ static KEYWORD precommands[] = {
 	,{"factdollar"   , DoFactDollar   , 0, 0}
 	,{"fromexternal" , DoFromExternal , 0, 0}
 	,{"if"           , DoIf           , 0, 0}
-	,{"ifdef"        , (TFUN)(void *)DoIfdef  , 1, 0}
-	,{"ifndef"       , (TFUN)(void *)DoIfdef  , 2, 0}
+	,{"ifdef"        , DoIfydef       , 0, 0}
+	,{"ifndef"       , DoIfndef       , 0, 0}
 	,{"include"      , DoInclude      , 0, 0}
 	,{"inside"       , DoInside       , 0, 0}
 	,{"message"      , DoMessage      , 0, 0}
@@ -1157,8 +1157,7 @@ retry:;
 		while ( ( t[-1] == ';' ) && ( t[-2] != '\\' ) ) {
 			t--; *t = 0;
 		}
-		if ( key->type ) return(((TFUN1)(void *)key->func)(s,key->type));
-		else return((key->func)(s));
+		return((key->func)(s));
 	}
 	return(0);
 }
@@ -3304,6 +3303,26 @@ int DoIfdef(UBYTE *s, int par)
 
 /*
  		#] DoIfdef : 
+ 		#[ DoIfydef :
+*/
+
+int DoIfydef(UBYTE *s)
+{
+	return DoIfdef(s,1);
+}
+
+/*
+ 		#] DoIfydef : 
+ 		#[ DoIfndef :
+*/
+
+int DoIfndef(UBYTE *s)
+{
+	return DoIfdef(s,2);
+}
+
+/*
+ 		#] DoIfndef : 
  		#[ DoInside :
 
 	#inside $var1,...,$varn

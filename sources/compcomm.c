@@ -73,62 +73,62 @@ static KEYWORD chisoptions[] = {
 	,{"symmetrize",  (TFUN)0,	ALSOREVERSE,	0          }
 };
 
-static KEYWORD writeoptions[] = {
-	 {"stats",			(TFUN)&(AC.StatsFlag),	1,		0}
-	,{"statistics",		(TFUN)&(AC.StatsFlag),	1,		0}
-	,{"shortstats",		(TFUN)&(AC.ShortStats),	1,		0}
-	,{"shortstatistics",(TFUN)&(AC.ShortStats),	1,		0}
-	,{"warnings",		(TFUN)&(AC.WarnFlag),	1,		0}
-	,{"allwarnings",	(TFUN)&(AC.WarnFlag),	2,		0}
-	,{"setup",			(TFUN)&(AC.SetupFlag),	1,		0}
-	,{"names",			(TFUN)&(AC.NamesFlag),	1,		0}
-	,{"allnames",		(TFUN)&(AC.NamesFlag),	2,		0}
-	,{"codes",			(TFUN)&(AC.CodesFlag),	1,		0}
-	,{"highfirst",		(TFUN)&(AC.SortType),	SORTHIGHFIRST,		SORTLOWFIRST}
-	,{"lowfirst",		(TFUN)&(AC.SortType),	SORTLOWFIRST,		SORTHIGHFIRST}
-	,{"powerfirst",		(TFUN)&(AC.SortType),	SORTPOWERFIRST,		SORTHIGHFIRST}
-	,{"tokens",			(TFUN)&(AC.TokensWriteFlag),1,	0}
+static KEYWORDV writeoptions[] = {
+	 {"stats",			&(AC.StatsFlag),	1,		0}
+	,{"statistics",		&(AC.StatsFlag),	1,		0}
+	,{"shortstats",		&(AC.ShortStats),	1,		0}
+	,{"shortstatistics",&(AC.ShortStats),	1,		0}
+	,{"warnings",		&(AC.WarnFlag),	1,		0}
+	,{"allwarnings",	&(AC.WarnFlag),	2,		0}
+	,{"setup",			&(AC.SetupFlag),	1,		0}
+	,{"names",			&(AC.NamesFlag),	1,		0}
+	,{"allnames",		&(AC.NamesFlag),	2,		0}
+	,{"codes",			&(AC.CodesFlag),	1,		0}
+	,{"highfirst",		&(AC.SortType),	SORTHIGHFIRST,		SORTLOWFIRST}
+	,{"lowfirst",		&(AC.SortType),	SORTLOWFIRST,		SORTHIGHFIRST}
+	,{"powerfirst",		&(AC.SortType),	SORTPOWERFIRST,		SORTHIGHFIRST}
+	,{"tokens",			&(AC.TokensWriteFlag),1,	0}
 };
 
-static KEYWORD onoffoptions[] = {
-	 {"compress",       (TFUN)&(AC.NoCompress),  0,  1}
-	,{"checkpoint",     (TFUN)&(AC.CheckpointFlag),  1,  0}
-	,{"insidefirst",	(TFUN)&(AC.insidefirst), 1,  0}
-	,{"propercount",    (TFUN)&(AC.BottomLevel), 1,  0}
-	,{"stats",			(TFUN)&(AC.StatsFlag),	1,	0}
-	,{"statistics",		(TFUN)&(AC.StatsFlag),	1,	0}
-	,{"shortstats",		(TFUN)&(AC.ShortStats),	1,	0}
-	,{"shortstatistics",(TFUN)&(AC.ShortStats),	1,	0}
-	,{"names",			(TFUN)&(AC.NamesFlag),	1,	0}
-	,{"allnames",		(TFUN)&(AC.NamesFlag),	2,	0}
-	,{"warnings",		(TFUN)&(AC.WarnFlag),	1,	0}
-	,{"allwarnings",	(TFUN)&(AC.WarnFlag),	2,	0}
-	,{"highfirst",		(TFUN)&(AC.SortType),	SORTHIGHFIRST,	SORTLOWFIRST}
-	,{"lowfirst",		(TFUN)&(AC.SortType),	SORTLOWFIRST,	SORTHIGHFIRST}
-	,{"powerfirst",		(TFUN)&(AC.SortType),	SORTPOWERFIRST,	SORTHIGHFIRST}
-	,{"setup",			(TFUN)&(AC.SetupFlag),	1,	0}
-	,{"codes",			(TFUN)&(AC.CodesFlag),	1,	0}
-	,{"tokens",		    (TFUN)&(AC.TokensWriteFlag),1,0}
-	,{"properorder",    (TFUN)&(AC.properorderflag),1,0}
-	,{"threadloadbalancing",(TFUN)&(AC.ThreadBalancing),1,	0}
-	,{"threads",		(TFUN)&(AC.ThreadsFlag),1,	0}
-	,{"threadsortfilesynch",(TFUN)&(AC.ThreadSortFileSynch),1,  0}
-	,{"threadstats",	(TFUN)&(AC.ThreadStats),1,	0}
-	,{"finalstats",	    (TFUN)&(AC.FinalStats),1,	0}
-	,{"fewerstats",		(TFUN)&(AC.ShortStatsMax),	10,		0}
-	,{"fewerstatistics",(TFUN)&(AC.ShortStatsMax),	10,		0}
-	,{"processstats",	(TFUN)&(AC.ProcessStats),1,	0}
-	,{"oldparallelstats",(TFUN)&(AC.OldParallelStats),1,0}
-	,{"parallel",	    (TFUN)&(AC.parallelflag),PARALLELFLAG,NOPARALLEL_USER}
-	,{"nospacesinnumbers",(TFUN)&(AO.NoSpacesInNumbers),1,0}
-	,{"indentspace",    (TFUN)&(AO.IndentSpace),INDENTSPACE,0}
-	,{"totalsize",		(TFUN)&(AM.PrintTotalSize),	1,	0}
-	,{"flag",			(TFUN)&(AC.debugFlags),	1,	0}
-	,{"oldfactarg",		(TFUN)&(AC.OldFactArgFlag),	1,	0}
-	,{"memdebugflag",	(TFUN)&(AC.MemDebugFlag),	1,	0}
-	,{"oldgcd", 		(TFUN)&(AC.OldGCDflag),	1,	0}
-	,{"innertest",      (TFUN)&(AC.InnerTest),  1,  0}
-	,{"wtimestats",     (TFUN)&(AC.WTimeStatsFlag),  1,  0}
+static KEYWORDV onoffoptions[] = {
+	 {"compress",       &(AC.NoCompress),  0,  1}
+	,{"checkpoint",     &(AC.CheckpointFlag),  1,  0}
+	,{"insidefirst",	&(AC.insidefirst), 1,  0}
+	,{"propercount",    &(AC.BottomLevel), 1,  0}
+	,{"stats",			&(AC.StatsFlag),	1,	0}
+	,{"statistics",		&(AC.StatsFlag),	1,	0}
+	,{"shortstats",		&(AC.ShortStats),	1,	0}
+	,{"shortstatistics",&(AC.ShortStats),	1,	0}
+	,{"names",			&(AC.NamesFlag),	1,	0}
+	,{"allnames",		&(AC.NamesFlag),	2,	0}
+	,{"warnings",		&(AC.WarnFlag),	1,	0}
+	,{"allwarnings",	&(AC.WarnFlag),	2,	0}
+	,{"highfirst",		&(AC.SortType),	SORTHIGHFIRST,	SORTLOWFIRST}
+	,{"lowfirst",		&(AC.SortType),	SORTLOWFIRST,	SORTHIGHFIRST}
+	,{"powerfirst",		&(AC.SortType),	SORTPOWERFIRST,	SORTHIGHFIRST}
+	,{"setup",			&(AC.SetupFlag),	1,	0}
+	,{"codes",			&(AC.CodesFlag),	1,	0}
+	,{"tokens",		    &(AC.TokensWriteFlag),1,0}
+	,{"properorder",    &(AC.properorderflag),1,0}
+	,{"threadloadbalancing",&(AC.ThreadBalancing),1,	0}
+	,{"threads",		&(AC.ThreadsFlag),1,	0}
+	,{"threadsortfilesynch",&(AC.ThreadSortFileSynch),1,  0}
+	,{"threadstats",	&(AC.ThreadStats),1,	0}
+	,{"finalstats",	    &(AC.FinalStats),1,	0}
+	,{"fewerstats",		&(AC.ShortStatsMax),	10,		0}
+	,{"fewerstatistics",&(AC.ShortStatsMax),	10,		0}
+	,{"processstats",	&(AC.ProcessStats),1,	0}
+	,{"oldparallelstats",&(AC.OldParallelStats),1,0}
+	,{"parallel",	    &(AC.parallelflag),PARALLELFLAG,NOPARALLEL_USER}
+	,{"nospacesinnumbers",&(AO.NoSpacesInNumbers),1,0}
+	,{"indentspace",    &(AO.IndentSpace),INDENTSPACE,0}
+	,{"totalsize",		&(AM.PrintTotalSize),	1,	0}
+	,{"flag",			(int *)&(AC.debugFlags),	1,	0}
+	,{"oldfactarg",		&(AC.OldFactArgFlag),	1,	0}
+	,{"memdebugflag",	&(AC.MemDebugFlag),	1,	0}
+	,{"oldgcd", 		&(AC.OldGCDflag),	1,	0}
+	,{"innertest",      &(AC.InnerTest),  1,  0}
+	,{"wtimestats",     &(AC.WTimeStatsFlag),  1,  0}
 };
 
 static WORD one = 1;
@@ -348,7 +348,7 @@ int CoOff(UBYTE *s)
 			}
 		}
 		*s = c;
-	 	*((int *)(onoffoptions[i].func)) = onoffoptions[i].flags; 
+	 	*onoffoptions[i].var = onoffoptions[i].flags; 
 		AR.SortType = AC.SortType;
 		AC.mparallelflag = AC.parallelflag | AM.hparallelflag;
 	}
@@ -595,7 +595,7 @@ int CoOn(UBYTE *s)
 			}
 		}
 		else { *s = c; }
-	 	*((int *)(onoffoptions[i].func)) = onoffoptions[i].type; 
+	 	*onoffoptions[i].var = onoffoptions[i].type; 
 		AR.SortType = AC.SortType;
 		AC.mparallelflag = AC.parallelflag | AM.hparallelflag;
 	}
@@ -2263,18 +2263,18 @@ int CoWrite(UBYTE *s)
 {
 	GETIDENTITY
 	UBYTE *option;
-	KEYWORD *key;
+	KEYWORDV *key;
 	option = s;
 	if ( ( ( s = SkipAName(s) ) == 0 ) || *s != 0 ) {
 		MesPrint("&Proper use of write statement is: write option");
 		return(1);
 	}
-	key = FindInKeyWord(option,writeoptions,sizeof(writeoptions)/sizeof(KEYWORD));
+	key = (KEYWORDV *)FindInKeyWord(option,(KEYWORD *)writeoptions,sizeof(writeoptions)/sizeof(KEYWORD));
 	if ( key == 0 ) {
 		MesPrint("&Unrecognized option in write statement");
 		return(1);
 	}
-	*((int *)(key->func)) = key->type;
+	*key->var = key->type;
 	AR.SortType = AC.SortType;
 	return(0);
 }
@@ -2288,18 +2288,18 @@ int CoNWrite(UBYTE *s)
 {
 	GETIDENTITY
 	UBYTE *option;
-	KEYWORD *key;
+	KEYWORDV *key;
 	option = s;
 	if ( ( ( s = SkipAName(s) ) == 0 ) || *s != 0 ) {
 		MesPrint("&Proper use of nwrite statement is: nwrite option");
 		return(1);
 	}
-	key = FindInKeyWord(option,writeoptions,sizeof(writeoptions)/sizeof(KEYWORD));
+	key = (KEYWORDV *)FindInKeyWord(option,(KEYWORD *)writeoptions,sizeof(writeoptions)/sizeof(KEYWORD));
 	if ( key == 0 ) {
 		MesPrint("&Unrecognized option in nwrite statement");
 		return(1);
 	}
-	*((int *)(key->func)) = key->flags;
+	*key->var = key->flags;
 	AR.SortType = AC.SortType;
 	return(0);
 }

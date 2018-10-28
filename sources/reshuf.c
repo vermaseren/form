@@ -361,7 +361,7 @@ int FullRenumber(PHEAD WORD *term, WORD par)
 				AT.WorkPointer = w;
 				if ( Normalize(BHEAD termtry) == 0 ) {
 					if ( *termtry == 0 ) goto Return0;
-					if ( ( ii = CompareTerms(BHEAD termtry,best,0) ) > 0 ) {
+					if ( ( ii = CompareTerms(termtry,best,0) ) > 0 ) {
 						t = termtry; w = best;
 						for ( ii = 0; ii < *termtry; ii++ ) *w++ = *t++;
 						i = 0; break; /* restart from beginning */
@@ -399,7 +399,7 @@ int FullRenumber(PHEAD WORD *term, WORD par)
 				AT.WorkPointer = w;
 				if ( Normalize(BHEAD termtry) == 0 ) {
 					if ( *termtry == 0 ) goto Return0;
-					if ( ( ii = CompareTerms(BHEAD termtry,best,0) ) > 0 ) {
+					if ( ( ii = CompareTerms(termtry,best,0) ) > 0 ) {
 						t = termtry; w = best;
 						for ( i = 0; i < *termtry; i++ ) *w++ = *t++;
 					}
@@ -1089,7 +1089,7 @@ WORD TryDo(PHEAD WORD *term, WORD *pattern, WORD level)
 		if ( *r == 0 ) return(0);
 		ReNumber(BHEAD r); Normalize(BHEAD r);
 		if ( *r == 0 ) return(0);
-		if ( ( i = CompareTerms(BHEAD term,r,0) ) < 0 ) {
+		if ( ( i = CompareTerms(term,r,0) ) < 0 ) {
 			*AN.RepPoint = 1;
 			AR.expchanged = 1;
 			return(Generator(BHEAD r,level));
@@ -2092,9 +2092,9 @@ WORD DoPermutations(PHEAD WORD *term, WORD level)
 	groups (0,1) also cause double terms.
 */
 
-WORD DoShuffle(PHEAD WORD *term, WORD level, WORD fun, WORD option)
+WORD DoShuffle(WORD *term, WORD level, WORD fun, WORD option)
 {
-	GETBIDENTITY
+	GETIDENTITY
 	SHvariables SHback, *SH = &(AN.SHvar);
 	WORD *t1, *t2, *tstop, ncoef, n = fun, *to, *from;
 	int i, error;
@@ -2180,7 +2180,7 @@ WORD DoShuffle(PHEAD WORD *term, WORD level, WORD fun, WORD option)
 	SH->outfun = to;
 	for ( i = 0; i < FUNHEAD; i++ ) { *to++ = t1[i]; }
 
-	error = Shuffle(BHEAD t1+FUNHEAD,t2+FUNHEAD,to);
+	error = Shuffle(t1+FUNHEAD,t2+FUNHEAD,to);
 
 	AT.WorkPointer = SH->outterm;
 	AN.SHvar = SHback;
@@ -2226,22 +2226,23 @@ WORD DoShuffle(PHEAD WORD *term, WORD level, WORD fun, WORD option)
 	We need space for the accumulation of the combinatoric factors.
 */
 
-int Shuffle(PHEAD WORD *from1, WORD *from2, WORD *to)
+int Shuffle(WORD *from1, WORD *from2, WORD *to)
 {
+	GETIDENTITY
 	WORD *t, *fr, *next1, *next2, na, *fn1, *fn2, *tt;
 	int i, n, n1, n2, j;
 	LONG combilast;
 	SHvariables *SH = &(AN.SHvar);
 	if ( from1 == SH->stop1 && from2 == SH->stop2 ) {
-		return(FiniShuffle(BHEAD to));
+		return(FiniShuffle(to));
 	}
 	else if ( from1 == SH->stop1 ) {
 		i = SH->stop2 - from2; t = to; tt = from2; NCOPY(t,tt,i)
-		return(FiniShuffle(BHEAD t));
+		return(FiniShuffle(t));
 	}
 	else if ( from2 == SH->stop2 ) {
 		i = SH->stop1 - from1; t = to; tt = from1; NCOPY(t,tt,i)
-		return(FiniShuffle(BHEAD t));
+		return(FiniShuffle(t));
 	}
 /*
 	Compare lead arguments
@@ -2289,15 +2290,15 @@ int Shuffle(PHEAD WORD *from1, WORD *from2, WORD *to)
 		if ( next1 >= SH->stop1 ) {
 			fr = next2; i = SH->stop2 - fr;
 			NCOPY(t,fr,i)
-			if ( FiniShuffle(BHEAD t) ) goto shuffcall;
+			if ( FiniShuffle(t) ) goto shuffcall;
 		}
 		else if ( next2 >= SH->stop2 ) {
 			fr = next1; i = SH->stop1 - fr;
 			NCOPY(t,fr,i)
-			if ( FiniShuffle(BHEAD t) ) goto shuffcall;
+			if ( FiniShuffle(t) ) goto shuffcall;
 		}
 		else {
-			if ( Shuffle(BHEAD next1,next2,t) ) goto shuffcall;
+			if ( Shuffle(next1,next2,t) ) goto shuffcall;
 		}
 		SH->combilast = combilast;
 /*
@@ -2324,11 +2325,11 @@ int Shuffle(PHEAD WORD *from1, WORD *from2, WORD *to)
 			while ( --n >= 0 ) { fr = from1; CopyArg(tt,fr) }
 			fr = next1; i = SH->stop1 - fr;
 			NCOPY(tt,fr,i)
-			if ( FiniShuffle(BHEAD tt) ) goto shuffcall;
+			if ( FiniShuffle(tt) ) goto shuffcall;
 		  }
 		  else {
 			n = j; fn1 = from1; while ( --n >= 0 ) { NEXTARG(fn1) }
-			if ( Shuffle(BHEAD fn1,fn2,tt) ) goto shuffcall;
+			if ( Shuffle(fn1,fn2,tt) ) goto shuffcall;
 		  }
 		  SH->combilast = combilast;
 		 }
@@ -2357,11 +2358,11 @@ int Shuffle(PHEAD WORD *from1, WORD *from2, WORD *to)
 			while ( --n >= 0 ) { fr = from1; CopyArg(tt,fr) }
 			fr = next2; i = SH->stop2 - fr;
 			NCOPY(tt,fr,i)
-			if ( FiniShuffle(BHEAD tt) ) goto shuffcall;
+			if ( FiniShuffle(tt) ) goto shuffcall;
 		  }
 		  else {
 			n = j; fn2 = from2; while ( --n >= 0 ) { NEXTARG(fn2) }
-			if ( Shuffle(BHEAD fn1,fn2,tt) ) goto shuffcall;
+			if ( Shuffle(fn1,fn2,tt) ) goto shuffcall;
 		  }
 		  SH->combilast = combilast;
 		 }
@@ -2377,10 +2378,10 @@ int Shuffle(PHEAD WORD *from1, WORD *from2, WORD *to)
 		if ( fr >= SH->stop1 ) {
 			fr = from2; i = SH->stop2 - fr;
 			NCOPY(t,fr,i)
-			if ( FiniShuffle(BHEAD t) ) goto shuffcall;
+			if ( FiniShuffle(t) ) goto shuffcall;
 		}
 		else {
-			if ( Shuffle(BHEAD fr,from2,t) ) goto shuffcall;
+			if ( Shuffle(fr,from2,t) ) goto shuffcall;
 		}
 /*
 		Argument from second list
@@ -2391,10 +2392,10 @@ int Shuffle(PHEAD WORD *from1, WORD *from2, WORD *to)
 		if ( fr >= SH->stop2 ) {
 			fr = from1; i = SH->stop1 - fr;
 			NCOPY(t,fr,i)
-			if ( FiniShuffle(BHEAD t) ) goto shuffcall;
+			if ( FiniShuffle(t) ) goto shuffcall;
 		}
 		else {
-			if ( Shuffle(BHEAD from1,fr,t) ) goto shuffcall;
+			if ( Shuffle(from1,fr,t) ) goto shuffcall;
 		}
 	}
 	return(0);
@@ -2417,8 +2418,9 @@ shuffcall:
 	   routine also for the stuffles and there it can happen.
 */
 
-int FinishShuffle(PHEAD WORD *fini)
+int FinishShuffle(WORD *fini)
 {
+	GETIDENTITY
 	WORD *t, *t1, *oldworkpointer = AT.WorkPointer, *tcoef, ntcoef, *out;
 	int i;
 	SHvariables *SH = &(AN.SHvar);
@@ -2454,7 +2456,7 @@ int FinishShuffle(PHEAD WORD *fini)
 		if ( Generator(BHEAD out,SH->level) ) goto Finicall;
 	}
 	else {
-		if ( DoShtuffle(BHEAD out,SH->level,SH->thefunction,SH->option) ) goto Finicall;
+		if ( DoShtuffle(out,SH->level,SH->thefunction,SH->option) ) goto Finicall;
 	}
 	AT.WorkPointer = oldworkpointer;
 	return(0);
@@ -2482,9 +2484,9 @@ Finicall:
 	need to know n1, n2, minval.
 */
 
-WORD DoStuffle(PHEAD WORD *term, WORD level, WORD fun, WORD option)
+WORD DoStuffle(WORD *term, WORD level, WORD fun, WORD option)
 {
-	GETBIDENTITY
+	GETIDENTITY
 	SHvariables SHback, *SH = &(AN.SHvar);
 	WORD *t1, *t2, *tstop, *t1stop, *t2stop, ncoef, n = fun, *to, *from;
 	WORD *r1, *r2;
@@ -2671,7 +2673,7 @@ retry2:;
 	SH->outfun = to;
 	for ( i = 0; i < FUNHEAD; i++ ) { *to++ = t1[i]; }
 
-	error = Stuffle(BHEAD t1+FUNHEAD,t2+FUNHEAD,to);
+	error = Stuffle(t1+FUNHEAD,t2+FUNHEAD,to);
 
 	AT.WorkPointer = SH->outterm;
 	AN.SHvar = SHback;
@@ -2697,9 +2699,9 @@ retry2:;
 	8: if ( ( SH->option & 2 ) != 0 ) the stuffle sum is negative.
 */
 
-int Stuffle(PHEAD WORD *from1, WORD *from2, WORD *to)
+int Stuffle(WORD *from1, WORD *from2, WORD *to)
 {
-	GETBIDENTITY
+	GETIDENTITY
 	WORD *t, *tf, *next1, *next2, *st1, *st2, *save1, *save2;
 	SHvariables *SH = &(AN.SHvar);
 	int i, retval;
@@ -2710,7 +2712,7 @@ int Stuffle(PHEAD WORD *from1, WORD *from2, WORD *to)
 	if ( from1 >= SH->ststop1 && from2 == SH->ststop2 ) {
 		SH->stop1 = SH->ststop1;
 		SH->stop2 = SH->ststop2;
-		retval = FinishShuffle(BHEAD to);
+		retval = FinishShuffle(to);
 		SH->stop1 = save1; SH->stop2 = save2;
 		return(retval);
 	}
@@ -2718,7 +2720,7 @@ int Stuffle(PHEAD WORD *from1, WORD *from2, WORD *to)
 		i = SH->ststop2 - from2; t = to; tf = from2; NCOPY(t,tf,i)
 		SH->stop1 = SH->ststop1;
 		SH->stop2 = SH->ststop2;
-		retval = FinishShuffle(BHEAD t);
+		retval = FinishShuffle(t);
 		SH->stop1 = save1; SH->stop2 = save2;
 		return(retval);
 	}
@@ -2726,7 +2728,7 @@ int Stuffle(PHEAD WORD *from1, WORD *from2, WORD *to)
 		i = SH->ststop1 - from1; t = to; tf = from1; NCOPY(t,tf,i)
 		SH->stop1 = SH->ststop1;
 		SH->stop2 = SH->ststop2;
-		retval = FinishShuffle(BHEAD t);
+		retval = FinishShuffle(t);
 		SH->stop1 = save1; SH->stop2 = save2;
 		return(retval);
 	}
@@ -2736,7 +2738,7 @@ int Stuffle(PHEAD WORD *from1, WORD *from2, WORD *to)
 	SH->stop1 = SH->ststop1;
 	SH->stop2 = SH->ststop2;
 	SH->finishuf = &FinishShuffle;
-	if ( Shuffle(BHEAD from1,from2,to) ) goto stuffcall;
+	if ( Shuffle(from1,from2,to) ) goto stuffcall;
 	SH->finishuf = &FinishStuffle;
 /*
 	Now we have to select a pair, one from 1 and one from 2.
@@ -2765,7 +2767,7 @@ int Stuffle(PHEAD WORD *from1, WORD *from2, WORD *to)
 				t = StuffRootAdd(st1,st2,t);
 #endif
 				SH->option ^= 256;
-				if ( Stuffle(BHEAD next1,next2,t) ) goto stuffcall;
+				if ( Stuffle(next1,next2,t) ) goto stuffcall;
 				SH->option ^= 256;
 			}
 			else if ( st1 == from1 ) {
@@ -2777,7 +2779,7 @@ int Stuffle(PHEAD WORD *from1, WORD *from2, WORD *to)
 				t = StuffRootAdd(st1,st2,t);
 #endif
 				SH->option ^= 256;
-				if ( Stuffle(BHEAD next1,next2,t) ) goto stuffcall;
+				if ( Stuffle(next1,next2,t) ) goto stuffcall;
 				SH->option ^= 256;
 			}
 			else if ( st2 == from2 ) {
@@ -2789,11 +2791,11 @@ int Stuffle(PHEAD WORD *from1, WORD *from2, WORD *to)
 				t = StuffRootAdd(st1,st2,t);
 #endif
 				SH->option ^= 256;
-				if ( Stuffle(BHEAD next1,next2,t) ) goto stuffcall;
+				if ( Stuffle(next1,next2,t) ) goto stuffcall;
 				SH->option ^= 256;
 			}
 			else {
-				if ( Shuffle(BHEAD from1,from2,to) ) goto stuffcall;
+				if ( Shuffle(from1,from2,to) ) goto stuffcall;
 			}
 #ifndef NEWCODE
 			st2 = next2; next2 += 2;       /* <----- */
@@ -2824,9 +2826,9 @@ stuffcall:;
 	It should add the stuffle sum and then call Stuffle again.
 */
 
-int FinishStuffle(PHEAD WORD *fini)
+int FinishStuffle(WORD *fini)
 {
-	GETBIDENTITY
+	GETIDENTITY
 	SHvariables *SH = &(AN.SHvar);
 #ifdef NEWCODE
 	WORD *next1 = SH->stop1, *next2 = SH->stop2;
@@ -2838,9 +2840,9 @@ int FinishStuffle(PHEAD WORD *fini)
 #ifdef NEWCODE
 	NEXTARG(next1)
 	NEXTARG(next2)
-	if ( Stuffle(BHEAD next1,next2,fini) ) goto stuffcall;
+	if ( Stuffle(next1,next2,fini) ) goto stuffcall;
 #else
-	if ( Stuffle(BHEAD SH->stop1+2,SH->stop2+2,fini) ) goto stuffcall;
+	if ( Stuffle(SH->stop1+2,SH->stop2+2,fini) ) goto stuffcall;
 #endif
 	SH->option ^= 256;
 	return(0);

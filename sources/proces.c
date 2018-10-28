@@ -687,7 +687,7 @@ WORD TestSub(PHEAD WORD *term, WORD level)
 	CBUF *C = cbuf+AT.ebufnum;
 	LONG isp, i;
 	TABLES T;
-	VOID *oldcompareroutine = AR.CompareRoutine;
+	COMPARE oldcompareroutine = AR.CompareRoutine;
 	WORD oldsorttype = AR.SortType;
 ReStart:
 	tbufnum = 0; i = 0;
@@ -3608,13 +3608,13 @@ CommonEnd:
 					break;
 				  case TYPEMERGE:
 					AT.WorkPointer = term + *term;
-					if ( DoShuffle(BHEAD term,level,C->lhs[level][2],C->lhs[level][3]) )
+					if ( DoShuffle(term,level,C->lhs[level][2],C->lhs[level][3]) )
 						goto GenCall;
 					AT.WorkPointer = term + *term;
 					goto Return0;
 				  case TYPESTUFFLE:
 					AT.WorkPointer = term + *term;
-					if ( DoStuffle(BHEAD term,level,C->lhs[level][2],C->lhs[level][3]) )
+					if ( DoStuffle(term,level,C->lhs[level][2],C->lhs[level][3]) )
 						goto GenCall;
 					AT.WorkPointer = term + *term;
 					goto Return0;

@@ -4194,7 +4194,7 @@ WORD DoTheta(PHEAD WORD *t)
 	ta += ARGHEAD; tb += ARGHEAD;
 	while ( ta < stopa ) {
 		if ( tb >= stopb ) return(0);
-		if ( ( ia = CompareTerms(BHEAD ta,tb,(WORD)1) ) < 0 ) return(0);
+		if ( ( ia = CompareTerms(ta,tb,(WORD)1) ) < 0 ) return(0);
 		if ( ia > 0 ) return(1);
 		ta += *ta;
 		tb += *tb;
@@ -4454,24 +4454,24 @@ WORD *PolyNormPoly (PHEAD WORD *Poly) {
 	WORD *buffer = AT.WorkPointer;
 	WORD *p;
 	if ( NewSort(BHEAD0) ) { Terminate(-1); }
-	AR.CompareRoutine = (void *)&CompareSymbols;
+	AR.CompareRoutine = &CompareSymbols;
 	while ( *Poly ) {
 		p = Poly + *Poly;
 		if ( SymbolNormalize(Poly) < 0 ) return(0);
 		if ( StoreTerm(BHEAD Poly) ) {
-			AR.CompareRoutine = (void *)&Compare1;
+			AR.CompareRoutine = &Compare1;
 			LowerSortLevel();
 			Terminate(-1);
 		}
 		Poly = p;
 	}
 	if ( EndSort(BHEAD buffer,1) < 0 ) {
-		AR.CompareRoutine = (void *)&Compare1;
+		AR.CompareRoutine = &Compare1;
 		Terminate(-1);
 	}
 	p = buffer;
 	while ( *p ) p += *p;
-	AR.CompareRoutine = (void *)&Compare1;
+	AR.CompareRoutine = &Compare1;
 	AT.WorkPointer = p + 1;
 	return(buffer);
 }

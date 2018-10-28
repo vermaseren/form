@@ -303,7 +303,7 @@ NoWildArg:
 		}
 		else { /*if ( args[4] >= 0 ) */
 			WORD *ss, *sy, n;
-			ss = AC.SetElementList.lijst+Sets[args[4]].first;
+			ss = (WORD *)(AC.SetElementList.lijst)+Sets[args[4]].first;
 			nsymlist = n = Sets[args[4]].last-Sets[args[4]].first;
 			sy = symlist = AT.WorkPointer;
 			NCOPY(sy,ss,n);

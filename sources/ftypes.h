@@ -47,17 +47,6 @@
  *	These macro's contain the comma as well. Hence we need special macro's if
  *	there are no other arguments. These are called PHEAD0 and BHEAD0.
  */
-#ifdef WITHPTHREADS
-#define PHEAD  ALLPRIVATES *B,
-#define PHEAD0 ALLPRIVATES *B
-#define BHEAD  B,
-#define BHEAD0 B
-#else
-#define PHEAD
-#define PHEAD0 VOID
-#define BHEAD
-#define BHEAD0
-#endif
  
 #define WITHOUTERROR 0
 #define WITHERROR 1
