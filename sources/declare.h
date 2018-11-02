@@ -1472,8 +1472,8 @@ extern int    ReleaseTB(VOID);
 
 extern int    SymbolNormalize(WORD *);
 extern int    TestFunFlag(PHEAD WORD *);
-extern int    CompareSymbols(WORD *,WORD *,WORD);
-extern int    CompareHSymbols(WORD *,WORD *,WORD);
+extern WORD   CompareSymbols(WORD *,WORD *,WORD);
+extern WORD   CompareHSymbols(WORD *,WORD *,WORD);
 extern WORD   NextPrime(PHEAD WORD);
 extern UWORD  wranf(PHEAD0);
 extern UWORD  iranf(PHEAD UWORD);

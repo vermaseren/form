@@ -254,7 +254,7 @@ class MNodeClass {
     int **clmat;                   // matrix used for classification
     int  *flist;                   // the first node in each class
     int   maxdeg;                  // maximal value of degree(node)
-	int   forallignment;
+    int   forallignment;
 
     MNodeClass(int nnodes, int ncl);
     ~MNodeClass();
