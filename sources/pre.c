@@ -5248,6 +5248,7 @@ int DoExternal(UBYTE *s)
 			case 10:/*'\0' fits here*/
 				MesPrint("@Can't finde closing \"");
 				Terminate(-1);
+				break;
 			case 0:case 1: continue;
 			default:
 				break;
@@ -5629,6 +5630,7 @@ int DoFromExternal(UBYTE *s)
 			case 10:/*'\0' fits here*/
 				MesPrint("@Can't finde closing \"");
 				Terminate(-1);
+				break;
 			case 0:case 1: continue;
 			default:
 				break;

@@ -1042,7 +1042,7 @@ VOID StartVariables()
 	We do want to give them unique names though that the user cannot access.
 */
 	{
-		char dumstr[10];
+		char dumstr[20];
 		for ( ; i < FIRSTUSERSYMBOL; i++ ) {
 			sprintf(dumstr,":%d:",i);
 			AddSymbol((UBYTE *)dumstr,-MAXPOWER,MAXPOWER,VARTYPENONE,0);
@@ -1069,7 +1069,7 @@ VOID StartVariables()
 	We do want to give them unique names though that the user cannot access.
 */
 	{
-		char dumstr[10];
+		char dumstr[20];
 		for ( ; i < FIRSTUSERFUNCTION-FUNCTION; i++ ) {
 			sprintf(dumstr,"::%d::",i);
 			AddFunction((UBYTE *)dumstr,0,0,0,0,0,-1,-1);
