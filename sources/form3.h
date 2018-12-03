@@ -195,6 +195,7 @@
 #define WORD FORM_WORD  /* WinDef.h */
 #define LONG FORM_LONG /* WinNT.h */
 #define ULONG FORM_ULONG  /* WinDef.h */
+#define BOOL FORM_BOOL  /* WinDef.h */
 #undef CreateFile  /* WinBase.h */
 #undef CopyFile  /* WinBase.h */
 #define OpenFile FORM_OpenFile  /* WinBase.h */
@@ -304,6 +305,11 @@ typedef unsigned char UBYTE;
 typedef unsigned int UINT;
 typedef ULONG RLONG;  /* Used in reken.c. */
 typedef INT64 MLONG;  /* See commentary in minos.h. */
+/*
+ * NOTE: we don't use the standard _Bool (or C++ bool) because its size is
+ * implementation-dependent and messes up the traditional PADXXX macros.
+ */
+typedef char BOOL;
                                                        /* E.g. in 32-bits */
 #define TOPBITONLY     ((ULONG)1 << (BITSINWORD - 1))  /* 0x00008000UL */
 #define TOPLONGBITONLY ((ULONG)1 << (BITSINLONG - 1))  /* 0x80000000UL */
@@ -346,7 +352,7 @@ template<typename T> struct calc {
 #endif
 
 /*
- * Macros inserted to the end of a structure to align the whole structure.
+ * Macros to be inserted at the end of a structure to align the whole structure.
  *
  * In the currently available systems,
  *   sizeof(POSITION) >= sizeof(pointers) == sizeof(LONG) >= sizeof(int)
@@ -370,11 +376,21 @@ template<typename T> struct calc {
  *     UBYTE d;
  *     PADPOSITION(1,1,0,0,1+sizeof(A));
  *   } B;
- * The cost for the use of those PADXXX functions is a padding (>= 1 byte) will
+ * The cost for the use of those PADXXX macros is a padding (>= 1 byte) will
  * be always inserted even in the case that no padding is actually needed.
  *
+ * Numbers for the arguments have to be calculated manually and so very
+ * error-prone. Be careful!
+ *
  * Note that there is a 32-bit system in which off_t is aligned on 8-byte
- * boundary, (e.g., Cygwin).
+ * boundary, (e.g., Cygwin with large file support), but still the above
+ * inequalities are satisfied.
+ *
+ * The legendary story of these macros--they fixed some problems in ancient
+ * times when compilers were unreliable and didn't know how to correctly compute
+ * structure paddings--has been handed down, though nowadays there are only
+ * disadvantages for them in practice (ancient compilers most likely can't
+ * compile C99 and C++98+TR1 sources anyway).
  */
 #define PADDUMMY(type, size) \
 	UBYTE d_u_m_m_y[alignof(type) - ((size) & (alignof(type) - 1))]
