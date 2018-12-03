@@ -16,7 +16,10 @@ If this extension is absent, \FORM\ will add it. Example:
 \begin{verbatim}
      form myformprogram
 \end{verbatim}
-and \FORM\ will look for the file \verb:myformprogram.frm:. The options are 
+and \FORM{} will look for the file \verb:myformprogram.frm:. 
+It is also possible to use the standard input as the input, rather than a file, 
+by giving \verb:-: for the \verb:inputfile: (which is currently not supported by \ParFORM{}, though). 
+The options are 
 separated by blanks and start with a minus sign, followed by one or more 
 alphabetic characters. They are:
 \begin{description}

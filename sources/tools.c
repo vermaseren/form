@@ -226,6 +226,37 @@ UBYTE ReadFromStream(STREAM *stream)
 	}
 #endif /*ifdef WITHEXTERNALCHANNEL*/
 /*:[14apr2004 mt]*/
+	if ( stream->type == INPUTSTREAM ) {
+		if ( stream->pointer < stream->top ) {
+			c = *stream->pointer++;
+		}
+		else {
+			if ( ReadFile(stream->handle,&c,1) != 1 ) {
+				return(ENDOFSTREAM);
+			}
+			if ( stream->fileposition == 0 ) {
+				if ( !stream->buffer ) {
+					stream->buffersize = 32;
+					stream->buffer = (UBYTE *)Malloc1(stream->buffersize,"input stream buffer");
+					stream->pointer = stream->top = stream->buffer;
+				}
+				else {
+					if ( stream->top - stream->buffer >= stream->buffersize ) {
+						LONG oldsize = stream->buffersize;
+						DoubleBuffer((void**)&stream->buffer,(void**)&stream->top,sizeof(UBYTE),"double input stream buffer");
+						stream->buffersize = stream->top - stream->buffer;
+						stream->pointer = stream->top = stream->buffer + oldsize;
+					}
+				}
+				*stream->pointer = c;
+				stream->pointer = ++stream->top;
+				stream->inbuffer++;
+			}
+		}
+		if ( stream->eqnum == 1 ) { stream->eqnum = 0; stream->linenumber++; }
+		if ( c == LINEFEED ) stream->eqnum = 1;
+		return(c);
+	}
 	if ( stream->pointer >= stream->top ) {
 		if ( stream->type != FILESTREAM ) return(ENDOFSTREAM);
 		if ( stream->fileposition != stream->bufferposition+stream->inbuffer ) {
@@ -485,6 +516,38 @@ STREAM *OpenStream(UBYTE *name, int type, int prevarmode, int raiselow)
 			break;
 #endif /*ifdef WITHEXTERNALCHANNEL*/
 /*:[14apr2004 mt]*/
+		case INPUTSTREAM:
+			/*
+			 * Assume that "name" stores a file descriptor (UNIX) or a FILE
+			 * pointer (Windows). We don't close it automatically on closing
+			 * the INPUTSTREAM stream (e.g., for stdin).
+			 */
+			stream = CreateStream((UBYTE *)"input stream");
+			stream->handle = CreateHandle();
+			{
+				FILES *f = (FILES *)Malloc1(sizeof(int),"input stream handle");
+				/* NOTE: in both cases name=0 indicates stdin. */
+#ifdef UNIX
+				f->descriptor = (int)(ssize_t)name;
+#else
+				f = name ? (FILES *)name : stdin;
+#endif
+				RWLOCKW(AM.handlelock);
+				filelist[stream->handle] = f;
+				UNRWLOCK(AM.handlelock);
+			}
+			stream->buffer = stream->pointer = stream->top = 0;
+			stream->inbuffer = 0;
+			stream->name = strDup1((UBYTE *)(name ? "INPUT" : "STDIN"),"input stream name");
+			stream->prevline = stream->linenumber = 1;
+			stream->eqnum = 0;
+			/*
+			 * fileposition == -1: default
+			 * fileposition ==  0: cache the input
+			 * See also: ReadFromStream, TryFileSetups
+			 */
+			stream->fileposition = -1;
+			break;
 		default:
 			return(0);
 	}
@@ -642,6 +705,15 @@ STREAM *CloseStream(STREAM *stream)
 	}
 #endif /*ifdef WITHEXTERNALCHANNEL*/
 /*:[14apr2004 mt]*/
+	else if ( stream->type == INPUTSTREAM ) {
+		FILES *f;
+		RWLOCKW(AM.handlelock);
+		f = filelist[stream->handle];
+		filelist[stream->handle] = 0;
+		numinfilelist--;
+		UNRWLOCK(AM.handlelock);
+		M_free(f,"input stream handle");
+	}
 	else if ( stream->type == PREVARSTREAM && (
 	stream->afterwards == PRERAISEAFTER || stream->afterwards == PRELOWERAFTER ) ) {
 		t = stream->buffer; x = 0; sgn = 1;
