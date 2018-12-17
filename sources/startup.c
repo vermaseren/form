@@ -884,6 +884,10 @@ VOID StartVariables()
 	AP.pSize = 128;
 	AP.MaxPreIfLevel = 10;
 	AP.cComChar = AP.ComChar = '*';
+	AP.firstnamespace = 0;
+	AP.lastnamespace = 0;
+	AP.fullnamesize = 127;
+	AP.fullname = (UBYTE *)Malloc1((AP.fullnamesize+1)*sizeof(UBYTE),"AP.fullname");
 	AM.OffsetVector = -2*WILDOFFSET+MINSPEC;
 	AC.cbufList.num = 0;
 	AM.hparallelflag = AM.gparallelflag =

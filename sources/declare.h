@@ -1665,6 +1665,11 @@ extern VOID SwitchSplitMergeRec(SWITCHTABLE *, WORD, SWITCHTABLE *);
 extern VOID SwitchSplitMerge(SWITCHTABLE *, WORD);
 extern int DoubleSwitchBuffers(VOID);
 
+extern int DoNamespace(UBYTE *);
+extern int DoEndNamespace(UBYTE *);
+extern int DoUse(UBYTE *);
+extern UBYTE *SkipName(UBYTE *);
+extern UBYTE *ConstructName(UBYTE *,UBYTE);
 
 /*
   	#] Declarations : 

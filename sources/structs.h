@@ -613,6 +613,18 @@ typedef struct {
 	int commute;
 	PADPOINTER(0,6,0,0);
 } FUN_INFO;
+
+/*
+ *	The struct NAMESPACE is used for the namespace info. It is a
+ *	doubly linked list of nested namespaces.
+ */
+
+typedef struct NaMeSpAcE {
+	struct NaMeSpAcE *previous;
+	struct NaMeSpAcE *next;
+	NAMETREE  *usenames;
+	UBYTE     *name;
+} NAMESPACE;
  
 /*
   	#] Variables : 
@@ -1553,6 +1565,9 @@ struct P_const {
     LIST LoopList;                 /* (P) List of do loops */
     LIST ProcList;                 /* (P) List of procedures */
     INSIDEINFO inside;             /*     Information during #inside/#endinside */
+    NAMESPACE *firstnamespace;     /* is zero when no namespace spacified */
+    NAMESPACE *lastnamespace;      /* is zero when no namespace spacified */
+    UBYTE *fullname;               /* buffer for namespace expanded names */
     UBYTE **PreSwitchStrings;      /* (P) The string in a switch */
     UBYTE *preStart;               /* (P) Preprocessor instruction buffer */
     UBYTE *preStop;                /* (P) end of preStart */
@@ -1590,11 +1605,12 @@ struct P_const {
     int     OpenDictionary;
     int     PreAssignLevel;        /* For nesting #$name = ...; assignments */
     int     MaxPreAssignLevel;     /* For nesting #$name = ...; assignments */
+    int     fullnamesize;          /* size of the fullname buffer */
     WORD    DebugFlag;             /* (P) For debugging purposes */
     WORD    preError;              /* (P) Blocks certain types of execution */
     UBYTE   ComChar;               /* (P) Commentary character */
     UBYTE   cComChar;              /* (P) Old commentary character for .clear */
-    PADPOINTER(3,21,2,2);
+    PADPOINTER(3,22,2,2);
 };
 
 /*

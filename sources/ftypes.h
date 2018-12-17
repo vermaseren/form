@@ -690,7 +690,7 @@ typedef int (*TFUN1)();
 
 /*@{*/
 #define GENERALFUNCTION 0
-#define FASTFUNCTION 1
+#define VERTEXFUNCTION 1
 #define TENSORFUNCTION 2
 #define GAMMAFUNCTION 4
 /*@}*/

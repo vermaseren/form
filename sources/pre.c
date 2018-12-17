@@ -64,6 +64,7 @@ static KEYWORD precommands[] = {
 	,{"enddo"        , DoEnddo        , 0, 0}
 	,{"endif"        , DoEndif        , 0, 0}
 	,{"endinside"    , DoEndInside    , 0, 0}
+	,{"endnamespace" , DoEndNamespace , 0, 0}
 	,{"endprocedure" , DoEndprocedure , 0, 0}
 	,{"endswitch"    , DoPreEndSwitch , 0, 0}
 	,{"exchange"     , DoPreExchange  , 0, 0}
@@ -76,6 +77,7 @@ static KEYWORD precommands[] = {
 	,{"include"      , DoInclude      , 0, 0}
 	,{"inside"       , DoInside       , 0, 0}
 	,{"message"      , DoMessage      , 0, 0}
+	,{"namespace"    , DoNamespace    , 0, 0}
 	,{"opendictionary", DoPreOpenDictionary,0,0}
 	,{"optimize"     , DoOptimize     , 0, 0}
 	,{"pipe"         , DoPipe         , 0, 0}
@@ -102,6 +104,7 @@ static KEYWORD precommands[] = {
 	,{"timeoutafter" , DoTimeOutAfter , 0, 0}
 	,{"toexternal"   , DoToExternal   , 0, 0}
 	,{"undefine"     , DoUndefine     , 0, 0}
+	,{"use"          , DoUse          , 0, 0}
 	,{"usedictionary", DoPreUseDictionary,0,0}
 	,{"write"        , DoPreWrite     , 0, 0}
 };
@@ -1212,9 +1215,14 @@ int LoadInstruction(int mode)
 				*s++ = 'a'; *s++ = 's'; *s++ = 's'; *s++ = 'i';
 				*s++ = 'g'; *s++ = 'n'; *s++ = ' '; *s = 0;
 			}
-			AP.preFill = s; *s++ = 0; *s = c;
-			oldmode = mode;
-			return(0);
+			if ( c == '\'' || c == '`' ) { /* we do not expand preprocessor variables */
+				mode = 1;
+			}
+			else {
+				AP.preFill = s; *s++ = 0; *s = c;
+				oldmode = mode;
+				return(0);
+			}
 		}
 		if ( mode == 0 && first ) {
 			if ( c == '$' ) {
@@ -6317,6 +6325,12 @@ noexpr:				MesPrint("@expression name expected in #write instruction");
 				if ( *fstring == 'O' ) goto dooptim;
 				else if ( *fstring == 'd' ) goto donumber;
 				else if ( *fstring == '$' ) goto dodollar;
+				else if ( *fstring == 't' ) {	/* `tab' position */
+					if ( number < (WORD)(stopper-Out) ) {
+						while ( (WORD)(to-Out) < number ) *to++ = ' ';
+					}
+					fstring++;
+				}
 				else if ( *fstring == 'X' || *fstring == 'x' ) {
 					if ( number > 0 && number <= cbuf[AM.sbufnum].numrhs ) {
 						UBYTE buffer[80], *out, *old1, *old2, *old3;
@@ -7001,5 +7015,322 @@ int DoTimeOutAfter(UBYTE *s)
 
 /*
  		#] DoTimeOutAfter : 
+ 		#[ DoNamespace :
+
+		Syntax:
+			#Namespace name
+				.....
+			#use variables
+				.....
+			#EndNamespace
+		Effect:
+			All variables/expressions defined inside the range of the
+			namespace get name_ prepended.
+			This holds also for $-variables, names of procedures and 
+			names of files.
+		Namespaces can be used in a nested way. cf this_is_deep_x
+		A leading _ takes the role of what is super:: in some other languages.
+		Remarks:
+			Names of preprocessor variables are excluded!
+			Names of built in objects are excluded! (like sum_, d_ etc.)
+*/
+
+int DoNamespace(UBYTE *s)
+{
+	UBYTE *s1, *s2, c;
+	NAMESPACE *namespace;
+	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
+	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
+	while ( *s == ' ' || *s == ',' || *s == '\t' ) s++;
+	if ( FG.cTable[*s] != 0 ) {
+		MesPrint("@Illegal name in #namespace instruction: %s",s);
+		return(-1);
+	}
+	s1 = s;
+	while ( FG.cTable[*s1] <= 1 ) s1++;
+	s2 = s1;
+	while ( *s2 == ' ' || *s2 == ',' || *s2 == '\t' ) s2++;
+	if ( *s2 != 0 ) {
+		MesPrint("@A #namespace instruction can only have one name with only alphanumeric characters.");
+		return(-1);
+	}
+	c = *s1; *s1 = 0;
+/*
+	Now we have the name and the statement is legal.
+	We can proceed creating the namespace and its use tree.
+*/
+	namespace = (NAMESPACE *)Malloc1(sizeof(NAMESPACE),"namespace");
+	namespace->name = strDup1(s,"namespace_name");
+	namespace->usenames = MakeNameTree();
+	if ( AP.firstnamespace == 0 ) {
+		namespace->previous = 0;
+		namespace->next = 0;
+		AP.firstnamespace = namespace;
+		AP.lastnamespace = namespace;
+	}
+	else {
+		AP.lastnamespace->next = namespace;
+		namespace->next = 0;
+		namespace->previous = AP.lastnamespace;
+		AP.lastnamespace = namespace;
+	}
+	*s1 = c;
+	return(0);
+}
+
+/*
+ 		#] DoNamespace : 
+ 		#[ DoEndNamespace :
+*/
+
+int DoEndNamespace(UBYTE *s)
+{
+	NAMESPACE *namespace;
+	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
+	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
+	while ( *s == ' ' || *s == ',' || *s == '\t' ) s++;
+	if ( *s != 0 ) {
+		MesPrint("@Illegal #endnamespace instruction");
+		return(-1);
+	}
+	namespace = AP.lastnamespace;
+	AP.lastnamespace = namespace->previous;
+	M_free(namespace->name,"namespace_name");
+	FreeNameTree(namespace->usenames);
+	M_free(namespace,"namespace");
+	return(0);
+}
+
+/*
+ 		#] DoEndNamespace : 
+ 		#[ SkipName :
+*/
+
+UBYTE *SkipName(UBYTE *s)
+{
+	UBYTE *t = s, *s1, c;
+	int num = 0, block = 0;
+	if ( *s == '[' ) {
+straight:
+		SKIPBRA1(s)
+		if ( *s == 0 ) {
+			MesPrint("&Illegal name: '%s'",t);
+			return(0);
+		}
+		s++; s1 = s;
+		while ( FG.cTable[*s] <= 1 || *s == '_' ) s++;
+		if ( s1 != s ) goto witherror;
+	}
+	else if ( *s == '$' ) {
+		s++;
+		while ( *s == '_' ) { s++; num++; }
+		block = 1;
+		while ( FG.cTable[*s] <= 1 || *s == '_' ) {
+			if ( FG.cTable[*s] != 0 && block == 1 ) {
+blocked:
+				MesPrint("&Illegally formed name: %s",t);
+				return(0);
+			}
+			if ( *s == '_' ) { num++; block = 1; }
+			else block = 0;
+			s++;
+		}
+		if ( s[-1] == '_' && num > 1 ) goto built;
+	}
+	else if ( FG.cTable[*s] == 0 ) {
+regular:
+		while ( FG.cTable[*s] <= 1 || *s == '_' ) {
+			if ( FG.cTable[*s] != 0 && block == 1 ) goto blocked;
+			if ( *s == '_' ) { block = 1; num++; }
+			else block = 0;
+			s++;
+		}
+		if ( *s == '[' ) goto straight;
+		if ( s[-1] == '_' && num > 1 ) {
+built:
+			c = *s; *s = 0;
+			MesPrint("&Built in objects cannot be part of namespaces: %s",t);
+			*s = c;
+			return(0);
+		}
+	}
+	else if ( *s == '_' ) {
+		while ( *s == '_' ) { s++; num++; }
+		if ( FG.cTable[*s] == 0 ) { block = 0; goto regular; }
+		goto witherror;
+	}
+	else if ( *s == '@' ) {
+		s++; block = 1;
+		if ( *s == '_' || FG.cTable[*s] == 1 ) {
+			MesPrint("@Illegally formed name: %s",s-1);
+		}
+		goto regular;
+	}
+	else if ( *s == '#' ) {	/* name of a procedure */
+		s++;
+		while ( *s == '_' ) { s++; num++; }
+		block = 1;
+		while ( FG.cTable[*s] <= 1 || *s == '_' ) {
+			if ( FG.cTable[*s] != 0 && block == 1 ) goto blocked;
+			if ( *s == '_' ) { num++; block = 1; }
+			else block = 0;
+			s++;
+		}
+		if ( s[-1] == '_' ) {
+witherror:
+			c = *s; *s = 0;
+			MesPrint("&Illegally formed name: %s",t);
+			*s = c;
+			return(0);
+		}
+	}
+	else if ( *s == '<' ) {	/* name of a file. Can be anything (more or less) */
+		s++;
+		while ( *s && *s != '>' ) s++;
+		if ( *s != '>' ) goto witherror;
+		s++;
+	}
+	return(s);
+}
+
+/*
+ 		#] SkipName : 
+ 		#[ ConstructName :
+
+		Routine gets a 'raw' name and modifies it if the namespace
+		settings ask for it. It puts the new name in a buffer that
+		may be expanded if the names become rather long.
+		Note that eventually that name needs to be copied, because
+		we do not allocate new buffers for each name.
+
+		type tells what kind of name we look for
+*/
+
+UBYTE *ConstructName(UBYTE *s,UBYTE type)
+{
+	int len;
+	UBYTE *t, *u;
+	WORD number;
+	NAMESPACE *namespace;
+	if ( AP.lastnamespace == 0 ) return(s);
+	if ( *s == '@' ) return(s+1);
+	if ( GetName(AP.lastnamespace->usenames,s,&number,NOAUTO) !=
+			NAMENOTFOUND ) return(s);
+/*
+	Now the real stuff
+	First we have to compute the size of the new name.
+*/
+	len = StrLen(s) + 1;
+	namespace = AP.firstnamespace;
+	while ( namespace ) {
+		len += StrLen(namespace->name)+1;
+		namespace = namespace->previous;
+	}
+	if ( len > AP.fullnamesize ) {
+		while ( len > AP.fullnamesize ) AP.fullnamesize *= 2;
+		M_free(AP.fullname,"AP.fullname");
+		AP.fullname = (UBYTE *)Malloc1(AP.fullnamesize*sizeof(UBYTE *),"AP.fullname");
+	}
+	namespace = AP.firstnamespace;
+	t = AP.fullname;
+	switch ( type ) {
+		case ' ':
+		case 0:
+			while ( namespace ) {
+				u = namespace->name;
+				while ( *u ) *t++ = *u++;
+				*t++ = '_';
+				namespace = namespace->previous;
+			}
+			while ( *s ) *t++ = *s++;
+			*t = 0;
+			break;
+		case '$':
+		case '#':
+			*t++ = type;
+			while ( namespace ) {
+				u = namespace->name;
+				while ( *u ) *t++ = *u++;
+				*t++ = '_';
+				namespace = namespace->previous;
+			}
+			if ( type == '$' ) s++;
+			while ( *s ) *t++ = *s++;
+			*t = 0;
+			break;
+		case '<':
+			while ( namespace ) {
+				u = namespace->name;
+				while ( *u ) *t++ = *u++;
+				*t++ = '_';
+				namespace = namespace->previous;
+			}
+			s++;
+			while ( *s ) *t++ = *s++;
+			t--;  /* strip the '>' */
+			*t = 0;
+			break;
+		default:
+			MesPrint("&Unrecognized datatype in ConstructName");
+			*t = 0;
+			break;
+	}
+	return(AP.fullname);
+}
+
+/*
+ 		#] ConstructName : 
+ 		#[ DoUse :
+
+		Routine makes (inside the confines of the current namespace)
+		a list of variables that are excluded from the namespace.
+		Once the namespace is ended, the list is removed.
+		The list can include names of variables, dollars and procedures.
+		Preprocessor variables are excluded from the namespace. Their
+		inclusion would be too complicated for the input streams.
+		Note that the preprocessor variables that are arguments in a #do
+		or in a procedure are on a stack and should not cause problems.
+		Names of variables can be just that.
+		Names of $-variables are also straightforward.
+		Names of procedures should be preceeded by a # character.
+		Names of files (like in #include) should be enclosed by <>.
+		The names are stored in a balanced tree. Each namespace may have
+		its own tree. The toplevel (no namespace) does not allow a #use.
+*/
+
+int DoUse(UBYTE *s)
+{
+	NAMESPACE *namespace;
+	UBYTE *t, c;
+	int number;
+	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
+	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
+	if ( AP.lastnamespace == 0 ) {
+		MesPrint("@It is not allowed to use #use outside the scope of a namespace.");
+		return(-1);
+	}
+	namespace = AP.lastnamespace;
+	while ( *s == ' ' || *s == ',' || *s == '\t' ) s++;
+	while ( *s ) {
+		t = s;
+		if ( ( s = SkipName(t) ) == 0 ) return(-1);
+		if ( s == t ) {
+			MesPrint("@Unrecognized object in #use instruction: %s",t);
+			return(-1);
+		}
+		c = *s; *s = 0;
+/*
+		In usenames we only need the names to know whether they are 'protected'.
+		We need to keep the $, # and <> to avoid potential double names.
+*/
+		AddName(namespace->usenames,t,0,0,&number);
+		*s = c;
+		while ( *s == ' ' || *s == ',' || *s == '\t' ) s++;
+	}
+	return(0);
+}
+
+/*
+ 		#] DoUse : 
  	# ] PreProcessor :
 */

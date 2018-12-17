@@ -293,7 +293,7 @@ int DoExpr(UBYTE *inp, int type, int par)
 			take hidden expressions into account. (1-jun-2010 JV)
 */
 		do {
-			if ( ( q = SkipAName(inp) ) == 0 ) {
+			if ( ( q = SkipName(inp) ) == 0 ) {
 				MesPrint("&Illegal name(s) for expression(s)");
 				return(1);
 			}
@@ -377,7 +377,7 @@ int DoExpr(UBYTE *inp, int type, int par)
 }
 
 /*
-  	#] DoExpr: 
+  	#] DoExpr:
   	#[ CoIdOld :
 */
 
