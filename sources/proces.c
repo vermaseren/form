@@ -1197,11 +1197,98 @@ Important: we may not have enough spots here
 						AN.TeInFun = -15;
 						AN.TeSuOut = 0;
 						AR.TePos = -1;
+						AR.funoffset = t - term;
 						return(1);
 					}
 				}
 			}
 			else if ( *t == DIAGRAMS ) {
+/*
+				Syntax:
+				diagrams_(setinparticles,setoutparticles,couplings or loops)
+*/
+				if ( AC.nummodels > 0 ) { /* No model, no diagrams */
+				  t1 = t+FUNHEAD; t2 = t+t[1];
+				  if ( 
+				  t1[0] == -SETSET && Sets[t1[1]].type == CMODEL &&
+				  t1[2] == -SETSET && ( Sets[t1[3]].type == CFUNCTION 
+					|| ( Sets[t1[3]].type == ANYTYPE && ( Sets[t1[3]].first == Sets[t1[3]].last ) ) ) &&
+				  t1[4] == -SETSET && ( Sets[t1[5]].type == CFUNCTION
+					|| ( Sets[t1[5]].type == ANYTYPE && ( Sets[t1[5]].first == Sets[t1[5]].last ) ) ) &&
+				  t1[6] == -SETSET && Sets[t1[7]].type == CVECTOR &&
+				  t1[8] == -SETSET && Sets[t1[9]].type == CVECTOR &&
+				  t1+12 <= t2 ) {
+/*
+					Test that the sets of particles correspond to particles
+					of the set model.
+*/
+					MODEL *m = AC.models[SetElements[Sets[t1[1]].first]];
+					int nn0,nn1,nn2;
+					for ( nn0 = 3; nn0 <= 5; nn0 += 2 ) {
+					  for ( nn1 = Sets[t1[nn0]].first; nn1 < Sets[t1[nn0]].last; nn1++ ) {
+						for ( nn2 = 0; nn2 < m->nparticles; nn2++ ) {
+							if ( m->vertices[nn2]->particles[0].number == SetElements[nn1]
+							  || m->vertices[nn2]->particles[1].number == SetElements[nn1] ) break;
+						}
+						if ( nn2 >= m->nparticles ) goto doesnotwork;
+					  }
+					}
+/*
+					Now test for a single argument indicating the order
+					in perturbation theory.
+*/
+					if ( ( t1[10] == -SNUMBER && t1[11] >= 0 && t1+12 == t2 )
+					|| ( t1[10] == -SYMBOL && t1+12 == t2 )
+					|| ( t1+10+t1[10] == t2 && t1+10+ARGHEAD+t1[10+ARGHEAD] == t2
+					&& t1[11+ARGHEAD] == SYMBOL ) ) {
+/*
+						Now test that all symbols are valid coupling constants.
+*/
+						if ( t1+12 > t2 ) {
+							WORD *tt1 = t1+13+ARGHEAD, im;
+							t2 -=  ABS(t2[-1]);
+							while ( tt1 < t2 ) {
+								for ( im = 0; im < m->ncouplings; im++ ) {
+									if ( *tt1 == m->couplings[im] ) break;
+								}
+								if ( im >= m->ncouplings ) goto doesnotwork;
+								tt1 += 2;
+							}
+						}
+						AN.TeInFun = -16;
+						AN.TeSuOut = 0;
+						AR.TePos = -1;
+						AR.funoffset = t - term;
+						return(1);
+					}
+					else if ( ( ( t1[10] == -SNUMBER && t1[11] >= 0 && t1+12 == t2-2 )
+					|| ( t1[10] == -SYMBOL && t1+12 == t2-2 )
+					|| ( t1+10+t1[10] == t2-2 && t1+10+ARGHEAD+t1[10+ARGHEAD] == t2-2
+					&& t1[11+ARGHEAD] == SYMBOL ) ) && t2[-2] == -SNUMBER ) {
+/*
+						Now test that all symbols are valid coupling constants.
+*/
+						t2 -= 2;
+						if ( t1+12 > t2 ) {
+							WORD *tt1 = t1+13+ARGHEAD, im;
+							t2 -=  ABS(t2[-1]);
+							while ( tt1 < t2 ) {
+								for ( im = 0; im < m->ncouplings; im++ ) {
+									if ( *tt1 == m->couplings[im] ) break;
+								}
+								if ( im >= m->ncouplings ) goto doesnotwork;
+								tt1 += 2;
+							}
+						}
+						AN.TeInFun = -16;
+						AN.TeSuOut = 0;
+						AR.TePos = -1;
+						AR.funoffset = t - term;
+						return(1);
+					}
+doesnotwork:;
+				  }
+				}
 			}
 			if ( functions[funnum-FUNCTION].spec == 0
 				|| ( t[2] & (DIRTYFLAG|MUSTCLEANPRF) ) != 0 ) { funflag = 1; }
@@ -1986,7 +2073,7 @@ EndTest2:;
 }
 
 /*
- 		#] TestSub : 
+ 		#] TestSub :
  		#[ InFunction :			WORD InFunction(term,termout)
 */
 /**

@@ -2121,7 +2121,7 @@ one_byte set_sub(set_of_char set, set_of_char set1, set_of_char set2)
 }/*set_sub*/
 /*
  		#] set_sub : 
-  	#] Strings : 
+  	#] Strings :
   	#[ Mixed :
  		#[ iniTools :
 */
@@ -3969,5 +3969,45 @@ finish:
 
 /*
  		#] TestTerm : 
+ 		#[ DistrN :
+*/
+ 
+int DistrN(int n, int *cpl, int ncpl, int *scratch)
+{
+/*
+	Divides n objects over ncpl bins (cpl), each time returning one
+	of those distributions until there are no more after which the 
+	routine returns the value zero (otherwise one).
+	The array scratch (size n) is kept for the intermediate information.
+	The whole starts with scratch[0] == -2;
+*/
+	int i, j;
+	if ( ncpl == 0 ) {
+		if ( scratch[0] == -2 ) { scratch[0] = 0; return(1); }
+		else return(0);
+	}
+	if ( scratch[0] == ncpl-1 ) {
+		return(0);
+	}
+	else if ( scratch[0] == -2 ) {
+		for ( i = 0; i < n; i++ ) scratch[i] = 0;
+	}
+	else {
+		j = n-1;
+		while ( j >= 0 ) {
+			scratch[j]++;
+			if ( scratch[j] < ncpl ) break;
+			j--;
+		}
+		j++;
+		while ( j < n ) { scratch[j] = scratch[j-1]; j++; }
+	}
+	for ( i = 0; i < ncpl; i++ ) cpl[i] = 0;
+	for ( i = 0; i < n; i++ ) { cpl[scratch[i]]++; }
+	return(1);
+}
+
+/*
+ 		#] DistrN : 
   	#] Mixed : 
 */

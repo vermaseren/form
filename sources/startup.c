@@ -884,6 +884,10 @@ VOID StartVariables()
 	AP.pSize = 128;
 	AP.MaxPreIfLevel = 10;
 	AP.cComChar = AP.ComChar = '*';
+	AP.firstnamespace = 0;
+	AP.lastnamespace = 0;
+	AP.fullnamesize = 127;
+	AP.fullname = (UBYTE *)Malloc1((AP.fullnamesize+1)*sizeof(UBYTE),"AP.fullname");
 	AM.OffsetVector = -2*WILDOFFSET+MINSPEC;
 	AC.cbufList.num = 0;
 	AM.hparallelflag = AM.gparallelflag =
@@ -892,6 +896,10 @@ VOID StartVariables()
 	if ( PF.numtasks < 2 ) AM.hparallelflag |= NOPARALLEL_NPROC;
 #endif
 	AC.tablefilling = 0;
+	AC.models = 0;
+	AC.nummodels = 0;
+	AC.ModelLevel = 0;
+	AC.modelspace = 0;
 	AM.resetTimeOnClear = 1;
 	AM.gnumextrasym = AM.ggnumextrasym = 0;
 	AM.havesortdir = 0;
@@ -1042,7 +1050,7 @@ VOID StartVariables()
 	We do want to give them unique names though that the user cannot access.
 */
 	{
-		char dumstr[20];
+		char dumstr[10];
 		for ( ; i < FIRSTUSERSYMBOL; i++ ) {
 			sprintf(dumstr,":%d:",i);
 			AddSymbol((UBYTE *)dumstr,-MAXPOWER,MAXPOWER,VARTYPENONE,0);
@@ -1069,7 +1077,7 @@ VOID StartVariables()
 	We do want to give them unique names though that the user cannot access.
 */
 	{
-		char dumstr[20];
+		char dumstr[10];
 		for ( ; i < FIRSTUSERFUNCTION-FUNCTION; i++ ) {
 			sprintf(dumstr,"::%d::",i);
 			AddFunction((UBYTE *)dumstr,0,0,0,0,0,-1,-1);
@@ -1119,6 +1127,17 @@ VOID StartVariables()
 	PutPreVar((UBYTE *)"tolower_",(UBYTE *)("0"),(UBYTE *)("?a"),0);
 	PutPreVar((UBYTE *)"toupper_",(UBYTE *)("0"),(UBYTE *)("?a"),0);
 	PutPreVar((UBYTE *)"SYSTEMERROR_",(UBYTE *)("0"),0,0);
+/*
+	Next are a few 'constants' for diagram generation
+*/
+	PutPreVar((UBYTE *)"ONEPI_",(UBYTE *)("1"),0,0);
+	PutPreVar((UBYTE *)"WITHOUTINSERTIONS_",(UBYTE *)("2"),0,0);
+	PutPreVar((UBYTE *)"NOTADPOLES_",(UBYTE *)("4"),0,0);
+	PutPreVar((UBYTE *)"SYMMETRIZE_",(UBYTE *)("8"),0,0);
+	PutPreVar((UBYTE *)"TOPOLOGIESONLY_",(UBYTE *)("16"),0,0);
+	PutPreVar((UBYTE *)"NONODES_",(UBYTE *)("32"),0,0);
+	PutPreVar((UBYTE *)"WITHEDGES_",(UBYTE *)("64"),0,0);
+
 	{
 		char buf[41];  /* up to 128-bit */
 		LONG pid;

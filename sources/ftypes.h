@@ -160,6 +160,7 @@
 #define STATEMENT     4
 #define TOOUTPUT      5
 #define ATENDOFMODULE 6
+#define MIXED2        8
 #define MIXED         9
 
 /*
@@ -228,6 +229,7 @@ typedef int (*TFUN1)();
 #define CDOLLAR 10
 #define CDUBIOUS 11
 #define CRANGE 12
+#define CMODEL 13
 #define CVECTOR1 21
 #define CDOUBLEDOT 22
 
@@ -449,12 +451,13 @@ typedef int (*TFUN1)();
 #define MULFUNCTION 105
 #define TOPOLOGIES 106
 #define DIAGRAMS 107
-#define VERTEX 108
+#define NODEFUNCTION 108
 #define EDGE 109
 /*#define ALLWILD 109 ???? */
 #define SIZEOFFUNCTION 110
+#define TOPO 111
 
-#define MAXBUILTINFUNCTION 110
+#define MAXBUILTINFUNCTION 111
 #define FIRSTUSERFUNCTION 150
 
 /*
@@ -690,7 +693,7 @@ typedef int (*TFUN1)();
 
 /*@{*/
 #define GENERALFUNCTION 0
-#define FASTFUNCTION 1
+#define VERTEXFUNCTION 1
 #define TENSORFUNCTION 2
 #define GAMMAFUNCTION 4
 /*@}*/
@@ -1045,3 +1048,10 @@ typedef int (*TFUN1)();
 #define DENSETABLE 1
 #define SPARSETABLE 0
 
+#define ONEPARTICLEIRREDUCIBLE 1
+#define WITHINSERTIONS         2
+#define NOTADPOLES             4
+#define WITHSYMMETRIZE         8
+#define TOPOLOGIESONLY        16
+#define NONODES               32
+#define WITHEDGES             64

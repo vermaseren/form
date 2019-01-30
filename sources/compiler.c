@@ -141,6 +141,7 @@ static KEYWORD com2commands[] = {
 	,{"endif",          (TFUN)CoEndIf,            STATEMENT,    PARTEST}
 	,{"endinexpression",(TFUN)CoEndInExpression,  STATEMENT,    PARTEST}
 	,{"endinside",      (TFUN)CoEndInside,        STATEMENT,    PARTEST}
+	,{"endmodel",       (TFUN)CoEndModel,         DECLARATION,  PARTEST}
 	,{"endrepeat",      (TFUN)CoEndRepeat,        STATEMENT,    PARTEST}
 	,{"endswitch",      (TFUN)CoEndSwitch,        STATEMENT,    PARTEST}
 	,{"endterm",        (TFUN)CoEndTerm,          STATEMENT,    PARTEST}
@@ -169,6 +170,7 @@ static KEYWORD com2commands[] = {
 	,{"many",           (TFUN)CoMany,             STATEMENT,    PARTEST}
 	,{"merge",          (TFUN)CoMerge,            STATEMENT,    PARTEST}
 	,{"metric",         (TFUN)CoMetric,           DECLARATION,  PARTEST}
+	,{"model",          (TFUN)CoModel,            DECLARATION,  PARTEST}
 	,{"moduleoption",   (TFUN)CoModuleOption,     ATENDOFMODULE,PARTEST}
 	,{"multi",          (TFUN)CoMulti,            STATEMENT,    PARTEST}
 	,{"multibracket",   (TFUN)CoMultiBracket,     STATEMENT,    PARTEST}
@@ -185,6 +187,7 @@ static KEYWORD com2commands[] = {
 	,{"on",             (TFUN)CoOn,               DECLARATION,  PARTEST}
 	,{"once",           (TFUN)CoOnce,             STATEMENT,    PARTEST}
 	,{"only",           (TFUN)CoOnly,             STATEMENT,    PARTEST}
+	,{"particle",       (TFUN)CoParticle,         DECLARATION,  PARTEST}
 	,{"polyfun",        (TFUN)CoPolyFun,          DECLARATION,  PARTEST}
 	,{"polyratfun",     (TFUN)CoPolyRatFun,       DECLARATION,  PARTEST}
 	,{"pophide",        (TFUN)CoPopHide,          SPECIFICATION,PARTEST}
@@ -227,6 +230,7 @@ static KEYWORD com2commands[] = {
 	,{"tryreplace",     (TFUN)CoTryReplace,       STATEMENT,    PARTEST}
 	,{"unfactorize",    (TFUN)CoUnFactorize,      TOOUTPUT,     PARTEST}
 	,{"unhide",         (TFUN)CoUnHide,           SPECIFICATION,PARTEST}
+	,{"vertex",         (TFUN)CoVertex,           DECLARATION,  PARTEST}
 	,{"while",          (TFUN)CoWhile,            STATEMENT,    PARTEST}
 };
 
@@ -593,6 +597,7 @@ int CompileStatement(UBYTE *in)
 			AC.compiletype = STATEMENT;
 		}
 	  }
+	  else if ( k->type == MIXED2 ) {}
 	  else if ( k->type > AC.compiletype ) {
 		if ( StrCmp((UBYTE *)(k->name),(UBYTE *)"format") != 0 )
 			AC.compiletype = k->type;

@@ -185,3 +185,8 @@
 #define MINALLOC 32
 
 #define JUMPRATIO 4
+ 
+#define MAXPARTICLES 10
+#define MAXCOUPLINGS 10
+#define NUMOPTIONS 10
+

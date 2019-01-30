@@ -827,6 +827,9 @@ VOID WriteLists()
 	OutScr = (UBYTE *)AT.WorkPointer + ( TOLONG(AT.WorkTop) - TOLONG(AT.WorkPointer) ) /2;
 	if ( AC.CodesFlag || AC.NamesFlag > 1 ) startvalue = 0;
 	else startvalue = FIRSTUSERSYMBOL;
+/*
+ 		#[ Symbols :
+*/
 	if ( ( j = NumSymbols ) > startvalue ) {
 		TokenToLine((UBYTE *)" Symbols");
 		*skip = 3;
@@ -867,6 +870,10 @@ VOID WriteLists()
 		*skip = 0;
 		FiniLine();
 	}
+/*
+ 		#] Symbols : 
+ 		#[ Indices :
+*/
 	if ( AC.CodesFlag || AC.NamesFlag > 1 ) startvalue = 0;
 	else startvalue = BUILTININDICES;
 	if ( ( j = NumIndices ) > startvalue ) {
@@ -897,6 +904,10 @@ VOID WriteLists()
 		*skip = 0;
 		FiniLine();
 	}
+/*
+ 		#] Indices : 
+ 		#[ Vectors :
+*/
 	if ( AC.CodesFlag || AC.NamesFlag > 1 ) startvalue = 0;
 	else startvalue = BUILTINVECTORS;
 	if ( ( j = NumVectors ) > startvalue ) {
@@ -912,7 +923,10 @@ VOID WriteLists()
 		*skip = 0;
 		FiniLine();
 	}
-
+/*
+ 		#] Vectors : 
+ 		#[ Functions :
+*/
 	if ( AC.CodesFlag || AC.NamesFlag > 1 ) startvalue = 0;
 	else startvalue = AM.NumFixedFunctions;
 	for ( k = 0; k < 2; k++ ) {
@@ -936,7 +950,10 @@ VOID WriteLists()
 				else if ( ( functions[i].complex & VARTYPECOMPLEX ) == VARTYPECOMPLEX ) {
 					Out = StrCopy((UBYTE *)"#c",Out);
 				}
-				if ( functions[i].spec >= TENSORFUNCTION ) {
+				if ( functions[i].spec == VERTEXFUNCTION ) {
+					Out = StrCopy((UBYTE *)"(Particle)",Out);
+				}
+				else if ( functions[i].spec >= TENSORFUNCTION ) {
 					Out = StrCopy((UBYTE *)"(Tensor)",Out);
 				}
 				if ( functions[i].symmetric > 0 ) {
@@ -956,6 +973,10 @@ VOID WriteLists()
 		*skip = 0;
 		if ( first == 0 ) FiniLine();
 	}
+/*
+ 		#] Functions : 
+ 		#[ Sets :
+*/
 	if ( AC.CodesFlag || AC.NamesFlag > 1 ) startvalue = 0;
 	else startvalue = AM.NumFixedSets;
 	if ( ( j = AC.SetList.num ) > startvalue ) {
@@ -1086,6 +1107,10 @@ VOID WriteLists()
 		*skip = 0;
 		FiniLine();
 	}
+/*
+ 		#] Sets : 
+ 		#[ Expressions :
+*/
 	if ( AS.ExecMode ) {
 		e = Expressions;
 		j = NumExpressions;
@@ -1133,6 +1158,10 @@ VOID WriteLists()
 		*skip = 0;
 		FiniLine();
 	}
+/*
+ 		#] Expressions : 
+ 		#[ Dollars :
+*/
 
 	if ( AC.CodesFlag || AC.NamesFlag > 1 ) startvalue = 0;
 	else startvalue = BUILTINDOLLARS;
@@ -1185,6 +1214,9 @@ VOID WriteLists()
 		*skip = 0;
 		FiniLine();
 	}
+/*
+ 		#] Dollars : 
+*/
 
 	if ( AC.ncmod != 0 ) {
 		TokenToLine((UBYTE *)"All arithmetic is modulus ");

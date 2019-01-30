@@ -1293,6 +1293,18 @@ dofunction:
 					case CVECTOR: goto dovector;
 					case CFUNCTION: goto dofunction;
 					case CNUMBER: goto dosymbol;
+					case CMODEL: 
+						if ( denom < 0 || *s == TPOWER ) {
+							MesPrint("&A model to a power or in denominator is illegal");
+							error = 1;
+						}
+						break;
+					case ANYTYPE: 
+						if ( denom < 0 || *s == TPOWER ) {
+							MesPrint("&A set without type to a power or in denominator is illegal");
+							error = 1;
+						}
+						break;
 					default: error = 1; break;
 				}
 				break;
@@ -1665,6 +1677,8 @@ dofunpower:
 					case CVECTOR: goto dovector;
 					case CFUNCTION: goto dofunction;
 					case CNUMBER: goto dosymbol;
+					case CMODEL: break;
+					case ANYTYPE: break;
 					default: error = 1; break;
 				}
 				break;

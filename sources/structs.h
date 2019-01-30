@@ -613,7 +613,51 @@ typedef struct {
 	int commute;
 	PADPOINTER(0,6,0,0);
 } FUN_INFO;
+
+typedef struct PaRtIcLe {
+	WORD number; /* Number of the function */
+	WORD spin;   /* +/- dimension of SU(2) representation */
+	WORD mass;   /* Number of symbol or 0 */
+	WORD type;   /* -1: anti particle, 1: particle, 0: own antiparticle */
+} PARTICLE;
+
+typedef struct VeRtEx {
+	PARTICLE particles[MAXPARTICLES];
+	WORD couplings[2*MAXCOUPLINGS];
+	WORD nparticles;
+	WORD ncouplings;
+	WORD type;
+	WORD error;
+} VERTEX;
+
+typedef struct MoDeL {
+	VERTEX **vertices;
+	WORD *couplings;
+	UBYTE *name;
+	void *grccmodel;
+	WORD nparticles;
+	WORD nvertices;
+	WORD invertices;
+	WORD sizevertices;
+	WORD sizecouplings;
+	WORD ncouplings;
+	WORD error;
+	WORD dummy;
+} MODEL;
  
+/*
+ *	The struct NAMESPACE is used for the namespace info. It is a
+ *	doubly linked list of nested namespaces.
+ */
+
+typedef struct NaMeSpAcE {
+	struct NaMeSpAcE *previous;
+	struct NaMeSpAcE *next;
+	NAMETREE  *usenames;
+	UBYTE     *name;
+} NAMESPACE;
+
+
 /*
   	#] Variables : 
   	#[ Files :
@@ -1339,10 +1383,19 @@ typedef struct {
     WORD padding;
 } SWITCH;
 
-/*
-	The next typedef comes originally from declare.h but because new compilers
-	do not like casting from void * to a function address we have to put it here
-*/
+typedef struct {
+	WORD *term;
+	void *currentModel;
+	void *currentMODEL;
+	LONG numtopo;
+	LONG numdia;
+	WORD diaoffset;
+	WORD level;
+	WORD externalset;
+	WORD internalset;
+	WORD numextern;
+	WORD flags;
+} TERMINFO;
 
 /*
   	#] Varia : 
@@ -1553,6 +1606,9 @@ struct P_const {
     LIST LoopList;                 /* (P) List of do loops */
     LIST ProcList;                 /* (P) List of procedures */
     INSIDEINFO inside;             /*     Information during #inside/#endinside */
+    NAMESPACE *firstnamespace;     /* is zero when no namespace spacified */
+    NAMESPACE *lastnamespace;      /* is zero when no namespace spacified */
+    UBYTE *fullname;               /* buffer for namespace expanded names */
     UBYTE **PreSwitchStrings;      /* (P) The string in a switch */
     UBYTE *preStart;               /* (P) Preprocessor instruction buffer */
     UBYTE *preStop;                /* (P) end of preStart */
@@ -1590,11 +1646,12 @@ struct P_const {
     int     OpenDictionary;
     int     PreAssignLevel;        /* For nesting #$name = ...; assignments */
     int     MaxPreAssignLevel;     /* For nesting #$name = ...; assignments */
+    int     fullnamesize;          /* size of the fullname buffer */
     WORD    DebugFlag;             /* (P) For debugging purposes */
     WORD    preError;              /* (P) Blocks certain types of execution */
     UBYTE   ComChar;               /* (P) Commentary character */
     UBYTE   cComChar;              /* (P) Old commentary character for .clear */
-    PADPOINTER(3,21,2,2);
+    PADPOINTER(3,22,2,2);
 };
 
 /*
@@ -1654,6 +1711,7 @@ struct C_const {
     STREAM  *CurrentStream;        /**< (C) The current input stream.
                                        Streams are: do loop, file, prevariable. points into Streams memory. */
     SWITCH  *SwitchArray;
+    MODEL   **models;
     WORD    *SwitchHeap;
     LONG    *termstack;            /**< [D] Last term statement {offset} */
     LONG    *termsortstack;        /**< [D] Last sort statement {offset} */
@@ -1789,6 +1847,9 @@ struct C_const {
 #endif
     int     origin;                /* Determines whether .sort or ModuleOption */
     int     vectorlikeLHS;
+    int     nummodels;
+    int     modelspace;
+    int     ModelLevel;
     WORD    argsumcheck[MAXNEST];  /* (C) Checking of nesting */
     WORD    insidesumcheck[MAXNEST];/* (C) Checking of nesting */
     WORD    inexprsumcheck[MAXNEST];/* (C) Checking of nesting */
@@ -1844,11 +1905,11 @@ struct C_const {
     UBYTE   Commercial[COMMERCIALSIZE+2]; /* (C) Message to be printed in statistics */
     UBYTE   debugFlags[MAXFLAGS+2];    /* On/Off Flag number(s) */
 #if defined(WITHPTHREADS)
-	PADPOSITION(49,8+3*MAXNEST,72,48+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17+sizeof(pthread_mutex_t));
+	PADPOSITION(50,8+3*MAXNEST,75,48+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17+sizeof(pthread_mutex_t));
 #elif defined(WITHMPI)
-	PADPOSITION(49,8+3*MAXNEST,72,49+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17);
+	PADPOSITION(50,8+3*MAXNEST,75,49+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17);
 #else
-	PADPOSITION(47,8+3*MAXNEST,70,48+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17);
+	PADPOSITION(48,8+3*MAXNEST,73,48+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17);
 #endif
 };
 /*
@@ -1972,17 +2033,19 @@ struct R_const {
     WORD    CurExpr;               /* (S) Number of current expression */
     WORD    SortType;              /* A copy of AC.SortType to play with */
     WORD    ShortSortCount;        /* For On FewerStatistics 10; */
+    WORD    modeloptions;
+    WORD    funoffset;
 #if ( BITSINWORD == 32 )
 #ifdef WITHPTHREADS
-	PADPOSITION(8,7,8,5026,0);
+	PADPOSITION(8,7,8,5028,0);
 #else
-	PADPOSITION(8,7,7,5026,0);
+	PADPOSITION(8,7,7,5028,0);
 #endif
 #else
 #ifdef WITHPTHREADS
-	PADPOSITION(8,7,8,24,0);
+	PADPOSITION(8,7,8,26,0);
 #else
-	PADPOSITION(8,7,7,24,0);
+	PADPOSITION(8,7,7,26,0);
 #endif
 #endif
 };

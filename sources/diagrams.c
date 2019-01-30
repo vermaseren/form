@@ -345,6 +345,8 @@ NoWildArg:
 	the GenTopologies routine.
 */
 
+#ifdef OLDTOPO
+
 WORD GenTopologies(PHEAD WORD *term,WORD level)
 {
 	WORD *t1, *tt1, *tstop, *t, *tt;
@@ -393,23 +395,10 @@ WORD GenTopologies(PHEAD WORD *term,WORD level)
 
 }
 
+#endif
+
 /*
   	#] GenTopologies : 
-  	#[ GenDiagrams :
-*/
-
-WORD GenDiagrams(PHEAD WORD *term,WORD level)
-{
-#ifdef WITHPTHREADS
-	DUMMYUSE(B)
-#endif
-	DUMMYUSE(term)
-	DUMMYUSE(level)
-	return(0);
-}
-
-/*
-  	#] GenDiagrams : 
   	#[ DoTopologyCanonicalize :
 
 	term: The term

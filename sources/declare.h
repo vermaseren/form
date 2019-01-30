@@ -1665,6 +1665,21 @@ extern VOID SwitchSplitMergeRec(SWITCHTABLE *, WORD, SWITCHTABLE *);
 extern VOID SwitchSplitMerge(SWITCHTABLE *, WORD);
 extern int DoubleSwitchBuffers(VOID);
 
+extern int DistrN(int, int *, int, int *);
+
+extern int DoNamespace(UBYTE *);
+extern int DoEndNamespace(UBYTE *);
+extern int DoUse(UBYTE *);
+extern UBYTE *SkipName(UBYTE *);
+extern UBYTE *ConstructName(UBYTE *,UBYTE);
+
+VERTEX *CreateVertex(MODEL *);
+UBYTE *ReadParticle(UBYTE *, VERTEX *,MODEL *, int);
+int CoModel(UBYTE *);
+int CoParticle(UBYTE *);
+int CoVertex(UBYTE *);
+int CoEndModel(UBYTE *);
+int LoadModel(MODEL *);
 
 /*
   	#] Declarations : 

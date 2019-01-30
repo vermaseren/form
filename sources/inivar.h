@@ -236,6 +236,7 @@ static struct fixedfun {
 	,{"node_"       ,0 ,0             ,0               ,0} /* VERTEX */
 	,{"edge_"       ,0 ,0             ,0               ,0} /* EDGE */
     ,{"sizeof_"     ,0 ,0             ,0               ,0} /* SIZEOFFUNCTION */
+	,{"topo_"       ,0 ,0             ,0               ,0} /* TOPO */
 };
 
 FIXEDSET fixedsets[] = {

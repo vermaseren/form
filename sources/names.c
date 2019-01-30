@@ -249,11 +249,13 @@ int AddName(NAMETREE *nametree, UBYTE *name, WORD type, WORD number, int *nodenu
 	3: call GetAutoName and return its values.
 */
 
-int GetName(NAMETREE *nametree, UBYTE *name, WORD *number, int par)
+int GetName(NAMETREE *nametree, UBYTE *namein, WORD *number, int par)
 {
 	NAMENODE *n;
 	int node, newnode, i;
-	UBYTE *s, *t, *u;
+	UBYTE *s, *t, *u, *name;
+/*	name = ConstructName(namein,0); */
+	name = namein;
 	if ( nametree->namenode == 0 || nametree->namefill == 0 ) goto NotFound;
 	newnode = nametree->headnode;
 	do {

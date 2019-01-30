@@ -1997,7 +1997,7 @@ int poly::first_variable () const {
 	
 	int var = AN.poly_num_vars;
 	for (int j=0; j<var; j++)
-		if (terms[2+j]>0) return j;
+		if (terms[2+j]>0) var=j;
 	return var;
 }
 
