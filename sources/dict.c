@@ -165,11 +165,11 @@ Numeratoronly:;
 				if ( i2 < 0 ) goto NotFound;
 				else {	/* number/replacement[i2] */
 					LongToLine(a,na);
-					if ( na > 1 ) {
+					if ( na > 1 || ( AO.DoubleFlag & 4 ) == 4 ) {
 						if ( AC.OutputMode == FORTRANMODE || AC.OutputMode == PFORTRANMODE
 							 || AC.OutputMode == CMODE ) {
-							if ( AO.DoubleFlag == 2 ) { AddToLine((UBYTE *)".Q0/"); }
-							else if ( AO.DoubleFlag == 1 ) { AddToLine((UBYTE *)".D0/"); }
+							if ( ( AO.DoubleFlag & 2 ) == 2 ) { AddToLine((UBYTE *)".Q0/"); }
+							else if ( ( AO.DoubleFlag & 1 ) == 1 ) { AddToLine((UBYTE *)".D0/"); }
 							else { AddToLine((UBYTE *)"/"); }
 						}
 					}
@@ -181,11 +181,11 @@ Numeratoronly:;
 				TokenToLine((UBYTE *)(dict->elements[i1]->rhs));
 				AddToLine((UBYTE *)("/"));
 				LongToLine((UWORD *)(b),nb);
-				if ( nb > 1 ) {
+				if ( nb > 1 || ( AO.DoubleFlag & 4 ) == 4 ) {
 					if ( AC.OutputMode == FORTRANMODE || AC.OutputMode == PFORTRANMODE
 						 || AC.OutputMode == CMODE ) {
-						if ( AO.DoubleFlag == 2 ) { AddToLine((UBYTE *)".Q0"); }
-						else if ( AO.DoubleFlag == 1 ) { AddToLine((UBYTE *)".D0"); }
+						if ( ( AO.DoubleFlag & 2 ) == 2 ) { AddToLine((UBYTE *)".Q0"); }
+						else if ( ( AO.DoubleFlag & 1 ) == 1 ) { AddToLine((UBYTE *)".D0"); }
 					}
 				}
 			}

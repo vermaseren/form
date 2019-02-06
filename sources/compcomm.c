@@ -41,7 +41,8 @@
 #include "comtool.h"
 
 static KEYWORD formatoptions[] = {
-	 {"c",				(TFUN)0,	CMODE,				0}
+	 {"allfloat",       (TFUN)0,    ALLINTEGERDOUBLE,   0}
+	,{"c",				(TFUN)0,	CMODE,				0}
 	,{"doublefortran",	(TFUN)0,	DOUBLEFORTRANMODE,	0}
 	,{"float",			(TFUN)0,	0,					2}
 	,{"fortran",		(TFUN)0,	FORTRANMODE,		0}
@@ -808,7 +809,7 @@ int CoFormat(UBYTE *s)
 		if ( key ) {
 			if ( key->flags == 0 ) {
 				if ( key->type == FORTRANMODE || key->type == PFORTRANMODE
-				|| key->type == DOUBLEFORTRANMODE
+				|| key->type == DOUBLEFORTRANMODE || key->type == ALLINTEGERDOUBLE
 				|| key->type == QUADRUPLEFORTRANMODE || key->type == VORTRANMODE ) {
 					AC.IsFortran90 = ISNOTFORTRAN90;
 					if ( AC.Fortran90Kind ) {
@@ -816,13 +817,18 @@ int CoFormat(UBYTE *s)
 						AC.Fortran90Kind = 0;
 					}
 				}
-				AO.DoubleFlag = 0;
-				AC.OutputMode = key->type & NODOUBLEMASK;
-				if ( ( key->type & DOUBLEPRECISIONFLAG ) != 0 ) {
-					AO.DoubleFlag = 1;
+				if ( ( key->type == ALLINTEGERDOUBLE ) && AO.DoubleFlag != 0 ) {
+					AO.DoubleFlag |= 4;
 				}
-				else if ( ( key->type & QUADRUPLEPRECISIONFLAG ) != 0 ) {
-					AO.DoubleFlag = 2;
+				else {
+					AO.DoubleFlag = 0;
+					AC.OutputMode = key->type & NODOUBLEMASK;
+					if ( ( key->type & DOUBLEPRECISIONFLAG ) != 0 ) {
+						AO.DoubleFlag = 1;
+					}
+					else if ( ( key->type & QUADRUPLEPRECISIONFLAG ) != 0 ) {
+						AO.DoubleFlag = 2;
+					}
 				}
 			}
 			else if ( key->flags == 1 ) {

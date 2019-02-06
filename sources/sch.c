@@ -357,7 +357,7 @@ VOID RatToLine(UWORD *a, WORD na)
 		  if ( adenom == 1 && a[na] == 1 ) {
 			LongToLine(a,anumer);
 			if ( anumer > 1 ) {
-				if ( AO.DoubleFlag == 2 ) { AddToLine((UBYTE *)".Q0"); }
+				if ( ( AO.DoubleFlag & 2 ) == 2 ) { AddToLine((UBYTE *)".Q0"); }
 				else { AddToLine((UBYTE *)".D0"); }
 			}
 		  }
@@ -366,7 +366,7 @@ VOID RatToLine(UWORD *a, WORD na)
 			AddToLine((UBYTE *)"(one/");
 			LongToLine(a,adenom);
 			if ( adenom > 1 ) {
-				if ( AO.DoubleFlag == 2 ) { AddToLine((UBYTE *)".Q0"); }
+				if ( ( AO.DoubleFlag & 2 ) == 2 ) { AddToLine((UBYTE *)".Q0"); }
 				else { AddToLine((UBYTE *)".D0"); }
 			}
 			AddToLine((UBYTE *)")");
@@ -375,14 +375,14 @@ VOID RatToLine(UWORD *a, WORD na)
 			if ( anumer > 1 || adenom > 1 ) {
 				LongToLine(a,anumer);
 				if ( anumer > 1 ) {
-					if ( AO.DoubleFlag == 2 ) { AddToLine((UBYTE *)".Q0"); }
+					if (  ( AO.DoubleFlag & 2 ) == 2 ) { AddToLine((UBYTE *)".Q0"); }
 					else { AddToLine((UBYTE *)".D0"); }
 				}
 				a += na;
 				AddToLine((UBYTE *)"/");
 				LongToLine(a,adenom);
 				if ( adenom > 1 ) {
-					if ( AO.DoubleFlag == 2 ) { AddToLine((UBYTE *)".Q0"); }
+					if (  ( AO.DoubleFlag & 2 ) == 2 ) { AddToLine((UBYTE *)".Q0"); }
 					else { AddToLine((UBYTE *)".D0"); }
 				}
 			}
@@ -411,8 +411,8 @@ VOID RatToLine(UWORD *a, WORD na)
 				}
 			}
 			else if ( AC.OutputMode == FORTRANMODE || AC.OutputMode == CMODE ) {
-				if ( AO.DoubleFlag == 2 ) { AddToLine((UBYTE *)".Q0/"); }
-				else if ( AO.DoubleFlag == 1 ) { AddToLine((UBYTE *)".D0/"); }
+				if ( ( AO.DoubleFlag & 2 ) == 2 ) { AddToLine((UBYTE *)".Q0/"); }
+				else if ( ( AO.DoubleFlag & 1 ) == 1 ) { AddToLine((UBYTE *)".D0/"); }
 				else { AddToLine((UBYTE *)"./"); }
 			}
 			else AddToLine((UBYTE *)"/");
@@ -426,12 +426,12 @@ VOID RatToLine(UWORD *a, WORD na)
 				}
 			}
 			else if ( AC.OutputMode == FORTRANMODE || AC.OutputMode == CMODE ) {
-				if ( AO.DoubleFlag == 2 ) { AddToLine((UBYTE *)".Q0"); }
-				else if ( AO.DoubleFlag == 1 ) { AddToLine((UBYTE *)".D0"); }
+				if ( ( AO.DoubleFlag & 2 ) == 2 ) { AddToLine((UBYTE *)".Q0"); }
+				else if ( ( AO.DoubleFlag & 1 ) == 1 ) { AddToLine((UBYTE *)".D0"); }
 				else { AddToLine((UBYTE *)"."); }
 			}
 		  }
-		  else if ( anumer > 1 && ( AC.OutputMode == FORTRANMODE
+		  else if ( ( anumer > 1 || ( AO.DoubleFlag & 4 ) == 4 ) && ( AC.OutputMode == FORTRANMODE
 		  || AC.OutputMode == CMODE ) ) {
 			if ( AC.OutputMode == FORTRANMODE && AC.IsFortran90 == ISFORTRAN90 ) {
 				if ( AC.Fortran90Kind ) {
@@ -441,8 +441,8 @@ VOID RatToLine(UWORD *a, WORD na)
 					AddToLine((UBYTE *)".");
 				}
 			}
-			else if ( AO.DoubleFlag == 2 ) { AddToLine((UBYTE *)".Q0"); }
-			else if ( AO.DoubleFlag == 1 ) { AddToLine((UBYTE *)".D0"); }
+			else if ( ( AO.DoubleFlag & 2 ) == 2 ) { AddToLine((UBYTE *)".Q0"); }
+			else if ( ( AO.DoubleFlag & 1 ) == 1 ) { AddToLine((UBYTE *)".D0"); }
 			else { AddToLine((UBYTE *)"."); }
 		  }
 		  else if ( AC.OutputMode == FORTRANMODE && AC.IsFortran90 == ISFORTRAN90 ) {
@@ -455,9 +455,10 @@ VOID RatToLine(UWORD *a, WORD na)
 		  }
 		  else if ( ( AC.OutputMode == FORTRANMODE || AC.OutputMode == CMODE )
 		  && AO.DoubleFlag ) {
-			if ( anumer == 1 && adenom == 1 && a[0] == 1 ) {}
-			else if ( AO.DoubleFlag == 2 ) { AddToLine((UBYTE *)".Q0"); }
-			else if ( AO.DoubleFlag == 1 ) { AddToLine((UBYTE *)".D0"); }
+			if ( anumer == 1 && adenom == 1 && a[0] == 1 &&
+				 ( AO.DoubleFlag & 4 ) == 0 ) {}
+			else if ( ( AO.DoubleFlag & 2 ) == 2 ) { AddToLine((UBYTE *)".Q0"); }
+			else if ( ( AO.DoubleFlag & 1 ) == 1 ) { AddToLine((UBYTE *)".D0"); }
 		  }
 		}
 	}
@@ -827,6 +828,9 @@ VOID WriteLists()
 	OutScr = (UBYTE *)AT.WorkPointer + ( TOLONG(AT.WorkTop) - TOLONG(AT.WorkPointer) ) /2;
 	if ( AC.CodesFlag || AC.NamesFlag > 1 ) startvalue = 0;
 	else startvalue = FIRSTUSERSYMBOL;
+/*
+ 		#[ Symbols :
+*/
 	if ( ( j = NumSymbols ) > startvalue ) {
 		TokenToLine((UBYTE *)" Symbols");
 		*skip = 3;
@@ -867,6 +871,10 @@ VOID WriteLists()
 		*skip = 0;
 		FiniLine();
 	}
+/*
+ 		#] Symbols : 
+ 		#[ Indices :
+*/
 	if ( AC.CodesFlag || AC.NamesFlag > 1 ) startvalue = 0;
 	else startvalue = BUILTININDICES;
 	if ( ( j = NumIndices ) > startvalue ) {
@@ -897,6 +905,10 @@ VOID WriteLists()
 		*skip = 0;
 		FiniLine();
 	}
+/*
+ 		#] Indices : 
+ 		#[ Vectors :
+*/
 	if ( AC.CodesFlag || AC.NamesFlag > 1 ) startvalue = 0;
 	else startvalue = BUILTINVECTORS;
 	if ( ( j = NumVectors ) > startvalue ) {
@@ -912,7 +924,10 @@ VOID WriteLists()
 		*skip = 0;
 		FiniLine();
 	}
-
+/*
+ 		#] Vectors : 
+ 		#[ Functions :
+*/
 	if ( AC.CodesFlag || AC.NamesFlag > 1 ) startvalue = 0;
 	else startvalue = AM.NumFixedFunctions;
 	for ( k = 0; k < 2; k++ ) {
@@ -956,6 +971,10 @@ VOID WriteLists()
 		*skip = 0;
 		if ( first == 0 ) FiniLine();
 	}
+/*
+ 		#] Functions : 
+ 		#[ Sets :
+*/
 	if ( AC.CodesFlag || AC.NamesFlag > 1 ) startvalue = 0;
 	else startvalue = AM.NumFixedSets;
 	if ( ( j = AC.SetList.num ) > startvalue ) {
@@ -1086,6 +1105,10 @@ VOID WriteLists()
 		*skip = 0;
 		FiniLine();
 	}
+/*
+ 		#] Sets : 
+ 		#[ Expressions :
+*/
 	if ( AS.ExecMode ) {
 		e = Expressions;
 		j = NumExpressions;
@@ -1133,6 +1156,10 @@ VOID WriteLists()
 		*skip = 0;
 		FiniLine();
 	}
+/*
+ 		#] Expressions : 
+ 		#[ Dollars :
+*/
 
 	if ( AC.CodesFlag || AC.NamesFlag > 1 ) startvalue = 0;
 	else startvalue = BUILTINDOLLARS;
@@ -1185,6 +1212,9 @@ VOID WriteLists()
 		*skip = 0;
 		FiniLine();
 	}
+/*
+ 		#] Dollars : 
+*/
 
 	if ( AC.ncmod != 0 ) {
 		TokenToLine((UBYTE *)"All arithmetic is modulus ");
