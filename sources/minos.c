@@ -973,6 +973,8 @@ int PutTableNames(DBASE *d)
 		for ( i = 0; i < d->info.numberofnamesblocks; i++ ) {
 			nnew[i] = d->nblocks[i];
 		}
+		free(d->nblocks);
+		d->nblocks = nnew;
 		for ( ; i < numblocks; i++ ) {
 			if ( ( d->nblocks[i] = (NAMESBLOCK *)Malloc1(sizeof(NAMESBLOCK),
 			"additional names blocks ") ) == 0 ) {
@@ -1004,11 +1006,11 @@ int PutTableNames(DBASE *d)
 			firstdif = i;
 			for ( ; m < d->tablenamefill; m++ ) {
 				*t++ = *s++; j++;
-			}
-			if ( j >= NAMETABLESIZE ) {
-				i++;
-				t = d->nblocks[i]->names;
-				j = 0;
+				if ( j >= NAMETABLESIZE ) {
+					i++;
+					t = d->nblocks[i]->names;
+					j = 0;
+				}
 			}
 			*t = 0;
 			break;
