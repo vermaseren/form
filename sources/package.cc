@@ -249,6 +249,20 @@ std::string GetPackagePath(const std::string& repo, const std::string& group,
 }
 
 /**
+ * Returns the package short name.
+ */
+std::string GetPackageDisplayName(const std::string& repo,
+                                  const std::string& group,
+                                  const std::string& name,
+                                  const std::string& version) {
+  if (repo == "github.com") {
+    return group + "/" + name + "@" + version;
+  } else {
+    return repo + "/" + group + "/" + name + "@" + version;
+  }
+}
+
+/**
  * Returns the package URL.
  */
 std::string GetPackageURL(const std::string& repo, const std::string& group,
@@ -272,13 +286,16 @@ std::string GetPackageURL(const std::string& repo, const std::string& group,
  * Ensures that the specified package is deployed.
  */
 int EnsurePackage(const std::string& repo, const std::string& group,
-                  const std::string& name, const std::string& version) {
+                  const std::string& name, const std::string& version,
+                  bool silent = true) {
+  std::string package_display_name =
+      GetPackageDisplayName(repo, group, name, version);
   std::string package_path = GetPackagePath(repo, group, name, version);
 
   std::string complete_file = JoinPath(package_path, ".complete");
+
   if (!FileExists(complete_file)) {
-    MesPrint("@Download package: %s",
-             (repo + "/" + group + "/" + name + "@" + version).c_str());
+    MesPrint("@Download package: %s", package_display_name.c_str());
 
     std::string package_url = GetPackageURL(repo, group, name, version);
     int err = DeployPackage(package_path, package_url);
@@ -289,6 +306,8 @@ int EnsurePackage(const std::string& repo, const std::string& group,
     if (err) return err;
 
     MesPrint("@Installed: %s", package_path.c_str());
+  } else if (!silent) {
+    MesPrint("@Already installed: %s", package_path.c_str());
   }
   return 0;
 }
@@ -364,6 +383,30 @@ illegal_format:
 }
 
 }  // unnamed namespace
+
+/**
+ * Installs the specified package.
+ *
+ * Syntax:
+ *   form -install [<site>/]<group>/<name>@<tag>
+ */
+extern "C" int InstallPackage(UBYTE* s) {
+  int err;
+
+  std::string repo;
+  std::string group;
+  std::string name;
+  std::string version;
+
+  err = SplitPackageNameComponents(Trim(std::string((const char*)s)), &repo,
+                                   &group, &name, &version);
+  if (err) return err;
+
+  err = EnsurePackage(repo, group, name, version, false);
+  if (err) return err;
+
+  return 0;
+}
 
 /**
  * Loads the specified package. If the package is unavailable, it will be
