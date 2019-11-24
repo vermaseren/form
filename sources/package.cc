@@ -194,7 +194,13 @@ int DeployPackage(const std::string& path, const std::string& url) {
 
   std::string tmp_name = JoinPath(tmp_dir, EscapePath(url));
 
-  cmd = "curl -L -o " + tmp_name + " " + url + " 2>&1";
+  cmd = "command -v curl >/dev/null 2>&1";
+  err = std::system(cmd.c_str());
+  if (!err) {
+    cmd = "curl -L -o " + tmp_name + " " + url + " 2>&1";
+  } else {
+    cmd = "wget -O " + tmp_name + " " + url + " 2>&1";
+  }
   err = DoSystem((UBYTE*)cmd.c_str());
   if (err) return err;
 
