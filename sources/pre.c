@@ -103,6 +103,7 @@ static KEYWORD precommands[] = {
 	,{"toexternal"   , DoToExternal   , 0, 0}
 	,{"undefine"     , DoUndefine     , 0, 0}
 	,{"usedictionary", DoPreUseDictionary,0,0}
+	,{"usepackage"   , DoPreUsePackage,0,0}
 	,{"write"        , DoPreWrite     , 0, 0}
 };
 
