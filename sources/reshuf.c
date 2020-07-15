@@ -938,7 +938,7 @@ WORD DimensionSubterm(WORD *subterm)
 		if ( functions[*subterm-FUNCTION].spec > 0 ) {	/* tensor */
 			r = subterm + FUNHEAD;
 			while ( r < rstop ) {
-				if ( *r < 0 ) {
+				if ( *r < MINSPEC ) {
 					dim = vectors[*r-AM.OffsetVector].dimension;
 					if ( dim == MAXPOSITIVE ) goto undefined;
 					x += dim;
