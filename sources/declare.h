@@ -1622,8 +1622,8 @@ extern int SelectDictionary(UBYTE *name,UBYTE *options);
 extern int AddToDictionary(DICTIONARY *dict,UBYTE *left,UBYTE *right);
 extern int AddDictionary(UBYTE *name);
 extern int FindDictionary(UBYTE *name);
-extern int IsExponentSign(VOID);
-extern int IsMultiplySign(VOID);
+extern UBYTE *IsExponentSign(VOID);
+extern UBYTE *IsMultiplySign(VOID);
 extern VOID TransformRational(UWORD *a, WORD na);
 extern void WriteDictionary(DICTIONARY *);
 extern void ShrinkDictionary(DICTIONARY *);
@@ -1665,6 +1665,7 @@ extern VOID SwitchSplitMergeRec(SWITCHTABLE *, WORD, SWITCHTABLE *);
 extern VOID SwitchSplitMerge(SWITCHTABLE *, WORD);
 extern int DoubleSwitchBuffers(VOID);
 
+extern int DistrN(int, int *, int, int *);
 
 /*
   	#] Declarations : 

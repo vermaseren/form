@@ -754,7 +754,14 @@ UBYTE *WrtPower(UBYTE *Out, WORD Power)
 		*Out++ = '*'; *Out++ = '*';
 	}
 	else if ( AC.OutputMode == CMODE ) *Out++ = ',';
-	else *Out++ = '^';
+	else {
+		UBYTE *Out1 = IsExponentSign();
+		if ( Out1 == 0 ) *Out++ = '^';
+		else {
+			while ( *Out1 ) *Out++ = *Out1++;
+			*Out = 0;
+		}
+	}
 	if ( Power >= 0 ) {
 		if ( Power < 2*MAXPOWER )
 			Out = NumCopy(Power,Out);
@@ -765,8 +772,8 @@ UBYTE *WrtPower(UBYTE *Out, WORD Power)
 		*Out = 0;
 	}
 	else {
-		if ( ( AC.OutputMode >= FORTRANMODE || AC.OutputMode >= PFORTRANMODE )
-		 && AC.OutputMode != CMODE )
+		if ( ( AC.OutputMode >= FORTRANMODE || AC.OutputMode >= PFORTRANMODE
+		 || AC.OutputMode >= REDUCEMODE ) && AC.OutputMode != CMODE )
 			*Out++ = '(';
 		*Out++ = '-';
 		if ( Power > -2*MAXPOWER )
@@ -774,7 +781,8 @@ UBYTE *WrtPower(UBYTE *Out, WORD Power)
 		else
 			Out = StrCopy(FindSymbol((WORD)((LONG)Power-2*MAXPOWER)),Out);
 /*			Out = StrCopy(VARNAME(symbols,(LONG)(-Power)-2*MAXPOWER),Out); */
-		if ( AC.OutputMode >= FORTRANMODE || AC.OutputMode >= PFORTRANMODE ) *Out++ = ')';
+		if ( ( AC.OutputMode >= FORTRANMODE || AC.OutputMode >= PFORTRANMODE
+		 || AC.OutputMode >= REDUCEMODE ) && AC.OutputMode != CMODE ) *Out++ = ')';
 		*Out = 0;
 	}
 	return(Out);
@@ -1787,7 +1795,15 @@ WORD WriteSubTerm(WORD *sterm, WORD first)
 			 || AC.OutputMode == REDUCEMODE )
 				TokenToLine((UBYTE *)")**(");
 			else if ( AC.OutputMode == CMODE ) TokenToLine((UBYTE *)",");
-			else TokenToLine((UBYTE *)")^(");
+			else {
+				UBYTE *Out1 = IsExponentSign();
+				if ( Out1 ) {
+					TokenToLine((UBYTE *)")");
+					TokenToLine(Out1);
+					TokenToLine((UBYTE *)"(");
+				}
+				else TokenToLine((UBYTE *)")^(");
+			}
 			NEXTARG(t)
 			WriteArgument(t);
 			TokenToLine((UBYTE *)")");
@@ -1817,7 +1833,9 @@ WORD WriteSubTerm(WORD *sterm, WORD first)
 			AC.outsidefun = oldoutsidefun;
 			TokenToLine((UBYTE *)")");
 			if ( sterm[3] != 1 ) {
-				TokenToLine((UBYTE *)"^");
+				UBYTE *Out1 = IsExponentSign();
+				if ( Out1 ) TokenToLine(Out1);
+				else TokenToLine((UBYTE *)"^");
 				Out = buffer;
 				NumCopy(sterm[3],Out);
 				TokenToLine(buffer);
@@ -1953,15 +1971,19 @@ WORD WriteInnerTerm(WORD *term, WORD first)
 	if ( AC.modpowers ) {
 		if ( n == 1 && *t == 1 && t > s ) first = 1;
 		else if ( ABS(AC.ncmod) == 1 ) {
+			UBYTE *Out1 = IsExponentSign();
 			LongToLine((UWORD *)AC.powmod,AC.npowmod);
-			TokenToLine((UBYTE *)"^");
+			if ( Out1 ) TokenToLine(Out1);
+			else TokenToLine((UBYTE *)"^");
 			TalToLine(AC.modpowers[(LONG)((UWORD)*t)]);
 			first = 0;
 		}
 		else {
 			LONG jj;
+			UBYTE *Out1 = IsExponentSign();
 			LongToLine((UWORD *)AC.powmod,AC.npowmod);
-			TokenToLine((UBYTE *)"^");
+			if ( Out1 ) TokenToLine(Out1);
+			else TokenToLine((UBYTE *)"^");
 			jj = (UWORD)*t;
 			if ( n == 2 ) jj += ((LONG)t[1])<<BITSINWORD;
 			if ( AC.modpowers[jj+1] == 0 ) {
@@ -1980,7 +2002,7 @@ WORD WriteInnerTerm(WORD *term, WORD first)
 				else IniLine(3);
 		}
 		if ( AO.CurrentDictionary > 0 ) TransformRational((UWORD *)t,n);
-		else                             RatToLine((UWORD *)t,n);
+		else                            RatToLine((UWORD *)t,n);
 		first = 0;
 	}
 	else first = 1;
@@ -2054,10 +2076,14 @@ WORD WriteInnerTerm(WORD *term, WORD first)
 						MesCall("WriteInnerTerm");
 						SETERROR(-1)
 					}
-					if ( AC.OutputMode == FORTRANMODE
-					 || AC.OutputMode == PFORTRANMODE ) { TokenToLine((UBYTE *)"**"); }
+					if ( AC.OutputMode == FORTRANMODE || AC.OutputMode == PFORTRANMODE
+					 || AC.OutputMode == REDUCEMODE ) { TokenToLine((UBYTE *)"**"); }
 					else if ( AC.OutputMode == CMODE ) { TokenToLine((UBYTE *)","); }
-					else { TokenToLine((UBYTE *)"^"); }
+					else {
+						UBYTE *Out1 = IsExponentSign();
+						if ( Out1 ) TokenToLine(Out1);
+						else TokenToLine((UBYTE *)"^");
+					}
 					TalToLine(pow);
 					if ( AC.OutputMode == CMODE ) TokenToLine((UBYTE *)")");
 				}

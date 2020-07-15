@@ -215,7 +215,7 @@ NoAction:
   	#[ IsMultiplySign:
 */
 
-int IsMultiplySign(VOID)
+UBYTE *IsMultiplySign(VOID)
 {
 	DICTIONARY *dict;
 	int i;
@@ -224,7 +224,8 @@ int IsMultiplySign(VOID)
 	if ( dict->characters == 0 ) return(0);
 	for ( i = dict->numelements-1; i >= 0; i-- ) {
 		if ( ( dict->elements[i]->type == DICT_SPECIALCHARACTER )
-			&& ( dict->elements[i]->lhs[0] == (WORD)('*') ) ) return(i+1);
+			&& ( dict->elements[i]->lhs[0] == (WORD)('*') ) )
+		return((UBYTE *)(dict->elements[i]->rhs));
 	}
 	return(0);
 }
@@ -234,7 +235,7 @@ int IsMultiplySign(VOID)
   	#[ IsExponentSign:
 */
 
-int IsExponentSign(VOID)
+UBYTE *IsExponentSign(VOID)
 {
 	DICTIONARY *dict;
 	int i;
@@ -243,7 +244,8 @@ int IsExponentSign(VOID)
 	if ( dict->characters == 0 ) return(0);
 	for ( i = dict->numelements-1; i >= 0; i-- ) {
 		if ( ( dict->elements[i]->type == DICT_SPECIALCHARACTER )
-			&& ( dict->elements[i]->lhs[0] == (WORD)('^') ) ) return(i+1);
+			&& ( dict->elements[i]->lhs[0] == (WORD)('^') ) )
+		return((UBYTE *)(dict->elements[i]->rhs));
 	}
 	return(0);
 }
