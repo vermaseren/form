@@ -1137,20 +1137,34 @@ do_shift:
 */
 						t = r5;
 						EAscrat = (UWORD *)(TermMalloc("execarg"));
-						if ( t + *t == r3 ) goto onetermnew;
-						GETSTOP(t,r6);
-						ngcd = t[t[0]-1];
-						i = abs(ngcd)-1;
-						while ( --i >= 0 ) EAscrat[i] = r6[i];
-						t += *t;
-						while ( t < r3 ) {
+						if ( t + *t == r3 ) {
+							if ( factor == 0 || *factor > 2 ) {
+							if ( pow > 0 ) {
+								*r1++ = -SNUMBER; *r1++ = -1;
+								t = r5;
+								while ( t < r3 ) {
+									t += *t; t[-1] = -t[-1];
+								}
+							}
+							t = rr; *r1++ = *t++; *r1++ = 1; t++;
+							COPYARG(r1,t);
+							while ( t < m ) *r1++ = *t++;
+							}
+						}
+						else {
+						 GETSTOP(t,r6);
+						 ngcd = t[t[0]-1];
+						 i = abs(ngcd)-1;
+						 while ( --i >= 0 ) EAscrat[i] = r6[i];
+						 t += *t;
+						 while ( t < r3 ) {
 							GETSTOP(t,r6);
 							i = t[t[0]-1];
 							if ( AccumGCD(BHEAD EAscrat,&ngcd,(UWORD *)r6,i) ) goto execargerr;
 							if ( ngcd == 3 && EAscrat[0] == 1 && EAscrat[1] == 1 ) break;
 							t += *t;
-						}
-	 					if ( ngcd != 3 || EAscrat[0] != 1 || EAscrat[1] != 1 ) {
+						 }
+	 					 if ( ngcd != 3 || EAscrat[0] != 1 || EAscrat[1] != 1 ) {
 							if ( pow ) ngcd = -ngcd;
 							t = r5; r9 = r1; *r1++ = t[-ARGHEAD]; *r1++ = 1;
 							FILLARG(r1); ngcd = REDLENG(ngcd);
@@ -1198,24 +1212,10 @@ do_shift:
 									if ( ToFast(r9,r9) ) r1 = r9+2;
 								}
 							}
-	 					}
+	 					 }
 /*
 			#] Numerical factor : 
 */
-						else {
-onetermnew:;
-							if ( factor == 0 || *factor > 2 ) {
-							if ( pow > 0 ) {
-								*r1++ = -SNUMBER; *r1++ = -1;
-								t = r5;
-								while ( t < r3 ) {
-									t += *t; t[-1] = -t[-1];
-								}
-							}
-							t = rr; *r1++ = *t++; *r1++ = 1; t++;
-							COPYARG(r1,t);
-							while ( t < m ) *r1++ = *t++;
-							}
 						}
 						TermFree(EAscrat,"execarg");
 					}
