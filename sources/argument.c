@@ -65,7 +65,7 @@ WORD execarg(PHEAD WORD *term, WORD level)
 	LONG oldcpointer = CC->Pointer - CC->Buffer, oldppointer = AT.pWorkPointer, lp;
 	WORD *oldwork = AT.WorkPointer, *oldwork2, scale, renorm;
 	WORD kLCM = 0, kGCD = 0, kGCD2, kkLCM = 0, jLCM = 0, jGCD, sign = 1;
-	int ii;
+	int ii, didpolyratfun;
 	UWORD *EAscrat, *GCDbuffer = 0, *GCDbuffer2, *LCMbuffer, *LCMb, *LCMc;
 	AT.WorkPointer += *term;
 	start = C->lhs[level];
@@ -124,8 +124,9 @@ WORD execarg(PHEAD WORD *term, WORD level)
 /*
   	#[ Argument detection : + argument statement
 */
+	didpolyratfun = 0;
 	while ( t < rstop ) {
-		if ( *t >= FUNCTION && functions[*t-FUNCTION].spec == 0 ) {
+		if ( *t >= FUNCTION && functions[*t-FUNCTION].spec <= 0 ) {
 /*
 			We have a function. First count the number of arguments.
 			Tensors are excluded.
@@ -185,6 +186,7 @@ HaveTodo:
 */
 				sign = 1;
 				action = 1;
+				if ( *t == AR.PolyFun ) didpolyratfun = 1;
 				v[2] |= DIRTYFLAG;
 				r = t + FUNHEAD;
 				j = i;
@@ -722,6 +724,10 @@ do_shift:
 			}
 		}
 		t += t[1];
+	}
+	if ( didpolyratfun ) {
+		PolyFunDirty(BHEAD term);
+		didpolyratfun = 0;
 	}
 /*
   	#] Argument detection : 
