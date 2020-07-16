@@ -645,6 +645,7 @@ end
 # Information of a test case.
 class TestInfo
   def initialize
+    @classname = nil
     @where = nil    # where the test is defined
     @foldname = nil # fold name of the test
     @enabled = nil  # enabled or not
@@ -654,7 +655,7 @@ class TestInfo
     @times = nil    # elapsed time (array)
   end
 
-  attr_accessor :where, :foldname, :enabled, :sources, :status, :times
+  attr_accessor :classname, :where, :foldname, :enabled, :sources, :status, :times
 
   # Return the description of the test.
   def desc
@@ -668,7 +669,6 @@ class TestCases
     @files = []             # Ruby files
 
     @classes = []           # test class names (unsorted)
-    @classes_set = Set.new  # set of test class names
     @classes_info = {}      # TestInfo objects, key: Ruby class name
 
     @name_patterns = []
@@ -730,8 +730,8 @@ class TestCases
               classname = canonical_name(fold)
               info = TestInfo.new
               @classes.push(classname)
-              @classes_set.add(classname)
               @classes_info["Test_#{classname}"] = info
+              info.classname = classname
               info.where = "#{inname}:#{lineno}"
               info.foldname = fold
               info.enabled = test_enabled?(classname)
@@ -949,6 +949,16 @@ class TestCases
     end
     s
   end
+
+  # Delete a test.
+  def delete(classname)
+    @classes.delete(classname)
+    @classes_info.delete("Test_#{classname}")
+    # It seems difficult to delete a class.
+    # Instead, remove the test method.
+    klass = Object.const_get("Test_#{classname}".to_sym)
+    klass.send(:remove_method, "test_#{classname}".to_sym)
+  end
 end
 
 # FORM configuration.
@@ -1116,6 +1126,23 @@ def parse_def(pat)
   nil
 end
 
+# Parse GROUPID/GROUPCOUNT
+def parse_group(group)
+  if group =~ %r{^(\d+)/(\d+)$}
+    group_id = $1.to_i
+    group_count = $2.to_i
+    if group_count <= 0
+      fatal("group count must be positive: '#{group}'")
+    end
+    if group_id <= 0 || group_id > group_count
+      fatal("group id out of range: '#{group}'")
+    end
+    return group_id, group_count
+  end
+
+  fatal("unrecognized group specification: '#{group}'")
+end
+
 # Search for the `file`.
 def search_file(file, opts)
   f = file
@@ -1165,6 +1192,8 @@ def main
   opts.dir = nil
   opts.name_patterns = []
   opts.exclude_patterns = []
+  opts.group_id = nil
+  opts.group_count = nil
   opts.files = []
   opts.verbose = false
 
@@ -1184,6 +1213,8 @@ def main
   parser.on("-C", "--directory DIR", "Directory for test cases")          { |dir| opts.dir = search_dir(dir, opts) }
   parser.on("-n", "--name NAME",     "Run tests matching NAME")           { |pat| opts.name_patterns << pat }
   parser.on("-x", "--exclude NAME",  "Do not run tests matching NAME")    { |pat| opts.exclude_patterns << pat }
+  parser.on("-g", "--group GROUPID/GROUPCOUNT",
+            "Split tests and run only one group")                         { |group| opts.group_id, opts.group_count = parse_group(group) }
   parser.on("-v", "--verbose",       "Do not suppress the test output")   { opts.verbose = true }
   parser.on("-D TEST=NAME",          "Alternative way to run tests NAME") { |pat| opts.name_patterns << parse_def(pat) }
   begin
@@ -1229,6 +1260,39 @@ def main
 
   opts.files.uniq.sort.each do |file|
     FormTest.tests.make_ruby_file(file)
+  end
+
+  # Split tests into groups and run only one group.
+  if opts.group_id
+    infos = FormTest.tests.classes_info_list
+    total = infos.length
+    divided = total / opts.group_count
+    reminder = total - divided * opts.group_count
+
+    test_nos = []
+    n = 0
+
+    (1..opts.group_count).each do |i|
+      (1..divided).each do
+        if i == opts.group_id
+          test_nos.push(n)
+        end
+        n += 1
+      end
+      if i <= reminder
+        if i == opts.group_id
+          test_nos.push(n)
+        end
+        n += 1
+      end
+    end
+
+    infos = FormTest.tests.classes_info_list
+    infos.each_with_index do |info, i|
+      if !test_nos.include?(i)
+        FormTest.tests.delete(info.classname)
+      end
+    end
   end
 
   # --list option.
