@@ -1,10 +1,6 @@
 # AllCops:
 #   TargetRubyVersion: 2.1
 
-# Stop ridiculous use of freeze.
-Style/MutableConstant:
-  Enabled: false
-
 # Allow several expressions on the same line.
 Style/Semicolon:
   AllowAsExpressionSeparator: true
@@ -72,7 +68,7 @@ Metrics/BlockLength:
 Metrics/ModuleLength:
   Enabled: false
 
-Metrics/LineLength:
+Layout/LineLength:
   Enabled: false
 
 Metrics/ParameterLists:
@@ -93,3 +89,6 @@ Style/PerlBackrefs:
 
 Style/SpecialGlobalVars:
   EnforcedStyle: use_perl_names
+
+Style/StderrPuts:
+  Enabled: false

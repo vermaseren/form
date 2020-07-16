@@ -1,4 +1,6 @@
 #!/bin/sh
+# frozen_string_literal: true
+
 # See bbatsov/rubocop#3326
 # rubocop:disable all
 exec ruby "-S" "-x" "$0" "$@"
