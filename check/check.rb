@@ -1037,8 +1037,15 @@ class FormConfig
   .end
         TEST_FRM
       end
-      @head = `#{@form_bin} #{frmname} 2>/dev/null`.split("\n").first
-      @is_serial = false
+
+      @head = ""
+      `#{@form_bin} #{frmname} 2>/dev/null`.split("\n").each do |output_line|
+        if output_line =~ /FORM/
+          @head = output_line
+          break
+        end
+      end
+
       if @head =~ /^FORM/
         @is_serial   = true
         @is_threaded = false
