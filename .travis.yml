@@ -1,5 +1,5 @@
+os: linux
 dist: trusty
-sudo: false
 language: cpp
 
 git:
@@ -47,7 +47,7 @@ after_script:
 #   The APT whitelist request for mpich seems to be continuously ignored,
 #   travis-ci/apt-package-whitelist#406, so on linux we need to build/brew it.
 # - It is best to cache ./mpich or ./texlive when adequate.
-matrix:
+jobs:
   include:
     - os: linux
       compiler: gcc
@@ -59,36 +59,34 @@ matrix:
       compiler: gcc
       env: CI_TARGET=parform
       addons: { apt: { packages: [ libgmp-dev, libopenmpi-dev, openmpi-bin, zlib1g-dev ] } }
-      sudo: required
     - os: linux
       compiler: gcc
       env: CI_TARGET=form-i386
       addons: { apt: { packages: [] } }
-      sudo: required
       services: [ docker ]
     - os: linux
       compiler: gcc
       env: CI_TARGET=tform-i386
       addons: { apt: { packages: [] } }
-      sudo: required
       services: [ docker ]
     - os: linux
       compiler: gcc
       env: CI_TARGET=sanitize-vorm
       addons: { apt: { sources: [ ubuntu-toolchain-r-test ], packages: [ g++-7, libgmp-dev, zlib1g-dev ] } }
-      sudo: required
     - os: linux
       compiler: gcc
       env: CI_TARGET=sanitize-tvorm
       addons: { apt: { sources: [ ubuntu-toolchain-r-test ], packages: [ g++-7, libgmp-dev, zlib1g-dev ] } }
-      sudo: required
     - os: linux
+      dist: bionic
       compiler: gcc
       env: CI_TARGET=coverage-vorm
     - os: linux
+      dist: bionic
       compiler: gcc
       env: CI_TARGET=coverage-tvorm
     - os: linux
+      dist: bionic
       compiler: gcc
       env: CI_TARGET=coverage-parvorm
       cache: { directories: [ mpich ] }
