@@ -1751,7 +1751,9 @@ VOID Terminate(int errorcode)
 	/*:[08may2006 mt]*/
 #endif
 #ifdef WITHPTHREADS
-	TerminateAllThreads();
+	if ( !WhoAmI() && !errorcode ) {
+		TerminateAllThreads();
+	}
 #endif
 	if ( AC.FinalStats ) {
 		if ( AM.PrintTotalSize ) {
