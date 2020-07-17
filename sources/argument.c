@@ -1164,7 +1164,10 @@ do_shift:
 							if ( ngcd == 3 && EAscrat[0] == 1 && EAscrat[1] == 1 ) break;
 							t += *t;
 						 }
+/*
 	 					 if ( ngcd != 3 || EAscrat[0] != 1 || EAscrat[1] != 1 ) {
+*/
+						 {
 							if ( pow ) ngcd = -ngcd;
 							t = r5; r9 = r1; *r1++ = t[-ARGHEAD]; *r1++ = 1;
 							FILLARG(r1); ngcd = REDLENG(ngcd);
@@ -1214,7 +1217,7 @@ do_shift:
 							}
 	 					 }
 /*
-			#] Numerical factor : 
+			#] Numerical factor :
 */
 						}
 						TermFree(EAscrat,"execarg");
@@ -1704,7 +1707,7 @@ oneterm:;
 		if ( AT.WorkPointer < t ) AT.WorkPointer = t;
 	}
 /*
-  	#] FACTARG : 
+  	#] FACTARG :
 */
 	AR.Cnumlhs = oldnumlhs;
 	if ( action && Normalize(BHEAD term) ) goto execargerr;
@@ -1723,7 +1726,7 @@ execargerr:
 }
 
 /*
-  	#] execarg : 
+  	#] execarg :
   	#[ execterm :
 */
 
