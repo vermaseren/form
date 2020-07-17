@@ -293,7 +293,7 @@ vector<vector<WORD> > get_brackets () {
   vector<vector<WORD> > brackets;
 
   if (has_brackets) {
-		int exprlen=8;	// we need potential space for an empty bracket
+		int exprlen=10;	// we need potential space for an empty bracket
 		for (WORD *t=optimize_expr; *t!=0; t+=*t)
 			exprlen += *t;
 	WORD *newexpr = (WORD *)Malloc1(exprlen*sizeof(WORD), "optimize newexpr");
@@ -1642,8 +1642,8 @@ vector<WORD> simulated_annealing() {
 	// create a valid state where FACTORSYMBOL/SEPARATESYMBOL remains first
 	vector<WORD> state = occurrence_order(optimize_expr, false);
 	int startindex = 0;
-	if (state[0] == SEPARATESYMBOL || state[1] == FACTORSYMBOL) startindex++;
-	if (state[1] == FACTORSYMBOL) startindex++;
+	if ((state.size() > 0 && state[0] == SEPARATESYMBOL) || (state.size() > 1 && state[1] == FACTORSYMBOL)) startindex++;
+	if (state.size() > 1 && state[1] == FACTORSYMBOL) startindex++;
 
 	my_random_shuffle(BHEAD state.begin() + startindex, state.end()); // start from random scheme
 
@@ -1652,10 +1652,18 @@ vector<WORD> simulated_annealing() {
 
 	std::vector<WORD> best = state; // best state
 	int bestscore = curscore;
+
+	if (startindex == state.size() || state.size() - startindex < 2) {
+		return best;
+	}
 	
 	for (int o = 0; o < AO.Optimize.saIter; o++) {
 		int inda = iranf(BHEAD state.size() - startindex) + startindex;
 		int indb = iranf(BHEAD state.size() - startindex) + startindex;
+
+		if (inda == indb) {
+			continue;
+		}
 
 		swap(state[inda], state[indb]); // swap works best for Horner
 
@@ -1874,7 +1882,7 @@ inline static void next_MCTS_scheme (PHEAD vector<WORD> *porder, vector<WORD> *p
 	// if this a new node, create node and add children
 	if (!select->finished && select->childs.size()==0) {
 		tree_node new_node(select->var);
-		int sign = SGN(order.back());
+		int sign = (order.size() == 0) ? 1 : SGN(order.back());
 		for (int i=0; i<(int)mcts_vars.size(); i++)
 			if (!var_used.count(mcts_vars[i])) {
 				new_node.childs.push_back(tree_node(sign*(mcts_vars[i]+1)));
