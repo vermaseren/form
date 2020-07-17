@@ -2052,3 +2052,88 @@ assert succeeded?
 assert result("test", -2) =~ expr("f(0)*g(2)")
 assert result("test", -1) =~ expr("h(2,0)")
 *--#] Issue277 : 
+*--#[ Issue340 :
+* Calling "argtoextrasymbol" of a function containing "g5_" crashes
+CF f, g;
+
+L A = f( g(g5_(1)) );
+L B = f( g5_(1) );
+L C = f( gi_(1) );
+
+argtoextrasymbol f;
+
+print +s;
+.end
+assert succeeded?
+assert result("A") =~ expr("+f(Z1_)")
+assert result("B") =~ expr("+f(Z2_)")
+assert result("C") =~ expr("+f(Z3_)")
+*--#] Issue340 : 
+*--#[ Issue345 :
+* PolyRatFun and Argument
+Symbol x,s,t,u,m1,m2;
+Symbol q1q2,q1q3,q2q3,q3q3;
+CFunction rat;
+
+PolyRatFun rat;
+Local test = x*rat( - 4*s^2,q1q2^2*q3q3 - 2*q1q2*q1q3*q2q3);
+.sort
+
+Argument;
+  Identify q1q2 = s/2;
+  Identify q1q3 = (t-m1^2)/2;
+  Identify q2q3 = (-s-t+m1^2+m2^2)/2;
+  Identify q3q3 = m1^2;
+EndArgument;
+
+* This works fine:
+*Multiply replace_(q1q2,s/2);
+*Multiply replace_(q1q3,(t-m1^2)/2);
+*Multiply replace_(q2q3,(-s-t+m1^2+m2^2)/2);
+*Multiply replace_(q3q3,m1^2);
+
+* PROBLEM 1
+* rat is not properly normalized at the end of this module, in the case of the Argument environment
+Print +s;
+.sort
+
+* PROBLEM 2
+* move some other symbol into the rat
+* Now the overall factor of the denominator is lost completely
+Identify x^s? = rat(x^s,1);
+.sort
+
+Print +s;
+.end
+assert succeeded?
+assert result("test", -2) =~ expr("
+       + x*rat( - 16*s,s*t + t^2 - 2*t*m1^2 - t*m2^2 + m1^4 + m1^2*m2^2)
+")
+assert result("test", -1) =~ expr("
+       + rat( - 16*x*s,s*t + t^2 - 2*t*m1^2 - t*m2^2 + m1^4 + m1^2*m2^2)
+")
+*--#] Issue345 : 
+*--#[ Issue358 :
+* Replacing power sign using dictionaries
+Symbols x,y;
+#OpenDictionary test
+  #add ^:"**"
+#CloseDictionary
+Local F = x^2;
+#UseDictionary test
+Print;
+.end
+assert succeeded?
+assert result("F") =~ expr("x**2")
+*--#] Issue358 : 
+*--#[ Issue359 :
+* Inconsistent use of power sign with "Format reduce"
+Symbols x;
+CFunctions f;
+Local F = f(x^2)+f(x)^2;
+Format reduce;
+Print;
+.end
+assert succeeded?
+assert result("F") =~ expr("f(x**2) + f(x)**2")
+*--#] Issue359 : 
