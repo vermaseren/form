@@ -1653,7 +1653,7 @@ vector<WORD> simulated_annealing() {
 	std::vector<WORD> best = state; // best state
 	int bestscore = curscore;
 
-	if (startindex == state.size() || state.size() - startindex < 2) {
+	if (startindex == (int)state.size() || (int)state.size() - startindex < 2) {
 		return best;
 	}
 	

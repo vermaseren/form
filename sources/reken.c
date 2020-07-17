@@ -3811,9 +3811,11 @@ UWORD wranf(PHEAD0)
 
 UWORD iranf(PHEAD UWORD imax)
 {
-	if (imax < 2) return 0;
 	UWORD i;
-	ULONG x = (LONG)1 << BITSINWORD, xmax = x - x%imax;
+	ULONG x, xmax;
+	if (imax < 2) return 0;
+	x = (LONG)1 << BITSINWORD;
+	xmax = x - x%imax;
 	while ( ( i = wranf(BHEAD0) ) >= xmax ) {}
 	return(i%imax);
 }
