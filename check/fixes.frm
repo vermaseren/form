@@ -2113,6 +2113,47 @@ assert result("test", -1) =~ expr("
        + rat( - 16*x*s,s*t + t^2 - 2*t*m1^2 - t*m2^2 + m1^4 + m1^2*m2^2)
 ")
 *--#] Issue345 : 
+*--#[ Issue353_1 :
+* Puzzling behavior of factarg (freezes etc.)
+CF f;
+S p1,p2;
+L exp = f(-p1-p2);
+factarg,(0),f;
+print;
+.end
+assert succeeded?
+assert result("exp") =~ expr("f(p2+p1)")
+*--#] Issue353_1 : 
+*--#[ Issue353_2 :
+CF f;
+S p1,p2;
+L exp = f(p1+p2);
+factarg,(0),f;
+print;
+.end
+assert succeeded?
+assert result("exp") =~ expr("f(p2+p1)")
+*--#] Issue353_2 : 
+*--#[ Issue353_3 :
+CF f;
+V p1,p2;
+L exp = f(p1+2*p2);
+factarg,(0),f;
+print;
+.end
+assert succeeded?
+assert result("exp") =~ expr("f(p1+2*p2)")
+*--#] Issue353_3 : 
+*--#[ Issue353_4 :
+CF f;
+S x;
+L F = f((1+x)^2);
+factarg(0);
+P;
+.end
+assert succeeded?
+assert result("F") =~ expr("f(1+2*x+x^2)")
+*--#] Issue353_4 : 
 *--#[ Issue358 :
 * Replacing power sign using dictionaries
 Symbols x,y;
