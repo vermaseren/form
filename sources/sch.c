@@ -781,8 +781,8 @@ UBYTE *WrtPower(UBYTE *Out, WORD Power)
 		else
 			Out = StrCopy(FindSymbol((WORD)((LONG)Power-2*MAXPOWER)),Out);
 /*			Out = StrCopy(VARNAME(symbols,(LONG)(-Power)-2*MAXPOWER),Out); */
-		if ( ( AC.OutputMode >= FORTRANMODE || AC.OutputMode >= PFORTRANMODE
-		 || AC.OutputMode >= REDUCEMODE ) && AC.OutputMode != CMODE ) *Out++ = ')';
+		if ( AC.OutputMode >= FORTRANMODE || AC.OutputMode >= PFORTRANMODE
+		 || AC.OutputMode >= REDUCEMODE) *Out++ = ')';
 		*Out = 0;
 	}
 	return(Out);
