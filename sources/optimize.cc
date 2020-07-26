@@ -1650,6 +1650,10 @@ vector<WORD> simulated_annealing() {
 	vector<WORD> tree = Horner_tree(optimize_expr, state);
 	int curscore = count_operators_cse_topdown(tree);
 
+	// clean poly_vars, that are allocated by Horner_tree
+	AN.poly_num_vars = 0;
+	M_free(AN.poly_vars,"poly_vars");
+
 	std::vector<WORD> best = state; // best state
 	int bestscore = curscore;
 
@@ -1669,6 +1673,10 @@ vector<WORD> simulated_annealing() {
 
 		vector<WORD> tree = Horner_tree(optimize_expr, state);
 		int newscore = count_operators_cse_topdown(tree);
+
+		// clean poly_vars, that are allocated by Horner_tree
+		AN.poly_num_vars = 0;
+		M_free(AN.poly_vars,"poly_vars");
 
 		if (newscore <= curscore || 2.0 * wranf(BHEAD0) / (float)(UWORD)(-1) < exp((curscore - newscore) / T)) {
 			curscore = newscore;
@@ -4615,6 +4623,9 @@ int Optimize (WORD exprnr, int do_print) {
 			(optimize_expr[optimize_expr[0]]==0 && optimize_expr[0]==ABS(optimize_expr[optimize_expr[0]-1])+1) ||
 			(optimize_expr[optimize_expr[0]]==0 && optimize_expr[0]==8 &&
 			 optimize_expr[5]==1 && optimize_expr[6]==1 && ABS(optimize_expr[7])==3)) {
+		if (AO.OptimizeResult.code != NULL)
+			M_free(AO.OptimizeResult.code, "optimize output");
+
 		// zero terms or one trivial term (number or +/-variable), so no
 		// optimization, so copy expression; special case because without
 		// operators the optimization crashes
