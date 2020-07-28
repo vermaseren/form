@@ -1536,6 +1536,11 @@ DoSpec:
 */
 redosize:
 								if ( i > *t ) {
+/*
+		Provisionally we replace this code with the code that also fixes
+		up the NestPoin stack. That was the cause of other bugs some 60
+		lines down. Presumably the same could happen here, although nobody
+		has complained yet. (28-jul-2020)
 									i -= *t;
 									*t2 -= i;
 									t1[1] -= i;
@@ -1544,6 +1549,21 @@ redosize:
 									m = term + *term;
 									while ( r < m ) *t++ = *r++;
 									*term -= i;
+*/
+									i -= *t;
+									t += *t;
+									r = t + i;
+									m = AN.EndNest;
+									while ( r < m ) *t++ = *r++;
+									n = AT.Nest;
+									while ( n < AT.NestPoin ) {
+										*(n->argsize) -= i;
+										*(n->funsize) -= i;
+										*(n->termsize) -= i;
+										n++;
+									}
+									AN.EndNest -= i;
+
 								}
 								AN.subsubveto = 0;
 								t1[2] = 1;
@@ -1581,7 +1601,7 @@ redosize:
 								if ( i > *t ) {
 /*
 									We should not forget to correct the Nest
-									stack. That caused trouble in the past.
+									stack. That caused trouble in the past. (28-jul-2020)
 */
 									retvalue = 1;
 									i -= *t;
