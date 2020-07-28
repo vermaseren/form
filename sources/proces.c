@@ -1579,16 +1579,25 @@ redosize:
 									}
 								}
 								if ( i > *t ) {
+/*
+									We should not forget to correct the Nest
+									stack. That caused trouble in the past.
+*/
 									retvalue = 1;
 									i -= *t;
-									*t2 -= i;
-									t1[1] -= i;
 									t += *t;
 									r = t + i;
-									m = term + *term;
+									m = AN.EndNest;
 									while ( r < m ) *t++ = *r++;
-									*term -= i;
 									t = AT.NestPoin[-1].argsize + ARGHEAD;
+									n = AT.Nest;
+									while ( n < AT.NestPoin ) {
+										*(n->argsize) -= i;
+										*(n->funsize) -= i;
+										*(n->termsize) -= i;
+										n++;
+									}
+									AN.EndNest -= i;
 								}
 							}
 							AN.subsubveto = 0;
@@ -3160,7 +3169,8 @@ SkipCount:	level++;
 				if ( AR.CurDum > AM.IndDum && AR.sLevel <= 0 ) {
 					WORD olddummies = AN.IndDum;
 					AN.IndDum = AM.IndDum;
-					ReNumber(BHEAD term); Normalize(BHEAD term);
+					ReNumber(BHEAD term);
+					Normalize(BHEAD term);
 					AN.IndDum = olddummies;
 					if ( !*term ) goto Return0;
 					olddummies = DetCurDum(BHEAD term);
