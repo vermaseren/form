@@ -116,6 +116,51 @@ P;
 assert succeeded?
 assert result("F") =~ expr("f1(1)+f2(0)+f3(3)")
 *--#] Forum3t187 : 
+*--#[ Issue7_1 :
+* SegFault when #optimizing trivial bracket
+Symbol x;
+Local expr = x;
+Bracket x;
+Print;
+.sort
+
+Format O3;
+#optimize expr
+Print;
+.end
+assert succeeded?
+assert result("expr", 0) =~ expr("+ x * ( 1 )")
+assert result("expr", 1) =~ expr("x")
+*--#] Issue7_1 :
+*--#[ Issue7_2 :
+* nontrivial bracket case was OK
+Symbol x,y;
+Local expr = x*(12+y);
+Bracket x;
+Print;
+.sort
+
+Format O3;
+#optimize expr
+Print;
+.end
+assert succeeded?
+assert result("expr", 0) =~ expr("+ x * ( 12 + y )")
+# See #364
+assert result("expr", 1) =~ expr("Z1_*x") || result("expr", 1) =~ expr("x*Z1_")
+*--#] Issue7_2 :
+*--#[ Issue7_3 :
+Symbols x,y,z;
+L expr = 1;
+AB x,y,z;
+Format O3;
+.sort
+#optimize expr
+Print;
+.end
+assert succeeded?
+assert result("expr") =~ expr("1")
+*--#] Issue7_3 :
 *--#[ Issue8 :
 * Bug with function replacement
 Symbols a, b;
