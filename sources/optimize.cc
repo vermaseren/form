@@ -4722,7 +4722,9 @@ int Optimize (WORD exprnr, int do_print) {
 #ifdef WITHMPI
 		else {
 			// non-null dummy code for slaves
-			AO.OptimizeResult.code = (WORD *)Malloc1(sizeof(WORD), "optimize output");
+			if (AO.OptimizeResult.code == NULL) {
+				AO.OptimizeResult.code = (WORD *)Malloc1(sizeof(WORD), "optimize output");
+			}
 		}
 #endif
 	}
