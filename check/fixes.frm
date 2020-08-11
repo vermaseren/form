@@ -2097,6 +2097,20 @@ assert succeeded?
 assert result("test", -2) =~ expr("f(0)*g(2)")
 assert result("test", -1) =~ expr("h(2,0)")
 *--#] Issue277 : 
+*--#[ Issue307 :
+* replace_ with nested CFunctions crashes
+S N,j1;
+CF cfun1,cfun2;
+V p;
+L test1 = cfun1(cfun2(-p,-3 - j1 + N)*cfun2(p,j1)) * cfun2(p,j1);
+L test2 = cfun1(j1,0, - 3 + N,cfun2(-p, - 3 - j1 + N)*cfun2(p,j1));
+multiply replace_(N,3);
+Print;
+.end
+assert succeeded?
+assert result("test1") =~ expr("cfun1(cfun2(-p, - j1)*cfun2(p,j1))*cfun2(p,j1)")
+assert result("test2") =~ expr("cfun1(j1,0,0,cfun2(-p, - j1)*cfun2(p,j1))")
+*--#] Issue307 : 
 *--#[ Issue340 :
 * Calling "argtoextrasymbol" of a function containing "g5_" crashes
 CF f, g;
