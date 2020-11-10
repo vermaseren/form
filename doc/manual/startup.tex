@@ -23,6 +23,7 @@ alphabetic characters. They are:
 \item[-c] Error checking only. Notice that this will not work 
      properly if there are conditionals in the preprocessor phase that 
      depend on results obtained at earlier stages of the program.
+\item[-C] Next argument/option is a custom filename for the log file.
 \item[-d] Next argument/option is the name of a preprocessor 
      variable that will be defined before the run starts. A specific value can be assigned with the
 	 syntax {\tt -d VARIABLENAME=VALUE}. The default value is 1.
@@ -79,7 +80,7 @@ alphabetic characters. They are:
 \noindent The log\index{log} file\index{file!log} is a file in which all 
 output is collected, even when the output appears on the screen already. 
 This makes it possible to follow the progress of the program and have a 
-record of everything at the same time. The name of the log file is 
+record of everything at the same time. The default name of the log file is 
 identical to the name of the program without the extension \verb:.frm: but 
 with the extra extension \verb:.log:.
 Example:

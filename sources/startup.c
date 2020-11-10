@@ -237,6 +237,8 @@ int DoTail(int argc, UBYTE **argv)
 			switch (*s) {
 				case 'c': /* Error checking only */
 							AM.qError = 1;   break;
+				case 'C': /* Next arg is filename of log file */
+							TAKEPATH(AM.LogFileName)  break;
 				case 'D':
 				case 'd': /* Next arg is define preprocessor var. */
 							t = copy = strDup1(*argv,"Dotail");
@@ -442,7 +444,7 @@ printversion:;
 			while ( *s ) *t++ = *s++;
 			*t++ = '.'; *t++ = 'f'; *t++ = 'r'; *t++ = 'm'; *t = 0;
 		}
-		if ( AM.LogType >= 0 ) {
+		if ( AM.LogType >= 0 && AM.LogFileName == 0 ) {
 			AM.LogFileName = strDup1(AM.InputFileName,"name of logfile");
 			s = AM.LogFileName;
 			while ( *s ) s++;
