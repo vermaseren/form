@@ -123,12 +123,24 @@ int CoCreateSpectator(UBYTE *inp)
 	while ( *q && ( *q == ',' || *q == ' ' || *q == '\t' ) ) q++;
 	if ( *q ) goto Syntax;
 	cc = *p; *p = 0;
+
+/*
+	Append pid if AM.MultiRun. Allocate space for supplied name + '.' + 5 digits + '\0'
+*/
+	char *filename2 = Malloc1(sizeof(filename) + 1 + 1 + 5, "MultiRun Spectator filename");
+	if ( AM.MultiRun ) {
+		sprintf(filename2, "%s.%d", filename, ((int)GetPID())%100000);
+	}
+	else {
+		sprintf(filename2, "%s", filename);
+	}
 /*
 	Now we need to: create a struct for the spectator file.
 */
 	if ( HadOne == 0 )
 		numexpr = EntVar(CEXPRESSION,inp,SPECTATOREXPRESSION,0,0,0);
-	fh = AllocFileHandle(1,(char *)filename);
+	fh = AllocFileHandle(1,(char *)filename2);
+	M_free(filename2, "MultiRun Spectator filename");
 /*
 	Make sure there is space in the AM.spectatorfiles array
 */
