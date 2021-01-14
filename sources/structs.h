@@ -1528,10 +1528,11 @@ struct M_const {
     WORD    vectorzero;            /* p0_ */
     WORD    ClearStore;
     WORD    BracketFactors[8];
+    BOOL    FromStdin;             /* read the input from STDIN */
 #ifdef WITHPTHREADS
-	PADPOSITION(17,26,62,83,(sizeof(pthread_rwlock_t)+sizeof(pthread_mutex_t)*2));
+	PADPOSITION(17,26,62,83,(sizeof(pthread_rwlock_t)+sizeof(pthread_mutex_t)*2+1));
 #else
-	PADPOSITION(17,24,62,83,0);
+	PADPOSITION(17,24,62,83,1);
 #endif
 };
 /*
