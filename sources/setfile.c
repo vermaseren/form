@@ -665,7 +665,6 @@ int AllocSetups()
 
 	sp = GetSetupPar((UBYTE *)"continuationlines");
 	AM.FortranCont = sp->value;
-	if ( AM.FortranCont <= 0 ) AM.FortranCont = 1;
 	sp = GetSetupPar((UBYTE *)"oldorder");
 	AM.OldOrderFlag = sp->value;
 	sp = GetSetupPar((UBYTE *)"resettimeonclear");
