@@ -2133,7 +2133,7 @@ WORD WriteTerm(WORD *term, WORD *lbrac, WORD first, WORD prtf, WORD br)
 					b = AO.bracket + 1;
 					t = term + 1;
 					while ( n > 0 && ( *b++ == *t++ ) ) { n--; }
-					if ( n <= 0 && ( ( AO.InFbrack < AM.FortranCont )
+					if ( n <= 0 && ( ( AM.FortranCont <= 0 || AO.InFbrack < AM.FortranCont )
 					|| ( lowestlevel == 0 ) ) ) {
 /*
 						We continue inside a bracket.
@@ -2362,7 +2362,7 @@ WrtTmes:				t = term;
 		}
 	}
 	if ( !br ) AO.IsBracket = 0;
-	if ( ( AO.InFbrack >= AM.FortranCont ) && lowestlevel ) {
+	if ( ( AM.FortranCont > 0 && AO.InFbrack >= AM.FortranCont ) && lowestlevel ) {
 		if ( AC.OutputMode == CMODE ) TokenToLine((UBYTE *)";");
 		if ( ( AC.OutputMode == FORTRANMODE || AC.OutputMode == PFORTRANMODE )
 		 && !first ) {

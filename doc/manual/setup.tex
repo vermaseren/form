@@ -71,9 +71,11 @@ it should not go much beyond 1000 on a 32\index{32 bits} bit machine. On a
 64\index{64 bits} bit machine it can go considerably further.}
 
 \leftvitem{4.0cm}{ContinuationLines\index{setup!continuationlines}\index{continuationlines}}
-\rightvitem{12.6cm}{The number of continuation lines that the local Fortran 
-compiler will allow. This limits the number of continuation lines, when the 
-output option `Format Fortran' (see \ref{substaformat}) is selected.}
+\rightvitem{12.6cm}{The maximum number of continuation lines, after which
+expressions will be broken apart when printed. The value of 0 means that no
+limit is imposed. The precise format of continuation lines depend on the
+current format (see \ref{substaformat}) settings; \#write instruction also
+allows for additional control (see \ref{prewrite}).}
 
 \leftvitem{4.0cm}{Define\index{setup!define}\index{define}}
 \rightvitem{12.6cm}{The syntax is as in the \#define instruction in the 

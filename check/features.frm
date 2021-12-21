@@ -811,3 +811,27 @@ assert result("F") =~ expr("
        + f(10,x3,x1,x4)
 ")
 *--#] Issue187 : 
+*--#[ Issue392_ContinuationLines_1 :
+#: ContinuationLines 1
+* Setting ContinuationLines to 0 should remove continuation line limit.
+auto symbol x;
+local ex = (xabcdefg + xhijklmnop)^100;
+.sort
+format C;
+#write <out.c> "%e" ex
+.end
+assert succeeded?
+assert file("out.c") =~ /[_] [+]=  /
+*--#] Issue392_ContinuationLines_1 :
+*--#[ Issue392_ContinuationLines_0 :
+#: ContinuationLines 0
+* Setting ContinuationLines to 0 should remove continuation line limit.
+auto symbol x;
+local ex = (xabcdefg + xhijklmnop)^100;
+.sort
+format C;
+#write <out.c> "%e" ex
+.end
+assert succeeded?
+assert !(file("out.c") =~ /[_] [+]=  /)
+*--#] Issue392_ContinuationLines_0 :
