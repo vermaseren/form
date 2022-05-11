@@ -782,9 +782,9 @@ int CoFormat(UBYTE *s)
 		x = 0;
 		while ( FG.cTable[*s] == 1 ) x = 10*x + *s++ - '0';
 		if ( x <= 0 || x >= MAXLINELENGTH ) {
-			x = 72;
 			error = 1;
 			MesPrint("&Illegal value for linesize: %d",x);
+			x = 72;
 		}
 		if ( x < 39 ) {
 			MesPrint(" ... Too small value for linesize corrected to 39");
@@ -893,7 +893,6 @@ int CoFormat(UBYTE *s)
 		else {
 Unknown:	MesPrint("&Unknown option: %s",s); error = 1;
 		}
-		AC.LineLength = 72;
 	}
 	return(error);
 }
