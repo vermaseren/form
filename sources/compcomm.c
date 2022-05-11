@@ -407,7 +407,6 @@ WrongOption:		MesPrint("&Illegal option in Format FloatPrecision: %s",s);
 		else {
 Unknown:	MesPrint("&Unknown option: %s",s); error = 1;
 		}
-		AC.LineLength = 72;
 	}
 	return(error);
 }
