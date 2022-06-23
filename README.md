@@ -4,48 +4,64 @@ FORM
 [![Build Status](https://travis-ci.org/vermaseren/form.svg?branch=master)](https://travis-ci.org/vermaseren/form)
 [![Coverage Status](https://coveralls.io/repos/github/vermaseren/form/badge.svg?branch=master)](https://coveralls.io/github/vermaseren/form?branch=master)
 
-FORM is a Symbolic Manipulation System. It reads symbolic expressions from files
-and executes symbolic/algebraic transformations upon them. The answers are
-returned in a textual mathematical representation. As its landmark feature, the
-size of the considered expressions in FORM is only limited by the available
-disk space and not by the available RAM.
+FORM is a Symbolic Manipulation System. It reads symbolic expressions from files and executes symbolic/algebraic transformations upon them. The answers are returned in a textual mathematical representation. As its landmark feature, the size of the considered expressions in FORM is only limited by the available disk space and not by the available RAM. FORM has been essential for many state-of-the-art computations in High Energy Physics.
 
-FORM's original author is Jos Vermaseren of NIKHEF, the Dutch institute for
-subatomic physics. Other people that have made contributions can be found in the
-file "[AUTHORS](AUTHORS)".
+FORM's original author is Jos Vermaseren of NIKHEF, the Dutch institute for subatomic physics. Other people that have made contributions can be found in the file "[AUTHORS](AUTHORS)".
 
+Quick examples
+--------------
+
+The following FORM program repeatedly matches the power of a variable as long as it is more than one and creates two new terms with lower power:
+
+```form
+S x,n;
+L F = x^10;
+repeat id x^n?{>1} = x^(n-1) + x^(n-2);
+Print;
+.end
+```
+
+and yields `F = 34 + 55*x`.
+
+The following FORM program matches the function `f` that has any arguments before encountering an `x` and any arguments after, and switches them around:
+
+```form
+S x;
+L F = f(1,2,x,3,4);
+id f(?a,x,?b) = f(?b,?a);
+Print;
+.end
+```
+
+and yields `F = f(3,4,1,2)`.
+
+FORM can match many more complicated patterns and has many more features, as documented in the [additional information](#additional-information).
 
 Build instructions
 ------------
 
-Before building FORM, it is advised to install the optional dependencies `gmp`
-and `zlib` for better performance. To quickly build FORM, install the `autoconf`
-and `automake` packages. Then, after cloning the repository, run:
+Before building FORM, it is advised to install the optional dependencies `gmp` and `zlib` for better performance. To quickly build FORM, install the `autoconf` and `automake` packages. Then, after cloning the repository, run:
 
-    autoreconf -i
-    ./configure
-    make
-    make install
+```sh
+autoreconf -i
+./configure
+make
+make install
+```
 
 For more advanced build options, see the file "[INSTALL](INSTALL)".
 
 
-Additional Information
+Additional information
 ----------------------
 
-Information about copying and licencing of this software can be found in the
-file "[COPYING](COPYING)".
+The latest reference manual can be found [here](https://github.com/vermaseren/form/releases/download/v4.2.1/form-4.2.1-manual.pdf) and the Form Cookbook can be found [here](https://github.com/vermaseren/form/wiki/FORM-Cookbook).
 
-More background information a collection of FORM
-programs a number of courses and an online version of the manual can be 
-found on the official FORM website: http://www.nikhef.nl/~form.
+More background information, a collection of FORM programs, and a number of courses can be found on the official [FORM website](http://www.nikhef.nl/~form) and on the [Wiki](https://github.com/vermaseren/form/wiki).
+
+Information about copying and licensing of this software can be found in the file "[COPYING](COPYING)".
 
 
 Bugs and remarks
 ----------------
-Bugs can be reported via the
-[Issue Tracker](https://github.com/vermaseren/form/issues) of Github.
-
-The issue tracker can also be used for questions, remarks and suggestions. 
-In the past the FORM [forum](http://www.nikhef.nl/~form/forum/) was used 
-for this but we will discontinue the forum in the future.
+For reporting bugs, asking questions, giving remarks and suggestions, we welcome you to use the [Issue Tracker](https://github.com/vermaseren/form/issues).
