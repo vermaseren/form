@@ -11,12 +11,14 @@ FORM's original author is Jos Vermaseren of NIKHEF, the Dutch institute for suba
 Quick examples
 --------------
 
-The following FORM program repeatedly matches the power of a variable as long as it is more than one and creates two new terms with lower power:
+The following FORM program repeatedly matches the power of a variable `x` in the expression `E`, as long as the power is more than 1 and creates two new terms with lower power:
 
 ```form
-S x,n;
-L F = x^10;
+Symbol x,n;
+Local E = x^10;
+
 repeat id x^n?{>1} = x^(n-1) + x^(n-2);
+
 Print;
 .end
 ```
@@ -26,9 +28,11 @@ and yields `F = 34 + 55*x`.
 The following FORM program matches the function `f` that has any arguments before encountering an `x` and any arguments after, and switches them around:
 
 ```form
-S x;
-L F = f(1,2,x,3,4);
+Symbol x;
+Local E = f(1,2,x,3,4);
+
 id f(?a,x,?b) = f(?b,?a);
+
 Print;
 .end
 ```
