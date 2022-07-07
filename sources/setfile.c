@@ -1109,6 +1109,7 @@ int TryFileSetups()
 	eqnum = AC.CurrentStream->eqnum;
 	AC.NoShowInput = 1;
 	settop = buff + SETBUFSIZE;
+	if ( AC.CurrentStream->type == INPUTSTREAM && oldstreamposition == 0 ) AC.CurrentStream->fileposition = 0;
 	for(;;) {
 		c = GetInput();
 		if ( c == '*' || c == '\n' ) {
@@ -1165,6 +1166,7 @@ nextline:;
 	AC.CurrentStream->prevline = prevline;
 	AC.CurrentStream->eqnum = eqnum;
 	ClearPushback();
+	if ( AC.CurrentStream->type == INPUTSTREAM ) AC.CurrentStream->fileposition = -1;
 	return(error);
 eoi:
 	MesPrint("Input file without a program.");

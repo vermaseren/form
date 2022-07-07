@@ -838,6 +838,8 @@ static void print_M()
 	MesPrint("%d", AM.ggIndentSpace);
 	MesPrint("%d", AM.gShortStatsMax);
 	MesPrint("%d", AM.ggShortStatsMax);
+	MesPrint("--MARK 11");
+	MesPrint("%d", AM.FromStdin);
 	MesPrint("%%%% END M_const");
 /*	fflush(0); */
 }
@@ -1499,6 +1501,8 @@ int DoRecovery(int *moduletype)
 	R_FREE(AM.Path);
 	R_SET(AM.Path,UBYTE *);
 	R_COPY_S(AM.Path,UBYTE *);
+
+	R_SET(AM.FromStdin, BOOL);
 
 #ifdef PRINTDEBUG
 	print_M();
@@ -2568,6 +2572,8 @@ static int DoSnapshot(int moduletype)
 
 	S_WRITE_B(&AM.Path,sizeof(UBYTE *));
 	S_WRITE_S(AM.Path);
+
+	S_WRITE_B(&AM.FromStdin,sizeof(BOOL));
 
 	/*#] AM :*/ 
 	/*#[ AC :*/
