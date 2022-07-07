@@ -407,6 +407,7 @@ printversion:;
 							errorflag++;
 #endif
 							AM.FromStdin = 1;
+							AC.NoShowInput = 1; // disable input echoing by default
 							break;
 				default:
 						if ( FG.cTable[*s] == 1 ) {
@@ -1603,6 +1604,7 @@ int main(int argc, char **argv)
 	 */
 	AS.printflag = -1;
 #endif
+	PrintHeader(1);
 
 	if ( ( retval = DoTail(argc,(UBYTE **)argv) ) != 0 ) {
 		if ( retval > 0 ) Terminate(0);
@@ -1634,7 +1636,6 @@ int main(int argc, char **argv)
 	ReserveTempFiles(0);
 	IniFbuffer(AT.fbufnum);
 #endif
-	PrintHeader(1);
 	IniVars();
 	Globalize(1);
 	if ( AM.TimeLimit > 0 ) alarm(AM.TimeLimit);
