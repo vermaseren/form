@@ -1163,6 +1163,7 @@ UBYTE *DoDimension(UBYTE *s, int *dim, int *dim4)
 	int type, error = 0;
 	WORD numsymbol;
 	NAMETREE **oldtree = AC.activenames;
+	LIST* oldsymbols = AC.Symbols;
 	*dim4 = -NMIN4SHIFT;
 	if ( FG.cTable[*s] == 1 ) {
 retry:
@@ -1176,6 +1177,7 @@ retry:
 	else if ( ( (FG.cTable[*s] == 0 ) || ( *s == '[' ) )
 		&& ( s = SkipAName(s) ) != 0 ) {
 		AC.activenames = &(AC.varnames);
+		AC.Symbols = &(AC.SymbolList);
 		c = *s; *s = 0;
 		if ( ( ( type = GetName(AC.exprnames,t,&numsymbol,NOAUTO) ) != NAMENOTFOUND )
 		|| ( ( type = GetName(AC.varnames,t,&numsymbol,WITHAUTO) ) != NAMENOTFOUND ) ) {
@@ -1183,7 +1185,7 @@ retry:
 		}
 		else {
 			numsymbol = AddSymbol(t,-MAXPOWER,MAXPOWER,0,0);
-			if ( *oldtree != AC.autonames && AC.WarnFlag )
+			if ( AC.WarnFlag )
 			MesPrint("&Warning: Implicit declaration of %s as a symbol",t);
 		}
 		*dim = -numsymbol;
@@ -1197,7 +1199,7 @@ retry:
 			}
 			else {
 				numsymbol = AddSymbol(t,-MAXPOWER,MAXPOWER,0,0);
-				if ( *oldtree != AC.autonames && AC.WarnFlag )
+				if ( AC.WarnFlag )
 				MesPrint("&Warning: Implicit declaration of %s as a symbol",t);
 			}
 			*dim4 = -numsymbol-NMIN4SHIFT;
@@ -1210,6 +1212,7 @@ retry:
 illeg:	MesPrint("&Illegal dimension specification. Should be number >= 0, symbol or symbol:symbol");
 		return(0);
 	}
+	AC.Symbols = oldsymbols;
 	AC.activenames = oldtree;
 	if ( error ) return(0);
 	return(s);
