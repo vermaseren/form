@@ -156,7 +156,7 @@ case $host_os in
 		print_os="OpenBSD"
 		;;
 	* )
-		print_os="UNKNOWN OS"
+		print_os="UNKNOWN OS ($host_os)"
 		;;
 esac
 case $host_cpu in
