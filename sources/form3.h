@@ -528,6 +528,17 @@ extern FILES *Ustdout;
 
 #endif  /* UNIX */
 
+/*
+ * Some system may implement the POSIX "environ" variable as a macro, e.g.,
+ * https://github.com/mingw-w64/mingw-w64/blob/v10.0.0/mingw-w64-headers/crt/stdlib.h#L704
+ * which breaks the definition of DoShattering() in diagrams.c that uses
+ * "environ" as a formal parameter. Because FORM doesn't use the POSIX "environ"
+ * or its variant anyway, we can just undefine it.
+ */
+#ifdef environ
+#undef environ
+#endif
+
 #ifdef WITHMPI
 #include "parallel.h"
 #endif
