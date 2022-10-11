@@ -22,9 +22,16 @@ field.
 \fBparform\fR is the multiprocessing version using MPI.
 .SH OPTIONS
 .TP
+.BR "-"
+Read the input from stdin instead of from a file.
+.TP
 .BR "-c"
 Error checking only. Notice that this will not work properly if there are conditionals in the
 preprocessor phase that depend on results obtained at earlier stages of the program.
+.TP
+.BR "-C"
+Next argument is the filename of the log file. The default is the filename of the FORM script
+with the .log extension.
 .TP
 .BR "-d, -D"
 Next argument/option is the name of a preprocessor variable that will be defined before the

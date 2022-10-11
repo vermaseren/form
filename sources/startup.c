@@ -1606,7 +1606,6 @@ int main(int argc, char **argv)
 	 */
 	AS.printflag = -1;
 #endif
-	PrintHeader(1);
 
 	if ( ( retval = DoTail(argc,(UBYTE **)argv) ) != 0 ) {
 		if ( retval > 0 ) Terminate(0);
@@ -1638,6 +1637,7 @@ int main(int argc, char **argv)
 	ReserveTempFiles(0);
 	IniFbuffer(AT.fbufnum);
 #endif
+	if ( !AM.FromStdin ) PrintHeader(1);
 	IniVars();
 	Globalize(1);
 	if ( AM.TimeLimit > 0 ) alarm(AM.TimeLimit);
