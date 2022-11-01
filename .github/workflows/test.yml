@@ -1,0 +1,179 @@
+name: Test
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  # This quick check aims to perform a simple build and test on Linux; except
+  # the ParFORM case, it probably passes unless the committer has forgotten
+  # running "make check".
+  quick-check:
+    name: Quick check for ${{ matrix.bin }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        bin: [form, tform, parform]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # ensures a reachable tag
+
+      - name: Set up MPI if necessary
+        uses: mpi4py/setup-mpi@v1
+        if: ${{ matrix.bin == 'parform' }}
+
+      - name: Configure
+        run: |
+          opts='--disable-dependency-tracking --disable-scalar --disable-threaded --disable-parform --disable-debug --with-gmp --with-zlib'
+          case ${{ matrix.bin }} in
+            form)    opts="$opts --enable-scalar";;
+            tform)   opts="$opts --enable-threaded";;
+            parform) opts="$opts --enable-parform";;
+          esac
+          autoreconf -i
+          ./configure $opts
+
+      - name: Build
+        run: make -j 4
+
+      - name: Test
+        run: make check
+
+  # Check memory errors (e.g., uninitialized values and memory leaks)
+  # thoroughly by using Valgrind on Linux. To maximize the use of concurrent
+  # jobs, we divide the tests into smaller parts.
+  valgrind-check:
+    name: Valgrind check for ${{ matrix.bin }} (${{ matrix.group }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {bin: vorm, group: 1/5}
+          - {bin: vorm, group: 2/5}
+          - {bin: vorm, group: 3/5}
+          - {bin: vorm, group: 4/5}
+          - {bin: vorm, group: 5/5}
+          - {bin: tvorm, group: 1/10}
+          - {bin: tvorm, group: 2/10}
+          - {bin: tvorm, group: 3/10}
+          - {bin: tvorm, group: 4/10}
+          - {bin: tvorm, group: 5/10}
+          - {bin: tvorm, group: 6/10}
+          - {bin: tvorm, group: 7/10}
+          - {bin: tvorm, group: 8/10}
+          - {bin: tvorm, group: 9/10}
+          - {bin: tvorm, group: 10/10}
+          - {bin: parvorm, group: 1/10}
+          - {bin: parvorm, group: 2/10}
+          - {bin: parvorm, group: 3/10}
+          - {bin: parvorm, group: 4/10}
+          - {bin: parvorm, group: 5/10}
+          - {bin: parvorm, group: 6/10}
+          - {bin: parvorm, group: 7/10}
+          - {bin: parvorm, group: 8/10}
+          - {bin: parvorm, group: 9/10}
+          - {bin: parvorm, group: 10/10}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # ensures a reachable tag
+
+      - name: Install Valgrind
+        uses: awalsh128/cache-apt-pkgs-action@v1
+        with:
+          packages: valgrind
+          version: 1.0
+
+      - name: Set up MPI if necessary
+        uses: mpi4py/setup-mpi@v1
+        if: ${{ matrix.bin == 'parvorm' }}
+
+      - name: Configure
+        run: |
+          opts='--disable-dependency-tracking --disable-scalar --disable-threaded --disable-parform --enable-debug --with-gmp --with-zlib'
+          case ${{ matrix.bin }} in
+            vorm)    opts="$opts --enable-scalar";;
+            tvorm)   opts="$opts --enable-threaded";;
+            parvorm) opts="$opts --enable-parform";;
+          esac
+          autoreconf -i
+          ./configure $opts
+
+      - name: Build
+        run: make -C sources -j 4 ${{ matrix.bin }}
+
+      - name: Test
+        run: ./check/check.rb valgrind ./sources/${{ matrix.bin }} --stat -g ${{ matrix.group }}
+
+  # Generate LCOV coverage data to be posted to coveralls.io. Note that
+  # we measure code coverage only for tests checked with Valgrind.
+  coverage:
+    name: Code coverage for ${{ matrix.bin }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        bin: [vorm, tvorm, parvorm]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # ensures a reachable tag
+
+      - name: Install LCOV
+        uses: awalsh128/cache-apt-pkgs-action@v1
+        with:
+          packages: lcov
+          version: 1.0
+
+      - name: Set up MPI if necessary
+        uses: mpi4py/setup-mpi@v1
+        if: ${{ matrix.bin == 'parvorm' }}
+
+      - name: Configure
+        run: |
+          opts='--disable-dependency-tracking --disable-scalar --disable-threaded --disable-parform --enable-debug --enable-coverage --with-gmp --with-zlib'
+          case ${{ matrix.bin }} in
+            vorm)    opts="$opts --enable-scalar";;
+            tvorm)   opts="$opts --enable-threaded";;
+            parvorm) opts="$opts --enable-parform";;
+          esac
+          autoreconf -i
+          ./configure $opts
+
+      - name: Build
+        run: make -C sources -j 4 ${{ matrix.bin }}
+
+      - name: Test
+        run: ./check/check.rb ./sources/${{ matrix.bin }} --stat --timeout 30
+
+      - name: Generate LCOV coverage data
+        run: |
+          lcov -d . -c -o coverage.info
+          lcov -r coverage.info */usr/include/* -o coverage.info
+
+      - name: Coveralls Parallel
+        uses: coverallsapp/github-action@1.1.3
+        with:
+          github-token: ${{ secrets.github_token }}
+          flag-name: run-${{ matrix.test_number }}
+          path-to-lcov: coverage.info
+          parallel: true
+
+  # Post LCOV coverage data to coveralls.io.
+  coverage-finish:
+    needs: coverage
+    runs-on: ubuntu-latest
+    steps:
+    - name: Coveralls Finished
+      uses: coverallsapp/github-action@1.1.3
+      with:
+        github-token: ${{ secrets.github_token }}
+        path-to-lcov: coverage.info
+        parallel-finished: true

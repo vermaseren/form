@@ -1,0 +1,333 @@
+name: Deploy
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  # Generate the tarball distribution, e.g., "form-v4.2.1.tar.gz" for v4.2.1.
+  # The tarball will be tested in the following "build-bin" job.
+  build-src:
+    name: Build tarball distribution
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # ensures a reachable tag
+
+      - name: Build tarball distribution
+        run: |
+          distname=form-$(./scripts/git-version-gen.sh -r | sed '2q;d' | sed 's/^v//')
+          autoreconf -i
+          ./configure --disable-dependency-tracking --disable-scalar --disable-threaded --disable-native --without-gmp --without-zlib
+          make distdir=$distname dist-gzip
+
+      - name: Print tarball information
+        run: |
+          distname=form-$(./scripts/git-version-gen.sh -r | sed '2q;d' | sed 's/^v//')
+          ls -l $distname.tar.gz
+          file $distname.tar.gz
+          tar -tf $distname.tar.gz
+
+      - name: Upload tarball as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: src
+          path: '*.tar.gz'
+          if-no-files-found: error
+
+  # Build executables from the tarball distribution (w/o the Git repository).
+  # The executables must not be too optimized for the build machine and must be
+  # statically linked in such a way that they are suitable for binary distributions.
+  build-bin:
+    name: Build ${{ matrix.bin }} on ${{ matrix.os }}
+    needs: [build-src]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: ${{ matrix.shell }} {0}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # To maximize compatibility, we build executables on the oldest
+          # platforms available.
+          # NOTE: Ubuntu 18.04 and macOS 10.15 images are deprecated;
+          # the former will be unsupported by 1 April 2023, and
+          # the latter will be unsupported by 1 December 2022.
+          # - https://github.com/actions/runner-images/issues/6002
+          # - https://github.com/actions/runner-images/issues/5583
+          - {os: ubuntu-18.04, shell: bash, bin: form}
+          - {os: ubuntu-18.04, shell: bash, bin: tform}
+          - {os: macos-10.15, shell: bash, bin: form}
+          - {os: macos-10.15, shell: bash, bin: tform}
+          # Disable Windows native executables that have too many problems, for now.
+          # - {os: windows-2019, shell: msys2, bin: form}
+          # - {os: windows-2019, shell: msys2, bin: tform}
+    steps:
+      - name: Download tarball
+        uses: actions/download-artifact@v3
+        with:
+          name: src
+
+      - name: Install dependencies (Windows)
+        if: runner.os == 'Windows'
+        uses: msys2/setup-msys2@v2
+        with:
+          update: true
+          install: >-
+            make
+            mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-gmp
+            mingw-w64-x86_64-zlib
+            ruby
+
+      - name: Configure
+        run: |
+          tar -xf *.tar.gz --strip-components 1
+          opts='--disable-dependency-tracking --disable-scalar --disable-threaded --disable-native --enable-static-link --with-gmp --with-zlib'
+          case ${{ matrix.bin }} in
+            form)  opts="$opts --enable-scalar";;
+            tform) opts="$opts --enable-threaded";;
+          esac
+          # --static fails on macOS but we want to statically link
+          # the brewed gmp. The linker supports neither -Wl,-static nor
+          # -l:libgmp.a to make partial static links possible.
+          # As a workaround, we make a library directory with libgmp.a
+          # but without libgmp.dylib so that the linker has to link libgmp.a.
+          if [ "$RUNNER_OS" == "macOS" ]; then
+            mkdir static-lib
+            ln -s /usr/local/opt/gmp/lib/libgmp.a static-lib/libgmp.a
+            export LIBRARY_PATH="$(pwd)/static-lib:${LIBRARY_PATH:-}"
+            opts="$opts --disable-static-link"
+          fi
+          if [ "$RUNNER_OS" == "Windows" ]; then
+            opts="$opts --with-api=windows"
+          fi
+          ./configure $opts
+
+      - name: Build
+        run: |
+          if [ "$RUNNER_OS" == "macOS" ]; then
+              export LIBRARY_PATH="$(pwd)/static-lib:${LIBRARY_PATH:-}"
+          fi
+          make -j 4
+
+      - name: Test
+        run: make check
+
+      - name: Print executable information
+        run: |
+          binname=${{ matrix.bin }}
+          if [ "$RUNNER_OS" == "Windows" ]; then
+            binname=$binname.exe
+          fi
+          ls -l sources/$binname
+          file sources/$binname
+          if [ "$RUNNER_OS" == "macOS" ]; then
+            otool -L sources/$binname
+            # Check if brewed libraries are statically linked.
+            if otool -L sources/$binname | grep -q '/usr/local/opt'; then
+              echo 'Error: failed to statically link brewed libraries' >&2
+              exit 1
+            fi
+          fi
+          if [ "$RUNNER_OS" == "Windows" ]; then
+            ldd sources/$binname
+            # Check if MSYS2 DLLs are not linked.
+            if ldd sources/$binname | grep -q 'msys'; then
+              echo 'Error: failed to avoid to link with MSYS2 DLLs' >&2
+              exit 1
+            fi
+          fi
+
+      - name: Upload binary as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.bin }}-${{ matrix.os }}
+          path: |
+            sources/${{ matrix.bin }}
+            sources/${{ matrix.bin }}.exe
+          if-no-files-found: error
+
+  # Generate the PDF reference manual, e.g., "form-4.2.1-manual.pdf" for v4.2.1.
+  build-doc-pdf:
+    name: Build PDF document
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # ensures a reachable tag
+
+      # Currently, cache-apt-pkgs-action doesn't work for LaTeX.
+      # https://github.com/awalsh128/cache-apt-pkgs-action/issues/57
+      # - name: Install LaTeX2HTML
+      #   uses: awalsh128/cache-apt-pkgs-action@v1
+      #   with:
+      #     packages: latex2html  # shares the same cache with build-doc-html
+      #     version: 1.0
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get -y install texlive-latex-extra
+
+      - name: Build PDF file
+        run: |
+          distname=form-$(./scripts/git-version-gen.sh -r | sed '2q;d' | sed 's/^v//')
+          distname=$distname-manual
+          autoreconf -i
+          ./configure --disable-dependency-tracking --disable-scalar --disable-threaded --disable-native --without-gmp --without-zlib
+          make pdf
+          cp doc/manual/manual.pdf $distname.pdf
+
+      - name: Print document information
+        run: |
+          distname=form-$(./scripts/git-version-gen.sh -r | sed '2q;d' | sed 's/^v//')
+          distname=$distname-manual
+          ls -l $distname.pdf
+          file $distname.pdf
+
+      - name: Upload document as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: doc-pdf
+          path: '*.pdf'
+          if-no-files-found: error
+
+  # Generate the HTML reference manual packed as, e.g.,
+  # "form-4.2.1-manual-html.tar.gz" for v4.2.1.
+  build-doc-html:
+    name: Build HTML document
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # ensures a reachable tag
+
+      # Currently, cache-apt-pkgs-action doesn't work for LaTeX.
+      # https://github.com/awalsh128/cache-apt-pkgs-action/issues/57
+      # - name: Install LaTeX2HTML
+      #   uses: awalsh128/cache-apt-pkgs-action@v1
+      #   with:
+      #     packages: latex2html  # shares the same cache with build-doc-pdf
+      #     version: 1.0
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get -y install latex2html
+
+      - name: Build HTML files
+        run: |
+          distname=form-$(./scripts/git-version-gen.sh -r | sed '2q;d' | sed 's/^v//')
+          distname=$distname-manual-html
+          autoreconf -i
+          ./configure --disable-dependency-tracking --disable-scalar --disable-threaded --disable-native --without-gmp --without-zlib
+          make -C doc/manual latex2html
+          (
+            cd doc/manual/manual
+            rm -f images.aux images.idx images.log images.pdf images.pl images.tex internals.pl labels.pl WARNINGS
+          )
+          cp -r doc/manual/manual $distname
+          tar -c $distname/* | gzip -c -9 > $distname.tar.gz
+
+      - name: Print file information
+        run: |
+          distname=form-$(./scripts/git-version-gen.sh -r | sed '2q;d' | sed 's/^v//')
+          distname=$distname-manual-html
+          ls -l $distname.tar.gz
+          file $distname.tar.gz
+          tar -tf $distname.tar.gz
+
+      - name: Upload file as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: doc-html
+          path: '*.tar.gz'
+          if-no-files-found: error
+
+  # Prepare binaries to be published in GitHub Releases.
+  # They will be actually delivered when the commit has a tag
+  # starting with "v" (e.g., v4.2.1).
+  publish-binaries:
+    name: Publish binaries to GitHub Releases
+    needs:
+      - build-src
+      - build-bin
+      - build-doc-pdf
+      - build-doc-html
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # ensures a reachable tag
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: artifacts
+
+      - name: Print all artifacts
+        run: ls -l -R artifacts
+
+      - name: Prepare distributions
+        run: |
+          distname=form-$(./scripts/git-version-gen.sh -r | sed '2q;d' | sed 's/^v//')
+          mkdir dist
+          mv artifacts/src/*.tar.gz dist
+          mv artifacts/doc-html/*.tar.gz dist
+          mv artifacts/doc-pdf/*.pdf dist
+          if ls artifacts/*-ubuntu-*/*form >/dev/null 2>&1; then
+            pkgname=$distname-x86_64-linux
+            mkdir $pkgname
+            mv artifacts/*-ubuntu-*/*form $pkgname
+            chmod +x $pkgname/*form
+            tar -c $pkgname/* | gzip -c -9 >dist/$pkgname.tar.gz
+            rm -rf $pkgname
+          fi
+          if ls artifacts/*-macos-*/*form >/dev/null 2>&1; then
+            pkgname=$distname-x86_64-osx
+            mkdir $pkgname
+            mv artifacts/*-macos-*/*form $pkgname
+            chmod +x $pkgname/*form
+            tar -c $pkgname/* | gzip -c -9 >dist/$pkgname.tar.gz
+            rm -rf $pkgname
+          fi
+          if ls artifacts/*-windows-*/*form.exe >/dev/null 2>&1; then
+            pkgname=$distname-x86_64-windows
+            mkdir $pkgname
+            mv artifacts/*-windows-*/*form.exe $pkgname
+            chmod +x $pkgname/*form.exe
+            tar -c $pkgname/* | gzip -c -9 >dist/$pkgname.tar.gz
+            rm -rf $pkgname
+          fi
+
+      - name: Print distributions
+        run: ls -l dist
+
+      # Publish the distributions to GitHub Releases, only if the commit has
+      # a versioning tag.
+      - name: Publish distributions
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/v')
+        with:
+          files: |
+            dist/*.tar.gz
+            dist/*.pdf
+
+      # Upload the distributions as an artifact, regardless of whether
+      # the commit has a versioning tag. This makes checking and debugging easy.
+      - name: Upload distributions as artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: dist
+          path: |
+            dist/*.tar.gz
+            dist/*.pdf
+          if-no-files-found: error
