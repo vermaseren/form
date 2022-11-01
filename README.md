@@ -1,7 +1,7 @@
 FORM
 ====
 
-[![Build Status](https://travis-ci.org/vermaseren/form.svg?branch=master)](https://travis-ci.org/vermaseren/form)
+[![Test](https://github.com/vermaseren/form/actions/workflows/test.yml/badge.svg?branch=master)](https://github.com/vermaseren/form/actions/workflows/test.yml)
 [![Coverage Status](https://coveralls.io/repos/github/vermaseren/form/badge.svg?branch=master)](https://coveralls.io/github/vermaseren/form?branch=master)
 
 FORM is a Symbolic Manipulation System. It reads symbolic expressions from files and executes symbolic/algebraic transformations upon them. The answers are returned in a textual mathematical representation. As its landmark feature, the size of the considered expressions in FORM is only limited by the available disk space and not by the available RAM. FORM has been essential for many state-of-the-art computations in High Energy Physics.
