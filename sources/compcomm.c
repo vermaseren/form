@@ -807,6 +807,11 @@ int CoFormat(UBYTE *s)
 		key = FindKeyWord(s,formatoptions,
 			sizeof(formatoptions)/sizeof(KEYWORD));
 		if ( key ) {
+			if ( key->type == FORTRANMODE || key->type == PFORTRANMODE || key->type == DOUBLEFORTRANMODE
+				|| key->type == QUADRUPLEFORTRANMODE || key->type == VORTRANMODE ) {
+					if (AC.LineLength > 72) AC.LineLength = 72;
+			}
+
 			if ( key->flags == 0 ) {
 				if ( key->type == FORTRANMODE || key->type == PFORTRANMODE
 				|| key->type == DOUBLEFORTRANMODE || key->type == ALLINTEGERDOUBLE
