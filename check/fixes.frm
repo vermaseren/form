@@ -2111,6 +2111,25 @@ assert succeeded?
 assert result("test1") =~ expr("cfun1(cfun2(-p, - j1)*cfun2(p,j1))*cfun2(p,j1)")
 assert result("test2") =~ expr("cfun1(j1,0,0,cfun2(-p, - j1)*cfun2(p,j1))")
 *--#] Issue307 : 
+*--#[ Issue324 :
+* Wrong implicit symbol declaration in "autodeclare index"
+autodeclare index randomIndex=n;
+local A = n;
+print +s;
+.end
+assert warning?
+assert result("A") =~ expr("+n")
+*--#] Issue324 :
+*--#[ Issue325 :
+* Another wrong outcome of autodeclared index dimension
+autodeclare symbol N;
+autodeclare index randomIndex=N1;
+local A = d_(randomIndex1,randomIndex2)*d_(randomIndex1,randomIndex2);
+print +s;
+.end
+assert succeeded?
+assert result("A") =~ expr("+N1")
+*--#] Issue325 :
 *--#[ Issue340 :
 * Calling "argtoextrasymbol" of a function containing "g5_" crashes
 CF f, g;
@@ -2237,3 +2256,13 @@ Print;
 assert succeeded?
 assert result("F") =~ expr("f(x**2) + f(x)**2")
 *--#] Issue359 : 
+*--#[ Issue405 :
+* Dimension of index gets wrongly mapped when it is declared as auto symbol
+Auto S D;
+Auto I mu=D;
+L F3 = d_(mu3,mu3);
+Print +s;
+.end
+assert succeeded?
+assert result("F3") =~ expr("+D")
+*--#] Issue405 :
