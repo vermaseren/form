@@ -3708,6 +3708,66 @@ nexti:;
  
 /*
  		#] NextPrime : 
+ 		#[ Moebius :
+
+		Returns the value of the Moebius function if n fits inside
+		a WORD.
+		The method we use is a bit like the sieve of Erathostenes.
+*/
+
+WORD Moebius(PHEAD WORD nn)
+{
+	WORD i,n = nn, x;
+	LONG newsize;
+	char *newtable, mu;
+#if ( BITSINWORD == 32 )
+	if ( AR.notfirstprime == 0 ) StartPrimeList(BHEAD0);
+#endif
+/*
+	First we make sure that:
+		a: the table is big enough.
+		b: the number is not already in the table.
+*/
+	if ( nn >= AR.moebiustablesize ) {
+		if ( AR.moebiustablesize <= 0 ) { newsize = nn + 20; }
+		else { newsize = nn*2; }
+		if ( newsize > MAXPOSITIVE ) newsize = MAXPOSITIVE;
+		newtable = (char *)Malloc1(newsize*sizeof(char),"Moebius");
+		for ( i = 0; i < AR.moebiustablesize; i++ ) newtable[i] = AR.moebiustable[i];
+		for ( ; i < newsize; i++ ) newtable[i] = 2;
+		if ( AR.moebiustablesize > 0 ) M_free(AR.moebiustable,"Moebius");
+		AR.moebiustable = newtable;			
+		AR.moebiustablesize = newsize;
+	}
+	if ( AR.moebiustable[nn] != 2 ) return((WORD)AR.moebiustable[nn]);
+	mu = 1;
+	if ( n == 1 ) goto putvalue;
+	if ( n % 2 == 0 ) {
+		n /= 2;
+		if ( n % 2 == 0 ) { mu = 0; goto putvalue; }
+		if ( AR.moebiustable[n] != 2 ) { mu = -AR.moebiustable[n]; goto putvalue; }
+		mu = -mu;
+		if ( n == 1 ) goto putvalue;
+	}
+	for ( i = 0; i < AR.numinprimelist; i++ ) {
+		x = AR.PrimeList[i];
+		if ( n % x == 0 ) {
+			n /= x;
+			if ( n % x == 0 ) { mu = 0; goto putvalue; }
+			if ( AR.moebiustable[n] != 2 ) { mu = -AR.moebiustable[n]; goto putvalue; }
+			mu = -mu;
+			if ( n == 1 ) goto putvalue;
+		}
+		if ( n < x*x ) break; /* notice that x*x always fits inside a WORD */
+	}
+	mu = -mu;
+putvalue:
+	AR.moebiustable[nn] = mu;
+	return((WORD)mu);
+}
+
+/*
+ 		#] Moebius : 
  		#[ wranf :
 
 		A random number generator that generates random WORDs with a very

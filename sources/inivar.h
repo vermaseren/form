@@ -231,6 +231,7 @@ static struct fixedfun {
 	,{"perm_"       ,1 ,0             ,0               ,0} /* PERMUTATIONS */
 	,{"partitions_" ,1 ,0             ,0               ,0} /* PARTITIONS */
 	,{"mul_"        ,0 ,0             ,0               ,0} /* MULFUNCTION */
+	,{"moebius_"    ,0 ,0             ,0               ,0} /* MOEBIUS */
 	,{"topologies_" ,0 ,0             ,0               ,0} /* TOPOLOGIES */
 	,{"diagrams_"   ,0 ,0             ,0               ,0} /* DIAGRAMS */
 	,{"node_"       ,0 ,0             ,0               ,0} /* VERTEX */
