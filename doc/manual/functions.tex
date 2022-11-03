@@ -735,6 +735,30 @@ function is left untouched.
 $+[(p+1)/2]$.
 
 %--#] mod2_ : 
+%--#[ moebius_ :
+
+\section{moebius\_}\index{moebius\_}\index{function!moebius\_}
+\label{funmoebius}
+\noindent The Moebius function. It has the property:
+\begin{itemize}
+\item moebius\_(1) = 1
+\item moebius\_(n) = 0 if n can be divided by the square of a prime number
+\item moebius\_(n) = 1 if n contains an even number of different prime factors
+\item moebius\_(n) = -1 if n contains an odd number of different prime factors
+\end{itemize}
+The number n must be a positive integer for the evaluation to take place. 
+The argument should be no bigger than can be allowed by the biggest primes 
+in Form. This means for a 64-bit computer arguments above $2^{31}$ may not 
+give a correct result with the current algorithms that try for prime 
+factors. There is a second algorithm that does not suffer from this 
+problem:
+\begin{verbatim}
+    id moebius_(n) = 1-sum_(j,1,n-1,integer_(n/j)*moebius_(j));
+\end{verbatim}
+but this algorithm needs all lower values and hence is inherently 
+quadratic. Therefore we did not use it.
+
+%--#] moebius_ : 
 %--#[ mul_ :
 
 \section{mul\_}\index{mul\_}\index{function!mul\_}

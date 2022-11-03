@@ -1959,6 +1959,20 @@ nospec:				pcom[ncom++] = t;
 				}
 				else goto defaultcase;
 				break;
+			case MOEBIUS:
+/*
+				Numerical function giving -1,0,1 or no evaluation
+*/
+				if ( t[1] == FUNHEAD+2 && t[FUNHEAD] == -SNUMBER
+					&& t[FUNHEAD+1] > 0 ) {
+					WORD val = Moebius(BHEAD t[FUNHEAD+1]);
+					if ( val == 0 ) goto NormZero;
+					if ( val < 0 ) ncoef = -ncoef;
+				}
+				else {
+					pcom[ncom++] = t;
+				}
+				break;
 			case LNUMBER :
 				ncoef = REDLENG(ncoef);
 				if ( Mully(BHEAD (UWORD *)n_coef,&ncoef,(UWORD *)(t+3),t[2]) ) goto FromNorm;

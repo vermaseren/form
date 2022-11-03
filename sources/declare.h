@@ -1475,6 +1475,7 @@ extern int    TestFunFlag(PHEAD WORD *);
 extern WORD   CompareSymbols(WORD *,WORD *,WORD);
 extern WORD   CompareHSymbols(WORD *,WORD *,WORD);
 extern WORD   NextPrime(PHEAD WORD);
+extern WORD   Moebius(PHEAD WORD);
 extern UWORD  wranf(PHEAD0);
 extern UWORD  iranf(PHEAD UWORD);
 extern void   iniwranf(PHEAD0);
