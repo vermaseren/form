@@ -3695,7 +3695,7 @@ CommonEnd:
 					AT.WorkPointer = term + *term;
 					break;
 				  case TYPEDENOMINATORS:
-					DenToFunction(term,C->lhs[level][2]);
+					if ( DenToFunction(term,C->lhs[level][2]) ) goto ReStart;
 					break;
 				  case TYPEDROPCOEFFICIENT:
 					DropCoefficient(BHEAD term);

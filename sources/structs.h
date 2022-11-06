@@ -1926,6 +1926,7 @@ struct R_const {
     WORD    *CompressPointer;      /* (R) */
     COMPARE CompareRoutine;
     ULONG   *wranfia;
+    char    *moebiustable;
 
     LONG    OldTime;               /* (R) Zero time. Needed in timer. */
     LONG    InInBuf;               /* (R) Characters in input buffer. Scratch files. */
@@ -1973,17 +1974,18 @@ struct R_const {
     WORD    CurExpr;               /* (S) Number of current expression */
     WORD    SortType;              /* A copy of AC.SortType to play with */
     WORD    ShortSortCount;        /* For On FewerStatistics 10; */
+    WORD    moebiustablesize;
 #if ( BITSINWORD == 32 )
 #ifdef WITHPTHREADS
-	PADPOSITION(8,7,8,5026,0);
+	PADPOSITION(8,7,8,5027,0);
 #else
-	PADPOSITION(8,7,7,5026,0);
+	PADPOSITION(8,7,7,5027,0);
 #endif
 #else
 #ifdef WITHPTHREADS
-	PADPOSITION(8,7,8,24,0);
+	PADPOSITION(8,7,8,25,0);
 #else
-	PADPOSITION(8,7,7,24,0);
+	PADPOSITION(8,7,7,25,0);
 #endif
 #endif
 };
