@@ -88,6 +88,8 @@ any longer.
                a checkpoint (\ref{checkpoints}) keeps using the PID of the
                crushed session.
 \item[STOPWATCH\_] Same as `TIMER\_'.
+\item[SYSTEMERROR\_] The return value of the last \#system\ref{presystem}
+               command when invoked with the -e\index{SYSTEMERROR\_} option.
 \item[TIME\_]  The running time\index{time\_} till the moment of call in the string format
                with a decimal point and two digits after the decimal point. 
                This is the same format as in the statistics.
@@ -95,8 +97,8 @@ any longer.
                unlike `time\_' this value can be used in the preprocessor 
                calculator and in numerical compares in \#if instructions.
                See also the \#reset (see \ref{prereset}) instruction.
-\item[NUMACTIVEEXPRS\_]  The number of the current active expressions.
-\item[ACTIVEEXPRNAMES\_]  The list of the current active expression names 
+\item[NUMACTIVEEXPRS\_]  The number of the currently active expressions.
+\item[ACTIVEEXPRNAMES\_]  The list of the currently active expression names 
                separated by commas. This can be passed to \#do lvar=\{...\} 
                instruction~(\ref{predo}) like: 
 \begin{verbatim}
@@ -2007,7 +2009,7 @@ brackets\index{bracket} of different types).
 
 \noindent Syntax:
 
-\#system systemcommand
+\#system [-e] systemcommand
  
 \noindent See also pipe (\ref{prepipe})
 
@@ -2016,6 +2018,11 @@ the operating system. The complete string (excluding initial blanks or
 tabs) is passed to the operating system. \FORM\ will then wait until control 
 is returned. Note that this instruction introduces operating system 
 dependent code. Hence it should be used with great care.
+
+\noindent Without the -e option execution of the Form program will halt if 
+the system command returns an error. With the -e option the Form program 
+will continue execution. The value of the return code of the system command 
+can be found in the SYSTEMERROR\_\index{SYSTEMERROR\_} preprocessor variable.
 
 %--#] system : 
 %--#[ terminate :
