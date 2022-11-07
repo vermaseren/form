@@ -441,59 +441,59 @@ bit bigger when potential conflicts with MaxTermSize occur.
 
 The default settings are
 \begin{center}
-\begin{tabular}{lrr}
-Variable         &      32-bits       &    64-bits   \\ \hline
-bracketindexsize &      200000        & 200000 \\
-commentchar &           $*$           & $*$ \\
-compresssize &          90000         & 90000 \\
-constindex &            128           & 128 \\
-continuationlines &     15            & 15 \\
-dotchar &               .             & . \\
-filepatches &           256           & 256 \\
-functionlevels &        30            & 30 \\
-hidesize &              50000000      & 50000000 \\
-incdir &                .             & . \\
-%indentspace &                        & \\
-insidefirst &           ON            & ON \\
-largepatches &          256           & 256 \\
-largesize &             50000000      & 800000000 \\
-maxnumbersize &         200           & 200 \\
-maxtermsize &           10000         & 40000 \\
-maxwildcards &          100           & 100 \\
-nospacesinnumbers &     OFF           & OFF \\
-numstorecaches &        4             & 4 \\
-nwritefinalstatistics & OFF           & OFF \\
-nwritestatistics &      OFF           & OFF \\
-nwritethreadstatistics &OFF           & OFF \\
-oldorder &              OFF           & OFF \\
-parentheses &           100           & 100 \\
-path &                  .             & . \\
-%polygcdchoice &        0             & 0 \\
-processbucketsize &     1000          & 1000 \\
-scratchsize &           50000000      & 500000000 \\
-sizestorecache &        32768         & 32768 \\
-smallextension &        20000000      & 300000000 \\
-smallsize &             10000000      & 150000000 \\
-sortiosize &            100000        & 100000 \\
-sorttype &              lowfirst      & lowfirst \\
-subfilepatches &        64            & 64 \\
-sublargepatches &       64            & 64 \\
-sublargesize &          4000000       & 4000000 \\
-subsmallextension &     800000        & 800000 \\
-subsmallsize &          500000        & 500000 \\
-subsortiosize &         32768         & 32768 \\
-subtermsinsmall &       10000         & 10000 \\
-tempdir &               .             & . \\
-tempsortdir &           .             & . \\
-termsinsmall &          100000        & 2000000 \\
-threadbucketsize &      500           & 500 \\
-threadloadbalancing &   ON            & ON \\
-threads &               0             & 0 \\
-threadsortfilesynch &   OFF           & OFF \\
-threadscratchoutsize &  2500000       & 2500000 \\
-threadscratchsize &     100000        & 100000 \\
-workspace &             10000000      & 40000000
-%zipsize &               32768        & 32768
+\begin{tabular}{lrrr}
+Variable         &      32-bits       &    64-bits  & tform 64-bits   \\ \hline
+bracketindexsize &      200000        & 200000      & 200000       \\
+commentchar &           $*$           & $*$         & $*$          \\
+compresssize &          90000         & 90000       & 90000        \\
+constindex &            128           & 128         & 128          \\
+continuationlines &     15            & 15          & 15           \\
+dotchar &               .             & .           & .            \\
+filepatches &           256           & 256         & 256          \\
+functionlevels &        30            & 30          & 30           \\
+hidesize &              50000000      & 50000000    & 50000000     \\
+incdir &                .             & .           & .            \\
+%indentspace &                        &             &              \\
+insidefirst &           ON            & ON          & ON           \\
+largepatches &          256           & 256         & 256          \\
+largesize &             50000000      & 800000000   & 1500000000   \\
+maxnumbersize &         200           & 200         & 200          \\
+maxtermsize &           10000         & 40000       & 40000        \\
+maxwildcards &          100           & 100         & 100          \\
+nospacesinnumbers &     OFF           & OFF         & OFF          \\
+numstorecaches &        4             & 4           & 4            \\
+nwritefinalstatistics & OFF           & OFF         & OFF          \\
+nwritestatistics &      OFF           & OFF         & OFF          \\
+nwritethreadstatistics &OFF           & OFF         & OFF          \\
+oldorder &              OFF           & OFF         & OFF          \\
+parentheses &           100           & 100         & 100          \\
+path &                  .             & .           & .            \\
+%polygcdchoice &        0             & 0           & 0            \\
+processbucketsize &     1000          & 1000        & 1000         \\
+scratchsize &           50000000      & 500000000   & 500000000    \\
+sizestorecache &        32768         & 32768       & 32768        \\
+smallextension &        20000000      & 300000000   & 600000000    \\
+smallsize &             10000000      & 150000000   & 300000000    \\
+sortiosize &            100000        & 100000      & 100000       \\
+sorttype &              lowfirst      & lowfirst    & lowfirst     \\
+subfilepatches &        64            & 64          & 64           \\
+sublargepatches &       64            & 64          & 64           \\
+sublargesize &          4000000       & 4000000     & 4000000      \\
+subsmallextension &     800000        & 800000      & 800000       \\
+subsmallsize &          500000        & 500000      & 500000       \\
+subsortiosize &         32768         & 32768       & 32768        \\
+subtermsinsmall &       10000         & 10000       & 10000        \\
+tempdir &               .             & .           & .            \\
+tempsortdir &           .             & .           & .            \\
+termsinsmall &          100000        & 2000000     & 3000000      \\
+threadbucketsize &      500           & 500         & 500          \\
+threadloadbalancing &   ON            & ON          & ON           \\
+threads &               0             & 0           & 0            \\
+threadsortfilesynch &   OFF           & OFF         & OFF          \\
+threadscratchoutsize &  2500000       & 2500000     & 2500000      \\
+threadscratchsize &     100000        & 100000      & 100000       \\
+workspace &             10000000      & 40000000    & 40000000    
+%zipsize &               32768        & 32768       & 32768       
 \end{tabular}
 \end{center}
 If one compares these numbers with the corresponding numbers for older 
