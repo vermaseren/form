@@ -160,14 +160,14 @@ notation there can be no zeroes. The `ArgImplode,Z;'
 statement\index{argimplode} would be 
 equivalent to the statement
 % THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
-% WELL!
+% WELL! (Sta_ArgImplode_1)
 \begin{verbatim}
    repeat id Z(?a,0,x?!{0,0},?b) = Z(?a,x+sig_(x),?b);
 \end{verbatim}
 and takes one from the first notation to the second. The `ArgExplode,Z;' 
 statement\index{argexplode} is equivalent to the statement
 % THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
-% WELL!
+% WELL! (Sta_ArgImplode_1)
 \begin{verbatim}
    repeat id Z(?a,x?!{1,0,-1},?b) = Z(?a,0,x-sig_(x),?b);
 \end{verbatim}
@@ -641,6 +641,9 @@ contents of the brackets\index{brackets} (if there was a bracket or
 antibracket\index{antibracket} statement in the preceding module) are 
 collected and put inside the argument of the named function. Hence if the 
 expression \verb:F: is given by
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL! (Sta_Collect_1)
+% TODO: the term order has been changed.
 \begin{verbatim}
    F =
       a*(b^2+c)
@@ -696,6 +699,8 @@ same function inside more than one set. For a function to commute with
 itself (with for instance different arguments) it needs to be specified 
 twice inside the same set. In that case it is more efficient to have a 
 separate set with only two arguments. Example:
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL! (Sta_CommuteInSet_1)
 \begin{verbatim}
     I   i1,...,i10;
     F   A1,...,A10;
@@ -1565,7 +1570,8 @@ separately.}
 \noindent In the case of the above options only the coefficient is treated. 
 When these options are not used the whole term is treated as in:
 % THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
-% WELL!
+% WELL! (Sta_FactArg_1)
+% TODO: On OldFactArg
 \begin{verbatim}
     Symbols a,b,c;
     CFunctions f,f1,f2,f3;
@@ -1716,6 +1722,8 @@ could have written:
 
 \noindent One warning\index{warning} is called for. One should avoid using 
 expressions in the right hand side of fill statements:
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL! (Sta_Fill_1)
 \begin{verbatim}
     Table B(1:1);
     Local dummy = 1;
@@ -1733,6 +1741,8 @@ is not expanded. Hence it keeps the reference to the expression dummy. When
 the table element is used the reference to the expression dummy is inserted 
 and expanded. Hence one obtains the contents of dummy that exist at the 
 moment of use. This is illustrated in the following example:
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL! (Sta_Fill_2)
 \begin{verbatim}
     Table B(1:1);
     Local dummy = 1;
@@ -1755,6 +1765,8 @@ The final value of F will be 2, not 1.
 \noindent A way to get around this problem is to force the evaluation of 
 the table definition by using dollar\index{dollar} 
 variables\index{variable!dollar}:
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL! (Sta_Fill_3)
 \begin{verbatim}
     Table B(1:1);
     Local dummy = 1;
@@ -1778,6 +1790,8 @@ evaluated at use again. In principle this could cause similar problems.
 
 \noindent Not dropping the expression dummy can sometimes give the correct 
 result, but is potentially still unsafe. 
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL! (Sta_Fill_4)
 \begin{verbatim}
     Table B(1:1);
     Local u = 2;
@@ -2363,6 +2377,8 @@ functions. It should also be known that the all option cannot be used in
 the if(match()) construction. It would not make sense there anyway.}
 
 \noindent Example:
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL! (Sta_Identify_1)
 \begin{verbatim}
     Vector Q,p1,...,p5,q1,...,q5;
     Cfunction V(s),replace;
@@ -2858,7 +2874,7 @@ have to be done only once, rather than for each complete term separately
 
 \noindent There can be some nasty side effects. Assume an expression like:
 % THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
-% WELL!
+% WELL! (Sta_Keep_1)
 \begin{verbatim}
     F = f(i1,x)*(g(i1,y)+g(i1,z));
     B  f;
@@ -2918,6 +2934,8 @@ factorize statement~\ref{substafactorize}.
 notation and keep it that way. The factors are recognized by multiplication 
 and division signs at lowest bracket level. For the rest the expression is 
 treated as a regular local expression. Example:
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL! (Sta_LFactorized_1)
 \begin{verbatim}
     Symbols x,y,z;
     LocalFactorized F1 = 3*(x+y)*(y+z)*((x+z)*(2*x+1));
@@ -3012,7 +3030,7 @@ normalize\index{normalize} the argument and then make its coefficients
 integer. The overall factor that is needed to make the coefficients like 
 described is taken from the overall factor of the complete term. Example:
 % THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
-% WELL!
+% WELL! (Sta_MakeInteger_1)
 \begin{verbatim}
     S   a,b,c;
     CF  f;
@@ -4096,7 +4114,7 @@ coefficient\index{coefficient} of the term. If two terms are otherwise
 identical the arguments of their polyfun will be added during the sorting, 
 even if these arguments are little expressions. Hence
 % THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
-% WELL!
+% WELL! (Sta_PolyFun_1)
 \begin{verbatim}
     PolyFun acc;
     Local F = 3*x^2*acc(1+y+y^2)+2*x^2*acc(1-y+y^2);
@@ -4141,6 +4159,8 @@ acts as the
 coefficient\index{coefficient} of the term. If two terms are otherwise 
 identical the arguments of their polyratfun will be added during the sorting, 
 even if these arguments are little nontrivial. Hence
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL! (Sta_PolyRatFun_1)
 \begin{verbatim}
     PolyRatFun acc;
     Local F = 3*x^2*acc(1+y+y^2,1-y)+2*x^2*acc(1-y+y^2,1+y);
@@ -4351,7 +4371,7 @@ will be printed at the end of the print command.}
 
 \noindent Each call is terminated with a linefeed\index{linefeed}. Example:
 % THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
-% WELL!
+% WELL! (Sta_Print_1)
 \begin{verbatim}
     Symbols a,b,c;
     Local F = 3*a+2*b;
@@ -4861,7 +4881,8 @@ something outgoing) and if the vertex function is
 antisymmetric\index{antisymmetric}\index{symmetric!anti}, each exchange will 
 result in a minus sign. Examples:
 % THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
-% WELL!
+% WELL! (Sta_ReplaceLoop_1)
+% TODO: the term order has been changed.
 \begin{verbatim}
     Functions f(antisymmetric),ff(cyclesymmetric);
     Indices i1,...,i8;
@@ -4873,6 +4894,9 @@ would result in
     -f(i4,i7,i8)*ff(i4,i5,i6)
 \end{verbatim}
 and
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL! (Sta_ReplaceLoop_2)
+% TODO: the term order has been changed.
 \begin{verbatim}
     Functions f(antisymmetric),ff(cyclesymmetric);
     Indices i1,...,i9;
@@ -5016,7 +5040,7 @@ lists preserved. It is the opposite of the
 distrib\_\index{distrib\_}\index{function!distrib\_} function (see 
 \ref{fundistrib}). Hence
 % THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
-% WELL!
+% WELL! (Sta_Shuffle_1)
 \begin{verbatim}
    Local F = f(a,b)*f(c,d);
    shuffle,f;
@@ -5250,7 +5274,7 @@ It is assumed that we have harmonic sums\index{harmonic sum} (see the
 summer library in the \FORM\ distribution). For such sums we expect 
 functions with lists of nonzero integer arguments. Example:
 % THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
-% WELL!
+% WELL! (Sta_Stuffle_1)
 \begin{verbatim}
     CF  S,R;
     Symbols N,n;
@@ -5818,6 +5842,9 @@ make this clearer:
 \end{eqnarray}
 \setcounter{equation}{6}
 and hence
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL! (Sta_ToTensor_1)
+% TODO: the functions option needed?
 \begin{verbatim}
    p.p1^2*f(p,p1)*p(mu)*tt(p1,p,p2,p)
 \end{verbatim}
@@ -6112,7 +6139,8 @@ sums}, harmonic polylogarithms\index{harmonic polylogarithm} and the MZV
 data mine\index{MZV data mine}) in the sum notation, but for calculational 
 reason we want to use a binary encoding (as used in the MZV programs). We 
 could have
-
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL! (Sta_Transform_1)
 \begin{verbatim}
     Symbol x,x1,x2;
     CF  H,H1;

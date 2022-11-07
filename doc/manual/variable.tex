@@ -153,7 +153,7 @@ somewhat uncommon. Any power outside the range 6 to 9 is eliminated.
 There is however one exception: a term that does not contain t to any 
 power ($t^0$) is not affected. 
 % THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
-% WELL!
+% WELL! (Var_Symbols_1)
 \begin{verbatim}
     s     x(:10),y;
     L     F=y^7;
@@ -494,7 +494,7 @@ elements of the set should be enclosed by a pair of curly
 brackets\index{brackets!curly} and the set is placed at the position where 
 otherwise the name of the set would be used:
 % THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
-% WELL!
+% WELL! (Var_Sets_1)
 \begin{verbatim}
     Symbols a1,a2,a3,b1,b2,b3,x,n;
     CFunctions g1,g2,g3,g;
@@ -626,7 +626,7 @@ contain the index nu. There is a command to sum over indices in such a way
 that {\FORM} recognizes that the exact name of the index is irrelevant. 
 This is the `sum'-statement (see also \ref{substasum}):%
 % THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
-% WELL!
+% WELL! (Var_Dummy_indices_1)
 \begin{verbatim}
    i  mu,nu;
    f  f1,f2;
@@ -667,7 +667,7 @@ These dummy indices can be used to solve a well known problem in the
 automatic summation of indices. This problem occurs, when summed indices 
 are found inside a subexpression that is raised to a power:
 % THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
-% WELL!
+% WELL! (Var_Dummy_indices_2)
 \begin{verbatim}
     Index mu,nu;
     CFunctions f,g;
@@ -685,7 +685,7 @@ are found inside a subexpression that is raised to a power:
 Clearly the answer is not what we had in mind, when we made the program. 
 There is an easy way out:
 % THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
-% WELL!
+% WELL! (Var_Dummy_indices_3)
 \begin{verbatim}
     Index mu,nu;
     Symbol x;
@@ -710,13 +710,13 @@ mu to a new dummy index.
 There are some extra problems connected to dummy indices. Assume that we 
 have the expression F which contains
 % THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
-% WELL!
+% WELL! (Var_Dummy_indices_4)
 \begin{verbatim}
      F = f(N1_?,N2_?)*f(N2_?,N1_?);
 \end{verbatim}
 and next we have the module
 % THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
-% WELL!
+% WELL! (Var_Dummy_indices_4)
 \begin{verbatim}
      Indices mu,nu,rho,si;
      Vectors p1,p2,p3,v;
@@ -822,7 +822,7 @@ FromPolynomial statement replaces the extra symbols again by their original
 meaning.
 
 % THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
-% WELL!   Not yet
+% WELL! (Var_Extra_Symbols_1)
 \begin{verbatim}
     Vector p,q,p1,p2;
     CFunction f;

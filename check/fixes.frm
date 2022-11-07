@@ -2256,6 +2256,24 @@ Print;
 assert succeeded?
 assert result("F") =~ expr("f(x**2) + f(x)**2")
 *--#] Issue359 : 
+*--#[ Issue400 :
+* denominators statement for nested functions
+S x;
+CF den;
+L F1 = 1/(1+x);
+L F2 = 1/(1+1/(1+x));
+L F3 = 1/(1+1/(1+1/(1+x)));
+L F4 = 1/(1+1/(1+1/(1+1/(1+x))));
+denominators den;
+multiply replace_(x,2);
+P;
+.end
+assert succeeded?
+assert result("F1") =~ expr("den(3)")
+assert result("F2") =~ expr("den(1 + den(3))")
+assert result("F3") =~ expr("den(1 + den(1 + den(3)))")
+assert result("F4") =~ expr("den(1 + den(1 + den(1 + den(3))))")
+*--#] Issue400 :
 *--#[ Issue405 :
 * Dimension of index gets wrongly mapped when it is declared as auto symbol
 Auto S D;

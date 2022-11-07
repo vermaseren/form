@@ -105,6 +105,8 @@ The defaults are that all potential objects are looked up (also inside
 function arguments) and no warnings are given.
 
 The use is best illustrated with a few examples.
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL! (Dictionaries_1)
 \begin{verbatim}
     Symbols x1,y2,z3,N;
     Indices mu,nu,ro,si;
@@ -199,6 +201,8 @@ after which one should either use the name 'third' or a construction like
      & 0/2.D0*x**6 + 1.D0/7.D0*x**7 + 1.D0/56.D0*x**8
 \end{verbatim}
 If we define a dictionary we can make this into
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL! (Dictionaries_2)
 \begin{verbatim}
     Symbol x,n;
     Format DoubleFortran;
@@ -222,6 +226,8 @@ such a way that the compiler can do the rest, provided we do this with all
 numbers that occur, and we feed the proper information to the compiler.
 
 One can also replace complete fractions as in
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL! (Dictionaries_3)
 \begin{verbatim}
     Symbol x,n;
     Format DoubleFortran;
@@ -244,6 +250,8 @@ because the fractions take precedence.
 
 The next question is how one makes sure to have all numbers that need 
 replacement? For that one can use the warnings option:
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL! (Dictionaries_4)
 \begin{verbatim}
     Symbol x,n;
     Format DoubleFortran;
@@ -272,6 +280,8 @@ Time =       0.00 sec    Generated terms =          8
 In this case the line after the warning contains a fraction that was not 
 substituted. This allows one to add either $56$ or $1/56$ to the 
 dictionary. This gives the program
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL! (Dictionaries_5)
 \begin{verbatim}
     Symbol x,n;
     Format DoubleFortran;
@@ -326,6 +336,8 @@ one range. In the substitution one can use the wildcards \verb:%#: and
 \verb:%@: to indicate the number of the extra symbol. The first 
 wildcard indicates the number of the symbol and the second starts it 
 counting with 1 from the beginning of the range.
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL! (Dictionaries_6)
 \begin{verbatim}
     Symbol x;
     CFunction f;

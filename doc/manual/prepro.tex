@@ -489,7 +489,7 @@ Nowadays also the use of the argument field wildcard (see chapter
 \ref{pattern} on pattern matching) is allowed as in the 
 regular functions:
 % THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
-% WELL!
+% WELL! (Pre_call_1)
 \begin{verbatim}
     #define a "1"
     #define bc2 "x"
@@ -696,7 +696,7 @@ substitution\index{substitution!delayed}. With macro's like the above the
 question is always {\sl when} a preprocessor variable will be substituted. 
 Take for instance
 % THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
-% WELL!
+% WELL! (Pre_define_1)
 \begin{verbatim}
     #define c "3"
     #define var1(a,b) "(`~a'+`~b'+`c')"
@@ -1445,7 +1445,7 @@ Hence it should be used with great care.
 \noindent Turns\index{\#preout} listing of the output of the preprocessor 
 to the compiler on or off. Example:
 % THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
-% WELL!
+% WELL! (Pre_preout_1)
 \begin{verbatim}
     #PreOut ON
     S   a1,...,a4;
@@ -2200,7 +2200,7 @@ the chapter on optimizations \ref{optimization}).
 If no special variables are asked for (by means of \%\$, \%e, \%E or \%s) 
 the list of variables will be ignored (if present). Example:
 % THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
-% WELL!
+% WELL! (Pre_write_1)
 \begin{verbatim}
     Symbols a,b;
     L   F = a+b;
@@ -2223,7 +2223,7 @@ We see that the writing occurs immediately after the \#write\index{\#write}
 instruction, because it is done by the preprocessor. Hence the output comes 
 before the execution of the expression F.
 % THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
-% WELL!
+% WELL! (Pre_write_2)
 \begin{verbatim}
     S   x1,...,x10;
     L   MyExpression = (x1+...+x10)^4;
@@ -2243,7 +2243,8 @@ of the expression is too long for fortran\index{fortran}, and hence the
 output file will use a different name (in this case the name `fun' was 
 selected). The output file looks like
 % THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
-% WELL!
+% WELL! (Pre_write_2)
+% TODO: the term order has been changed.
 \begin{verbatim}
       FUNCTION fun(x1,x2,x3,x4,x5,x6,x7,x8,x9,x10)
       REAL x1,x2,x3,x4,x5,x6,x7,x8,x9,x10
