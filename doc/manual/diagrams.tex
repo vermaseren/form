@@ -25,6 +25,8 @@ The current interface is rather simple, due to the fact that one can
 generate only 'topologies'. First one needs two sets of vectors, one for 
 the momenta of the external particles and one for the momenta of internal 
 particles. The call is then with the function topologies\_ as in
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL! (Diagrams_1)
 \begin{verbatim}
     Vectors Q1,Q2,p1,...,p8;
     Set QQ:Q1,Q2;
@@ -49,6 +51,8 @@ vertices.
 
 If one would like to allow more types of vertices one may change 
 the third parameter:
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL! (Diagrams_2)
 \begin{verbatim}
     Vectors Q1,Q2,p1,...,p8;
     Set QQ:Q1,Q2;
@@ -85,6 +89,8 @@ In the above configuration the program sees the external lines as
 different. If there is however a symmetry between the two external lines of 
 a propagator-like diagram (as is the case with boson propagators) one can 
 indicate this by putting a minus sign in front of the number 2:
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL! (Diagrams_3)
 \begin{verbatim}
     Vectors Q1,Q2,p1,...,p8;
     Set QQ:Q1,Q2;
@@ -122,6 +128,8 @@ diagrams\_.
 
 That this function is very fast can be seen when one generates all 
 topologies of a 6-loop propagator with only 3-point vertices:
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL! (Diagrams_4)
 \begin{verbatim}
     Vectors Q1,Q2,p1,...,p17;
     Set QQ:Q1,Q2;
@@ -135,6 +143,8 @@ Time =       1.75 sec    Generated terms =       2793
                          Bytes used      =     347156
 \end{verbatim}
 or without the symmetry
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL! (Diagrams_5)
 \begin{verbatim}
     Vectors Q1,Q2,p1,...,p17;
     Set QQ:Q1,Q2;

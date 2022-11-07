@@ -87,6 +87,9 @@ Style/FormatStringToken:
 Style/PerlBackrefs:
   Enabled: false
 
+Style/SlicingWithRange:  # OK only for Ruby 2.6+
+  Enabled: false
+
 Style/SpecialGlobalVars:
   EnforcedStyle: use_perl_names
 

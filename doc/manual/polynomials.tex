@@ -11,6 +11,8 @@ with it. We will list most of these here.
 the PolyFun~\ref{substapolyfun}, but now with two arguments: a numerator and 
 a denominator. Instead of PolyFun the function is designated as 
 PolyRatFun~\ref{substapolyratfun} as in the example below:
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL! (PolyandFact_1)
 \begin{verbatim}
     Symbol x,y;
     CFunction rat;
@@ -68,6 +70,9 @@ arguments.
 \noindent One can factorize function arguments with the FactArg 
 statement~\ref{substafactarg}. The factors are each represented by a 
 separate argument as in
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL! (PolyandFact_2)
+% TODO: the term order has been changed.
 \begin{verbatim}
     Symbol x,y;
     CFunction f1,f2;
@@ -82,6 +87,9 @@ separate argument as in
 Overall constants and overall signs are taken separately as one can see. If 
 one wants the factors in separate functions one can use the 
 ChainOut~\ref{substachainout} command as in
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL! (PolyandFact_3)
+% TODO: the term order has been changed.
 \begin{verbatim}
     Symbol x,y;
     CFunction f1,f2;
@@ -119,6 +127,8 @@ statement~\ref{substabracket}. It should be noticed however that a
 factorized expression will never apply the bracket mechanism. They are 
 mutually exclusive, because internally we use the bracket mechanism with a 
 built in symbol factor\_ to indicate the factors. Here is an example:
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL! (PolyandFact_4)
 \begin{verbatim}
     Symbol x,y;
     Local F = x^4-y^4;
@@ -160,6 +170,9 @@ unnecessarily.
 \noindent The next question is of course how to find out how many factors 
 an expression has and how to access individual factors. There is a function 
 numfactors\_ which gives the number of factors in an expression:
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL! (PolyandFact_5)
+% TODO: the term order has been changed.
 \begin{verbatim}
     Symbol x,y;
     Local F1 = x^4-y^4;
@@ -198,6 +211,8 @@ factorized. When the expression is not factorized it will return 0 in all
 cases. The factors can be accessed easily once one knows that the factors 
 are stored by means of the bracket mechanism and the n-th factor is the 
 bracket with the n-th power of the symbol factor\_ outside the bracket:
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL! (PolyandFact_6)
 \begin{verbatim}
     Symbol x,y;
     Local F = x^4-y^4;
@@ -236,6 +251,8 @@ GlobalFactorized~\ref{substagfactorized} commands. These commands can
 be abbreviated to LFactorized, GFactorized or even LF and GF. One should 
 notice that these commands do not execute a factorization. They accept the 
 factors as the user provides them:
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL! (PolyandFact_7)
 \begin{verbatim}
     Symbol x,y;
     LocalFactorize E = -(x+1)*(x+2)*((x+3)*(x+4));
@@ -250,6 +267,8 @@ factors as the user provides them:
 \end{verbatim}
 \noindent This can go to some extremes when we feed in expressions 
 containing powers and expressions that are potentially already factorized:
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL! (PolyandFact_8)
 \begin{verbatim}
     Symbol x,y;
     LocalFactorize E = -(x+1)*(x+2)*((x+3)*(x+4));
@@ -287,6 +306,8 @@ containing powers and expressions that are potentially already factorized:
 \end{verbatim}
 \noindent To put some order in this one may factorize the new expression 
 again:
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL! (PolyandFact_9)
 \begin{verbatim}
     Symbol x,y;
     LocalFactorize E = -(x+1)*(x+2)*((x+3)*(x+4));
@@ -323,6 +344,8 @@ factorized, and all factors in the new format are sorted.
 
 \noindent The case that one or more factors are zero is special. In 
 principle the zero factors are kept as in:
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL! (PolyandFact_10)
 \begin{verbatim}
     Symbol x,y;
     LocalFactorize E = -0*(x+1)*(x+2)*0*((x+3)*(x+4));
@@ -342,6 +365,8 @@ a factor zero. When we factorize this expression again however the whole
 expression becomes zero. If this is not intended and one would like to 
 continue with the factors that are nonzero we have the keepzero option in 
 the factorize statement as in:
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL! (PolyandFact_11)
 \begin{verbatim}
     Symbol x,y;
     Format Nospaces;
@@ -380,6 +405,8 @@ zero. We just have to look whether \verb:E[factor_]: is zero.
 of the factorize statement. It takes the factorized expression and 
 multiplies out the factors. It also uses the current brackets for 
 formatting the output.
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL! (PolyandFact_12)
 \begin{verbatim}
     Symbol x,y;
     LFactorized F = (x+1)*(x+y)*(y+1);
@@ -407,6 +434,8 @@ less efficient when the master would do all the work as is the case with
 the factorize statement. Currently this statement is still being developed 
 internally. It is possible to make ones own emulation of it. Here we give 
 the `brute force' way:
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL! (PolyandFact_13)
 \begin{verbatim}
     Symbol x,y;
     LFactorized F = (x+1)*(x+y)*(y+1);
@@ -443,6 +472,8 @@ allocated memory. Hence we also store the factors in allocated memory. In
 that case we can keep both the original and the factors. The factors are 
 accessed by referring to their number between braces. The number zero 
 refers to the number of factors:
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL! (PolyandFact_14)
 \begin{verbatim}
     Symbol x,y;
     CFunction f;
@@ -499,6 +530,8 @@ contents for \$b. And the arguments of the function f remain unaffected.
 
 \noindent One may also ask for the number of factors in a \$-expression 
 with the numfactors\_ function as in:
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL! (PolyandFact_15)
 \begin{verbatim}
     Symbol x,y;
     CFunction f;
@@ -525,6 +558,8 @@ number of variables used. For example factorization of $x^{60}-1$ is much
 faster than factorization of $x^{60}-y^{60}$. One could argue that the 
 second formula can be converted into the first, but there is a limit to 
 what FORM should do and what the user should do.
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL! (PolyandFact_16)
 \begin{verbatim}
     Symbol x,y;
     Format NoSpaces;
@@ -571,6 +606,8 @@ what FORM should do and what the user should do.
 \noindent When one has a factorized expression and one uses the multiply 
 statement, all terms in the factorized expression are multiplied the 
 specified amount. This may lead to a counterintuitive result:
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL! (PolyandFact_17)
 \begin{verbatim}
     Symbols a,b;
     LF F = (a+b)^2;
@@ -585,6 +622,8 @@ specified amount. This may lead to a counterintuitive result:
 This is a consequence of the way we store the factors. This way each factor 
 will be multiplied by two. If one would like to add a factor one can do 
 this by the following simple mechanism:
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL! (PolyandFact_18)
 \begin{verbatim}
     Symbols a,b;
     LF F = (a+b)^2;

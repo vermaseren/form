@@ -7,16 +7,6 @@ exec ruby "-S" "-x" "$0" "$@"
 #! ruby
 # rubocop:enable all
 
-# The default prefix for the root temporary directory. See TempDir.root.
-TMPDIR_PREFIX = "form_check_"
-
-# The default maximal running time in seconds of FORM jobs before they get
-# terminated.
-TIMEOUT = 10
-
-# The default directory for searching test cases.
-TESTDIR = File.dirname(__FILE__)
-
 # Check the Ruby version.
 if RUBY_VERSION < "1.8.0"
   warn("ruby 1.8 required for the test suite")
@@ -33,11 +23,11 @@ require "tmpdir"
 # Show an error message and exit.
 def fatal(message, file = nil, lineno = nil)
   if !file.nil? && !lineno.nil?
-    STDERR.puts("#{file}:#{lineno}: error: #{message}")
+    $stderr.puts("#{file}:#{lineno}: error: #{message}")
   elsif !file.nil?
-    STDERR.puts("#{file}: error: #{message}")
+    $stderr.puts("#{file}: error: #{message}")
   else
-    STDERR.puts("error: #{message}")
+    $stderr.puts("error: #{message}")
   end
   exit(1)
 end
@@ -45,13 +35,42 @@ end
 # Show a warning message.
 def warn(message, file = nil, lineno = nil)
   if !file.nil? && !lineno.nil?
-    STDERR.puts("#{file}:#{lineno}: warning: #{message}")
+    $stderr.puts("#{file}:#{lineno}: warning: #{message}")
   elsif !file.nil?
-    STDERR.puts("#{file}: warning: #{message}")
+    $stderr.puts("#{file}: warning: #{message}")
   else
-    STDERR.puts("warning: #{message}")
+    $stderr.puts("warning: #{message}")
   end
 end
+
+# Get a positive integer from the given environment variable.
+def read_env_positive_int(key, default_value)
+  value = default_value
+  if ENV.key?(key)
+    begin
+      value = Integer(ENV[key])
+    rescue ArgumentError, TypeError
+      warn("environment variable ignored: #{key} is not integer: #{ENV[key]}")
+    end
+  end
+  if value <= 0
+    warn("environment variable ingored: #{key} must be positive: #{ENV[key]}")
+    value = default_value
+  end
+  value
+end
+
+# The default prefix for the root temporary directory. See TempDir.root.
+TMPDIR_PREFIX = "form_check_"
+
+# The default maximal running time in seconds of FORM jobs before they get terminated.
+DEFAULT_TIMEOUT = read_env_positive_int("FORM_CHECK_DEFAULT_TIMEOUT", 10)
+
+# The factor multiplied to DEFAULT_TIMEOUT when Valgrind is used.
+VALGRIND_TIME_DILATION = read_env_positive_int("FORM_CHECK_VALGRIND_TIME_DILATION", 30)
+
+# The default directory for searching test cases.
+TESTDIR = File.dirname(__FILE__)
 
 # Routines for temporary directories.
 class TempDir
@@ -205,6 +224,10 @@ module FormTest
     ENV["TRAVIS"] == "true"
   end
 
+  def github?
+    ENV["GITHUB_ACTIONS"] == "true"
+  end
+
   # Override methods in Test::Unit::TestCase.
 
   def setup
@@ -221,7 +244,7 @@ module FormTest
   # Set up the working directory and put FORM files.
   def setup_files
     cleanup_files
-    @tmpdir = TempDir.mktmpdir(self.class.name + "_")
+    @tmpdir = TempDir.mktmpdir("#{self.class.name}_")
     nfiles.times do |i|
       File.open(File.join(@tmpdir, "#{i + 1}.frm"), "w") do |file|
         file.write(info.sources[i])
@@ -238,13 +261,11 @@ module FormTest
   end
 
   # Called from derived classes' test_* methods.
-  def do_test
+  def do_test(&block)
     if !requires
       info.status = "SKIPPED"
       if defined?(omit)
-        omit(requires_str) do
-          yield
-        end
+        omit(requires_str, &block)
       elsif defined?(skip)
         skip(requires_str)
       end
@@ -286,13 +307,13 @@ module FormTest
     #       minitest and MiniTest::Assertion is not a subclass of
     #       StandardError.
     rescue Exception => e # rubocop:disable Lint/RescueException
-      STDERR.puts
-      STDERR.puts("=" * 79)
-      STDERR.puts("#{info.desc} FAILED")
-      STDERR.puts("=" * 79)
-      STDERR.puts(@stdout)
-      STDERR.puts("=" * 79)
-      STDERR.puts
+      $stderr.puts
+      $stderr.puts("=" * 79)
+      $stderr.puts("#{info.desc} FAILED")
+      $stderr.puts("=" * 79)
+      $stderr.puts(@stdout)
+      $stderr.puts("=" * 79)
+      $stderr.puts
       if info.status.nil?
         if (defined?(MiniTest::Assertion) && e.is_a?(MiniTest::Assertion)) ||
            (defined?(Test::Unit::AssertionFailedError) && e.is_a?(Test::Unit::AssertionFailedError))
@@ -304,13 +325,13 @@ module FormTest
       raise e
     else
       if FormTest.cfg.verbose
-        STDERR.puts
-        STDERR.puts("=" * 79)
-        STDERR.puts("#{info.desc} SUCCEEDED")
-        STDERR.puts("=" * 79)
-        STDERR.puts(@stdout)
-        STDERR.puts("=" * 79)
-        STDERR.puts
+        $stderr.puts
+        $stderr.puts("=" * 79)
+        $stderr.puts("#{info.desc} SUCCEEDED")
+        $stderr.puts("=" * 79)
+        $stderr.puts(@stdout)
+        $stderr.puts("=" * 79)
+        $stderr.puts
       end
       info.status = "OK"
     end
@@ -402,16 +423,14 @@ module FormTest
       stdout.shift
     end
 
-    if !FormTest.cfg.valgrind.nil?
+    if !FormTest.cfg.valgrind.nil? && (@finished && !stdout.empty? && !stdout[-1].start_with?("exit_status="))
       # The exit status may be in the middle of the output (sometimes annoyingly
       # happened on Travis CI).
-      if @finished && !stdout.empty? && !stdout[-1].start_with?("exit_status=")
-        i = stdout.map { |x| x.start_with?("exit_status") }.rindex(true)
-        if !i.nil?
-          s = stdout[i]
-          stdout.delete_at(i)
-          stdout << s
-        end
+      i = stdout.map { |x| x.start_with?("exit_status") }.rindex(true)
+      if !i.nil?
+        s = stdout[i]
+        stdout.delete_at(i)
+        stdout << s
       end
     end
 
@@ -523,7 +542,7 @@ module FormTest
         return f.read
       end
     rescue StandardError
-      STDERR.puts("warning: failed to read '#{filename}'")
+      $stderr.puts("warning: failed to read '#{filename}'")
     end
     ""
   end
@@ -638,7 +657,7 @@ module FormTest
   # Assumes the default output format.
   def expr(str)
     san_str = Regexp.quote(str.gsub(/\s+/, ""))
-    Regexp.new("^" + san_str + "$")
+    Regexp.new("^#{san_str}$")
   end
 end
 
@@ -682,7 +701,7 @@ class TestCases
   def classes_info_list
     infos = []
     @classes.each do |c|
-      info = @classes_info["Test_" + c]
+      info = @classes_info["Test_#{c}"]
       if info.enabled
         infos.push(info)
       end
@@ -694,7 +713,7 @@ class TestCases
   def make_ruby_file(filename)
     # Check existing files.
     inname = File.basename(filename)
-    outname = File.basename(filename, ".frm") + ".rb"
+    outname = "#{File.basename(filename, '.frm')}.rb"
     if @files.include?(outname)
       fatal("duplicate output file name", inname)
     end
@@ -721,7 +740,8 @@ class TestCases
           line.chop!
           lineno += 1
           if level == 0
-            if line =~ /^\*..#\[\s*([^:]*)/
+            case line
+            when /^\*..#\[\s*([^:]*)/
               # fold open: start a class
               fold = $1.strip
               if fold.empty?
@@ -750,7 +770,7 @@ class TestCases
               else
                 line = "class Test_#{classname} < Test::Unit::TestCase; include FormTest"
               end
-            elsif line =~ /^\*..#\]/
+            when /^\*..#\]/
               # unexpected fold close
               fatal("unexpected fold close", inname, lineno)
             else
@@ -784,12 +804,12 @@ class TestCases
               end
               line += "def nfiles; #{fileno} end; " if fileno != 1
               if !requires.nil?
-                requires = requires.map { |s| "(" + s + ")" }.join(" && ")
+                requires = requires.map { |s| "(#{s})" }.join(" && ")
                 line += "def requires; #{requires} end; "
                 line += "def requires_str; %(#{requires}) end; "
               end
               if !pendings.nil?
-                pendings = pendings.map { |s| "(" + s + ")" }.join(" || ")
+                pendings = pendings.map { |s| "(#{s})" }.join(" || ")
                 line += "def pendings; #{pendings} end; "
                 line += "def pendings_str; %(#{pendings}) end; "
               end
@@ -812,7 +832,7 @@ class TestCases
                 outfile.write("\n")
               end
 
-              block += line + "\n"
+              block += "#{line}\n"
               fileno += 1
               info.sources.push(block)
 
@@ -873,13 +893,13 @@ class TestCases
               if line =~ /^\s*assert\s+(succeeded\?|finished\?)\s*$/
                 line = "assert(#{$1}, 'Failed for #{$1}')"
               end
-              block += line + "\n"
+              block += "#{line}\n"
               blockno += 1
               line = nil
             end
           end
           if !line.nil?
-            outfile.write(line + "\n")
+            outfile.write("#{line}\n")
           end
         end
         if level >= 1
@@ -896,14 +916,14 @@ class TestCases
     @name_patterns.length.times do |i|
       if !@name_patterns[i].is_a?(Regexp)
         s = @name_patterns[i].to_s.gsub("\*", ".*").tr("\?", ".")
-        s = "^" + s + "$"
+        s = "^#{s}$"
         @name_patterns[i] = Regexp.new(s)
       end
     end
     @exclude_patterns.length.times do |i|
       if !@exclude_patterns[i].is_a?(Regexp)
         s = @exclude_patterns[i].to_s.gsub("\*", ".*").tr("\?", ".")
-        s = "^" + s + "$"
+        s = "^#{s}$"
         @exclude_patterns[i] = Regexp.new(s)
       end
     end
@@ -945,7 +965,7 @@ class TestCases
       end
 
       i += 1
-      s = prefix + "_" + i.to_s
+      s = "#{prefix}_#{i}"
     end
     s
   end
@@ -986,9 +1006,7 @@ class FormConfig
     @form_cmd    = nil
   end
 
-  attr_reader :form, :mpirun, :valgrind, :ncpu, :timeout, :stat, :full, :verbose
-  attr_reader :form_bin, :mpirun_bin, :valgrind_bin, :valgrind_supp
-  attr_reader :head, :wordsize, :form_cmd
+  attr_reader :form, :mpirun, :valgrind, :ncpu, :timeout, :stat, :full, :verbose, :form_bin, :mpirun_bin, :valgrind_bin, :valgrind_supp, :head, :wordsize, :form_cmd
 
   def serial?
     @is_serial
@@ -1046,15 +1064,16 @@ class FormConfig
         end
       end
 
-      if @head =~ /^FORM/
+      case @head
+      when /^FORM/
         @is_serial   = true
         @is_threaded = false
         @is_mpi      = false
-      elsif @head =~ /^TFORM/
+      when /^TFORM/
         @is_serial   = false
         @is_threaded = true
         @is_mpi      = false
-      elsif @head =~ /^ParFORM/
+      when /^ParFORM/
         @is_serial   = false
         @is_threaded = false
         @is_mpi      = true
@@ -1106,7 +1125,7 @@ class FormConfig
       end
       if !@valgrind.nil?
         # Include valgrind version information.
-        @head += "\n" + `#{@form_cmd} @{frmname} 2>&1 >/dev/null | grep Valgrind`.split("\n")[0]
+        @head += "\n#{`#{@form_cmd} @{frmname} 2>&1 >/dev/null | grep Valgrind`.split("\n")[0]}"
       end
     ensure
       FileUtils.rm_rf(tmpdir)
@@ -1121,7 +1140,7 @@ def add_path(oldpath, newpath)
     return newpath
   end
 
-  newpath + ":" + oldpath
+  "#{newpath}:#{oldpath}"
 end
 
 # Parse `TEST=...`.
@@ -1227,8 +1246,8 @@ def main
   begin
     parser.parse!(ARGV)
   rescue OptionParser::ParseError => e
-    STDERR.puts(e.backtrace.first + ": #{e.message} (#{e.class})")
-    e.backtrace[1..-1].each { |m| STDERR.puts("\tfrom #{m}") }
+    $stderr.puts(e.backtrace.first + ": #{e.message} (#{e.class})")
+    e.backtrace[1..-1].each { |m| $stderr.puts("\tfrom #{m}") }
     puts(parser)
     exit(1)
   end
@@ -1314,19 +1333,19 @@ def main
 
   # --path option.
   if !opts.path.nil?
-    ENV["PATH"] = opts.path + ":" + ENV["PATH"]
+    ENV["PATH"] = "#{opts.path}:#{ENV['PATH']}"
   end
 
   # Set FORMPATH
   ENV["FORMPATH"] = File.expand_path(opts.dir.nil? ? TESTDIR : opts.dir) +
-                    (ENV["FORMPATH"].nil? ? "" : ":" + ENV["FORMPATH"])
+                    (ENV["FORMPATH"].nil? ? "" : ":#{ENV['FORMPATH']}")
 
   # Default timeout.
   if opts.timeout.nil?
-    opts.timeout = TIMEOUT
+    opts.timeout = DEFAULT_TIMEOUT
     # Running Valgrind can be really slow.
     if opts.enable_valgrind
-      opts.timeout *= 30
+      opts.timeout *= VALGRIND_TIME_DILATION
     end
   end
 
@@ -1379,7 +1398,7 @@ def finalize
       if i == 0
         puts(format("%s %s  %s %s%s",
                     lpad(info.foldname, max_foldname_width),
-                    lpad("(" + info.where + ")", max_where_width),
+                    lpad("(#{info.where})", max_where_width),
                     lpad(info.status.nil? ? "UNKNOWN" : info.status, status_width),
                     bar_str(t, FormTest.cfg.timeout, bar_width),
                     format_time(t, FormTest.cfg.timeout)))
@@ -1452,7 +1471,7 @@ def guess_term_width
 rescue LoadError, NoMethodError
   system("type tput >/dev/null 2>&1")
   if $? == 0
-    cols = `tput cols`
+    cols = `tput cols 2>/dev/null`
   else
     cols = ENV["COLUMNS"] || ENV["TERM_WIDTH"]
   end

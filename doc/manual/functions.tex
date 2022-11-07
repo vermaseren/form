@@ -253,7 +253,7 @@ function should obtain n arguments. The remaining arguments go to the
 second function. If type is 2 or -2 the second function should obtain n 
 arguments. Example:
 % THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
-% WELL!
+% WELL! (Fun_distrib_1)
 \begin{verbatim}
     Symbols x1,...,x4;
     CFunctions f,f1,f2;
@@ -349,6 +349,8 @@ power notation.
 arguments. It then computes the Greatest Common Divider of these arguments 
 with the use of the extended Euclidean algoritm. The answer will be in the 
 same function but now there will be four arguments as in:
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL! (Fun_exteuclidean_1)
 \begin{verbatim}
     Symbols x1,x2,x3,x4;
     Local F = exteuclidean_(54,84);
@@ -368,6 +370,8 @@ same function but now there will be four arguments as in:
 \noindent We can see that we obtain the GCD with the relation that is 
 characteristic for the extended Euclidean algorithm. When the two arguments 
 are relative prime, one obtains the so-called modinverses of these numbers:
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL! (Fun_exteuclidean_2)
 \begin{verbatim}
     Symbols x1,x2,x3,x4,a,b;
     Local F = exteuclidean_(97,101);
@@ -644,6 +648,8 @@ calculus modulus the second argument. The function is then replaced by a
 fraction of which both elements are less than the square root of the second 
 argument and that, in calculus modulus this second number would give the 
 same result as the first number modulus the second number. Example:
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL! (Fun_makerational_1)
 \begin{verbatim}
     #$m = prime_(1);
     #write <> "The prime number is %$",$m
@@ -880,6 +886,8 @@ partitions_(0,f1,3,x1,x1,x1,x4,x5,x6) =
 \noindent Generates all permutations of the arguments, with exception 
 of the first argument which should be the name of a function. This function 
 will then have the permuted arguments as in:
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL! (Fun_perm_1)
 \begin{verbatim}
     CFunction f;
     Symbols x1,...,x3;
@@ -945,6 +953,8 @@ n (n a positive integer) makes that \verb:prime_(n): will be replaced by
 the n-th member of the list. There is a limitation to the size of the list 
 which is implementation dependent. The number will anyway never be smaller 
 than the maximum power that is allowed for symbols. Example:
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL! (Fun_prime_1)
 \begin{verbatim}
     Symbols x1,x2,x3,x4;
     ON highfirst;
@@ -982,6 +992,8 @@ It will select the indicated argument in the argument field indicated by
 arguments and output this as the first argument in the indicated function. 
 This argument will then be followed by the remaining arguments.
 Example:
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL! (Fun_putfirst_1)
 \begin{verbatim}
     S   a,a1,...,a10;
     CF  f,g;
@@ -1021,6 +1033,8 @@ as it is non-deterministic which term ends up in which worker.
 \noindent Generates a random permutation of the arguments, with exception 
 of the first argument which should be the name of a function. This function 
 will then have the permuted arguments as in:
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL! (Fun_ranperm_1)
 \begin{verbatim}
     CFunction f;
     Symbols x1,...,x5;
@@ -1171,7 +1185,7 @@ generated term with the last argument in which the current value of the
 summation parameter has been substituted. The first term is always one. 
 Example:
 % THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
-% WELL!
+% WELL! (Fun_sump_1)
 \begin{verbatim}
     Symbol i,x;
     Local F = sump_(i,0,5,x/i);
