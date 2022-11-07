@@ -17,16 +17,18 @@ jobs:
         with:
           fetch-depth: 0  # ensures a reachable tag
 
+      - name: Determine distname
+        run: |
+          echo "distname=form-$(./scripts/git-version-gen.sh -r | sed '2q;d' | sed 's/^v//')" >> $GITHUB_ENV
+
       - name: Build tarball distribution
         run: |
-          distname=form-$(./scripts/git-version-gen.sh -r | sed '2q;d' | sed 's/^v//')
           autoreconf -i
           ./configure --disable-dependency-tracking --disable-scalar --disable-threaded --disable-native --without-gmp --without-zlib
           make distdir=$distname dist-gzip
 
       - name: Print tarball information
         run: |
-          distname=form-$(./scripts/git-version-gen.sh -r | sed '2q;d' | sed 's/^v//')
           ls -l $distname.tar.gz
           file $distname.tar.gz
           tar -tf $distname.tar.gz
@@ -43,7 +45,7 @@ jobs:
   # statically linked in such a way that they are suitable for binary distributions.
   build-bin:
     name: Build ${{ matrix.bin }} on ${{ matrix.os }}
-    needs: [build-src]
+    needs: build-src
     runs-on: ${{ matrix.os }}
     defaults:
       run:
@@ -63,15 +65,14 @@ jobs:
           - {os: ubuntu-18.04, shell: bash, bin: tform}
           - {os: macos-10.15, shell: bash, bin: form}
           - {os: macos-10.15, shell: bash, bin: tform}
-          # Disable Windows native executables that have too many problems, for now.
-          # - {os: windows-2019, shell: msys2, bin: form}
-          # - {os: windows-2019, shell: msys2, bin: tform}
+          # NOTE: Windows native executables have too many problems.
+          # We include them in artifacts but not in releases.
+          # Unfortunately, "allow-failure" is not available on GitHub Actions
+          # (https://github.com/actions/toolkit/issues/399).
+          # We have to use "continue-on-error", instead.
+          - {os: windows-2019, shell: msys2, bin: form}
+          - {os: windows-2019, shell: msys2, bin: tform}
     steps:
-      - name: Download tarball
-        uses: actions/download-artifact@v3
-        with:
-          name: src
-
       - name: Install dependencies (Windows)
         if: runner.os == 'Windows'
         uses: msys2/setup-msys2@v2
@@ -84,9 +85,18 @@ jobs:
             mingw-w64-x86_64-zlib
             ruby
 
-      - name: Configure
+      - name: Download tarball
+        uses: actions/download-artifact@v3
+        with:
+          name: src
+
+      - name: Uncompress tarball
         run: |
           tar -xf *.tar.gz --strip-components 1
+          rm *.tar.gz
+
+      - name: Configure
+        run: |
           opts='--disable-dependency-tracking --disable-scalar --disable-threaded --disable-native --enable-static-link --with-gmp --with-zlib'
           case ${{ matrix.bin }} in
             form)  opts="$opts --enable-scalar";;
@@ -109,16 +119,24 @@ jobs:
           ./configure $opts
 
       - name: Build
+        id: build
+        continue-on-error: ${{ runner.os == 'Windows' }}
         run: |
           if [ "$RUNNER_OS" == "macOS" ]; then
               export LIBRARY_PATH="$(pwd)/static-lib:${LIBRARY_PATH:-}"
           fi
           make -j 4
 
+      # NOTE: Currently, many tests on Windows miserably fail.
       - name: Test
+        if: steps.build.outcome == 'success' && steps.build.conclusion == 'success'
+        continue-on-error: ${{ runner.os == 'Windows' }}
         run: make check
 
       - name: Print executable information
+        id: check-portability
+        if: steps.build.outcome == 'success' && steps.build.conclusion == 'success'
+        continue-on-error: ${{ runner.os == 'Windows' }}
         run: |
           binname=${{ matrix.bin }}
           if [ "$RUNNER_OS" == "Windows" ]; then
@@ -144,6 +162,7 @@ jobs:
           fi
 
       - name: Upload binary as artifact
+        if: steps.check-portability.outcome == 'success' && steps.check-portability.conclusion == 'success'
         uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.bin }}-${{ matrix.os }}
@@ -155,12 +174,22 @@ jobs:
   # Generate the PDF reference manual, e.g., "form-4.2.1-manual.pdf" for v4.2.1.
   build-doc-pdf:
     name: Build PDF document
+    needs: build-src
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+      - name: Download tarball
+        uses: actions/download-artifact@v3
         with:
-          fetch-depth: 0  # ensures a reachable tag
+          name: src
+
+      - name: Determine distname
+        run: |
+          echo "distname=$(basename *.tar.gz .tar.gz)-manual" >> $GITHUB_ENV
+
+      - name: Uncompress tarball
+        run: |
+          tar -xf *.tar.gz --strip-components 1
+          rm *.tar.gz
 
       # Currently, cache-apt-pkgs-action doesn't work for LaTeX.
       # https://github.com/awalsh128/cache-apt-pkgs-action/issues/57
@@ -177,8 +206,6 @@ jobs:
 
       - name: Build PDF file
         run: |
-          distname=form-$(./scripts/git-version-gen.sh -r | sed '2q;d' | sed 's/^v//')
-          distname=$distname-manual
           autoreconf -i
           ./configure --disable-dependency-tracking --disable-scalar --disable-threaded --disable-native --without-gmp --without-zlib
           make pdf
@@ -186,8 +213,6 @@ jobs:
 
       - name: Print document information
         run: |
-          distname=form-$(./scripts/git-version-gen.sh -r | sed '2q;d' | sed 's/^v//')
-          distname=$distname-manual
           ls -l $distname.pdf
           file $distname.pdf
 
@@ -202,12 +227,22 @@ jobs:
   # "form-4.2.1-manual-html.tar.gz" for v4.2.1.
   build-doc-html:
     name: Build HTML document
+    needs: build-src
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+      - name: Download tarball
+        uses: actions/download-artifact@v3
         with:
-          fetch-depth: 0  # ensures a reachable tag
+          name: src
+
+      - name: Determine distname
+        run: |
+          echo "distname=$(basename *.tar.gz .tar.gz)-manual-html" >> $GITHUB_ENV
+
+      - name: Uncompress tarball
+        run: |
+          tar -xf *.tar.gz --strip-components 1
+          rm *.tar.gz
 
       # Currently, cache-apt-pkgs-action doesn't work for LaTeX.
       # https://github.com/awalsh128/cache-apt-pkgs-action/issues/57
@@ -224,8 +259,6 @@ jobs:
 
       - name: Build HTML files
         run: |
-          distname=form-$(./scripts/git-version-gen.sh -r | sed '2q;d' | sed 's/^v//')
-          distname=$distname-manual-html
           autoreconf -i
           ./configure --disable-dependency-tracking --disable-scalar --disable-threaded --disable-native --without-gmp --without-zlib
           make -C doc/manual latex2html
@@ -238,8 +271,6 @@ jobs:
 
       - name: Print file information
         run: |
-          distname=form-$(./scripts/git-version-gen.sh -r | sed '2q;d' | sed 's/^v//')
-          distname=$distname-manual-html
           ls -l $distname.tar.gz
           file $distname.tar.gz
           tar -tf $distname.tar.gz
@@ -263,22 +294,20 @@ jobs:
       - build-doc-html
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0  # ensures a reachable tag
-
       - name: Download all artifacts
         uses: actions/download-artifact@v3
         with:
           path: artifacts
+
+      - name: Determine distname
+        run: |
+          echo "distname=$(basename artifacts/src/*.tar.gz .tar.gz)" >> $GITHUB_ENV
 
       - name: Print all artifacts
         run: ls -l -R artifacts
 
       - name: Prepare distributions
         run: |
-          distname=form-$(./scripts/git-version-gen.sh -r | sed '2q;d' | sed 's/^v//')
           mkdir dist
           mv artifacts/src/*.tar.gz dist
           mv artifacts/doc-html/*.tar.gz dist
@@ -299,14 +328,18 @@ jobs:
             tar -c $pkgname/* | gzip -c -9 >dist/$pkgname.tar.gz
             rm -rf $pkgname
           fi
-          if ls artifacts/*-windows-*/*form.exe >/dev/null 2>&1; then
-            pkgname=$distname-x86_64-windows
-            mkdir $pkgname
-            mv artifacts/*-windows-*/*form.exe $pkgname
-            chmod +x $pkgname/*form.exe
-            tar -c $pkgname/* | gzip -c -9 >dist/$pkgname.tar.gz
-            rm -rf $pkgname
-          fi
+          # Do not include Windows binaries into the distribution, for now.
+          #
+          # if ls artifacts/*-windows-*/*form.exe >/dev/null 2>&1; then
+          #   pkgname=$distname-x86_64-windows
+          #   mkdir $pkgname
+          #   mv artifacts/*-windows-*/*form.exe $pkgname
+          #   chmod +x $pkgname/*form.exe
+          #   # Zip may be more popular than tar.gz for Windows(?)
+          #   # tar -c $pkgname/* | gzip -c -9 >dist/$pkgname.tar.gz
+          #   zip -9 dist/$pkgname.zip $pkgname/*
+          #   rm -rf $pkgname
+          # fi
 
       - name: Print distributions
         run: ls -l dist
@@ -314,11 +347,12 @@ jobs:
       # Publish the distributions to GitHub Releases, only if the commit has
       # a versioning tag.
       - name: Publish distributions
-        uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v1
         with:
           files: |
             dist/*.tar.gz
+            dist/*.zip
             dist/*.pdf
 
       # Upload the distributions as an artifact, regardless of whether
@@ -329,5 +363,6 @@ jobs:
           name: dist
           path: |
             dist/*.tar.gz
+            dist/*.zip
             dist/*.pdf
           if-no-files-found: error

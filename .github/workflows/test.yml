@@ -6,42 +6,80 @@ on:
   workflow_dispatch:
 
 jobs:
-  # This quick check aims to perform a simple build and test on Linux; except
-  # the ParFORM case, it probably passes unless the committer has forgotten
-  # running "make check".
-  quick-check:
-    name: Quick check for ${{ matrix.bin }}
+  # Simple tests on Linux; except the ParFORM case, they probably pass unless
+  # the committer has forgotten running "make check".
+  check:
+    name: Test (${{ matrix.test }}) for ${{ matrix.bin }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        bin: [form, tform, parform]
+        include:
+          - {bin: form, test: default, timeout: 10}
+          - {bin: tform, test: default, timeout: 10}
+          - {bin: parform, test: default, timeout: 15}
+          - {bin: form, test: forcer, timeout: 60}
+          - {bin: tform, test: forcer, timeout: 60}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
           fetch-depth: 0  # ensures a reachable tag
 
-      - name: Set up MPI if necessary
-        uses: mpi4py/setup-mpi@v1
-        if: ${{ matrix.bin == 'parform' }}
+      - name: Install MPI if necessary
+        if: matrix.bin == 'parform' || matrix.bin == 'parvorm'
+        run: |
+          sudo apt update
+          sudo apt install -y -q libmpich-dev
 
       - name: Configure
         run: |
-          opts='--disable-dependency-tracking --disable-scalar --disable-threaded --disable-parform --disable-debug --with-gmp --with-zlib'
+          opts='--disable-dependency-tracking'
           case ${{ matrix.bin }} in
-            form)    opts="$opts --enable-scalar";;
-            tform)   opts="$opts --enable-threaded";;
-            parform) opts="$opts --enable-parform";;
+            form|vorm)       opts="$opts --enable-scalar --disable-threaded --disable-parform";;
+            tform|tvorm)     opts="$opts --disable-scalar --enable-threaded --disable-parform";;
+            parform|parvorm) opts="$opts --disable-scalar --disable-threaded --enable-parform";;
           esac
+          case ${{ matrix.bin }} in
+            vorm|tvorm|parvorm) opts="$opts --enable-debug";;
+          esac
+          opts="$opts --with-gmp --with-zlib"
           autoreconf -i
           ./configure $opts
 
       - name: Build
-        run: make -j 4
+        run: make -C sources -j 4 ${{ matrix.bin }}
+
+      - name: Cache library
+        id: cache-formlib
+        if: contains(fromJson('["forcer"]'), matrix.test)
+        uses: actions/cache@v3
+        with:
+          path: formlib
+          key: formlib-${{ matrix.test }}
+
+      - name: Install library if necessary
+        if: steps.cache-formlib.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p formlib
+          case ${{ matrix.test }} in
+            forcer)
+              wget https://github.com/benruijl/forcer/archive/v1.0.0.tar.gz -O - | tar -x --gzip
+              mv forcer-1.0.0/forcer.h formlib
+              mv forcer-1.0.0/forcer formlib
+              rm -rf forcer-1.0.0
+              ;;
+          esac
 
       - name: Test
-        run: make check
+        run: |
+          testset=''
+          if [ "${{ matrix.test }}" != "default" ]; then
+            testset='-C ${{ matrix.test }}'
+          fi
+          ./check/check.rb ./sources/${{ matrix.bin }} --stat $testset --timeout ${{ matrix.timeout }}
+        env:
+          FORMPATH: ${{ github.workspace }}/formlib
 
   # Check memory errors (e.g., uninitialized values and memory leaks)
   # thoroughly by using Valgrind on Linux. To maximize the use of concurrent
@@ -90,18 +128,24 @@ jobs:
           packages: valgrind
           version: 1.0
 
-      - name: Set up MPI if necessary
-        uses: mpi4py/setup-mpi@v1
-        if: ${{ matrix.bin == 'parvorm' }}
+      - name: Install MPI if necessary
+        if: matrix.bin == 'parform' || matrix.bin == 'parvorm'
+        run: |
+          sudo apt update
+          sudo apt install -y -q libmpich-dev
 
       - name: Configure
         run: |
-          opts='--disable-dependency-tracking --disable-scalar --disable-threaded --disable-parform --enable-debug --with-gmp --with-zlib'
+          opts='--disable-dependency-tracking'
           case ${{ matrix.bin }} in
-            vorm)    opts="$opts --enable-scalar";;
-            tvorm)   opts="$opts --enable-threaded";;
-            parvorm) opts="$opts --enable-parform";;
+            form|vorm)       opts="$opts --enable-scalar --disable-threaded --disable-parform";;
+            tform|tvorm)     opts="$opts --disable-scalar --enable-threaded --disable-parform";;
+            parform|parvorm) opts="$opts --disable-scalar --disable-threaded --enable-parform";;
           esac
+          case ${{ matrix.bin }} in
+            vorm|tvorm|parvorm) opts="$opts --enable-debug";;
+          esac
+          opts="$opts --with-gmp --with-zlib"
           autoreconf -i
           ./configure $opts
 
@@ -132,18 +176,21 @@ jobs:
           packages: lcov
           version: 1.0
 
-      - name: Set up MPI if necessary
-        uses: mpi4py/setup-mpi@v1
-        if: ${{ matrix.bin == 'parvorm' }}
+      - name: Install MPI if necessary
+        if: matrix.bin == 'parform' || matrix.bin == 'parvorm'
+        run: |
+          sudo apt update
+          sudo apt install -y -q libmpich-dev
 
       - name: Configure
         run: |
-          opts='--disable-dependency-tracking --disable-scalar --disable-threaded --disable-parform --enable-debug --enable-coverage --with-gmp --with-zlib'
+          opts='--disable-dependency-tracking'
           case ${{ matrix.bin }} in
-            vorm)    opts="$opts --enable-scalar";;
-            tvorm)   opts="$opts --enable-threaded";;
-            parvorm) opts="$opts --enable-parform";;
+            vorm)    opts="$opts --enable-scalar --disable-threaded --disable-parform";;
+            tvorm)   opts="$opts --disable-scalar --enable-threaded --disable-parform";;
+            parvorm) opts="$opts --disable-scalar --disable-threaded --enable-parform";;
           esac
+          opts="$opts --enable-debug --enable-coverage --with-gmp --with-zlib"
           autoreconf -i
           ./configure $opts
 
@@ -168,7 +215,7 @@ jobs:
 
   # Post LCOV coverage data to coveralls.io.
   coverage-finish:
-    needs: coverage
+    needs: [check, valgrind-check, coverage]
     runs-on: ubuntu-latest
     steps:
     - name: Coveralls Finished
