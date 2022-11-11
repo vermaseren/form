@@ -41,7 +41,7 @@ double thetime () {
 
 std::string thetime_str() {
 	char res[10];
-	sprintf (res,"%.4lf", thetime());
+	snprintf (res,10,"%.4lf", thetime());
 	return res;
 }
 

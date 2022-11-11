@@ -4744,9 +4744,9 @@ int Optimize (WORD exprnr, int do_print) {
 
 	// set preprocessor variables
 	char str[100];
-	sprintf (str,"%d",AO.OptimizeResult.minvar);
+	snprintf (str,100,"%d",AO.OptimizeResult.minvar);
 	PutPreVar((UBYTE *)"optimminvar_",(UBYTE *)str,0,1);
-	sprintf (str,"%d",AO.OptimizeResult.maxvar);
+	snprintf (str,100,"%d",AO.OptimizeResult.maxvar);
 	PutPreVar((UBYTE *)"optimmaxvar_",(UBYTE *)str,0,1);
 
 	if (do_print) {
@@ -4772,13 +4772,13 @@ int Optimize (WORD exprnr, int do_print) {
 		MesPrint("");
 		count_operators(optimize_expr,true);
 		int numop = count_operators(optimize_best_instr,true);
-		sprintf(str,"%d",numop);
+		snprintf(str,20,"%d",numop);
 		PutPreVar((UBYTE *)"optimvalue_",(UBYTE *)str,0,1);
 	}
 	else {
 		char str[20];
 		int numop = count_operators(optimize_best_instr,false);
-		sprintf(str,"%d",numop);
+		snprintf(str,20,"%d",numop);
 		PutPreVar((UBYTE *)"optimvalue_",(UBYTE *)str,0,1);
 	}
 
@@ -4953,7 +4953,7 @@ int ClearOptimize()
 		*w = SetExprCases(DROP,1,*w);
 		if ( *w < 0 ) error = 1;
 	}
-	sprintf (str,"%d",cbuf[AM.sbufnum].numrhs);
+	snprintf (str,20,"%d",cbuf[AM.sbufnum].numrhs);
 	PutPreVar(AM.oldnumextrasymbols,(UBYTE *)str,0,1);
 	PutPreVar((UBYTE *)"optimvalue_",(UBYTE *)("0"),0,1);
 	PutPreVar((UBYTE *)"optimscheme_",(UBYTE *)("0"),0,1);

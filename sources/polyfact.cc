@@ -73,7 +73,7 @@ const string factorized_poly::tostring () const {
 		if (power[i]>1) {
 			res += "^";
 			char tmp[100];
-			sprintf (tmp,"%i",power[i]);
+			snprintf (tmp,100,"%i",power[i]);
 			res += tmp;
 		}
 	}
@@ -82,10 +82,10 @@ const string factorized_poly::tostring () const {
 	if (factor[0].modp>0) {
 		res += " (mod ";
 		char tmp[12];
-		sprintf (tmp,"%i",factor[0].modp);
+		snprintf (tmp,12,"%i",factor[0].modp);
 		res += tmp;
 		if (factor[0].modn > 1) {
-			sprintf (tmp,"%i",factor[0].modn);
+			snprintf (tmp,12,"%i",factor[0].modn);
 			res += "^";
 			res += tmp;
 		}
