@@ -1573,9 +1573,9 @@ Global void testPerm()
     if (count != nperm) {
         printf("*** %d != %d\n", count, nperm);
     }
-    delete p;
-    delete q;
-    delete r;
+    delete[] p;
+    delete[] q;
+    delete[] r;
 }
 
 // } ) ]
