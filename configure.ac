@@ -66,8 +66,9 @@ m4_define([serial_tests], [m4_esyscmd_s([
 	awk '{split ($NF,a,"."); if (a[1] >= 2 || (a[1] == 1 && a[2] >= 13)) { print "serial-tests" }}'
 ])])
 
-AC_PREREQ(2.59)
-AC_INIT([FORM], FORM_VERSION, [https://github.com/vermaseren/form/issues])
+AC_PREREQ([2.59])
+AC_INIT([FORM], [FORM_VERSION], [https://github.com/vermaseren/form/issues])
+AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_SRCDIR([sources/form3.h])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_AUX_DIR([build-aux])
@@ -96,8 +97,18 @@ AC_PROG_CXX([g++ c++ icpc])
 AC_PROG_LN_S
 
 # Checks for header files
-AC_HEADER_STDC
-AC_HEADER_TIME
+# NOTE: autoconf>=2.70 has started to warn obsolete macros.
+# We check if AC_CHECK_INCLUDES_DEFAULT (introduced in 2.70) is available
+# and switch to the new code if possible.
+m4_ifdef([AC_CHECK_INCLUDES_DEFAULT],
+	[AC_CHECK_INCLUDES_DEFAULT
+	AC_PROG_EGREP
+	AC_CHECK_HEADERS_ONCE([sys/time.h])
+	AC_DEFINE([TIME_WITH_SYS_TIME],
+		[1],
+		[Define to 1 if you can safely include both <sys/time.h> and <time.h>. This macro is obsolete.])],
+	[AC_HEADER_STDC
+	AC_HEADER_TIME])
 AC_CHECK_HEADERS([fcntl.h limits.h sys/file.h])
 
 AC_LANG_PUSH([C++])
@@ -160,8 +171,11 @@ case $host_os in
 		;;
 esac
 case $host_cpu in
-	i?86 )
+	i586 )
 		print_cpu="Pentium"
+		;;
+	i686 )
+		print_cpu="Pentium Pro"
 		;;
 	x86_64 )
 		print_cpu="Opteron"
@@ -170,7 +184,7 @@ case $host_cpu in
 		print_cpu="Alpha"
 		;;
 	* )
-		print_cpu="UNKNOWN CPU"
+		print_cpu="UNKNOWN CPU ($host_cpu)"
 		;;
 esac
 
@@ -730,6 +744,13 @@ AC_ARG_ENABLE([sanitize],
 		[enable_sanitize=no])],
 	[enable_sanitize=no])
 
+# Check for extra compiler warnings
+AC_ARG_ENABLE([extra-warning],
+	[AS_HELP_STRING([--enable-extra-warning],
+		[enable extra compiler warnings @<:@default=no@:>@])],
+	[enable_extra_warning=yes],
+	[enable_extra_warning=no])
+
 # Optimization/debugging flags
 AC_ARG_VAR([COMPILEFLAGS], [Compiler flags for release versions])
 AC_ARG_VAR([LINKFLAGS], [Linker flags for release versions])
@@ -738,36 +759,45 @@ AC_ARG_VAR([DEBUGLINKFLAGS], [Linker flags for debugging versions])
 TOOL_LIBS=
 DEBUGTOOL_LIBS=
 
+# AX_HANDLE_EXTRA_WARNING(COMPILEFLAGS)
+# -------------------------------------
+AC_DEFUN([AX_HANDLE_EXTRA_WARNING],
+[if test "x$enable_extra_warning" = xno; then
+	# Too many misleading indentation in the FORM source code.
+	AX_CHECK_COMPILE_FLAG([-Wno-misleading-indentation],
+		[$1="$$1 -Wno-misleading-indentation"])
+	# Too many false positives.
+	# See: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=88443
+	AX_CHECK_COMPILE_FLAG([-Wno-stringop-overflow],
+		[$1="$$1 -Wno-stringop-overflow"])
+fi[]dnl
+])
+
 my_test_COMPILEFLAGS=${COMPILEFLAGS+set}
 if test "$my_test_COMPILEFLAGS" != set; then
 	if test "x$vendor" = xgnu; then
 		# We don't use -pedantic option because of horrible warnings.
-		COMPILEFLAGS="-Wall -Wextra -Wpadded -O3"
+		COMPILEFLAGS="-Wall -Wextra -Wpadded"
+		AX_HANDLE_EXTRA_WARNING([COMPILEFLAGS])
+		# Enable optimizations.
+		COMPILEFLAGS="$COMPILEFLAGS -O3"
 		if test "x$enable_profile" != xgprof; then
 			# -pg conflicts with -fomit-frame-pointer.
 			COMPILEFLAGS="$COMPILEFLAGS -fomit-frame-pointer"
 		fi
 		if test "x$enable_native" = xyes; then
-			# Check for -march=native.
-			AC_MSG_CHECKING([whether compiler accepts -march=native])
-			ok=no
-			save_CFLAGS=$CFLAGS
-			CFLAGS="$CFLAGS -march=native"
-			AC_COMPILE_IFELSE([AC_LANG_PROGRAM()], [ok=yes])
-			CFLAGS=$save_CFLAGS
-			AC_MSG_RESULT($ok)
-			if test "x$ok" = xyes; then
-				COMPILEFLAGS="$COMPILEFLAGS -march=native"
-			else
-				if test "x$print_data_model" = xILP32; then
+			# Use -march=native if available.
+			AX_CHECK_COMPILE_FLAG([-march=native],
+				[COMPILEFLAGS="$COMPILEFLAGS -march=native"],
+				[if test "x$print_data_model" = xILP32; then
 					if test "x$print_cpu" = xPentium; then
-						# NOTE: In a strict sense, i686 must be used for Pentium Pro or later.
+						COMPILEFLAGS="$COMPILEFLAGS -march=i586"
+					elif test "x$print_cpu" = 'xPentium Pro'; then
 						COMPILEFLAGS="$COMPILEFLAGS -march=i686"
 					elif test "x$print_cpu" = xOpteron; then
 						COMPILEFLAGS="$COMPILEFLAGS -march=opteron"
 					fi
-				fi
-			fi
+				fi])
 		fi
 		# Profiling option.
 		if test "x$enable_profile" = xgprof; then
@@ -809,24 +839,18 @@ fi
 my_test_DEBUGCOMPILEFLAGS=${DEBUGCOMPILEFLAGS+set}
 if test "$my_test_DEBUGCOMPILEFLAGS" != set && test "x$enable_debug" = xyes; then
 	if test "x$vendor" = xgnu; then
-		DEBUGCOMPILEFLAGS='-g3 -Wall -Wextra'
+		DEBUGCOMPILEFLAGS='-Wall -Wextra'
 		if test "x$enable_sanitize" = xno; then
 			# UBSan puts many paddings (at least in gcc 5.3).
 			DEBUGCOMPILEFLAGS="$DEBUGCOMPILEFLAGS -Wpadded"
 		fi
-		# Check for -Og.
-		AC_MSG_CHECKING([whether compiler accepts -Og])
-		ok=no
-		save_CFLAGS=$CFLAGS
-		CFLAGS="$CFLAGS -Og"
-		AC_COMPILE_IFELSE([AC_LANG_PROGRAM()], [ok=yes])
-		CFLAGS=$save_CFLAGS
-		AC_MSG_RESULT($ok)
-		if test "x$ok" = xyes; then
-			DEBUGCOMPILEFLAGS="$DEBUGCOMPILEFLAGS -Og"
-		else
-			DEBUGCOMPILEFLAGS="$DEBUGCOMPILEFLAGS -O0"
-		fi
+		AX_HANDLE_EXTRA_WARNING([DEBUGCOMPILEFLAGS])
+		# Check for -Og. If it doesn't work then use -O0.
+		AX_CHECK_COMPILE_FLAG([-Og],
+			[DEBUGCOMPILEFLAGS="$DEBUGCOMPILEFLAGS -Og"],
+			[DEBUGCOMPILEFLAGS="$DEBUGCOMPILEFLAGS -O0"])
+		# Debugging information.
+		DEBUGCOMPILEFLAGS="$DEBUGCOMPILEFLAGS -g3"
 		# Coverage option.
 		if test "x$enable_coverage" = xyes; then
 			DEBUGCOMPILEFLAGS="$DEBUGCOMPILEFLAGS -coverage"
@@ -840,31 +864,13 @@ if test "$my_test_DEBUGCOMPILEFLAGS" != set && test "x$enable_debug" = xyes; the
 				else
 					tmp_sanitize=$enable_sanitize,$san
 				fi
-				AC_MSG_CHECKING([whether compiler accepts -fsanitize=$tmp_sanitize])
-				ok=no
-				save_CFLAGS=$CFLAGS
-				CFLAGS="$CFLAGS -fsanitize=$tmp_sanitize"
-				AC_COMPILE_IFELSE([AC_LANG_PROGRAM()], [ok=yes])
-				CFLAGS=$save_CFLAGS
-				AC_MSG_RESULT($ok)
-				if test "x$ok" = xyes; then
-					enable_sanitize=$tmp_sanitize
-				fi
+				AX_CHECK_COMPILE_FLAG([-fsanitize=$tmp_sanitize], [enable_sanitize=$tmp_sanitize])
 			done
 			if test "x$enable_sanitize" = x; then
 				enable_sanitize=failed
 			fi
 		elif test "x$enable_sanitize" != xno; then
-			AC_MSG_CHECKING([whether compiler accepts -fsanitize=$enable_sanitize])
-			ok=no
-			save_CFLAGS=$CFLAGS
-			CFLAGS="$CFLAGS -fsanitize=$enable_sanitize"
-			AC_COMPILE_IFELSE([AC_LANG_PROGRAM()], [ok=yes])
-			CFLAGS=$save_CFLAGS
-			AC_MSG_RESULT($ok)
-			if test "x$ok" != xyes; then
-				enable_sanitize=failed
-			fi
+			AX_CHECK_COMPILE_FLAG([-fsanitize=$enable_sanitize], [], [enable_sanitize=failed])
 		fi
 		if test "x$enable_sanitize" = xfailed; then
 			AC_MSG_FAILURE([test for sanitizer failed. Give --disable-sanitize if you want to compile without sanitizer])
