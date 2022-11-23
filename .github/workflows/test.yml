@@ -224,3 +224,40 @@ jobs:
         github-token: ${{ secrets.github_token }}
         path-to-lcov: coverage.info
         parallel-finished: true
+
+  # Tests with a 32-bit container.
+  check-i386:
+    runs-on: ubuntu-latest
+    container:
+      image: i386/debian:11.5
+    strategy:
+      fail-fast: false
+      matrix:
+        bin: [form, tform]
+    steps:
+      # We have to use v1.
+      # See https://github.com/actions/checkout/issues/334
+      - name: Checkout repository
+        uses: actions/checkout@v1
+
+      - name: Install dependencies
+        run: |
+          apt-get update
+          apt-get -y install automake build-essential git libgmp-dev ruby zlib1g-dev
+
+      - name: Configure
+        run: |
+          opts='--disable-dependency-tracking'
+          case ${{ matrix.bin }} in
+            form)  opts="$opts --enable-scalar --disable-threaded --disable-parform";;
+            tform) opts="$opts --disable-scalar --enable-threaded --disable-parform";;
+          esac
+          opts="$opts --disable-debug --with-gmp --with-zlib"
+          autoreconf -i
+          ./configure $opts
+
+      - name: Build
+        run: make -C sources -j 4 ${{ matrix.bin }}
+
+      - name: Test
+        run: ./check/check.rb ./sources/${{ matrix.bin }} --stat
