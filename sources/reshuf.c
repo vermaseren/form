@@ -1175,7 +1175,7 @@ WORD DoDistrib(PHEAD WORD *term, WORD level)
 		0:	Make all possible divisions:  2^nargs
 		1:	fun1 should get n arguments:  nargs! / ( n! (nargs-n)! )
 		2:	fun2 should get n arguments:  nargs! / ( n! (nargs-n)! )
-	The distiction between 1 and two is for noncommuting objects.
+	The distinction between 1 and two is for noncommuting objects.
 		3:  fun1 should get n arguments. Super symmetric option.
 		4:	fun2 idem
 	The super symmetric option involves:

@@ -189,7 +189,7 @@
  * Returns the size of the vector X.
  *
  * @param  X  the vector object.
- * @return    the size of the vetor.
+ * @return    the size of the vector.
  */
 #define VectorSize(X) \
 	((X).size)
@@ -203,7 +203,7 @@
  * Returns the capacity (the number of the already allocated elements) of the vector X.
  *
  * @param  X  the vector object.
- * @return    the capacity of the vetor.
+ * @return    the capacity of the vector.
  */
 #define VectorCapacity(X) \
 	((X).capacity)

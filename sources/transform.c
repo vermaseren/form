@@ -2846,7 +2846,7 @@ WORD RunMulArg(PHEAD WORD *fun, WORD *args)
  		#[ RunIsLyndon :
 
 		Determines whether the range constitutes a Lyndon word.
-		The two cases of ordering are distinguised by the order of
+		The two cases of ordering are distinguished by the order of
 		the numbers of the arguments in the range.
 */
 
@@ -2924,7 +2924,7 @@ nexti1:;
 		Determines whether the range constitutes a Lyndon word.
 		If not, we rotate it to a Lyndon word. If this is not possible
 		we return the noLyndon condition.
-		The two cases of ordering are distinguised by the order of
+		The two cases of ordering are distinguished by the order of
 		the numbers of the arguments in the range.
 */
 
