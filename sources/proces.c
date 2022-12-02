@@ -2047,7 +2047,7 @@ showtable:							AO.OutFill = AO.OutputLine = (UBYTE *)m;
 					}
 /*
 					If there are more arguments we have to do some
-					pattern matching. This should be easy. We addapted the
+					pattern matching. This should be easy. We adapted the
 					pattern, so that the array indices match already.
 					Note that if there is no match the program will become
 					very slow.
@@ -4563,7 +4563,7 @@ OverWork:
  *		If there are more powers needed there will be a recursion.
  *
  *		No attempt is made to use binomials because we have no
- *		information about commutating properties.
+ *		information about commuting properties.
  *
  *		There is a searching for the contents of brackets if needed.
  *		This searching may be rather slow because of the single links.

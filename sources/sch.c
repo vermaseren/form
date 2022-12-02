@@ -1276,7 +1276,7 @@ VOID WriteLists(VOID)
 			MesPrint("\nCurrently dictionary %s is active\n",
 				AO.Dictionaries[olddict-1]->name);
 		else
-			MesPrint("\nCurrently there is no actice dictionary\n");
+			MesPrint("\nCurrently there is no active dictionary\n");
 	}
 	if ( AC.CodesFlag ) {
 		if ( C->numlhs > 0 ) {

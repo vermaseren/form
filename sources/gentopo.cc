@@ -364,7 +364,7 @@ void T_MNodeClass::mkNdCl(void)
 int T_MNodeClass::clCmp(int nd0, int nd1, int cn)
 {
 
-    // Wether two nodes are in a same class or not.
+    // Whether two nodes are in a same class or not.
     int cmp = ndcl[nd0] - ndcl[nd1];
     if (cmp != 0) {
       return cmp;

@@ -557,7 +557,7 @@ int FactorInExpr(PHEAD WORD *term, WORD level)
 	Load the first term in the workspace
 */
 	if ( GetTerm(BHEAD oldwork) == 0 ) {
-		SetScratch(file,&oldposition); /* We still need this untill Processor is clean */
+		SetScratch(file,&oldposition); /* We still need this until Processor is clean */
 		AR.DeferFlag = olddeferflag;
 		oldwork[0] = 4; oldwork[1] = 1; oldwork[2] = 1; oldwork[3] = 3; 
 		goto Complete;

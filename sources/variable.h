@@ -7,7 +7,7 @@
  *  Contains a number of defines to make the coding easier.
  *	Especially the defines for the use of the lists are very nice.
  *	And of course the AC for A.Cc and AT for either A.T of B->T
- *	are indispensible to keep FORM and TFORM in one set of sources.
+ *	are indispensable to keep FORM and TFORM in one set of sources.
  */
 
 /* #[ License : */

@@ -1480,7 +1480,7 @@ struct M_const {
 #endif
     int     FileOnlyFlag;          /* (M) Writing only to file */
     int     Interact;              /* (M) Interactive mode flag */
-    int     MaxParLevel;           /* (M) Maximum nesting of parantheses */
+    int     MaxParLevel;           /* (M) Maximum nesting of parentheses */
     int     OutBufSize;            /* (M) size of OutBuffer */
     int     SMaxFpatches;          /* (M) */
     int     SMaxPatches;           /* (M) */

@@ -847,7 +847,7 @@ cancelled:
  * outputfile.
  *
  * @return   1  if the sorting on the master was done.
- *           0  if EndSort() still must perform a regular sorting becuase it is not
+ *           0  if EndSort() still must perform a regular sorting because it is not
  *              at the ground level or not on the master or in the sequential mode
  *              or in the InParallel mode.
  *          -1  if an error occured.
@@ -1974,7 +1974,7 @@ int PF_Init(int *argc, char ***argv)
 	if ( PF.me == MASTER ) {
 		char *c;
 /*
-			get these from the environment at the moment sould be in setfile/tail
+			get these from the environment at the moment should be in setfile/tail
 */
 		if ( ( c = getenv("PF_LOG") ) != 0 ) {
 			if ( *c ) PF.log = (int)atoi(c);

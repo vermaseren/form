@@ -139,7 +139,7 @@ We have to revise the code for the second case.
  		#] RatioFind : 
  		#[ RatioGen :
 
-		The algoritm:
+		The algorithm:
 		x1^-n1*x2^n2	==>  x2 --> x1 + x3
 		x1^n1*x2^-n2	==>  x1 --> x2 - x3
 		x1^-n1*x2^-n2	==>

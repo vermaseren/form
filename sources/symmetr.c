@@ -317,7 +317,7 @@ NextWV:
 	(somewhat slow) permutation routine that has as its worst
 	cases some rather unlikely configurations, rather than some
 	common ones (as would have been the case with the conventional
-	permuation routine).
+	permutation routine).
 		assume:
 		vvvvvvvvvvvviiiiiii		(tvfix in tfixvec and tifix in tfixind)
 		VVVVVVVVVIIIIIIIIII		(vwc in wcvec and iwc in wcind)
