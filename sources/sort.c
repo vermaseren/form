@@ -1949,7 +1949,7 @@ WORD FlushOut(POSITION *position, FILEHANDLE *fi, int compr)
  *		Adds the coefficients of the terms *ps1 and *ps2.
  *		The problem comes when there is not enough space for a new
  *		longer coefficient. First a local solution is tried.
- *		If this is not succesfull we need to move terms around.
+ *		If this is not successful we need to move terms around.
  *		The possibility of a garbage collection should not be
  *		ignored, as avoiding this costs very much extra space which
  *		is nearly wasted otherwise.
@@ -2081,8 +2081,8 @@ RegEnd:
  *		At first we allow only univariate polynomials in the PolyFun.
  *		This restriction will be lifted a.s.a.p.
  *
- *		@param ps1 A pointer to the postion of the first term
- *		@param ps2 A pointer to the postion of the second term
+ *		@param ps1 A pointer to the position of the first term
+ *		@param ps2 A pointer to the position of the second term
  *		@return If zero the terms cancel. Otherwise the new term is in *ps1.
  */
 
@@ -2889,7 +2889,7 @@ NoPoly:
 				There is a little problem here with fast arguments
 				We don't want to sacrifice speed, but we like to
 				keep a rational ordering. This last one suffers in
-				the solution that has been choosen here.
+				the solution that has been chosen here.
 */
 				if ( AC.properorderflag ) {
 					WORD oldpolyflag;

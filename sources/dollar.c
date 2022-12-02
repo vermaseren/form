@@ -2630,7 +2630,7 @@ int DollarRaiseLow(UBYTE *name, LONG value)
 /**
  *	Evaluates one argument of a do loop. Such an argument is constructed
  *	from SNUMBERs DOLLAREXPRESSIONs and possibly DOLLAREXPR2s which indicate
- *	factors of the preceeding dollar. Hence we have
+ *	factors of the preceding dollar. Hence we have
  *	SNUMBER,num
  *	DOLLAREXPRESSION,numdollar
  *	DOLLAREXPRESSION,numdollar,DOLLAREXPR2,numfactor

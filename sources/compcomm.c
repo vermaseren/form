@@ -7018,7 +7018,7 @@ int DoPutInside(UBYTE *inp, int par)
   	#[ CoSwitch :
 
 	Syntax: Switch $var;
-	Be carefull with illegal nestings with repeat, if, while.
+	Be careful with illegal nestings with repeat, if, while.
 */
 
 int CoSwitch(UBYTE *s)

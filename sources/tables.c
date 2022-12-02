@@ -1957,7 +1957,7 @@ WORD Apply(WORD *term, WORD level)
 	rhs of table(indices,pattern). It does this up to maxtogo times
 	in the given term. It starts with the occurrences inside the
 	arguments of functions. If necessary it finishes at groundlevel.
-	An infite number of tries is indicates by maxtogo = 2^15-1 or 2^31-1.
+	An infinite number of tries is indicated by maxtogo = 2^15-1 or 2^31-1.
 	The occurrences are replaced by subexpressions. This allows TestSub
 	to finish the job properly.
 

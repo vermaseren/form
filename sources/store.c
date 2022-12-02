@@ -2837,7 +2837,7 @@ RENUMBER GetTable(WORD expr, POSITION *position, WORD mode)
 
 	oldw = AT.WorkPointer + 1 + SUBEXPSIZE;
 /*
-	The protoype is loaded in the WorkSpace by the Index routine.
+	The prototype is loaded in the WorkSpace by the Index routine.
 	After all it has to find an occurrence with the proper arguments.
 	This sets the WorkPointer. Hence be careful now.
 */
