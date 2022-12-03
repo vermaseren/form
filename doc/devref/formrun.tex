@@ -52,7 +52,7 @@ calls to dedicated functions. The initializations are split up according to the
 type of objects involved and the available information at this point. The
 command line parameters passed to \FORM\ (none in our example run) are treated
 in the function \C{DoTail()}. After that, files are opened and also parsed for
-addtional settings. Then, as all settings are known, the large part of the
+additional settings. Then, as all settings are known, the large part of the
 internal data is allocated and initialized. Finally, recovery settings are
 checked, threads are started if necessary, timers are started, and variable
 initializations that might need to be repeated later (e.g. clear modules) are
@@ -107,7 +107,7 @@ at the end of \C{LoadInstruction()}, if the buffer gets to small, it can be
 replaced by a larger memory patch with the help of utility functions like
 \C{DoubleLList()}. The contents is copied from the old to the new buffer. Since
 this dynamical resizing of buffers needs to be done with most buffers
-occationally, most buffers in \FORM\ store data such that it easily allows for
+occasionally, most buffers in \FORM\ store data such that it easily allows for
 copying, i.e.  usually C pointers are avoided and instead numbers representing
 offsets are used. Since the preprocessor instruction buffer just contains
 characters there is no problem here.
@@ -186,10 +186,10 @@ recognize unfinished statements and sets this variable accordingly.
 \C{LoadStatement()} basically copies the input to the compiler's input buffer at
 \C{AC.iBuffer} (which has \C{AC.iPointer} and \C{AC.iStop} associated to it). It
 modifies the copy if necessary. The modification are to replace spaces by commas
-or insert commas at teh right spots to separate tokens. The interpretation steps
+or insert commas at the right spots to separate tokens. The interpretation steps
 that are following rely on these synactic conventions.
 
-The call to \C{CompileStatement()} is done only if no errors occured and all
+The call to \C{CompileStatement()} is done only if no errors occurred and all
 lines of a statement have been gathered into the compiler's input buffer.
 \C{CompileStatement()} is called with the address of this input buffer and tries
 to identify the statement. Like in the preprocessor, the input string is search
@@ -214,11 +214,11 @@ explained before, though.
 Symbols can appear in expressions that need to be encoded. The coding for
 symbols can simply be its entry index in the list \C{AC.Symbols}, but symbols
 also need to be recognized when an expression is parsed. Therefore a efficient
-look-up mechnism is required. This is achieved by a second data structure that
+look-up mechanism is required. This is achieved by a second data structure that
 holds the name strings in a tree for fast searching. The data in the symbol list
-does not contain the name string itself, but contains a referece (a index) into
+does not contain the name string itself, but contains a reference (a index) into
 this name string tree. The tree is managed by generalized functions and types
-that are also used for other, similiar objects like vectors, indices, etc. The
+that are also used for other, similar objects like vectors, indices, etc. The
 functions for name trees are located in the first part of the file \C{name.c}.
 The types \C{NAMENODE} and \C{NAMETREE} are defined in \C{structs.h}.
 \C{NAMENODE}s are the node of a balanced binary tree. It does not hold the
@@ -511,7 +511,7 @@ expansion of the terms using binomials.
 Finally, the call to \C{TestSub()} at the beginning of \C{Generator()} will
 return zero. The function \C{Normalize()} is called, which puts the terms in a
 canonical form, i.e. terms are ordered and collected with the correct
-coefficient. In our example, as the first fully subsituted term we have
+coefficient. In our example, as the first fully substituted term we have
 {\it 12, 1, 4, 6, 1, 1, 4, 6, 1, 1, 1, 3} before the call to
 \C{Normalize()}, which means we have a term $x*x$. \C{Normalize()}
 makes this into {\it 8, 1, 4, 6, 2, 1, 1, 3}, which is $x^2$.
@@ -563,6 +563,6 @@ The parsing continues and ends with
 The way these statements are treated and how the program is executed has already
 been described. The pattern matching is something that has not occurred before,
 though. We will not describe it here, since there is a dedicated section in this
-manual for that. After the final sorting, \FORM\ will clean up tempory files and
+manual for that. After the final sorting, \FORM\ will clean up temporary files and
 other resources that are not automatically freed by the operating system before
 \FORM\ ends itself.

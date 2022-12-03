@@ -444,7 +444,7 @@ Syntax & case,number; \\
 \end{tabular} \vspace{4mm}
 
 \noindent The cases in a switch construction are marked by a number. This 
-number must be an interger that can be represented inside a {\FORM} word. 
+number must be an integer that can be represented inside a {\FORM} word. 
 On a 64-bit processor this would be an integer in the range $-2^{31}$ to 
 $2^{31}-1$. If the dollar variable in the switch statement has the same 
 value as the integer in the case statement, the next statement to be 
@@ -1663,8 +1663,8 @@ if necessary read it again and factorize it.
 
 \noindent Expressions never exists in two varieties as the dollar variable 
 that have been factorized. It is either unfactorized (default) or 
-factorized. An expression remains factorized untill an UnFactorize 
-statement is encoutered that mentions that this expression should be 
+factorized. An expression remains factorized until an UnFactorize 
+statement is encountered that mentions that this expression should be 
 brought to unfactorized representation (see also 
 UnFactorize~\ref{substaunfactorize} and 
 NunFactorize~\ref{substanunfactorize}).
@@ -2907,7 +2907,7 @@ Syntax & la[bel] {\tt<}name of label{\tt>};
 \end{tabular} \vspace{4mm}
 
 \noindent Places a label\index{label} at the current location. The name of 
-the label can be any name or positive number. Control can be transfered to the 
+the label can be any name or positive number. Control can be transferred to the 
 position of the label by a goto\index{goto} statement (see 
 \ref{substagoto}) or the ifmatch\index{ifmatch} option of an id statement 
 (see \ref{substaidentify}). The only condition is that the goto statement 
@@ -4215,7 +4215,7 @@ in the polyratfun statement. The first is
 in which x is the name of the symbol of interest. In this case the 
 polyratfun keeps only its most divergent term in this variable x and gives 
 it the coefficient one. The result is that terms will never cancel and at 
-the end of the calcuation one can see how many poles in x were maximally 
+the end of the calculation one can see how many poles in x were maximally 
 present, and hence how far one has to expand in x. Because the contents of 
 the polyratfun are extremely simple, the expensive rational arithmetic is 
 completely absent and things should go rather fast.
@@ -4224,7 +4224,7 @@ completely absent and things should go rather fast.
 \begin{verbatim}
     PolyRatFun rat(expand,x,power);
 \end{verbatim}
-In this case the denomnator can only be a polynomial in the variable x. It 
+In this case the denominator can only be a polynomial in the variable x. It 
 will be expanded and multiplied by the numerator and eventually all terms 
 with powers of x that are greater than 'power' will be discarded. The 
 remaining incidence of the function rat will then have only one argument, 
@@ -4344,7 +4344,7 @@ including its sign, even if this is a plus sign.}
 
 \leftvitem{1cm}{\%T\index{print!\%T}}
 \rightvitem{15cm}{The current term will be printed at this position. If its 
-coeficient is positive no leading plus sign is printed.}
+coefficient is positive no leading plus sign is printed.}
 
 \leftvitem{1cm}{\%w\index{print!\%w}}
 \rightvitem{15cm}{The number of the current thread will be printed. This is 
@@ -4844,7 +4844,7 @@ smallest loop is substituted.}
 
 \leftvitem{4cm}{loopsize$<$number}
 \rightvitem{12cm}{Only loops with fewer vertices than `number' will be 
-considered and the smallest looop will be substituted.}
+considered and the smallest loop will be substituted.}
 
 \leftvitem{4cm}{outfun=$<$name$>$}
 \rightvitem{12cm}{Name of an output function in which the remaining 
@@ -6037,7 +6037,7 @@ replace(1,last)=(xarg\_,2\*xarg\_+1,p) which would replace f(2,a) by f(5,
 parg\_.}
 
 \leftvitem{3.2cm}{encode\index{transform!encode}\index{encode}}
-\rightvitem{13cm}{encode(r1,r2):base=number will interprete the arguments as 
+\rightvitem{13cm}{encode(r1,r2):base=number will interpret the arguments as 
 the digits in a base 2 number system, compute the complete number and 
 replace the arguments by a single argument that is that number. The number 
 must fit inside a single FORM word and so must each of the original 
@@ -6088,7 +6088,7 @@ specified range.}
 
 \leftvitem{3.2cm}{cycle\index{transform!cycle}\index{cycle}}
 \rightvitem{13cm}{cycle(r1,r2)=+/-number will perform a cyclic permutation 
-of the indicated range of arguments. If the number is preceeded by a - the 
+of the indicated range of arguments. If the number is preceded by a - the 
 cycling is to the left. If there is a plus sign the cycling is to the 
 right. Note that either the plus or the minus sign is mandatory. The number 
 following the +/- sign is also allowed to be a dollar variable provided it 
