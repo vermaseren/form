@@ -11,7 +11,7 @@
  *
  *	Special routines for the parallel sorting are in the file threads.c
  *	Also the sorting of terms in polynomials is special but most of that is
- *	controled by changing the address of the compare routine. Other routines
+ *	controlled by changing the address of the compare routine. Other routines
  *	relevant for adding rational polynomials are in the file polynito.c
  */
 /* #[ License : */

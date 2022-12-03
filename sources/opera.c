@@ -1438,7 +1438,7 @@ WORD TraceN(PHEAD WORD *term, WORD *params, WORD num, WORD level)
 
 		This routine is a simplified version of Trace4Gen. We know here
 		only three cases: Adjacent objects, same objects and all different.
-		The othere difference lies of course in the struct which is now
+		The other difference lies of course in the struct which is now
 		not of type TRACES, but of type TRACES.
 
 */

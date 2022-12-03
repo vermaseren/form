@@ -525,7 +525,7 @@ ScaledVariety:;
 					}
 /*
                   	We generate a statement for adapting all terms in the
-					argument sucessively
+					argument successively
 */
 					r4 = AddRHS(AT.ebufnum,1);
 					while ( (r4+j+12) > CC->Top ) r4 = DoubleCbuffer(AT.ebufnum,r4,3);

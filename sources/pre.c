@@ -5589,7 +5589,7 @@ int DoRmExternal(UBYTE *s)
 					stored.
 
 					FORM continues to read the running external
-					program output until the extrenal program outputs a
+					program output until the external program outputs a
 					prompt.
 
 */

@@ -499,7 +499,7 @@ STREAM *OpenStream(UBYTE *name, int type, int prevarmode, int raiselow)
 			{/*Block*/
 				int n, *tmpn;
 				if( (n=getCurrentExternalChannel()) == 0 )
-					Error0("@No current extrenal channel");
+					Error0("@No current external channel");
 				stream = CreateStream((UBYTE *)"externalchannel");
 				stream->handle = CreateHandle();
 				tmpn = (int *)Malloc1(sizeof(int),"external channel handle");

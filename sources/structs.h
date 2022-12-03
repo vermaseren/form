@@ -196,7 +196,7 @@ typedef struct ReNuMbEr {
 
 /**
  *  Much information is stored in arrays of which we can double the size
- *  if the array proves to be too small. Such arrays are controled by
+ *  if the array proves to be too small. Such arrays are controlled by
  *  a variable of type #LIST. The routines that expand the lists are in the
  *  file tools.c
  */

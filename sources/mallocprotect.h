@@ -355,7 +355,7 @@ static void *mprotectMalloc(size_t theSize)
 #if MALLOCPROTECT > 0
 
 	/*Potential problems with alignment if the requested size is not 
-	a multiple of items. But no poblems on x86-64:*/
+	a multiple of items. But no problems on x86-64:*/
 	return ret+ (theSize-pageSize-requestedSize);
 #endif
 }/*mprotectMalloc*/

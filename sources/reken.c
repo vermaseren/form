@@ -2223,7 +2223,7 @@ GcdErr:
 	digit Lehmer-Euclid algorithm of Jebelean it seems.
 
 	Maybe this can be programmed slightly better and we can get another
-	few percent speed increase. Further improvements for the assymptotic
+	few percent speed increase. Further improvements for the asymptotic
 	case come from splitting the calculation as in Karatsuba and working
 	with FFT divisions and multiplications etc. But this is when hundreds
 	of words are involved at the least.

@@ -1599,7 +1599,7 @@ FullTerm:
 		it at 'to'.
 		The value to be returned is the number of words read.
 		Renumbering is done also.
-		This is controled by the renumber table, given in 'renumber'
+		This is controlled by the renumber table, given in 'renumber'
 
 		This routine should work with a number of cache buffers. The
 		exact number should be definable in form.set.
@@ -4636,7 +4636,7 @@ WORD ReadSaveVariables(UBYTE *buffer, UBYTE *top, LONG *size, LONG *outsize,\
 
 RSVEnd:
 		/* we are here because the remaining buffer cannot hold the next
-		   struct. we position the file behind the last sucessfully translated
+		   struct. we position the file behind the last successfully translated
 		   struct and return. */
 		ADDPOS(pos, *size);
 		SeekFile(AO.SaveData.Handle, &pos, SEEK_SET);
