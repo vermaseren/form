@@ -83,7 +83,7 @@ template<class T> ostream& operator<< (ostream &out, const vector<T> &x) {
  *   Notes
  *   =====
  *   - The input and output integers are represented as polynomials.
- *     These polynonials must consist of one term with all powers
+ *     These polynomials must consist of one term with all powers
  *     equal to zero.
  *   - The result is always positive.
  *   - Over ZZ/p^n, the gcd is defined as 1.
@@ -666,7 +666,7 @@ const poly polygcd::sparse_interpolation_fix_poly (const poly &a, int x) {
  *     e.g. "Computing the Greatest Common Divisor of Multivariate
  *     Polynomials over Finite Fields" by Suling Yang. [TODO]
  *   - For calculation modulo small prime numbers, such a Vandermonde
- *     matrix doesnot exist, because there are not enough different
+ *     matrix does not exist, because there are not enough different
  *     numbers. In that case, we should resort to random equations of
  *     which enough exist. [TODO]
  *   - Non-monic cases are handled inefficiently. Implement LINZIP? [TODO]

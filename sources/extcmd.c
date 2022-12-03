@@ -536,7 +536,7 @@ static VOID pushDescriptor(int *fifo, int top, int fd)
 	}
 }/*pushDescriptor*/
 
-/*Close all descriptors greate or equal than startFrom except those
+/*Close all descriptors greater or equal than startFrom except those
   listed in the ascendantly ordered array usedFd of length top:*/
 static FORM_INLINE VOID closeAllDescriptors(int startFrom, int *usedFd, int top)
 {
@@ -562,7 +562,7 @@ static VOID closepipe(L_APIPE *thepipe)
 }/*closepipe*/
 
 /*Parses the cmd line like "sh -c myprg", passes each option to the
-  correspondinig element of argv, ends agrv by NULL. Returns the 
+  corresponding element of argv, ends agrv by NULL. Returns the 
   number of stored argv elements, or -1 if fails:*/
 static FORM_INLINE int parseline(char **argv, char *cmd)
 {
@@ -1211,7 +1211,7 @@ typedef struct{
 }ECINFOSTRUCT;
 
 /* Creates a new external channel starting the command cmd (if cmd !=NULL)
-	or using informaion from (ECINFOSTRUCT *)shellname, if cmd ==NULL:*/
+	or using information from (ECINFOSTRUCT *)shellname, if cmd ==NULL:*/
 static FORM_INLINE void *createExternalChannel(
 					  EXTHANDLE *h,
 					  char *cmd, /*Command to run or NULL*/
@@ -1398,7 +1398,7 @@ int initPresetExternalChannels(UBYTE *theline, int thetimeout)
 		theline = (UBYTE *)c + 1;
 		/*Now we have two descriptors.
 		  According to the protocol, FORM must send to external channel 
-		  it's PID with added '\n' and read back two comma-separaetd
+		  it's PID with added '\n' and read back two comma-separated
 		  decimals with added '\n'. The first must be repeated FORM PID,
 		  the second must be the parent PID
 		*/

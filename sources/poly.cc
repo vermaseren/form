@@ -1990,7 +1990,7 @@ int poly::number_of_terms () const {
   	#[ first_variable :
 */
 
-// returns the lexcicographically first variable of a polynomial
+// returns the lexicographically first variable of a polynomial
 int poly::first_variable () const {
 	
 	POLY_GETIDENTITY(*this);

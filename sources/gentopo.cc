@@ -91,7 +91,7 @@ T_EGraph::T_EGraph(int nnodes, int nedges, int mxdeg)
 
     nNodes  = nnodes;
     nEdges  = nedges;
-    maxdeg  = mxdeg;    // maxmum value of degree of nodes
+    maxdeg  = mxdeg;    // maximum value of degree of nodes
     nExtern = 0;
 
     nodes = new T_ENode[nNodes];

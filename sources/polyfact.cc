@@ -176,7 +176,7 @@ const vector<poly> polyfact::extended_gcd_Euclidean_lifted (const poly &a, const
 	sa /= s.integer_lcoeff();
 	sb /= s.integer_lcoeff();
 
-	// Lift the result to modolu p^n with p-adic Newton's iteration.
+	// Lift the result to modulo p^n with p-adic Newton's iteration.
 	poly samodp(sa);
 	poly sbmodp(sb);
 	poly term(BHEAD 1);

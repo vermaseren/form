@@ -2974,7 +2974,7 @@ bool do_optimization (const optimization optim, vector<WORD> &instr, int newid) 
 		instr.push_back(varnumx);  // symbol id
 		instr.push_back(n); 	   // power
 		instr.push_back(1);
-		instr.push_back(1); 	   // coeffient 1
+		instr.push_back(1); 	   // coefficient 1
 		instr.push_back(3);
 		instr.push_back(0); 	   // trailing 0
 	}
@@ -3291,7 +3291,7 @@ bool do_optimization (const optimization optim, vector<WORD> &instr, int newid) 
 			// check signs (type=4: x+y and -x-y, type=5: x-y and -x+y) ??????
 			// check signs (type=4: x+y, type=5: x-y) !!!!!!!!!!
 			if (SGN(ncoeffx) * SGN(ncoeffy) * (optim.type==4 ? 1 : -1) == 1) {
-				// check absolute value of coeeficients
+				// check absolute value of coefficients
 				if (BigLong((UWORD *)coeffx, ABS(ncoeffx)-1, (UWORD *)coeffy, ABS(ncoeffy)-1) == 0) {
 					// substitute
 					vector<WORD> coeff(coeffx, coeffx+ABS(ncoeffx));

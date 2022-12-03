@@ -758,7 +758,7 @@ ReStart:
 					else if ( t[2] >= 0 ) {
 /*
 						Compute Binom(numterms+power-1,power-1)
-						We need potentially long arrithmetic.
+						We need potentially long arithmetic.
 						That is why we had to allocate AN.BinoScrat
 */
 						if ( AN.last1 == t[3] && AN.last2 == cbuf[t[4]].NumTerms[t[2]] + t[3] - 1 ) {

@@ -1032,7 +1032,7 @@ int UpdateOneThread(int identity)
  *	because this is part of the 'overhead'.
  *
  *	@param from     the source thread which has all the variables already
- *	@param identity the TFORM defined integer thread identitier of the thread that needs the copy
+ *	@param identity the TFORM defined integer thread identifier of the thread that needs the copy
  *	@param thr      the bucket that contains the terms to be processed by 'identity'
  *	@param par		if 1 copies the already active pieces in the (de)compress buffer
  *	@return Standard return convention (OK -> 0)
@@ -2457,7 +2457,7 @@ int SendOneBucket(int type)
 /**
  *	We divide the expressions marked by partodo over the workers.
  *	The workers are responsible for writing their results into the buffers
- *	of the master (output). This is to be controled by locks.
+ *	of the master (output). This is to be controlled by locks.
  *	The order of the expressions may get changed this way.
  *
  *	The InParallel statement allows the execution of complete expressions
@@ -3577,7 +3577,7 @@ SortBotOut(PHEAD WORD *term)
  *	but now also each worker part is divided into blocks. This allows the
  *	worker to fill blocks while the master is already working on blocks that
  *	were filled before. The blocks are arranged in a circular fashion.
- *	The whole is controled by locks which seems faster than setting it up
+ *	The whole is controlled by locks which seems faster than setting it up
  *	with signals.
  *
  *	This routine is run by the master when we don't use the sortbots.

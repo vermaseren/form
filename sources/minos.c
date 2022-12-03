@@ -1428,7 +1428,7 @@ int ExistsObject(DBASE *d,MLONG tablenumber,char *arguments)
   	#] ExistsObject : 
   	#[ DeleteObject :
 
-	Returns 1 if Object has been deleteted.
+	Returns 1 if Object has been deleted.
 	We leave a hole. Actually the object is still there but has been
 	inactivated. It can be reactivated by calling this routine again.
 */
