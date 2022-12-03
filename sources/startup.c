@@ -726,7 +726,7 @@ VOID ReserveTempFiles(int par)
 		they can make the same .str file. We prevent this with first trying
 		a file that contains the digits of the pid. If this file
 		has already been taken we fall back on the old scheme.
-		The whole is controled with the -M (MultiRun) parameter in the
+		The whole is controlled with the -M (MultiRun) parameter in the
 		command tail.
 */
 	if ( AM.MultiRun ) {

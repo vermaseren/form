@@ -297,7 +297,7 @@ NextWV:
 				while ( n > 0 && ( *wv == FROMSET || *wv == SETTONUM
 				|| *wv == LOADDOLLAR ) ) { wv += wv[1]; wm++; n--; }
 /*              
-                Freak problem: doesn't test for n and ran into a reamining
+                Freak problem: doesn't test for n and ran into a remaining
                 code equal to SETTONUM followed by a big number and then
                 ran out of the memory.
 

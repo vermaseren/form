@@ -2343,9 +2343,9 @@ int DoRecovery(int *moduletype)
 	R_SET(AR.SortType, WORD);
 	R_SET(AR.ShortSortCount, WORD);
 
-	/* this is usually done in Process(), but sometimes FORM doesn't
+	/* this is usually done in Process(), but sometimes FORM does not
 	   end up executing Process() before it uses the AR.CompressPointer,
-	   so we need to explicitely set it here. */
+	   so we need to explicitly set it here. */
 	AR.CompressPointer = AR.CompressBuffer;
 
 #ifdef WITHPTHREADS

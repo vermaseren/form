@@ -54,7 +54,7 @@ def read_env_positive_int(key, default_value)
     end
   end
   if value <= 0
-    warn("environment variable ingored: #{key} must be positive: #{ENV[key]}")
+    warn("environment variable ignored: #{key} must be positive: #{ENV[key]}")
     value = default_value
   end
   value
