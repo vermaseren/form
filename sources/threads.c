@@ -3250,7 +3250,7 @@ restart:;
 */
 		if ( thr->totnum-thr->usenum < numtogo ) goto restart;
 /*
-		If the thread is in the term loading phace
+		If the thread is in the term loading phase
 		(thr->busy == BUCKETPREPARINGTERM) we better stay away from it.
 		We wait now for the thread to be busy, and don't allow it
 		now to drop out of this state till we are done here.

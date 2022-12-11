@@ -30,11 +30,11 @@
 #include <string>
 
 // First prime modulo which factorization is tried. Too small results
-// in more unsuccesful attempts; too large is slower.
+// in more unsuccessful attempts; too large is slower.
 const int POLYFACT_FIRST_PRIME = 17;
 
 // Fraction of [1,p) that is used for substitutions of variables. Too
-// small results in more unsuccesful attempts; too large is slower.
+// small results in more unsuccessful attempts; too large is slower.
 const int POLYFACT_IDEAL_FRACTION = 5;
 
 // Number of ideals that are tried before failure due to unlucky
