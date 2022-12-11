@@ -693,7 +693,7 @@ int PF_Unpack(void *buffer, size_t count, MPI_Datatype type)
  * the string. If the string does not fit to the buffer PF_packbuf,
  * the function packs only the initial portion. It returns
  * the number of packed bytes, so if (str[length-1]=='\0') then the whole
- * string fits to the buffer, if not, then the rest (str+length) bust be
+ * string fits to the buffer, if not, then the rest (str+length) must be
  * packed and send again. On error, the function returns the negative
  * error code.
  *

@@ -462,7 +462,7 @@ static int PF_InitTree(void)
 	}
 
 	if ( PF_root == NULL )
-	if ( ( PF_root = (NODE*)Malloc1(sizeof(NODE)*numnodes,"nodes in mergtree") ) == NULL )
+	if ( ( PF_root = (NODE*)Malloc1(sizeof(NODE)*numnodes,"nodes in mergetree") ) == NULL )
 		return(-1);
 /*
 		then initialize all the nodes

@@ -2,7 +2,7 @@
  * 
  *  This file contains the main program.
  *  It also deals with the very early stages of the startup of FORM
- *	and the final stages when the program attemps some cleanup.
+ *	and the final stages when the program attempts some cleanup.
  *	Here is the routine that analyses the command tail.
  */
 /* #[ License : */

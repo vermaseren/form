@@ -75,7 +75,7 @@
 
 	By default, the terminator if an empty line. For the current external
 	channel it can be set by means of the function
-	int setTerminatorForExternalChannel(newterminaror).
+	int setTerminatorForExternalChannel(newterminator).
 	The function returns 0 in success, or !0 if something is wrong (no
 	current channel, too long terminator).
 
@@ -110,7 +110,7 @@
 	List of all public functions:
 	int openExternalChannel(UBYTE *cmd,int daemonize,UBYTE *shellname, UBYTE * stderrname);
 	int initPresetExternalChannels(UBYTE *theline, int thetimeout);
-	int setTerminatorForExternalChannel(char *newterminaror);
+	int setTerminatorForExternalChannel(char *newterminator);
 	int setKillModeForExternalChannel(int signum, int sentToWholeGroup);
 	int closeExternalChannel(int n);
 	int selectExternalChannel(int n);
@@ -1054,7 +1054,7 @@ mysighandler_t oldPIPE=NULL;
 				  /*Ignore SIGPIPE (up to the end of the process):*/
 				  signal(SIGPIPE,SIG_IGN);
 
-				  /*Wait on read() while the granchild close the pipe 
+				  /*Wait on read() while the grandchild close the pipe 
 					 (on success) or send -2 (if exec() fails).*/
 				  /*There are two possibilities: 
 					  -1 -- this is ok, the pipe was closed on exec,
@@ -1064,7 +1064,7 @@ mysighandler_t oldPIPE=NULL;
 				  */
 				  if( readpid(fdsig2[0]) != (pid_t)-1 )/*something is wrong*/
 					  writepid(fdsig[1],(pid_t)-1);
-				  else/*ok, send PID of the granchild to the father:*/
+				  else/*ok, send PID of the grandchild to the father:*/
 					  writepid(fdsig[1],childpid);
 				  /*Die and free the life space for the grandchild:*/
 				  _exit(0);/*The child, just exit, not return*/
@@ -1253,7 +1253,7 @@ static FORM_INLINE void *createExternalChannel(
 		}
 #ifdef WITHMPI
 		if(h->pid<0)
-			statusbuf[0]='!';/*Brodcast fail to slaves*/
+			statusbuf[0]='!';/*Broadcast fail to slaves*/
 	}
 	 /*else: Keep h->pid = 0 and h->fsend = 0 for slaves in parallel mode!*/
 
@@ -1339,7 +1339,7 @@ int i=0;
   	#] openExternalChannel : 
   	#[ initPresetExternalChannels :
 */
-/*Just simpe wrapper to invoke  openExternalChannel()
+/*Just simple wrapper to invoke  openExternalChannel()
 	from initPresetExternalChannels():*/
 static FORM_INLINE int openPresetExternalChannel(int fdin, int fdout, pid_t theppid)
 {
@@ -1368,7 +1368,7 @@ r#,w# where r# is a read-only descriptor and w# is a write-only
 descriptor. Alternatively, the environment variable FORM_PIPES can be
 used.
 	The following function expects as the first argument 
-this comma-separated list of the  desctiptor pairs and tries to 
+this comma-separated list of the  descriptor pairs and tries to 
 initialize each of channel during thetimeout milliseconds:*/
 
 int initPresetExternalChannels(UBYTE *theline, int thetimeout)
@@ -1412,7 +1412,7 @@ int initPresetExternalChannels(UBYTE *theline, int thetimeout)
 		if( ( *b != ',' ) || ( ppid != getpid() ) )goto presetFails;
 		/*read the parent PID:*/
 		/*The problem is that we do not know the the real type of pid_t.
-		  But long should be ehough. On obsolete systems (when LONG_MAX
+		  But long should be enough. On obsolete systems (when LONG_MAX
 		  is not defined) we assume pid_t is 32-bit integer.
 		  This can lead to problem with portability: */
 		ppid = (pid_t)str2i(b+1,&b,LONG_MAX);
@@ -1602,7 +1602,7 @@ int main (void)
 	printf("Initial channel:%d\n",last=openExternalChannel((UBYTE*)"cat",0,NULL,NULL));
 
 	if( ( i = setTerminatorForExternalChannel("qu") ) != 0 ) return 1;
-	printf("Terminaror is 'qu'\n");
+	printf("Terminator is 'qu'\n");
 
 	while ( fgets(buf, 1024, stdin) != NULL ) {
 		if ( *buf == 'N' ) {

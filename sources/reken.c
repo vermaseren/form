@@ -5,7 +5,7 @@
  *	Hence there are routines for dealing with integers and with rational
  *	of 'arbitrary precision' (within limits)
  *	There are also routines for that calculus modulus an integer.
- *	In addition there are the routines for factorials and bernoulli numbers.
+ *	In addition there are the routines for factorials and Bernoulli numbers.
  *	The random number function is currently only for internal purposes.
  */
 /* #[ License : */
@@ -522,7 +522,7 @@ WORD DivRat(PHEAD UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
  		#[ Simplify :		WORD Simplify(a,na,b,nb)
 
 	Determines the greatest common denominator of a and b and
-	devides both by it. A possible sign is put in a. This is
+	divides both by it. A possible sign is put in a. This is
 	the simplification of the fraction a/b.
 
 */
@@ -1641,7 +1641,7 @@ UWORD Quotient(UWORD *a, WORD *na, WORD b)
  		#] Quotient : 
  		#[ Remain10 :		WORD Remain10(a,na)
 
-	Routine devides a by 10 and gives the remainder as return value.
+	Routine divides a by 10 and gives the remainder as return value.
 	The value of a will be the quotient! a must be positive.
 
 */
@@ -1668,7 +1668,7 @@ WORD Remain10(UWORD *a, WORD *na)
  		#] Remain10 : 
  		#[ Remain4 :		WORD Remain4(a,na)
 
-	Routine devides a by 10000 and gives the remainder as return value.
+	Routine divides a by 10000 and gives the remainder as return value.
 	The value of a will be the quotient! a must be positive.
 
 */
@@ -3506,7 +3506,7 @@ int Factorial(PHEAD WORD n, UWORD *a, WORD *na)
 	Builds up what is needed and remembers it for the next time.
 	b_0 = 1
 	(n+1)*b_n = -b_{n-1}-sum_(i,1,n-1,b_i*b_{n-i})
-	The n-1 playes only a role for b_2.
+	The n-1 plays only a role for b_2.
 	We have hard coded b_0,b_1,b_2 and b_odd. After that:
 	(2n+1)*b_2n = -sum_(i,1,n-1,b_2i*b_{2n-2i})
 
