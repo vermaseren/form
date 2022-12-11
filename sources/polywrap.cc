@@ -705,7 +705,7 @@ WORD *poly_ratfun_add (PHEAD WORD *t1, WORD *t2) {
  *
  *   Description
  *   ===========
- *   This method seaches a term for multiple polyratfuns and
+ *   This method searches a term for multiple polyratfuns and
  *   multiplies their contents. The result is properly
  *   normalized. Normalization also works for terms with a single
  *   polyratfun.

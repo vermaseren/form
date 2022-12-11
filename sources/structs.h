@@ -1452,7 +1452,7 @@ struct M_const {
     LONG    CompressSize;          /* (M) Size of Compress buffer */
     LONG    ScratSize;             /* (M) Size of Fscr[] buffers */
     LONG    HideSize;              /* (M) Size of Fscr[2] buffer */
-    LONG    SizeStoreCache;        /* (M) Size of the chaches for reading global expr. */
+    LONG    SizeStoreCache;        /* (M) Size of the caches for reading global expr. */
     LONG    MaxStreamSize;         /* (M) Maximum buffer size in reading streams */
     LONG    SIOsize;               /* (M) Sort InputOutput buffer size */
     LONG    SLargeSize;            /* (M) */
@@ -1929,7 +1929,7 @@ struct C_const {
     WORD    SymChangeFlag;         /* (C) */
     WORD    CollectPercentage;     /* (C) Collect function percentage */
     WORD    ShortStatsMax;         /* For  On FewerStatistics 10; */
-	WORD	extrasymbols;          /* Flag for the extra symbsols output mode */
+	WORD	extrasymbols;          /* Flag for the extra symbols output mode */
     WORD    PolyRatFunChanged;     /* Keeps track whether we changed in the compiler */
     WORD    ToBeInFactors;
     WORD    InnerTest;            /* For debugging */
@@ -2136,7 +2136,7 @@ struct T_const {
     UWORD   *factorials;           /* (T) buffer of factorials. Dynamic. */
     WORD    *small_power_n;        /*     length of the number */
     UWORD  **small_power;          /*     the number*/	
-    UWORD   *bernoullis;           /* (T) The buffer with bernoulli numbers. Dynamic. */
+    UWORD   *bernoullis;           /* (T) The buffer with Bernoulli numbers. Dynamic. */
     WORD    *primelist;
     LONG    *pfac;                 /* (T) array of positions of factorials. Dynamic. */
     LONG    *pBer;                 /* (T) array of positions of Bernoulli's. Dynamic. */
@@ -2161,7 +2161,7 @@ struct T_const {
     VOID    *auxr_;
 #endif
     PARTI   partitions;
-    LONG    sBer;                  /* (T) Size of the bernoullis buffer */
+    LONG    sBer;                  /* (T) Size of the Bernoullis buffer */
     LONG    pWorkPointer;          /* (R) Offset-pointer in pWorkSpace */
     LONG    lWorkPointer;          /* (R) Offset-pointer in lWorkSpace */
     LONG    posWorkPointer;        /* (R) Offset-pointer in posWorkSpace */
@@ -2215,7 +2215,7 @@ struct T_const {
     WORD    TMbuff;                /* (R) Communication between TestSub and Genera */
 	WORD	TMdolfac;              /* factor number for dollar */
     WORD    nfac;                  /* (T) Number of highest stored factorial */
-    WORD    nBer;                  /* (T) Number of highest bernoulli number. */
+    WORD    nBer;                  /* (T) Number of highest Bernoulli number. */
     WORD    mBer;                  /* (T) Size of buffer pBer. */
     WORD    PolyAct;               /* (R) Used for putting the PolyFun at end. ini at 0 */
     WORD    RecFlag;               /* (R) Used in TestSub. ini at zero. */

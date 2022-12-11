@@ -2167,7 +2167,7 @@ WORD RunPermute(PHEAD WORD *fun, WORD *args, WORD *info)
 		if ( *info > totarg ) return(0);
 /*
 		Now we have a look whether there are dollar variables to be expanded
-		We also sift out all values that are out of range.
+		We also shift out all values that are out of range.
 */
 		withdollar = 0;  in = info;
 		while ( in < infostop ) {

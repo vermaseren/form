@@ -4161,7 +4161,7 @@ WORD ReadSaveHeader(VOID)
  *
  *  Called by CoLoad() and FindInIndex().
  *
- *  @param  fileind  contains the read FILEINDEX after succesful return. must
+ *  @param  fileind  contains the read FILEINDEX after successful return. must
  *                   point to allocated, big enough memory.
  *  @return          = 0 everything okay, != 0 an error occurred
  */
@@ -4170,7 +4170,7 @@ WORD ReadSaveIndex(FILEINDEX *fileind)
 	/* do we need some translation for the FILEINDEX? */
 	if ( AO.transFlag ) {
 		/* if a translated FILEINDEX can hold less entries than the original
-		   FILEINDEX, then we need to buffer the extra entires in this static
+		   FILEINDEX, then we need to buffer the extra entries in this static
 		   variable (can happen going from 32bit to 64bit */
 		static FILEINDEX sbuffer;
 
