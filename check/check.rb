@@ -43,6 +43,15 @@ def warn(message, file = nil, lineno = nil)
   end
 end
 
+# Get a string from the given environment variable.
+def read_env_str(key, default_value)
+  value = default_value
+  if ENV.key?(key)
+    value = ENV[key]
+  end
+  value
+end
+
 # Get a positive integer from the given environment variable.
 def read_env_positive_int(key, default_value)
   value = default_value
@@ -62,6 +71,12 @@ end
 
 # The default prefix for the root temporary directory. See TempDir.root.
 TMPDIR_PREFIX = "form_check_"
+
+# The default extra options for mpirun.
+DEFAULT_MPIRUN_OPTS = read_env_str("FORM_CHECK_MPIRUN_OPTS", nil)
+
+# The default extra options for valgrind.
+DEFAULT_VALGRIND_OPTS = read_env_str("FORM_CHECK_VALGRIND_OPTS", nil)
 
 # The default maximal running time in seconds of FORM jobs before they get terminated.
 DEFAULT_TIMEOUT = read_env_positive_int("FORM_CHECK_DEFAULT_TIMEOUT", 10)
@@ -285,60 +300,72 @@ module FormTest
       return
     end
 
-    setup_files
-    prepare
-    @stdout = ""
-    @stderr = ""
-    begin
-      nfiles.times do |i|
-        @filename = "#{i + 1}.frm"
-        execute("#{FormTest.cfg.form_cmd} #{@filename}")
-        if !finished?
-          info.status = "TIMEOUT"
-          assert(false, "timeout (= #{timeout} sec) in #{@filename} of #{info.desc}")
+    FormTest.cfg.retries.times do |t|
+      setup_files
+      prepare
+      @stdout = ""
+      @stderr = ""
+      begin
+        nfiles.times do |i|
+          @filename = "#{i + 1}.frm"
+          execute("#{FormTest.cfg.form_cmd} #{@filename}")
+          if !finished?
+            info.status = "TIMEOUT"
+            assert(false, "timeout (= #{timeout} sec) in #{@filename} of #{info.desc}")
+          end
+          if return_value != 0
+            break
+          end
         end
-        if return_value != 0
-          break
+        yield
+      # NOTE: Here we catch all exceptions, though it is a very bad style. This
+      #       is because, in Ruby 1.9, test/unit is implemented based on
+      #       minitest and MiniTest::Assertion is not a subclass of
+      #       StandardError.
+      rescue Exception => e # rubocop:disable Lint/RescueException
+        if info.status == "TIMEOUT" && t < FormTest.cfg.retries - 1
+          warn("timeout (= #{timeout} sec) in #{@filename} of #{info.desc}, retry")
+          info.status = nil
+          info.times = nil
+          next
         end
-      end
-      yield
-    # NOTE: Here we catch all exceptions, though it is a very bad style. This
-    #       is because, in Ruby 1.9, test/unit is implemented based on
-    #       minitest and MiniTest::Assertion is not a subclass of
-    #       StandardError.
-    rescue Exception => e # rubocop:disable Lint/RescueException
-      $stderr.puts
-      $stderr.puts("=" * 79)
-      $stderr.puts("#{info.desc} FAILED")
-      $stderr.puts("=" * 79)
-      $stderr.puts(@stdout)
-      $stderr.puts("=" * 79)
-      $stderr.puts
-      if info.status.nil?
-        if (defined?(MiniTest::Assertion) && e.is_a?(MiniTest::Assertion)) ||
-           (defined?(Test::Unit::AssertionFailedError) && e.is_a?(Test::Unit::AssertionFailedError))
-          info.status = "FAILED"
-        else
-          info.status = "ERROR"
-        end
-      end
-      raise e
-    else
-      if FormTest.cfg.verbose
         $stderr.puts
         $stderr.puts("=" * 79)
-        $stderr.puts("#{info.desc} SUCCEEDED")
+        $stderr.puts("#{info.desc} FAILED")
         $stderr.puts("=" * 79)
         $stderr.puts(@stdout)
         $stderr.puts("=" * 79)
         $stderr.puts
+        if info.status.nil?
+          if (defined?(MiniTest::Assertion) && e.is_a?(MiniTest::Assertion)) ||
+             (defined?(Test::Unit::AssertionFailedError) && e.is_a?(Test::Unit::AssertionFailedError))
+            info.status = "FAILED"
+          else
+            info.status = "ERROR"
+          end
+        end
+        raise e
+      else
+        if FormTest.cfg.verbose
+          $stderr.puts
+          $stderr.puts("=" * 79)
+          $stderr.puts("#{info.desc} SUCCEEDED")
+          $stderr.puts("=" * 79)
+          $stderr.puts(@stdout)
+          $stderr.puts("=" * 79)
+          $stderr.puts
+        end
+        info.status = "OK"
       end
-      info.status = "OK"
+      break
     end
   end
 
   # Execute a FORM job.
   def execute(cmdline)
+    if FormTest.cfg.verbose
+      $stderr.puts("Command: #{cmdline}")
+    end
     @finished = false
     @exit_status = nil
     t0 = Time.now
@@ -983,12 +1010,15 @@ end
 
 # FORM configuration.
 class FormConfig
-  def initialize(form, mpirun, valgrind, ncpu, timeout, stat, full, verbose)
+  def initialize(form, mpirun, mpirun_opts, valgrind, valgrind_opts, ncpu, timeout, retries, stat, full, verbose)
     @form     = form
     @mpirun   = mpirun
+    @mpirun_opts = mpirun_opts
     @valgrind = valgrind
+    @valgrind_opts = valgrind_opts
     @ncpu     = ncpu
     @timeout  = timeout
+    @retries  = retries
     @stat     = stat
     @full     = full
     @verbose  = verbose
@@ -1006,7 +1036,8 @@ class FormConfig
     @form_cmd    = nil
   end
 
-  attr_reader :form, :mpirun, :valgrind, :ncpu, :timeout, :stat, :full, :verbose, :form_bin, :mpirun_bin, :valgrind_bin, :valgrind_supp, :head, :wordsize, :form_cmd
+  attr_reader :form, :mpirun, :mpirun_opts, :valgrind, :valgrind_opts, :ncpu, :timeout, :retries, :stat, :full, :verbose,
+              :form_bin, :mpirun_bin, :valgrind_bin, :valgrind_supp, :head, :wordsize, :form_cmd
 
   def serial?
     @is_serial
@@ -1104,12 +1135,18 @@ class FormConfig
       cmdlist = []
       if @is_mpi
         cmdlist << @mpirun_bin << "-np" << @ncpu.to_s
+        if !@mpirun_opts.nil?
+          cmdlist << @mpirun_opts
+        end
       end
       if !@valgrind_bin.nil?
         cmdlist << @valgrind_bin
         cmdlist << "--leak-check=full"
         if !@valgrind_supp.nil?
           cmdlist << "--suppressions=#{@valgrind_supp}"
+        end
+        if !@valgrind_opts.nil?
+          cmdlist << @valgrind_opts
         end
       end
       cmdlist << @form_bin
@@ -1209,12 +1246,15 @@ def main
   opts.path = nil
   opts.form = "form"
   opts.mpirun = "mpirun"
+  opts.mpirun_opts = nil
   opts.ncpu = 4
   opts.timeout = nil
+  opts.retries = 1
   opts.stat = false
   opts.full = false
   opts.enable_valgrind = false
   opts.valgrind = "valgrind"
+  opts.valgrind_opts = nil
   opts.dir = nil
   opts.name_patterns = []
   opts.exclude_patterns = []
@@ -1225,24 +1265,46 @@ def main
 
   parser = OptionParser.new
   parser.banner = "Usage: #{File.basename($0)} [options] [--] [binname] [files|tests..]"
-  parser.on("-h", "--help",          "Show this help and exit")           { puts(parser); exit }
-  parser.on("-l", "--list",          "List all tests and exit")           { opts.list = true }
-  parser.on("--path PATH",           "Use PATH for executables")          { |path| opts.path = add_path(opts.path, path) }
-  parser.on("--form BIN",            "Use BIN as FORM executable")        { |bin|  opts.form = bin }
-  parser.on("--mpirun BIN",          "Use BIN as mpirun executable")      { |bin|  opts.mpirun = bin }
-  parser.on("-w", "--ncpu N",        "Use N CPUs")                        { |n|    opts.ncpu = n.to_i }
-  parser.on("-t", "--timeout N",     "Timeout N in seconds")              { |n|    opts.timeout = n.to_i }
-  parser.on("--stat",                "Print detailed statistics")         { opts.stat = true }
-  parser.on("--full",                "Full test, ignoring pending")       { opts.full = true }
-  parser.on("--enable-valgrind",     "Enable Valgrind")                   { opts.enable_valgrind = true }
-  parser.on("--valgrind BIN",        "Use BIN as Valgrind executable")    { |bin| opts.enable_valgrind = true; opts.valgrind = bin }
-  parser.on("-C", "--directory DIR", "Directory for test cases")          { |dir| opts.dir = search_dir(dir, opts) }
-  parser.on("-n", "--name NAME",     "Run tests matching NAME")           { |pat| opts.name_patterns << pat }
-  parser.on("-x", "--exclude NAME",  "Do not run tests matching NAME")    { |pat| opts.exclude_patterns << pat }
+  parser.on("-h", "--help",
+            "Show this help and exit")            { puts(parser); exit }
+  parser.on("-l", "--list",
+            "List all tests and exit")            { opts.list = true }
+  parser.on("--path PATH",
+            "Use PATH for executables")           { |path| opts.path = add_path(opts.path, path) }
+  parser.on("--form BIN",
+            "Use BIN as FORM executable")         { |bin| opts.form = bin }
+  parser.on("--mpirun BIN",
+            "Use BIN as mpirun executable")       { |bin| opts.mpirun = bin }
+  parser.on("--mpirun-opts OPTS",
+            "Pass command line options OPTS to mpirun") { |s| opts.mpirun_opts = s }
+  parser.on("-w", "--ncpu N",
+            "Use N CPUs")                         { |n| opts.ncpu = n.to_i }
+  parser.on("-t", "--timeout N",
+            "Timeout N in seconds")               { |n| opts.timeout = n.to_i }
+  parser.on("-r", "--retries N",
+            "Retry up to N times when timeout")   { |n| opts.retries = n.to_i }
+  parser.on("-s", "--stat",
+            "Print detailed statistics")          { opts.stat = true }
+  parser.on("-f", "--full",
+            "Full test, ignoring pending")        { opts.full = true }
+  parser.on("--enable-valgrind",
+            "Enable Valgrind")                    { opts.enable_valgrind = true }
+  parser.on("--valgrind BIN",
+            "Use BIN as Valgrind executable")     { |bin| opts.enable_valgrind = true; opts.valgrind = bin }
+  parser.on("--valgrind-opts OPTS",
+            "Pass command line options OPTS to valgrind") { |s| opts.valgrind_opts = s }
+  parser.on("-C", "--directory DIR",
+            "Directory for test cases")           { |dir| opts.dir = search_dir(dir, opts) }
+  parser.on("-n", "--name NAME",
+            "Run tests matching NAME")            { |pat| opts.name_patterns << pat }
+  parser.on("-x", "--exclude NAME",
+            "Do not run tests matching NAME")     { |pat| opts.exclude_patterns << pat }
   parser.on("-g", "--group GROUPID/GROUPCOUNT",
-            "Split tests and run only one group")                         { |group| opts.group_id, opts.group_count = parse_group(group) }
-  parser.on("-v", "--verbose",       "Do not suppress the test output")   { opts.verbose = true }
-  parser.on("-D TEST=NAME",          "Alternative way to run tests NAME") { |pat| opts.name_patterns << parse_def(pat) }
+            "Split tests and run only one group") { |group| opts.group_id, opts.group_count = parse_group(group) }
+  parser.on("-v", "--verbose",
+            "Enable verbose output")              { opts.verbose = true }
+  parser.on("-D TEST=NAME",
+            "Alternative way to run tests NAME")  { |pat| opts.name_patterns << parse_def(pat) }
   begin
     parser.parse!(ARGV)
   rescue OptionParser::ParseError => e
@@ -1340,6 +1402,16 @@ def main
   ENV["FORMPATH"] = File.expand_path(opts.dir.nil? ? TESTDIR : opts.dir) +
                     (ENV["FORMPATH"].nil? ? "" : ":#{ENV['FORMPATH']}")
 
+  # Default mpirun_opts.
+  if opts.mpirun_opts.nil?
+    opts.mpirun_opts = DEFAULT_MPIRUN_OPTS
+  end
+
+  # Default valgrind_opts.
+  if opts.valgrind_opts.nil?
+    opts.valgrind_opts = DEFAULT_VALGRIND_OPTS
+  end
+
   # Default timeout.
   if opts.timeout.nil?
     opts.timeout = DEFAULT_TIMEOUT
@@ -1352,9 +1424,12 @@ def main
   # Initialize the FORM configuration.
   FormTest.cfg = FormConfig.new(opts.form,
                                 opts.mpirun,
+                                opts.mpirun_opts,
                                 opts.enable_valgrind ? opts.valgrind : nil,
+                                opts.valgrind_opts,
                                 opts.ncpu,
                                 opts.timeout > 1 ? opts.timeout : 1,
+                                opts.retries > 1 ? opts.retries : 1,
                                 opts.stat,
                                 opts.full,
                                 opts.verbose)
