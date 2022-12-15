@@ -3729,8 +3729,8 @@ WORD Moebius(PHEAD WORD nn)
 		b: the number is not already in the table.
 */
 	if ( nn >= AR.moebiustablesize ) {
-		if ( AR.moebiustablesize <= 0 ) { newsize = nn + 20; }
-		else { newsize = nn*2; }
+		if ( AR.moebiustablesize <= 0 ) { newsize = (LONG)nn + 20; }
+		else { newsize = (LONG)nn*2; }
 		if ( newsize > MAXPOSITIVE ) newsize = MAXPOSITIVE;
 		newtable = (char *)Malloc1(newsize*sizeof(char),"Moebius");
 		for ( i = 0; i < AR.moebiustablesize; i++ ) newtable[i] = AR.moebiustable[i];
@@ -3739,7 +3739,8 @@ WORD Moebius(PHEAD WORD nn)
 		AR.moebiustable = newtable;			
 		AR.moebiustablesize = newsize;
 	}
-	if ( AR.moebiustable[nn] != 2 ) return((WORD)AR.moebiustable[nn]);
+	/* NOTE: nn == MAXPOSITIVE never fits in moebiustable. */
+	if ( nn != MAXPOSITIVE && AR.moebiustable[nn] != 2 ) return((WORD)AR.moebiustable[nn]);
 	mu = 1;
 	if ( n == 1 ) goto putvalue;
 	if ( n % 2 == 0 ) {
@@ -3749,8 +3750,12 @@ WORD Moebius(PHEAD WORD nn)
 		mu = -mu;
 		if ( n == 1 ) goto putvalue;
 	}
+#if ( BITSINWORD == 32 )
 	for ( i = 0; i < AR.numinprimelist; i++ ) {
 		x = AR.PrimeList[i];
+#else
+	for ( x = 3; x < MAXPOSITIVE; x += 2 ) {
+#endif
 		if ( n % x == 0 ) {
 			n /= x;
 			if ( n % x == 0 ) { mu = 0; goto putvalue; }
@@ -3762,7 +3767,7 @@ WORD Moebius(PHEAD WORD nn)
 	}
 	mu = -mu;
 putvalue:
-	AR.moebiustable[nn] = mu;
+	if ( nn != MAXPOSITIVE ) AR.moebiustable[nn] = mu;
 	return((WORD)mu);
 }
 
