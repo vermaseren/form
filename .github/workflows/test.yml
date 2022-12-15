@@ -10,7 +10,7 @@ jobs:
   # the committer has forgotten running "make check".
   check:
     name: Test (${{ matrix.test }}) for ${{ matrix.bin }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
       matrix:
@@ -86,7 +86,7 @@ jobs:
   # jobs, we divide the tests into smaller parts.
   valgrind-check:
     name: Valgrind check for ${{ matrix.bin }} (${{ matrix.group }})
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
       matrix:
@@ -153,13 +153,13 @@ jobs:
         run: make -C sources -j 4 ${{ matrix.bin }}
 
       - name: Test
-        run: ./check/check.rb valgrind ./sources/${{ matrix.bin }} --stat -g ${{ matrix.group }}
+        run: ./check/check.rb valgrind ./sources/${{ matrix.bin }} --stat -g ${{ matrix.group }} --retries 5
 
   # Generate LCOV coverage data to be posted to coveralls.io. Note that
   # we measure code coverage only for tests checked with Valgrind.
   coverage:
     name: Code coverage for ${{ matrix.bin }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
       matrix:
