@@ -33,19 +33,17 @@
 
 	This module is written by M.Tentyukov as a part of implementation of
 	interaction between FORM and external processes, first release
-	09.04.2004. A part of this code is copyied from the DIANA project
+	09.04.2004. A part of this code is copied from the DIANA project, which was
 	written by M. Tentyukov and published under the GPL version 2 as
-	published by the Free Software Foundation.  The code of this module
-	is NOT covered by GPL; it can be used under the terms of the FORM 
-	License http://www.nikhef.nl/~form/license.html
+	published by the Free Software Foundation.
 
 	This file is completely re-written by M.Tentyukov in May 2006.
 	Since the interface was changed, the public function were changed,
-	also. A new publc functions were added: initPresetExternalChannels()
+	also. A new public functions were added: initPresetExternalChannels()
 	(see comments just before this function in the present file) and
 	setKillModeForExternalChannel (a pointer, not a function).
 
-	If a macro WITHEXTERNALCHANNEL is not defined, all public punctions
+	If a macro WITHEXTERNALCHANNEL is not defined, all public functions
 	are stubs returning failure.
 
 	The idea is to start an external command  swallowing
