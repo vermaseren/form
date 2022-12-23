@@ -1905,6 +1905,7 @@ Print;
     #define LOOPS "6"
     Local F = topologies_(`LOOPS',-2,{3,},QQ,PP);
     .end
+    #time_dilation 2.0
     assert succeeded?
     assert nterms("F") == 2793
 *--#] Diagrams_4 : 

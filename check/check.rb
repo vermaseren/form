@@ -696,12 +696,14 @@ class TestInfo
     @foldname = nil # fold name of the test
     @enabled = nil  # enabled or not
     @sources = []   # FORM sources
+    @time_dilation = nil
 
     @status = nil   # status
     @times = nil    # elapsed time (array)
   end
 
-  attr_accessor :classname, :where, :foldname, :enabled, :sources, :status, :times
+  attr_accessor :classname, :where, :foldname, :enabled, :sources, :time_dilation,
+                :status, :times
 
   # Return the description of the test.
   def desc
@@ -762,6 +764,7 @@ class TestCases
         requires = nil
         pendings = nil
         prepares = nil
+        time_dilation = nil
 
         infile.each_line do |line|
           line.chop!
@@ -792,6 +795,7 @@ class TestCases
               requires = nil
               pendings = nil
               prepares = nil
+              time_dilation = nil
               if skipping
                 line = ""
               else
@@ -844,6 +848,9 @@ class TestCases
                 prepares = prepares.join("; ")
                 line += "def prepare; #{prepares} end; "
               end
+              if !time_dilation.nil?
+                line += "def timeout; super() * #{time_dilation} end;"
+              end
               line += "end"
             end
             level = 0
@@ -889,8 +896,19 @@ class TestCases
               prepares = []
             end
             prepares << $1
-          elsif heredoc.nil? && line =~ /^\*\s*#\s*(require|prepare|pend_if)\s+(.*)/
-            # *#require/prepare/pend_if, commented out in the FORM way
+          elsif heredoc.nil? && line =~ /^\s*#\s*time_dilation\s+(.*)/
+            # #time_dilation <dilation>
+            line = ""
+            if !time_dilation.nil?
+              fatal("attempted to set time_dilation twice", inname, lineno)
+            end
+            time_dilation = $1.to_f
+            if time_dilation <= 0
+              fatal("invalid time_dilation", inname, lineno)
+            end
+            info.time_dilation = time_dilation
+          elsif heredoc.nil? && line =~ /^\*\s*#\s*(require|prepare|pend_if|time_dilation)\s+(.*)/
+            # *#require/prepare/pend_if/time_dilation, commented out in the FORM way
             line = ""
           else
             if heredoc.nil?
@@ -1462,7 +1480,7 @@ def finalize
     bar_width = 40
   end
 
-  puts("timeout: #{FormTest.cfg.timeout}s")
+  puts("default timeout: #{FormTest.cfg.timeout}s")
 
   infos.each do |info|
     (0..info.sources.length - 1).each do |i|
@@ -1470,20 +1488,24 @@ def finalize
       if !info.times.nil? && i < info.times.length
         t = info.times[i]
       end
+      timeout = FormTest.cfg.timeout
+      if !info.time_dilation.nil?
+        timeout *= info.time_dilation
+      end
       if i == 0
         puts(format("%s %s  %s %s%s",
                     lpad(info.foldname, max_foldname_width),
                     lpad("(#{info.where})", max_where_width),
                     lpad(info.status.nil? ? "UNKNOWN" : info.status, status_width),
-                    bar_str(t, FormTest.cfg.timeout, bar_width),
-                    format_time(t, FormTest.cfg.timeout)))
+                    bar_str(t, timeout, bar_width),
+                    format_time(t, timeout)))
       else
         puts(format("%s %s  %s %s%s",
                     lpad("", max_foldname_width),
                     lpad("", max_where_width),
                     lpad("", status_width),
-                    bar_str(t, FormTest.cfg.timeout, bar_width),
-                    format_time(t, FormTest.cfg.timeout)))
+                    bar_str(t, timeout, bar_width),
+                    format_time(t, timeout)))
       end
     end
   end

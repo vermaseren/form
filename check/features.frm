@@ -159,6 +159,41 @@ assert result("F") =~ expr("
  x^203 - x^205 - x^206 + x^207 + x^209 + x^210
 ")
 *--#] moebius_2 :
+*--#[ moebius_3 :
+* corner cases, see #430
+#do i=1,9
+  L F`i' = moebius_(2^15-`i');
+#enddo
+#do i=1,9
+  L G`i' = moebius_(2^31-`i');
+#enddo
+P;
+.end
+#time_dilation 4.0
+assert succeeded?
+if wordsize >= 2
+  assert result("F1") =~ expr("-1")
+  assert result("F2") =~ expr("1")
+  assert result("F3") =~ expr("1")
+  assert result("F4") =~ expr("0")
+  assert result("F5") =~ expr("-1")
+  assert result("F6") =~ expr("1")
+  assert result("F7") =~ expr("0")
+  assert result("F8") =~ expr("0")
+  assert result("F9") =~ expr("-1")
+end
+if wordsize >= 4
+  assert result("G1") =~ expr("-1")
+  assert result("G2") =~ expr("0")
+  assert result("G3") =~ expr("-1")
+  assert result("G4") =~ expr("0")
+  assert result("G5") =~ expr("1")
+  assert result("G6") =~ expr("-1")
+  assert result("G7") =~ expr("1")
+  assert result("G8") =~ expr("0")
+  assert result("G9") =~ expr("-1")
+end
+*--#] moebius_3 :
 *--#[ partitions_ :
 * Test partitions function
 #-

@@ -1474,6 +1474,7 @@ P;
 .end
 # Too slow on Travis CI. ParFORM didn't have this bug.
 #pend_if travis? && (!linux? || valgrind? || mpi?)
+#time_dilation 2.0
 assert succeeded?
 assert result("F1") =~ expr("2027025")
 *--#] Issue154 : 
