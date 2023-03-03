@@ -655,6 +655,12 @@ VOID ReserveTempFiles(int par)
 		}
 	}
 /*
+	Make these paths available to the user as pre-processor variables:
+*/
+	PutPreVar((UBYTE *)"FORMTMP_", AM.TempDir, 0, 0);
+	PutPreVar((UBYTE *)"FORMTMPSORT_", AM.TempSortDir, 0, 0);
+
+/*
 	We have now in principle a path but we will use its first element only.
 	Later that should become more complicated. Then we will use a path and
 	when one device is full we can continue on the next one.
