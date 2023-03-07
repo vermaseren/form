@@ -170,6 +170,8 @@ assert result("F") =~ expr("
 P;
 .end
 #time_dilation 4.0
+# too heavy on GitHub (often fails)
+#pend_if github? && valgrind?
 assert succeeded?
 if wordsize >= 2
   assert result("F1") =~ expr("-1")
