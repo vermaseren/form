@@ -321,6 +321,7 @@ higherlevel:
 */
 					int nargs = 1;
 					PREVAR *p;
+					size_t p_offset;
 					*s++ = 0; namebuf[i-2] = 0;
 					if ( StrICmp(namebuf,(UBYTE *)"random_") == 0 ) {
 						UBYTE *ranvalue;
@@ -438,6 +439,7 @@ higherlevel:
 					while ( *s ) s++;
 					s++;
 					t = p->argnames;
+					p_offset = p - PreVar;
 					for ( j = 0; j < p->nargs; j++ ) {
 						if ( ( nargs == p->nargs-1 ) && ( *t == '?' ) ) {
 							PutPreVar(t,0,0,0);
@@ -447,6 +449,7 @@ higherlevel:
 							while ( *s ) s++;
 							s++;
 						}
+						p = PreVar + p_offset;
 						while ( *t ) t++;
 						t++;
 					}
