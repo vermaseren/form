@@ -43,6 +43,7 @@
 */
 
 #include "form3.h"
+#include "comtool.h"
 
 /*
 	com1commands are the commands of which only part of the word has to
@@ -572,10 +573,13 @@ int CompileStatement(UBYTE *in)
 	First the test on the order of the statements.
 	This is relatively new (2.2c) and may cause some problems with old
 	programs. Hence the first error message should explain!
+
+	Positions of declaration statements with the WITHAUTO flag and
+	ModuleOption statements for $-variables have been relaxed from v4.2.
 */
 	if ( AP.PreAssignFlag == 0 && AM.OldOrderFlag == 0 ) {
 	 if ( AP.PreInsideLevel ) {
-	  if ( k->type != STATEMENT && k->type != MIXED ) {
+	  if ( k->type != STATEMENT && k->type != MIXED && (k->type != DECLARATION || !(k->flags & WITHAUTO)) ) {
 		MesPrint("&Only executable and print statements are allowed in an %#inside/%#endinside construction");
 		return(-1);
 	  }
@@ -588,14 +592,36 @@ int CompileStatement(UBYTE *in)
 			if ( TestTables() ) error1 = 1;
 		}
 	  }
+	  /*
+	   * Exception rules of the ordering:
+	   *   - mixed statements
+	   *   - declaration statements with the WITHAUTO flag
+	   *   - the Format statement
+	   *   - the ModuleOption statement for $-variables
+	   */
 	  if ( k->type == MIXED ) {
 		if ( AC.compiletype <= DEFINITION ) {
 			AC.compiletype = STATEMENT;
 		}
 	  }
+	  else if ( k->type == DECLARATION && (k->flags & WITHAUTO) ) {
+		  if ( AC.compiletype < DECLARATION ) {
+			AC.compiletype = DECLARATION;
+		  }
+	  }
 	  else if ( k->type > AC.compiletype ) {
-		if ( StrCmp((UBYTE *)(k->name),(UBYTE *)"format") != 0 )
-			AC.compiletype = k->type;
+		if ( k->type == TOOUTPUT && (StrCmp((UBYTE *)(k->name),(UBYTE *)"format") == 0) )
+			goto skip_new_compiletype;
+		if ( k->type == ATENDOFMODULE && (StrCmp((UBYTE *)(k->name),(UBYTE *)"moduleoption") == 0) ) {
+			UBYTE *ss = s;
+			SkipSpaces(&ss);
+			if ( ConsumeOption(&ss,"local") ||
+			     ConsumeOption(&ss,"maximum") ||
+			     ConsumeOption(&ss,"minimum") ||
+			     ConsumeOption(&ss,"sum") ) goto skip_new_compiletype;
+		}
+		AC.compiletype = k->type;
+skip_new_compiletype:;
 	  }
 	  else if ( k->type < AC.compiletype ) {
 		switch ( k->type ) {
