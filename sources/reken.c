@@ -1069,11 +1069,21 @@ WORD DivLong(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c,
 		  if ( ( (LONG)b & (sizeof(mp_limb_t)-1) ) != 0 ) {
 			from = b; b = to = DLscratA; i = nb; NCOPY(to, from, i);
 		  }
+#if ( GMPSPREAD != 1 )
+/*
+		  Not recognizing this case was a nasty and extremely rare bug.
+		  In the case that c == a and na is odd and nc == na and b
+		  still needs to be used, the least significant UWORD of b got
+		  overwritten by zero. (22-mar-2023)
+*/
+		  ic = DLscratB; id = DLscratC;
+#else
 		  if ( ( (LONG)c & (sizeof(mp_limb_t)-1) ) != 0 ) ic = DLscratB;
 		  else                                            ic = c;
 
 		  if ( ( (LONG)d & (sizeof(mp_limb_t)-1) ) != 0 ) id = DLscratC;
 		  else                                            id = d;
+#endif
 		  mpn_tdiv_qr((mp_limb_t *)ic,(mp_limb_t *)id,(mp_size_t)0,
 			(const mp_limb_t *)a,(mp_size_t)(na/GMPSPREAD),
 			(const mp_limb_t *)b,(mp_size_t)(nb/GMPSPREAD));
