@@ -29,7 +29,7 @@
 
 \providecommand{\texorpdfstring}[2]{#1}% htmlonly
 
-\newcommand{\emptypage}{\newpage \thispagestyle{empty} \tiny{.} \normalsize}
+\newcommand{\emptypage}{\newpage \thispagestyle{empty} \tiny{\ } \normalsize}
 \newcommand{\clearemptydoublepage}{\newpage{\pagestyle{empty}\cleardoublepage}}
 
 \newcommand{\C}[1]{{\tt #1}}

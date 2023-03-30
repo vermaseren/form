@@ -4586,15 +4586,15 @@ partial\index{partial fractioning} fractioning. In the statement
 in which \verb:a:, \verb:b: and \verb:c: should be three symbols {\FORM} 
 will assume that $c = b-a$ and then make the substitutions
 \begin{eqnarray}
-    \frac{1}{a^m}\frac{1}{b^n} & = & \sum_{i=0}^{m-1}\sign(i)
-        \binom(n-1+i,n-1)\frac{1}{a^{m-i}}\frac{1}{c^{n+i}}
-        +\sum_{i=0}^{n-1}\sign(m)
-        \binom(m-1+i,m-1)\frac{1}{b^{n-i}}\frac{1}{c^{m+i}}
+    \frac{1}{a^m}\frac{1}{b^n} & = & \sum_{i=0}^{m-1}\sign{i}
+        \binom{n-1+i}{n-1}\frac{1}{a^{m-i}}\frac{1}{c^{n+i}}
+        +\sum_{i=0}^{n-1}\sign{m}
+        \binom{m-1+i}{m-1}\frac{1}{b^{n-i}}\frac{1}{c^{m+i}}
         \nonumber \\
-    \frac{b^n}{a^m} & = & \sum_{i=0}^n\binom(n,i)\frac{c^i}{a^{m-n+i}}
+    \frac{b^n}{a^m} & = & \sum_{i=0}^n\binom{n}{i}\frac{c^i}{a^{m-n+i}}
             \ \ \ \ \ \ \ \hfill m\ge n \nonumber \\
-    \frac{b^n}{a^m} & = & \sum_{i=0}^{m-1}\binom(n,i)\frac{c^{n-i}}{a^{m-i}}
-        + \sum_{i=0}^{n-m}\binom(m-1+i,m-1)
+    \frac{b^n}{a^m} & = & \sum_{i=0}^{m-1}\binom{n}{i}\frac{c^{n-i}}{a^{m-i}}
+        + \sum_{i=0}^{n-m}\binom{m-1+i}{m-1}
             c^ib^{n-m-i}
             \ \ \ \ \ \ \ \hfill m<n \nonumber
 \end{eqnarray}

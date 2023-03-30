@@ -1,0 +1,14 @@
+$ADDRESS = '<small>'
+    . 'This document was generated using the '
+    . "<a href=\"$TEX2HTMLADDRESS\">LaTeX2HTML</a>"
+    . " translator Version $TEX2HTMLVERSION."
+    . '</small>';
+$DVIPSOPT = ' -E';
+$INFO = 0;
+$MAX_SPLIT_DEPTH = 0;
+$NO_FOOTNODE = 1;
+$NO_NAVIGATION = 1;
+$SHORT_INDEX = 1;
+$SHOW_SECTION_NUMBERS = 1;
+
+1;

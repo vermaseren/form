@@ -26,7 +26,7 @@ MAIN = manual
 
 TEXFILES = $(TEXSRC) $(MAIN).tex version.tex
 
-EXTRA_DIST = $(TEXSRC) .latex2html-init
+EXTRA_DIST = $(TEXSRC)
 
 .PHONY: dvi latex2html html ps pdf clean-local update_version_tex
 
@@ -89,11 +89,7 @@ if CONFIG_LATEX2HTML
 latex2html: $(MAIN)/$(MAIN).html
 
 $(MAIN)/$(MAIN).html: $(MAIN).dvi
-	$(LATEX2HTML) -init_file $(srcdir)/.latex2html-init $(MAIN).tex
-	cat $(MAIN)/index.html | sed 's/$(MAIN).html#/#/g' >$(MAIN)/index.html.tmp
-	mv $(MAIN)/index.html.tmp $(MAIN)/index.html
-	cat $(MAIN)/$(MAIN).html | sed 's/$(MAIN).html#/#/g' >$(MAIN)/$(MAIN).html.tmp
-	mv $(MAIN)/$(MAIN).html.tmp $(MAIN)/$(MAIN).html
+	LATEX2HTML="$(LATEX2HTML)" $(top_srcdir)/scripts/run-latex2html.sh $(MAIN).tex
 
 endif
 ########## CONFIG_LATEX2HTML

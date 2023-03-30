@@ -31,7 +31,7 @@
 \providecommand{\texorpdfstring}[2]{#1}% htmlonly
 
 \newcommand{\pfill}{\hfill}
-\newcommand{\emptypage}{\newpage \thispagestyle{empty} \tiny{.} \normalsize}
+\newcommand{\emptypage}{\newpage \thispagestyle{empty} \tiny{\ } \normalsize}
 \newcommand{\lefttabitem}[1]{\noindent{\begin{minipage}[t]{4cm}{#1}
 \end{minipage}}\vspace{1mm}}
 \newcommand{\leftvitem}[2]{\noindent{\begin{minipage}[t]{#1}{#2}
@@ -58,9 +58,9 @@
 \def\Remark#1{{\sl #1}}
 \def\Tr{{\rm Tr}}
 \def\hash{\symbol{"23}}
-\def\sign(#1){(\!-\!1)^{#1}}
-\def\binom(#1,#2){ (\!\!
-	 \begin{array}{c} #1 \\ #2 \end{array}\!\! ) }
+\def\sign#1{(\!-\!1)^{#1}}
+\def\binom#1#2{ \left(\!\!
+	 \begin{array}{c} #1 \\ #2 \end{array}\!\! \right) }
 \def\plus{\!+\!}
 \def\minus{\!-\!}
 \def\mydot{\!\!\cdot\!}

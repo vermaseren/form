@@ -1,6 +1,6 @@
 SUBDIRS = doc sources check
 
-EXTRA_DIST = README.md
+EXTRA_DIST = README.md scripts/.latex2html-init scripts/run-latex2html.sh
 
 dist-hook:
 	$(DISTHOOK_VERSION)
