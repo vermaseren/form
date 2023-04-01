@@ -18,6 +18,8 @@ jobs:
           - {bin: form, test: default, timeout: 10}
           - {bin: tform, test: default, timeout: 10}
           - {bin: parform, test: default, timeout: 15}
+          - {bin: form, test: checkpoint, timeout: 10}
+          - {bin: tform, test: checkpoint, timeout: 10}
           - {bin: form, test: forcer, timeout: 60}
           - {bin: tform, test: forcer, timeout: 60}
     steps:

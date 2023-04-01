@@ -235,6 +235,10 @@ module FormTest
     RUBY_PLATFORM =~ /linux/i
   end
 
+  def unix?
+    cygwin? || mac? || linux?
+  end
+
   def travis?
     ENV["TRAVIS"] == "true"
   end
@@ -307,6 +311,7 @@ module FormTest
       @stderr = ""
       begin
         nfiles.times do |i|
+          ENV["FORM"] = FormTest.cfg.form_cmd
           @filename = "#{i + 1}.frm"
           execute("#{FormTest.cfg.form_cmd} #{@filename}")
           if !finished?

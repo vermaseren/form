@@ -27,9 +27,10 @@ endif
 TESTS += benchmark-fu.sh
 
 EXTRA_DIST = \
-	check-help.sh \
 	benchmark-fu.sh \
+	check-help.sh \
 	check.rb \
+	checkpoint/checkpoint.frm \
 	examples.frm \
 	features.frm \
 	fixes.frm \
