@@ -25,7 +25,7 @@
 	assert succeeded?
 	assert bytesize("F") == 27 * wordsize
 	assert result("F") =~ expr("x^7 + 7*x^8 + 21*x^9 + 35*x^10")
-*--#] Var_Symbols_1 :
+*--#] Var_Symbols_1 : 
 *--#[ Var_Sets_1 :
     Symbols a1,a2,a3,b1,b2,b3,x,n;
     CFunctions g1,g2,g3,g;
@@ -36,7 +36,7 @@
     .end
 	assert succeeded?
 	assert result("expr") =~ expr("g1(b1) + g2(b2) + g3(b3) + g(x)")
-*--#] Var_Sets_1 :
+*--#] Var_Sets_1 : 
 *--#[ Var_Dummy_indices_1 :
    i  mu,nu;
    f  f1,f2;
@@ -47,7 +47,7 @@
    .end
 	assert succeeded?
 	assert result("F") =~ expr("2*f1(N1_?)*f2(N1_?)")
-*--#] Var_Dummy_indices_1 :
+*--#] Var_Dummy_indices_1 : 
 *--#[ Var_Dummy_indices_2 :
     Index mu,nu;
     CFunctions f,g;
@@ -60,7 +60,7 @@
     .end
 	assert succeeded?
 	assert result("F") =~ expr("p.p*q.q")
-*--#] Var_Dummy_indices_2 :
+*--#] Var_Dummy_indices_2 : 
 *--#[ Var_Dummy_indices_3 :
     Index mu,nu;
     Symbol x;
@@ -77,7 +77,7 @@
     .end
 	assert succeeded?
 	assert result("F") =~ expr("p.q^2")
-*--#] Var_Dummy_indices_3 :
+*--#] Var_Dummy_indices_3 : 
 *--#[ Var_Dummy_indices_4 :
      Indices mu,nu;
      CFunctions f;
@@ -97,7 +97,7 @@
 	assert succeeded?
 	assert result("G") =~ expr("f(N1_?,N2_?)*f(N2_?,N1_?)*f(N3_?,N4_?)*f(N4_?,N3_?)*f(N5_?,N6_?)*f(N6_?,N5_?)
 		*g(N7_?,N8_?,p1,N9_?)*g(N10_?,N11_?,p2,N12_?)*e_(p1,p2,p3,N9_?)*e_(p1,p2,p3,N12_?)*e_(N7_?,N8_?,N10_?,N11_?)")
-*--#] Var_Dummy_indices_4 :
+*--#] Var_Dummy_indices_4 : 
 *--#[ Var_Extra_Symbols_1 :
 * NOTE: removed "Generated on `DATE_'"
     Vector p,q,p1,p2;
@@ -220,7 +220,7 @@ EOF
       END
 EOF
     end
-*--#] Var_Extra_Symbols_1 :
+*--#] Var_Extra_Symbols_1 : 
 *--#[ Pre_call_1 :
     #define a "1"
     #define bc2 "x"
@@ -238,7 +238,7 @@ EOF
 	assert succeeded?
 	assert stdout =~ /#message This is b: `b'\n~~~This is b: c2\n/
 	assert stdout =~ /#call hop\(`b`!b''`!b'`b'`!b'`b',`~a',`b',`a'\)\n~~~This is the call: xc2c3c2c3,3,c3,2\n/
-*--#] Pre_call_1 :
+*--#] Pre_call_1 : 
 *--#[ Pre_define_1 :
     #define c "3"
     #define var1(a,b) "(`~a'+`~b'+`c')"
@@ -251,7 +251,7 @@ EOF
 	assert succeeded?
 	assert result("F1") =~ expr("6")
 	assert result("F2") =~ expr("7")
-*--#] Pre_define_1 :
+*--#] Pre_define_1 : 
 *--#[ Pre_preout_1 :
     #PreOut ON
     S   a1,...,a4;
@@ -270,7 +270,7 @@ EOF
         .end
 		EOF
 		)
-*--#] Pre_preout_1 :
+*--#] Pre_preout_1 : 
 *--#[ Pre_write_1 :
     Symbols a,b;
     L   F = a+b;
@@ -289,7 +289,7 @@ EOF
         .end
 		EOF
 		)
-*--#] Pre_write_1 :
+*--#] Pre_write_1 : 
 *--#[ Pre_write_2 :
 * TODO: change the result in the manual.
     S   x1,...,x10;
@@ -510,7 +510,7 @@ EOF
       RETURN
       END
 	EOF
-*--#] Pre_write_2 :
+*--#] Pre_write_2 : 
 *--#[ DolVars_1 :
     S	x,a,b;
     Off statistics;
@@ -539,7 +539,7 @@ EOF
      ># \\$a = 3
 	EOF
 	)
-*--#] DolVars_1 :
+*--#] DolVars_1 : 
 *--#[ DolVarsParallel_1 :
     S   a1,...,a10;
     L   F = (a1+...+a10)^3;
@@ -570,7 +570,7 @@ EOF
 	assert stdout =~ /~~~\$c = 2200/
 	assert stdout =~ /~~~\$max = 4/
 	assert stdout =~ /~~~\$min = 0/
-*--#] DolVarsParallel_1 :
+*--#] DolVarsParallel_1 : 
 *--#[ Sta_ArgImplode_1 :
     CF Z1, ..., Z4;
     S x, a, b;
@@ -586,7 +586,7 @@ EOF
     .end
 	assert succeeded?
 	assert result("s") =~ expr("0")
-*--#] Sta_ArgImplode_1 :
+*--#] Sta_ArgImplode_1 : 
 *--#[ Sta_Collect_1 :
 * TODO: change the result in the manual.
 S a,b,c;
@@ -604,7 +604,7 @@ assert succeeded?
 assert result("F") =~ expr("
       cfun(6 + b)*a^2 + cfun(12 + b*c + b^3) + cfun(c + b^2)*a
 ")
-*--#] Sta_Collect_1 :
+*--#] Sta_Collect_1 : 
 *--#[ Sta_CommuteInSet_1 :
     I   i1,...,i10;
     F   A1,...,A10;
@@ -622,7 +622,7 @@ assert result("G") =~ expr("
        + g_(1,i4,i5,i6)*g_(2,i1,i2,i3)*A1(i1)*A1(i2)*A1(i3)*
        A3(i5)*A3(i4)*g_(1,5_)
 ")
-*--#] Sta_CommuteInSet_1 :
+*--#] Sta_CommuteInSet_1 : 
 *--#[ Sta_FactArg_1 :
 *TODO: OldFactArg is needed for the result in the manual.
     On OldFactArg;
@@ -643,7 +643,7 @@ assert result("G") =~ expr("
           f(a,b,-1,3) + f(a,b,3) + 2*f1(a*b) + f2(a*b,-1,3) + f2(a*b,3)
           + f3(a*b,-3) + f3(a*b,3)
         ")
-*--#] Sta_FactArg_1 :
+*--#] Sta_FactArg_1 : 
 *--#[ Sta_Fill_1 :
     Table B(1:1);
     Local dummy = 1;
@@ -656,7 +656,7 @@ assert result("G") =~ expr("
     .end
     assert finished?
     assert warning?
-*--#] Sta_Fill_1 :
+*--#] Sta_Fill_1 : 
 *--#[ Sta_Fill_2 :
     Table B(1:1);
     Local dummy = 1;
@@ -681,7 +681,7 @@ assert result("G") =~ expr("
     assert return_value == 0
     assert result("F", 0) =~ expr("1")
     assert result("F", 1) =~ expr("2")
-*--#] Sta_Fill_2 :
+*--#] Sta_Fill_2 : 
 *--#[ Sta_Fill_3 :
     Table B(1:1);
     Local dummy = 1;
@@ -695,7 +695,7 @@ assert result("G") =~ expr("
     .end
     assert succeeded?
     assert result("F") =~ expr("1")
-*--#] Sta_Fill_3 :
+*--#] Sta_Fill_3 : 
 *--#[ Sta_Fill_4 :
     Table B(1:1);
     Local u = 2;
@@ -715,7 +715,7 @@ assert result("G") =~ expr("
     assert warning?
     assert return_value == 0
     assert result("F") =~ expr("5")
-*--#] Sta_Fill_4 :
+*--#] Sta_Fill_4 : 
 *--#[ Sta_Identify_1 :
     Vector Q,p1,...,p5,q1,...,q5;
     Cfunction V(s),replace;
@@ -739,7 +739,7 @@ assert result("G") =~ expr("
        + V(Q,p1,p4)*V(Q,p2,p3)*V(p1,p2,p5)*V(p3,p4,p5)*
       replace(p4,q1,p3,q2,p2,q3,p1,q4,p5,q5)
     ")
-*--#] Sta_Identify_1 :
+*--#] Sta_Identify_1 : 
 *--#[ Sta_Keep_1 :
 	CF f,g;
 	I i1;
@@ -753,7 +753,7 @@ assert result("G") =~ expr("
 	.end
 	assert succeeded?
 	assert result("F") =~ expr("f(N1_?,x)*g(i1,y)+f(N1_?,x)*g(i1,z)")
-*--#] Sta_Keep_1 :
+*--#] Sta_Keep_1 : 
 *--#[ Sta_LFactorized_1 :
     Symbols x,y,z;
     LocalFactorized F1 = 3*(x+y)*(y+z)*((x+z)*(2*x+1));
@@ -770,7 +770,7 @@ assert result("G") =~ expr("
     assert result("F2") =~ expr("
          ( z + 3*y*z + 3*y^2 + x + 5*x*z + 3*x*y + 2*x^2 )
     ")
-*--#] Sta_LFactorized_1 :
+*--#] Sta_LFactorized_1 : 
 *--#[ Sta_MakeInteger_1 :
     S   a,b,c;
     CF  f;
@@ -780,7 +780,7 @@ assert result("G") =~ expr("
     .end
 	assert succeeded?
 	assert result("F") =~ expr("2/105*f(135*c + 147*b + 385*a)")
-*--#] Sta_MakeInteger_1 :
+*--#] Sta_MakeInteger_1 : 
 *--#[ Sta_PolyFun_1 :
 	Symbol x,y;
 	CF acc;
@@ -790,7 +790,7 @@ assert result("G") =~ expr("
 	.end
 	assert succeeded?
 	assert result("F") =~ expr("x^2 * acc(5 + y + 5*y^2)")
-*--#] Sta_PolyFun_1 :
+*--#] Sta_PolyFun_1 : 
 *--#[ Sta_PolyRatFun_1 :
     S x,y;
     CF acc;
@@ -800,7 +800,7 @@ assert result("G") =~ expr("
     .end
     assert succeeded?
     assert result("F") =~ expr("x^2*acc(-y^3-10*y^2-2*y-5,y^2-1)")
-*--#] Sta_PolyRatFun_1 :
+*--#] Sta_PolyRatFun_1 : 
 *--#[ Sta_Print_1 :
     Symbols a,b,c;
     Local F = 3*a+2*b;
@@ -819,7 +819,7 @@ assert result("G") =~ expr("
 	EOF
 	)
 	assert result("F") =~ expr("3*c + 5*b")
-*--#] Sta_Print_1 :
+*--#] Sta_Print_1 : 
 *--#[ Sta_ReplaceLoop_1 :
 *TODO: change the result in the manual.
     Functions f(antisymmetric),ff(cyclesymmetric);
@@ -830,7 +830,7 @@ assert result("G") =~ expr("
     .end
     assert succeeded?
     assert result("F") =~ expr("- ff(i4,i5,i6)*f(i4,i7,i8)")
-*--#] Sta_ReplaceLoop_1 :
+*--#] Sta_ReplaceLoop_1 : 
 *--#[ Sta_ReplaceLoop_2 :
 *TODO: change the result in the manual.
     Functions f(antisymmetric),ff(cyclesymmetric);
@@ -842,7 +842,7 @@ assert result("G") =~ expr("
     .end
     assert succeeded?
     assert result("F") =~ expr("- f(i1,i2,i4)*f(i2,i3,i5)*f(i1,i3,i6)*ff(i4,i6)")
-*--#] Sta_ReplaceLoop_2 :
+*--#] Sta_ReplaceLoop_2 : 
 *--#[ Sta_Shuffle_1 :
    CF f,ff,g;
    S a,b,c,d,x1,x2;
@@ -858,7 +858,7 @@ assert result("G") =~ expr("
 	assert succeeded?
 	assert result("F1") =~ expr("f(a,b,c,d)+f(a,c,b,d)+f(a,c,d,b)+f(c,a,b,d)+f(c,a,d,b)+f(c,d,a,b)")
 	assert result("F2") =~ expr("g(a,b,c,d)+g(a,c,b,d)+g(a,c,d,b)+g(c,a,b,d)+g(c,a,d,b)+g(c,d,a,b)")
-*--#] Sta_Shuffle_1 :
+*--#] Sta_Shuffle_1 : 
 *--#[ Sta_Stuffle_1 :
     CF  S,R;
     Symbols N,n;
@@ -884,7 +884,7 @@ assert result("G") =~ expr("
        - S(R(1,8,1),N)
 	  EOF
 	)
-*--#] Sta_Stuffle_1 :
+*--#] Sta_Stuffle_1 : 
 *--#[ Sta_ToTensor_1 :
 *NOTE: "functions" option is needed.
 V p,p1,p2;
@@ -899,7 +899,7 @@ assert succeeded?
 assert result("F") =~ expr("
   f(N1_?,p1)*tt(p1,N2_?,p2,N3_?)*t(p1,p1,mu,N1_?,N2_?,N3_?)
 ")
-*--#] Sta_ToTensor_1 :
+*--#] Sta_ToTensor_1 : 
 *--#[ Sta_Transform_1 :
     Symbol x,x1,x2;
     CF  H,H1;
@@ -912,7 +912,7 @@ assert result("F") =~ expr("
     .end
     assert succeeded?
     assert result("F") =~ expr("H(907202)")
-*--#] Sta_Transform_1 :
+*--#] Sta_Transform_1 : 
 *--#[ Fun_distrib_1 :
     Symbols x1,...,x4;
     CFunctions f,f1,f2;
@@ -929,7 +929,7 @@ assert result("F") =~ expr("
        - f1(x2,x4)*f2(x1,x3)
        + f1(x3,x4)*f2(x1,x2)
 	")
-*--#] Fun_distrib_1 :
+*--#] Fun_distrib_1 : 
 *--#[ Fun_exteuclidean_1 :
     Symbols x1,x2,x3,x4;
     Local F = exteuclidean_(54,84);
@@ -941,7 +941,7 @@ assert result("F") =~ expr("
     assert succeeded?
     assert result("F", 0) =~ expr("exteuclidean_(54,84,-3,2)")
     assert result("F", 1) =~ expr("6")
-*--#] Fun_exteuclidean_1 :
+*--#] Fun_exteuclidean_1 : 
 *--#[ Fun_exteuclidean_2 :
     Symbols x1,x2,x3,x4,a,b;
     Local F = exteuclidean_(97,101);
@@ -954,7 +954,7 @@ assert result("F") =~ expr("
     assert succeeded?
     assert result("F", 0) =~ expr("exteuclidean_(97,101,25,-24)")
     assert result("F", 1) =~ expr("1 - 24*b + 25*a")
-*--#] Fun_exteuclidean_2 :
+*--#] Fun_exteuclidean_2 : 
 *--#[ Fun_makerational_1 :
     #$m = prime_(1);
     #write <> "The prime number is %$",$m
@@ -974,7 +974,7 @@ assert result("F") =~ expr("
       assert result("F", 0) =~ expr("9719/38790")
       assert result("F", 1) =~ expr("12345678")
     end
-*--#] Fun_makerational_1 :
+*--#] Fun_makerational_1 : 
 *--#[ Fun_perm_1 :
     CFunction f;
     Symbols x1,...,x3;
@@ -990,7 +990,7 @@ assert result("F") =~ expr("
        + f(x3,x1,x2)
        + f(x3,x2,x1)
     """)
-*--#] Fun_perm_1 :
+*--#] Fun_perm_1 : 
 *--#[ Fun_prime_1 :
     Symbols x1,x2,x3,x4;
     ON highfirst;
@@ -1004,7 +1004,7 @@ assert result("F") =~ expr("
     elsif wordsize == 4
       assert result("F") =~ expr("2147483587*x1 + 2147483579*x2 + 2147483563*x3 + 2147483549*x4")
     end
-*--#] Fun_prime_1 :
+*--#] Fun_prime_1 : 
 *--#[ Fun_putfirst_1 :
     S   a,a1,...,a10;
     CF  f,g;
@@ -1016,7 +1016,7 @@ assert result("F") =~ expr("
     assert result("F") =~ expr("
       f(a3,a,a1,a2,a4,a5,a6,a7,a8,a9,a10)
     ")
-*--#] Fun_putfirst_1 :
+*--#] Fun_putfirst_1 : 
 *--#[ Fun_ranperm_1 :
     Function f;
     Symbols x1,...,x5;
@@ -1026,7 +1026,7 @@ assert result("F") =~ expr("
     .end
     assert succeeded?
     # We can't predict the results!
-*--#] Fun_ranperm_1 :
+*--#] Fun_ranperm_1 : 
 *--#[ Fun_sump_1 :
     Symbol i,x;
     Local F = sump_(i,0,5,x/i);
@@ -1034,7 +1034,7 @@ assert result("F") =~ expr("
     .end
 	assert succeeded?
 	assert result("F") =~ expr("1 + x + 1/2*x^2 + 1/6*x^3 + 1/24*x^4 + 1/120*x^5")
-*--#] Fun_sump_1 :
+*--#] Fun_sump_1 : 
 *--#[ Brackets_1 :
     Symbols a,b,c,x;
     L  F = a*x^2+b*x+c;
@@ -1045,7 +1045,7 @@ assert result("F") =~ expr("
     .end
 	assert succeeded?
 	assert result("Discriminant") =~ pattern("b^2-4*a*c");
-*--#] Brackets_1 :
+*--#] Brackets_1 : 
 *--#[ PolyandFact_1 :
     Symbol x,y;
     CFunction rat;
@@ -1055,7 +1055,7 @@ assert result("F") =~ expr("
     .end
     assert succeeded?
     assert result("F") =~ expr("rat(2*x^2 + 2*y^2,x^2 - y^2)")
-*--#] PolyandFact_1 :
+*--#] PolyandFact_1 : 
 *--#[ PolyandFact_2 :
 * TODO: change the result in the manual.
     Symbol x,y;
@@ -1066,7 +1066,7 @@ assert result("F") =~ expr("
     .end
     assert succeeded?
     assert result("F") =~ expr("f1(-1,y - x,y + x,y^2 + x^2) + f2(3,y - x,y + x,y^2 + x^2)")
-*--#] PolyandFact_2 :
+*--#] PolyandFact_2 : 
 *--#[ PolyandFact_3 :
 * TODO: change the the first result in the manual.
     Symbol x,y;
@@ -1082,7 +1082,7 @@ assert result("F") =~ expr("
     assert succeeded?
     assert result("F", 0) =~ expr("f2(3,y - x,y + x,y^2 + x^2)")
     assert result("F", 1) =~ expr("3*f2(y-x)*f2(y+x)*f2(y^2+x^2)")
-*--#] PolyandFact_3 :
+*--#] PolyandFact_3 : 
 *--#[ PolyandFact_4 :
     Symbol x,y;
     Local F = x^4-y^4;
@@ -1094,7 +1094,7 @@ assert result("F") =~ expr("
     assert succeeded?
     assert result("F", 0) =~ expr("-y^4+x^4")
     assert result("F", 1) =~ expr("(-1)*(y-x)*(y+x)*(y^2+x^2)")
-*--#] PolyandFact_4 :
+*--#] PolyandFact_4 : 
 *--#[ PolyandFact_5 :
 * TODO: change the the result of F2 in the manual.
     Symbol x,y;
@@ -1119,7 +1119,7 @@ assert result("F") =~ expr("
     assert stdout =~ /~~~expression F2 has 1 factors/
     assert stdout =~ /~~~expression F3 has 1 factors/
     assert stdout =~ /~~~expression F4 has 0 factors/
-*--#] PolyandFact_5 :
+*--#] PolyandFact_5 : 
 *--#[ PolyandFact_6 :
     Symbol x,y;
     Local F = x^4-y^4;
@@ -1137,7 +1137,7 @@ assert result("F") =~ expr("
     assert result("F2") =~ expr("y-x")
     assert result("F3") =~ expr("y+x")
     assert result("F4") =~ expr("y^2+x^2")
-*--#] PolyandFact_6 :
+*--#] PolyandFact_6 : 
 *--#[ PolyandFact_7 :
     Symbol x,y;
     LocalFactorize E = -(x+1)*(x+2)*((x+3)*(x+4));
@@ -1150,7 +1150,7 @@ assert result("F") =~ expr("
        * ( 2 + x )
        * ( 12 + 7*x + x^2 )
     ")
-*--#] PolyandFact_7 :
+*--#] PolyandFact_7 : 
 *--#[ PolyandFact_8 :
     Symbol x,y;
     LocalFactorize E = -(x+1)*(x+2)*((x+3)*(x+4));
@@ -1185,7 +1185,7 @@ assert result("F") =~ expr("
       *(-24-50*x-35*x^2-10*x^3-x^4)
       *(-24-50*x-35*x^2-10*x^3-x^4)
     ")
-*--#] PolyandFact_8 :
+*--#] PolyandFact_8 : 
 *--#[ PolyandFact_9 :
     Symbol x,y;
     LocalFactorize E = -(x+1)*(x+2)*((x+3)*(x+4));
@@ -1217,7 +1217,7 @@ assert result("F") =~ expr("
       *(4+x)
       *(4+x)
     ")
-*--#] PolyandFact_9 :
+*--#] PolyandFact_9 : 
 *--#[ PolyandFact_10 :
     Symbol x,y;
     LocalFactorize E = -0*(x+1)*(x+2)*0*((x+3)*(x+4));
@@ -1232,7 +1232,7 @@ assert result("F") =~ expr("
       *(0)
       *(12+7*x+x^2)
     ")
-*--#] PolyandFact_10 :
+*--#] PolyandFact_10 : 
 *--#[ PolyandFact_11 :
     Symbol x,y;
     Format Nospaces;
@@ -1261,7 +1261,7 @@ assert result("F") =~ expr("
       *(3+x)
       *(4+x)
     ")
-*--#] PolyandFact_11 :
+*--#] PolyandFact_11 : 
 *--#[ PolyandFact_12 :
     Symbol x,y;
     LFactorized F = (x+1)*(x+y)*(y+1);
@@ -1282,7 +1282,7 @@ assert result("F") =~ expr("
       +x^2*(1+y)
       +y+y^2
     ")
-*--#] PolyandFact_12 :
+*--#] PolyandFact_12 : 
 *--#[ PolyandFact_13 :
     Symbol x,y;
     LFactorized F = (x+1)*(x+y)*(y+1);
@@ -1309,7 +1309,7 @@ assert result("F") =~ expr("
       +x^2*(1+y)
       +y+y^2
     ")
-*--#] PolyandFact_13 :
+*--#] PolyandFact_13 : 
 *--#[ PolyandFact_14 :
     Symbol x,y;
     CFunction f;
@@ -1355,7 +1355,7 @@ Factor 3 of  - y^6 + x^6 is y + x
 Factor 4 of  - y^6 + x^6 is y^2 - x*y + x^2
 Factor 5 of  - y^6 + x^6 is y^2 + x*y + x^2
 ")
-*--#] PolyandFact_14 :
+*--#] PolyandFact_14 : 
 *--#[ PolyandFact_15 :
     Symbol x,y;
     CFunction f;
@@ -1370,7 +1370,7 @@ Factor 5 of  - y^6 + x^6 is y^2 + x*y + x^2
     assert result("F", 0) =~ expr("
       f(-1,y-x,y+x,y^2+x^2)+f(4)
     ")
-*--#] PolyandFact_15 :
+*--#] PolyandFact_15 : 
 *--#[ PolyandFact_16 :
     Symbol x,y;
     Format NoSpaces;
@@ -1413,7 +1413,7 @@ Factor 5 of  - y^6 + x^6 is y^2 + x*y + x^2
         *(y^16+x^2*y^14-x^6*y^10-x^8*y^8-x^10*y^6+x^14*y^2+x^16)
       ")
     end
-*--#] PolyandFact_16 :
+*--#] PolyandFact_16 : 
 *--#[ PolyandFact_17 :
     Symbols a,b;
     LF F = (a+b)^2;
@@ -1425,7 +1425,7 @@ Factor 5 of  - y^6 + x^6 is y^2 + x*y + x^2
       ( 2*b + 2*a )
        * ( 2*b + 2*a )
     ")
-*--#] PolyandFact_17 :
+*--#] PolyandFact_17 : 
 *--#[ PolyandFact_18 :
     Symbols a,b;
     LF F = (a+b)^2;
@@ -1439,7 +1439,7 @@ Factor 5 of  - y^6 + x^6 is y^2 + x*y + x^2
        * ( b + a )
        * ( b + a )
     ")
-*--#] PolyandFact_18 :
+*--#] PolyandFact_18 : 
 *--#[ OutputOptimization_1 :
    CF  f;
    S   a,b,c;
@@ -1500,7 +1500,7 @@ EOF
       H = w(1) + w(2) + w(3) + w(4) + w(5)
 EOF
    end
-*--#] OutputOptimization_1 :
+*--#] OutputOptimization_1 : 
 *--#[ Dictionaries_1 :
     Symbols x1,y2,z3,N;
     Indices mu,nu,ro,si;
@@ -1537,7 +1537,7 @@ EOF
        + S_2(N)
        + \\ln(1 + x_1)
     ")
-*--#] Dictionaries_1 :
+*--#] Dictionaries_1 : 
 *--#[ Dictionaries_2 :
     Symbol x,n;
     Format DoubleFortran;
@@ -1557,7 +1557,7 @@ EOF
      & 1/SEVEN*x + 1/TWO*x**2 + x**3 + FIVE/4*x**4 + x**5 + 1/TWO*x**6
      &  + 1/SEVEN*x**7 + 1.D0/56.D0*x**8
 ")
-*--#] Dictionaries_2 :
+*--#] Dictionaries_2 : 
 *--#[ Dictionaries_3 :
     Symbol x,n;
     Format DoubleFortran;
@@ -1578,7 +1578,7 @@ EOF
      & 1/SEVEN*x + HALF*x**2 + x**3 + FIVE/4*x**4 + x**5 + HALF*x**6 + 
      & 1/SEVEN*x**7 + 1.D0/56.D0*x**8
 ")
-*--#] Dictionaries_3 :
+*--#] Dictionaries_3 : 
 *--#[ Dictionaries_4 :
     Symbol x,n;
     Format DoubleFortran;
@@ -1601,7 +1601,7 @@ EOF
 <<<
      & 1/SEVEN*x**7 + 1.D0/56.D0*x**8
 ")
-*--#] Dictionaries_4 :
+*--#] Dictionaries_4 : 
 *--#[ Dictionaries_5 :
     Symbol x,n;
     Format DoubleFortran;
@@ -1624,7 +1624,7 @@ EOF
      & 1/cd7*x + c1d2*x**2 + x**3 + c5d4*x**4 + x**5 + c1d2*x**6 + 1/
      & cd7*x**7 + 1/cd56*x**8
 ")
-*--#] Dictionaries_5 :
+*--#] Dictionaries_5 : 
 *--#[ Dictionaries_6 :
     Symbol x;
     CFunction f;
@@ -1647,7 +1647,7 @@ EOF
     assert result("F", 1) =~ expr("
       x*w(1) + x^2*w(2) + x^3*ww(3) + x^4*www(1) + x^5*www(2) + x^6*www(3)
     ")
-*--#] Dictionaries_6 :
+*--#] Dictionaries_6 : 
 *--#[ DiracAlgebla_1 :
 *
 *   Symmetric trace of a gamma5 and 12 regular matrices
@@ -1664,7 +1664,7 @@ tracen,1;
 	assert stdout =~ /Generated terms =      51975$/
 	assert stdout =~ /Terms in output =      51975$/
 	assert bytesize("F") == 459582 * wordsize
-*--#] DiracAlgebla_1 :
+*--#] DiracAlgebla_1 : 
 *--#[ DiracAlgebla_2 :
 *
 *   Regular trace of a gamma5 and 12 regular matrices
@@ -1677,7 +1677,7 @@ trace4,1;
 	assert @stdout =~ /Generated terms =       1053$/
 	assert @stdout =~ /Terms in output =       1029$/
 	assert bytesize("F") == 10142 * wordsize
-*--#] DiracAlgebla_2 :
+*--#] DiracAlgebla_2 : 
 *--#[ NotesMetric_1 :
 Indices m1,m2,m3,n1,n2,n3,i1,i2,i3;
 Cfunction eta(symmetric),e(antisymmetric);
@@ -1735,7 +1735,7 @@ Print +s;
 	  EOF
 	)
 	assert result("F") =~ expr("-6")
-*--#] NotesMetric_1 :
+*--#] NotesMetric_1 : 
 *--#[ NotesMetric_2 :
 Indices i1,i2,i3;
 FixIndex 1:1,2:1,3:-1;
@@ -1753,7 +1753,7 @@ Print +s;
 	assert succeeded?
 	assert result("F",0) =~ expr("+6*e_(1,2,3)*e_(1,2,3)")
 	assert result("F") =~ expr("-6")
-*--#] NotesMetric_2 :
+*--#] NotesMetric_2 : 
 *--#[ NotesMetric_3 :
 Indices i1=0,i2=0,i3=0;
 FixIndex 1:1,2:1,3:-1;
@@ -1778,7 +1778,7 @@ Print +s;
 	  EOF
 	)
 	assert result("F") =~ expr("-6")
-*--#] NotesMetric_3 :
+*--#] NotesMetric_3 : 
 *--#[ ExtComm_1 :
 symbol a,b;
 
@@ -1823,7 +1823,7 @@ Print;
 	assert succeeded?
 	assert result("aPLUSbTO2") =~ expr("b^2 + 2*a*b + a^2")
 	assert result("aPLUSbTO3") =~ expr("b^3 + 3*a*b^2 + 3*a^2*b + a^3")
-*--#] ExtComm_1 :
+*--#] ExtComm_1 : 
 *--#[ Diagrams_1 :
     Vectors Q1,Q2,p1,...,p8;
     Set QQ:Q1,Q2;
@@ -1910,12 +1910,35 @@ Print;
     assert nterms("F") == 2793
 *--#] Diagrams_4 : 
 *--#[ Diagrams_5 :
-    Vectors Q1,Q2,p1,...,p17;
-    Set QQ:Q1,Q2;
-    Set PP:p1,...,p17;
     #define LOOPS "6"
-    Local F = topologies_(`LOOPS',2,{3,},QQ,PP);
+    Model PHI3;
+        Particle phi,+1;
+        Vertex phi,phi,phi:g;
+    EndModel;
+    Vector Q1,Q2,p1,...,p{3*`LOOPS'};
+    Set QQ:Q1,Q2;
+    Set pp:p1,...,p{3*`LOOPS'};
+    Set empty:;
+    Local F = diagrams_(PHI3,{phi,phi},empty,QQ,pp,`LOOPS',
+            'OnePI_'+`NoTadpoles\_'+`Symmetrize_'+`TopologiesOnly_');
     .end
     assert succeeded?
-    assert nterms("F") == 4999
+    assert nterms("F") == 2793
 *--#] Diagrams_5 : 
+*--#[ Diagrams_6 :
+*    #define LOOPS "6"
+*    Model PHI3;
+*        Particle phi,+1;
+*        Vertex phi,phi,phi:g;
+*    EndModel;
+*    Vector Q1,Q2,p1,...,p{3*`LOOPS'};
+*    Set QQ:Q1,Q2;
+*    Set pp:p1,...,p{3*`LOOPS'};
+*    Set empty:;
+*    Local F = diagrams_(PHI3,{phi,phi},empty,QQ,pp,`LOOPS',
+*            'OnePI_'+`NoTadpoles\_'+`TopologiesOnly_');
+*    .end
+*    assert succeeded?
+*    assert nterms("F") == 4999
+*--#] Diagrams_6 : 
+
