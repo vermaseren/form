@@ -39,7 +39,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */
+/* #] License : */ 
  
 #ifndef __STRUCTS__
 
@@ -191,7 +191,7 @@ typedef struct ReNuMbEr {
 } *RENUMBER;
 
 /*
-  	#] sav&store :
+  	#] sav&store : 
   	#[ Variables :
 */
 
@@ -664,7 +664,7 @@ typedef struct NaMeSpAcE {
 
 
 /*
-  	#] Variables :
+  	#] Variables : 
   	#[ Files :
 */
 
@@ -773,7 +773,7 @@ typedef struct SpecTatoR {
 } SPECTATOR;
 
 /*
-  	#] Files :
+  	#] Files : 
   	#[ Traces :
 */
 
@@ -830,7 +830,7 @@ typedef struct TrAcEn {			/* For computing n dimensional traces */
 } *TRACEN;
 
 /*
-  	#] Traces :
+  	#] Traces : 
   	#[ Preprocessor :
 */
 
@@ -971,7 +971,7 @@ typedef struct {
 } HANDLERS;
 
 /*
-  	#] Preprocessor :
+  	#] Preprocessor : 
   	#[ Varia :
 */
 
@@ -1338,6 +1338,7 @@ typedef struct {
         float fval;
         int ival[2];
     } saMinT; /* Minimum temperature of SA */
+    int    spare;
 } OPTIMIZE;
 
 typedef struct {
@@ -1409,7 +1410,7 @@ typedef struct {
 } TERMINFO;
 
 /*
-  	#] Varia :
+  	#] Varia : 
     #[ A :
  		#[ M : The M struct is for global settings at startup or .clear
 */
@@ -1615,7 +1616,7 @@ struct M_const {
 #endif
 };
 /*
- 		#] M :
+ 		#] M : 
  		#[ P : The P struct defines objects set by the preprocessor
 */
 /**
@@ -1682,7 +1683,7 @@ struct P_const {
 };
 
 /*
- 		#] P :
+ 		#] P : 
  		#[ C : The C struct defines objects changed by the compiler
 */
 
@@ -1956,7 +1957,7 @@ struct C_const {
 #endif
 };
 /*
- 		#] C :
+ 		#] C : 
  		#[ S : The S struct defines objects changed at the start of the run (Processor)
 		       Basically only set by the master.
 */
@@ -2006,7 +2007,7 @@ struct S_const {
 #endif
 };
 /*
- 		#] S :
+ 		#] S : 
  		#[ R : The R struct defines objects changed at run time.
                They determine the environment that has to be transfered
                together with a term during multithreaded execution.
@@ -2100,7 +2101,7 @@ struct R_const {
 };
 
 /*
- 		#] R :
+ 		#] R : 
  		#[ T : These are variables that stay in each thread during multi threaded execution.
 */
 /**
@@ -2252,7 +2253,7 @@ struct T_const {
 #endif
 };
 /*
- 		#] T :
+ 		#] T : 
  		#[ N : The N struct contains variables used in running information
                that is inside blocks that should not be split, like pattern
                matching, traces etc. They are local for each thread.
@@ -2432,7 +2433,7 @@ struct N_const {
 };
 
 /*
- 		#] N :
+ 		#] N : 
  		#[ O : The O struct concerns output variables
 */
 /**
@@ -2526,9 +2527,9 @@ struct O_const {
 */
 #ifdef WITHFLOAT
 #if defined(mBSD) && defined(MICROTIME)
-	PADPOSITION(25,7,36,17,1);
+	PADPOSITION(25,7,36,18,1);
 #else
-	PADPOSITION(25,5,36,17,1);
+	PADPOSITION(25,5,36,18,1);
 #endif
 #else
 #if defined(mBSD) && defined(MICROTIME)
@@ -2539,7 +2540,7 @@ struct O_const {
 #endif
 };
 /*
- 		#] O :
+ 		#] O : 
  		#[ X : The X struct contains variables that deal with the external channel
 */
 /**
@@ -2566,7 +2567,7 @@ struct X_const {
 	PADPOINTER(0,5,0,0);
 };
 /*
- 		#] X :
+ 		#] X : 
  		#[ Definitions :
 
 	Note: we changed the definition from C to Cc in version 5.
@@ -2626,7 +2627,7 @@ typedef struct AllGlobals {
 #endif
 
 /*
- 		#] Definitions :
+ 		#] Definitions : 
     #] A : 
   	#[ FG :
 */
@@ -2682,7 +2683,7 @@ typedef struct FixedGlobals {
 } FIXEDGLOBALS;
 
 /*
-  	#] FG :
+  	#] FG : 
 */
 
 #endif

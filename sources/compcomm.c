@@ -140,6 +140,280 @@ static WORD one = 1;
 
 /*
   	#] includes : 
+  	#[ CoFormat :
+*/
+
+int CoFormat(UBYTE *s)
+{
+	int error = 0, x;
+	KEYWORD *key;
+	UBYTE *ss;
+	while ( *s == ' ' || *s == ',' ) s++;
+	if ( *s == 0 ) {
+		AC.OutputMode = 72;
+		AC.OutputSpaces = NORMALFORMAT;
+		return(error);
+	}
+/*
+	First the optimization level
+*/
+	if ( *s == 'O' || *s == 'o' ) {
+		if ( ( FG.cTable[s[1]] == 1 ) ||
+			 ( s[1] == '=' && FG.cTable[s[2]] == 1 ) ) {
+			s++; if ( *s == '=' ) s++;
+			x = 0;
+			while ( *s >= '0' && *s <= '9' ) x = 10*x + *s++ - '0';
+			while ( *s == ',' ) s++;
+			AO.OptimizationLevel = x;
+			AO.Optimize.greedytimelimit = 0;
+			AO.Optimize.mctstimelimit = 0;
+			AO.Optimize.printstats = 0;
+			AO.Optimize.debugflags = 0;
+			AO.Optimize.schemeflags = 0;
+			AO.Optimize.mctsdecaymode = 1; /* default is decreasing C_p with iteration number */
+			if ( AO.inscheme ) {
+				M_free(AO.inscheme,"Horner input scheme");
+				AO.inscheme = 0; AO.schemenum = 0;
+			}
+			switch ( x ) {
+				case 0:
+					break;
+				case 1:
+					AO.Optimize.mctsconstant.fval = -1.0;
+					AO.Optimize.horner = O_OCCURRENCE;
+					AO.Optimize.hornerdirection = O_FORWARDORBACKWARD;
+					AO.Optimize.method = O_CSE;
+					break;
+				case 2:
+					AO.Optimize.horner = O_OCCURRENCE;
+					AO.Optimize.hornerdirection = O_FORWARDORBACKWARD;
+					AO.Optimize.method = O_GREEDY;
+					AO.Optimize.greedyminnum = 10;
+					AO.Optimize.greedymaxperc = 5;
+					break;
+				case 3:
+					AO.Optimize.mctsconstant.fval = 1.0;
+					AO.Optimize.horner = O_MCTS;
+					AO.Optimize.hornerdirection = O_FORWARDORBACKWARD;
+					AO.Optimize.method = O_GREEDY;
+					AO.Optimize.mctsnumexpand = 1000;
+					AO.Optimize.mctsnumkeep = 10;
+					AO.Optimize.mctsnumrepeat = 1;
+					AO.Optimize.greedyminnum = 10;
+					AO.Optimize.greedymaxperc = 5;
+					break;
+				case 4:
+					AO.Optimize.horner = O_SIMULATED_ANNEALING;
+					AO.Optimize.saIter = 1000;
+					AO.Optimize.saMaxT.fval = 2000;
+					AO.Optimize.saMinT.fval = 1;
+					break;
+				default:
+					error = 1;
+					MesPrint("&Illegal optimization specification in format statement");
+					break;
+			}
+			if ( error == 0 && *s != 0 && x > 0 ) return(CoOptimizeOption(s));
+			return(error);
+		}
+#ifdef EXPOPT
+		{ UBYTE c;
+		ss = s;
+		while ( FG.cTable[*s] == 0 ) s++;
+		c = *s; *s = 0;
+		if ( StrICont(ss,(UBYTE *)"optimize") == 0 ) {
+			*s = c;
+			while ( *s == ',' ) s++;
+			if ( *s == '=' ) s++;
+			AO.OptimizationLevel = 3;
+			AO.Optimize.mctsconstant.fval = 1.0;
+			AO.Optimize.horner = O_MCTS;
+			AO.Optimize.hornerdirection = O_FORWARDORBACKWARD;
+			AO.Optimize.method = O_GREEDY;
+			AO.Optimize.mctstimelimit = 0;
+			AO.Optimize.mctsnumexpand = 1000;
+			AO.Optimize.mctsnumkeep = 10;
+			AO.Optimize.mctsnumrepeat = 1;
+			AO.Optimize.greedytimelimit = 0;
+			AO.Optimize.greedyminnum = 10;
+			AO.Optimize.greedymaxperc = 5;
+			AO.Optimize.printstats = 0;
+			AO.Optimize.debugflags = 0;
+			AO.Optimize.schemeflags = 0;
+			AO.Optimize.mctsdecaymode = 1;
+			if ( AO.inscheme ) {
+				M_free(AO.inscheme,"Horner input scheme");
+				AO.inscheme = 0; AO.schemenum = 0;
+			}
+			return(CoOptimizeOption(s));
+		}
+		else {
+			error = 1;
+			MesPrint("&Illegal optimization specification in format statement");
+			return(error);
+		}
+		}
+#endif
+	}
+	else if ( FG.cTable[*s] == 1 ) {
+		x = 0;
+		while ( FG.cTable[*s] == 1 ) x = 10*x + *s++ - '0';
+		if ( x <= 0 || x >= MAXLINELENGTH ) {
+			error = 1;
+			MesPrint("&Illegal value for linesize: %d",x);
+			x = 72;
+		}
+		if ( x < 39 ) {
+			MesPrint(" ... Too small value for linesize corrected to 39");
+			x = 39;
+		}
+		AO.DoubleFlag = 0;
+/*
+		The next line resets the mode to normal. Because the special modes
+		reset the line length we have a little problem with the special modes
+		and customized line length. We try to improve by removing the next line
+*/
+/*		AC.OutputMode = 0;  */
+		AC.LineLength = x;
+		if ( *s != 0 ) {
+			error = 1;
+			MesPrint("&Illegal linesize field in format statement");
+		}
+	}
+	else {
+		key = FindKeyWord(s,formatoptions,
+			sizeof(formatoptions)/sizeof(KEYWORD));
+		if ( key ) {
+			if ( key->type == FORTRANMODE || key->type == PFORTRANMODE || key->type == DOUBLEFORTRANMODE
+				|| key->type == QUADRUPLEFORTRANMODE || key->type == VORTRANMODE ) {
+					if (AC.LineLength > 72) AC.LineLength = 72;
+			}
+			if ( key->flags == 0 ) {
+				if ( key->type == FORTRANMODE || key->type == PFORTRANMODE
+				|| key->type == DOUBLEFORTRANMODE || key->type == ALLINTEGERDOUBLE
+				|| key->type == QUADRUPLEFORTRANMODE || key->type == VORTRANMODE ) {
+					AC.IsFortran90 = ISNOTFORTRAN90;
+					if ( AC.Fortran90Kind ) {
+						M_free(AC.Fortran90Kind,"Fortran90 Kind");
+						AC.Fortran90Kind = 0;
+					}
+				}
+				if ( ( key->type == ALLINTEGERDOUBLE ) && AO.DoubleFlag != 0 ) {
+					AO.DoubleFlag |= 4;
+				}
+				else {
+					AO.DoubleFlag = 0;
+					AC.OutputMode = key->type & NODOUBLEMASK;
+					if ( ( key->type & DOUBLEPRECISIONFLAG ) != 0 ) {
+						AO.DoubleFlag = 1;
+					}
+					else if ( ( key->type & QUADRUPLEPRECISIONFLAG ) != 0 ) {
+						AO.DoubleFlag = 2;
+					}
+				}
+			}
+			else if ( key->flags == 1 ) {
+				AC.OutputMode = AC.OutNumberType = key->type;
+			}
+			else if ( key->flags == 2 ) {
+				while ( FG.cTable[*s] == 0 ) s++;
+				if ( *s == 0 ) AC.OutNumberType = 10;
+				else if ( *s == ',' ) {
+					s++;
+					x = 0;
+					while ( FG.cTable[*s] == 1 ) x = 10*x + *s++ - '0';
+					if ( *s != 0 ) {
+						error = 1;
+						MesPrint("&Illegal float format specifier");
+					}
+					else {
+						if ( x < 3 ) {
+							x = 3;
+							MesPrint("& ... float format value corrected to 3");
+						}
+						if ( x > 100 ) {
+							x = 100;
+							MesPrint("& ... float format value corrected to 100");
+						}
+						AC.OutNumberType = x;
+					}
+				}
+			}
+			else if ( key->flags == 3 ) {
+				AC.OutputSpaces = key->type;
+			}
+			else if ( key->flags == 4 ) {
+				AC.IsFortran90 = ISFORTRAN90;
+				if ( AC.Fortran90Kind ) {
+					M_free(AC.Fortran90Kind,"Fortran90 Kind");
+					AC.Fortran90Kind = 0;
+				}
+				while ( FG.cTable[*s] <= 1 ) s++;
+				if ( *s == ',' ) {
+					s++; ss = s;
+					while ( *ss && *ss != ',' ) ss++;
+					if ( *ss == ',' ) {
+						MesPrint("&No white space or comma's allowed in Fortran90 option: %s",s); error = 1;
+					}
+					else {
+						AC.Fortran90Kind = strDup1(s,"Fortran90 Kind");
+					}
+				}
+				AO.DoubleFlag = 0;
+				AC.OutputMode = key->type & NODOUBLEMASK;
+			}
+#ifdef WITHFLOAT
+			else if ( key->flags == 5 ) {
+/*
+				Syntax: Format FloatPrecision number;
+				        Format FloatPrecision off;
+*/
+				while ( FG.cTable[*s] == 0 ) s++;
+				while ( *s == ' ' || *s == '\t' || *s == ',' ) s++;
+				if ( *s == 0 ) {
+					AO.FloatPrec = 0;
+				}
+				else if ( tolower(*s) == 'o' && tolower(s[1]) == 'f'
+				&& tolower(s[2]) == 'f' ) {
+					ss = s;
+					s += 3;
+					while ( *s == ' ' || *s == '\t' || *s == ',' ) s++;
+					if ( *s ) { s = ss; goto WrongOption; }
+					AO.FloatPrec = -1;
+				}
+				else if ( FG.cTable[*s] == 1 ) {
+					ss = s;
+					AO.FloatPrec = 0;
+					while ( *s <= '9' && *s >= '0' )
+						AO.FloatPrec = 10*AO.FloatPrec + (*s++ - '0');
+					while ( *s == ' ' || *s == '\t' || *s == ',' ) s++;
+					if ( *s ) { s = ss; goto WrongOption; }
+				}
+				else {
+WrongOption:		MesPrint("&Illegal option in Format FloatPrecision: %s",s);
+					error = 1;
+				}
+			}
+#endif
+		}
+		else if ( ( *s == 'c' || *s == 'C' ) && ( FG.cTable[s[1]] == 1 ) ) {
+			UBYTE *ss = s+1;
+			WORD x = 0;
+			while ( *ss >= '0' && *ss <= '9' ) x = 10*x + *ss++ - '0';
+			if ( *ss != 0 ) goto Unknown;
+			AC.OutputMode = CMODE;
+			AC.Cnumpows = x;
+		}
+		else {
+Unknown:	MesPrint("&Unknown option: %s",s); error = 1;
+		}
+		AC.LineLength = 72;
+	}
+	return(error);
+}
+
+/*
+  	#] CoFormat :
   	#[ CoCollect :
 
 	Collect,functionname
@@ -667,281 +941,6 @@ unknown:
 
 /*
   	#] CoDelete : 
-  	#[ CoFormat :
-*/
-
-int CoFormat(UBYTE *s)
-{
-	int error = 0, x;
-	KEYWORD *key;
-	UBYTE *ss;
-	while ( *s == ' ' || *s == ',' ) s++;
-	if ( *s == 0 ) {
-		AC.OutputMode = 72;
-		AC.OutputSpaces = NORMALFORMAT;
-		return(error);
-	}
-/*
-	First the optimization level
-*/
-	if ( *s == 'O' || *s == 'o' ) {
-		if ( ( FG.cTable[s[1]] == 1 ) ||
-			 ( s[1] == '=' && FG.cTable[s[2]] == 1 ) ) {
-			s++; if ( *s == '=' ) s++;
-			x = 0;
-			while ( *s >= '0' && *s <= '9' ) x = 10*x + *s++ - '0';
-			while ( *s == ',' ) s++;
-			AO.OptimizationLevel = x;
-			AO.Optimize.greedytimelimit = 0;
-			AO.Optimize.mctstimelimit = 0;
-			AO.Optimize.printstats = 0;
-			AO.Optimize.debugflags = 0;
-			AO.Optimize.schemeflags = 0;
-			AO.Optimize.mctsdecaymode = 1; // default is decreasing C_p with iteration number
-			if ( AO.inscheme ) {
-				M_free(AO.inscheme,"Horner input scheme");
-				AO.inscheme = 0; AO.schemenum = 0;
-			}
-			switch ( x ) {
-				case 0:
-					break;
-				case 1:
-					AO.Optimize.mctsconstant.fval = -1.0;
-					AO.Optimize.horner = O_OCCURRENCE;
-					AO.Optimize.hornerdirection = O_FORWARDORBACKWARD;
-					AO.Optimize.method = O_CSE;
-					break;
-				case 2:
-					AO.Optimize.horner = O_OCCURRENCE;
-					AO.Optimize.hornerdirection = O_FORWARDORBACKWARD;
-					AO.Optimize.method = O_GREEDY;
-					AO.Optimize.greedyminnum = 10;
-					AO.Optimize.greedymaxperc = 5;
-					break;
-				case 3:
-					AO.Optimize.mctsconstant.fval = 1.0;
-					AO.Optimize.horner = O_MCTS;
-					AO.Optimize.hornerdirection = O_FORWARDORBACKWARD;
-					AO.Optimize.method = O_GREEDY;
-					AO.Optimize.mctsnumexpand = 1000;
-					AO.Optimize.mctsnumkeep = 10;
-					AO.Optimize.mctsnumrepeat = 1;
-					AO.Optimize.greedyminnum = 10;
-					AO.Optimize.greedymaxperc = 5;
-					break;
-				case 4:
-					AO.Optimize.horner = O_SIMULATED_ANNEALING;
-					AO.Optimize.saIter = 1000;
-					AO.Optimize.saMaxT.fval = 2000;
-					AO.Optimize.saMinT.fval = 1;
-					break;
-				default:
-					error = 1;
-					MesPrint("&Illegal optimization specification in format statement");
-					break;
-			}
-			if ( error == 0 && *s != 0 && x > 0 ) return(CoOptimizeOption(s));
-			return(error);
-		}
-#ifdef EXPOPT
-		{ UBYTE c;
-		ss = s;
-		while ( FG.cTable[*s] == 0 ) s++;
-		c = *s; *s = 0;
-		if ( StrICont(ss,(UBYTE *)"optimize") == 0 ) {
-			*s = c;
-			while ( *s == ',' ) s++;
-			if ( *s == '=' ) s++;
-			AO.OptimizationLevel = 3;
-			AO.Optimize.mctsconstant.fval = 1.0;
-			AO.Optimize.horner = O_MCTS;
-			AO.Optimize.hornerdirection = O_FORWARDORBACKWARD;
-			AO.Optimize.method = O_GREEDY;
-			AO.Optimize.mctstimelimit = 0;
-			AO.Optimize.mctsnumexpand = 1000;
-			AO.Optimize.mctsnumkeep = 10;
-			AO.Optimize.mctsnumrepeat = 1;
-			AO.Optimize.greedytimelimit = 0;
-			AO.Optimize.greedyminnum = 10;
-			AO.Optimize.greedymaxperc = 5;
-			AO.Optimize.printstats = 0;
-			AO.Optimize.debugflags = 0;
-			AO.Optimize.schemeflags = 0;
-			AO.Optimize.mctsdecaymode = 1;
-			if ( AO.inscheme ) {
-				M_free(AO.inscheme,"Horner input scheme");
-				AO.inscheme = 0; AO.schemenum = 0;
-			}
-			return(CoOptimizeOption(s));
-		}
-		else {
-			error = 1;
-			MesPrint("&Illegal optimization specification in format statement");
-			return(error);
-		}
-		}
-#endif
-	}
-	else if ( FG.cTable[*s] == 1 ) {
-		x = 0;
-		while ( FG.cTable[*s] == 1 ) x = 10*x + *s++ - '0';
-		if ( x <= 0 || x >= MAXLINELENGTH ) {
-			error = 1;
-			MesPrint("&Illegal value for linesize: %d",x);
-			x = 72;
-		}
-		if ( x < 39 ) {
-			MesPrint(" ... Too small value for linesize corrected to 39");
-			x = 39;
-		}
-		AO.DoubleFlag = 0;
-/*
-		The next line resets the mode to normal. Because the special modes
-		reset the line length we have a little problem with the special modes
-		and customized line length. We try to improve by removing the next line
-*/
-/*		AC.OutputMode = 0;  */
-		AC.LineLength = x;
-		if ( *s != 0 ) {
-			error = 1;
-			MesPrint("&Illegal linesize field in format statement");
-		}
-	}
-	else {
-		key = FindKeyWord(s,formatoptions,
-			sizeof(formatoptions)/sizeof(KEYWORD));
-		if ( key ) {
-			if ( key->type == FORTRANMODE || key->type == PFORTRANMODE || key->type == DOUBLEFORTRANMODE
-				|| key->type == QUADRUPLEFORTRANMODE || key->type == VORTRANMODE ) {
-					if (AC.LineLength > 72) AC.LineLength = 72;
-			}
-
-			if ( key->flags == 0 ) {
-				if ( key->type == FORTRANMODE || key->type == PFORTRANMODE
-				|| key->type == DOUBLEFORTRANMODE || key->type == ALLINTEGERDOUBLE
-				|| key->type == QUADRUPLEFORTRANMODE || key->type == VORTRANMODE ) {
-					AC.IsFortran90 = ISNOTFORTRAN90;
-					if ( AC.Fortran90Kind ) {
-						M_free(AC.Fortran90Kind,"Fortran90 Kind");
-						AC.Fortran90Kind = 0;
-					}
-				}
-				if ( ( key->type == ALLINTEGERDOUBLE ) && AO.DoubleFlag != 0 ) {
-					AO.DoubleFlag |= 4;
-				}
-				else {
-					AO.DoubleFlag = 0;
-					AC.OutputMode = key->type & NODOUBLEMASK;
-					if ( ( key->type & DOUBLEPRECISIONFLAG ) != 0 ) {
-						AO.DoubleFlag = 1;
-					}
-					else if ( ( key->type & QUADRUPLEPRECISIONFLAG ) != 0 ) {
-						AO.DoubleFlag = 2;
-					}
-				}
-			}
-			else if ( key->flags == 1 ) {
-				AC.OutputMode = AC.OutNumberType = key->type;
-			}
-			else if ( key->flags == 2 ) {
-				while ( FG.cTable[*s] == 0 ) s++;
-				if ( *s == 0 ) AC.OutNumberType = 10;
-				else if ( *s == ',' ) {
-					s++;
-					x = 0;
-					while ( FG.cTable[*s] == 1 ) x = 10*x + *s++ - '0';
-					if ( *s != 0 ) {
-						error = 1;
-						MesPrint("&Illegal float format specifier");
-					}
-					else {
-						if ( x < 3 ) {
-							x = 3;
-							MesPrint("& ... float format value corrected to 3");
-						}
-						if ( x > 100 ) {
-							x = 100;
-							MesPrint("& ... float format value corrected to 100");
-						}
-						AC.OutNumberType = x;
-					}
-				}
-			}
-			else if ( key->flags == 3 ) {
-				AC.OutputSpaces = key->type;
-			}
-			else if ( key->flags == 4 ) {
-				AC.IsFortran90 = ISFORTRAN90;
-				if ( AC.Fortran90Kind ) {
-					M_free(AC.Fortran90Kind,"Fortran90 Kind");
-					AC.Fortran90Kind = 0;
-				}
-				while ( FG.cTable[*s] <= 1 ) s++;
-				if ( *s == ',' ) {
-					s++; ss = s;
-					while ( *ss && *ss != ',' ) ss++;
-					if ( *ss == ',' ) {
-						MesPrint("&No white space or comma's allowed in Fortran90 option: %s",s); error = 1;
-					}
-					else {
-						AC.Fortran90Kind = strDup1(s,"Fortran90 Kind");
-					}
-				}
-				AO.DoubleFlag = 0;
-				AC.OutputMode = key->type & NODOUBLEMASK;
-			}
-#ifdef WITHFLOAT
-			else if ( key->flags == 5 ) {
-/*
-				Syntax: Format FloatPrecision number;
-				        Format FloatPrecision off;
-*/
-				while ( FG.cTable[*s] == 0 ) s++;
-				while ( *s == ' ' || *s == '\t' || *s == ',' ) s++;
-				if ( *s == 0 ) {
-					AO.FloatPrec = 0;
-				}
-				else if ( tolower(*s) == 'o' && tolower(s[1]) == 'f'
-				&& tolower(s[2]) == 'f' ) {
-					ss = s;
-					s += 3;
-					while ( *s == ' ' || *s == '\t' || *s == ',' ) s++;
-					if ( *s ) { s = ss; goto WrongOption; }
-					AO.FloatPrec = -1;
-				}
-				else if ( FG.cTable[*s] == 1 ) {
-					ss = s;
-					AO.FloatPrec = 0;
-					while ( *s <= '9' && *s >= '0' )
-						AO.FloatPrec = 10*AO.FloatPrec + (*s++ - '0');
-					while ( *s == ' ' || *s == '\t' || *s == ',' ) s++;
-					if ( *s ) { s = ss; goto WrongOption; }
-				}
-				else {
-WrongOption:		MesPrint("&Illegal option in Format FloatPrecision: %s",s);
-					error = 1;
-				}
-			}
-		}
-#endif
-		else if ( ( *s == 'c' || *s == 'C' ) && ( FG.cTable[s[1]] == 1 ) ) {
-			UBYTE *ss = s+1;
-			WORD x = 0;
-			while ( *ss >= '0' && *ss <= '9' ) x = 10*x + *ss++ - '0';
-			if ( *ss != 0 ) goto Unknown;
-			AC.OutputMode = CMODE;
-			AC.Cnumpows = x;
-		}
-		else {
-Unknown:	MesPrint("&Unknown option: %s",s); error = 1;
-		}
-		AC.LineLength = 72;
-	}
-	return(error);
-}
-
-/*
-  	#] CoFormat : 
   	#[ CoKeep :
 */
 
