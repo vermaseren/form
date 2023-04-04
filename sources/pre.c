@@ -4,7 +4,7 @@
  */
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2022 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -50,6 +50,7 @@ static KEYWORD precommands[] = {
 	,{"breakdo"      , DoBreakDo      , 0, 0}
 	,{"call"         , DoCall         , 0, 0}
 	,{"case"         , DoPreCase      , 0, 0}
+	,{"clearflag"    , DoClearUserFlag, 0, 0}
 	,{"clearoptimize", DoClearOptimize, 0, 0}
 	,{"close"        , DoPreClose     , 0, 0}
 	,{"closedictionary", DoPreCloseDictionary,0,0}
@@ -62,8 +63,12 @@ static KEYWORD precommands[] = {
 	,{"else"         , DoElse         , 0, 0}
 	,{"elseif"       , DoElseif       , 0, 0}
 	,{"enddo"        , DoEnddo        , 0, 0}
+#ifdef WITHFLOAT
+    ,{"endfloat"     , DoEndFloat     , 0, 0}
+#endif
 	,{"endif"        , DoEndif        , 0, 0}
 	,{"endinside"    , DoEndInside    , 0, 0}
+	,{"endnamespace" , DoEndNamespace , 0, 0}
 	,{"endprocedure" , DoEndprocedure , 0, 0}
 	,{"endswitch"    , DoPreEndSwitch , 0, 0}
 	,{"exchange"     , DoPreExchange  , 0, 0}
@@ -76,6 +81,7 @@ static KEYWORD precommands[] = {
 	,{"include"      , DoInclude      , 0, 0}
 	,{"inside"       , DoInside       , 0, 0}
 	,{"message"      , DoMessage      , 0, 0}
+	,{"namespace"    , DoNamespace    , 0, 0}
 	,{"opendictionary", DoPreOpenDictionary,0,0}
 	,{"optimize"     , DoOptimize     , 0, 0}
 	,{"pipe"         , DoPipe         , 0, 0}
@@ -93,15 +99,20 @@ static KEYWORD precommands[] = {
 	,{"rmseparator"  , DoPreRmSeparator,0, 0}
 	,{"setexternal"  , DoSetExternal  , 0, 0}
 	,{"setexternalattr"  , DoSetExternalAttr  , 0, 0}
+	,{"setflag"      , DoSetUserFlag  , 0, 0}
 	,{"setrandom"    , DoSetRandom    , 0, 0}
 	,{"show"         , DoPreShow      , 0, 0}
 	,{"skipextrasymbols" , DoSkipExtraSymbols , 0, 0}
+#ifdef WITHFLOAT
+    ,{"startfloat"   , DoStartFloat   , 0, 0}
+#endif
 	,{"switch"       , DoPreSwitch    , 0, 0}
 	,{"system"       , DoSystem       , 0, 0}
 	,{"terminate"    , DoTerminate    , 0, 0}
 	,{"timeoutafter" , DoTimeOutAfter , 0, 0}
 	,{"toexternal"   , DoToExternal   , 0, 0}
 	,{"undefine"     , DoUndefine     , 0, 0}
+	,{"use"          , DoUse          , 0, 0}
 	,{"usedictionary", DoPreUseDictionary,0,0}
 	,{"write"        , DoPreWrite     , 0, 0}
 };
@@ -116,7 +127,7 @@ static KEYWORD precommands[] = {
 		If there are no more streams we let this be known.
 */
 
-UBYTE GetInput()
+UBYTE GetInput(VOID)
 {
 	UBYTE c;
 	while ( AC.CurrentStream ) {
@@ -145,7 +156,7 @@ UBYTE GetInput()
  		#[ ClearPushback :
 */
 
-VOID ClearPushback()
+VOID ClearPushback(VOID)
 {
 	pushbackchar = 0;
 }
@@ -310,7 +321,6 @@ higherlevel:
 */
 					int nargs = 1;
 					PREVAR *p;
-					size_t p_offset;
 					*s++ = 0; namebuf[i-2] = 0;
 					if ( StrICmp(namebuf,(UBYTE *)"random_") == 0 ) {
 						UBYTE *ranvalue;
@@ -329,6 +339,66 @@ higherlevel:
 						UBYTE *ss = s;
 						while ( *ss ) { *ss = (UBYTE)(toupper(*ss)); ss++; }
 						PutPreVar(namebuf,s,(UBYTE *)"?a",1);
+						goto dostream;
+					}
+					else if ( StrICmp(namebuf,(UBYTE *)"takeleft_") == 0 ) {
+						UBYTE *ss = s;
+						int x = 0, nsize;
+						while ( *ss != ',' && *ss ) ss++;
+						nsize = ss-s;
+						if ( *ss ) {
+							*ss++ = 0;
+							while ( FG.cTable[*ss] == 1 ) x = 10*x + (*ss++ - '0');
+							if ( x > nsize ) x = nsize;
+						}
+						else x = 0;
+						PutPreVar(namebuf,s+x,(UBYTE *)"?a",1);
+						goto dostream;
+					}
+					else if ( StrICmp(namebuf,(UBYTE *)"takeright_") == 0 ) {
+						UBYTE *ss = s;
+						int x = 0, nsize;
+						while ( *ss != ',' && *ss ) ss++;
+						nsize = ss-s;
+						if ( *ss ) {
+							*ss++ = 0;
+							while ( FG.cTable[*ss] == 1 ) x = 10*x + (*ss++ - '0');
+							if ( x > nsize ) x = nsize;
+						}
+						else x = 0;
+						x = nsize - x;
+						s[x] = 0;
+						PutPreVar(namebuf,s,(UBYTE *)"?a",1);
+						goto dostream;
+					}
+					else if ( StrICmp(namebuf,(UBYTE *)"keepleft_") == 0 ) {
+						UBYTE *ss = s;
+						int x = 0, nsize;
+						while ( *ss != ',' && *ss ) ss++;
+						nsize = ss-s;
+						if ( *ss ) {
+							*ss++ = 0;
+							while ( FG.cTable[*ss] == 1 ) x = 10*x + (*ss++ - '0');
+							if ( x > nsize ) x = nsize;
+						}
+						else x = nsize;
+						s[x] = 0;
+						PutPreVar(namebuf,s,(UBYTE *)"?a",1);
+						goto dostream;
+					}
+					else if ( StrICmp(namebuf,(UBYTE *)"keepright_") == 0 ) {
+						UBYTE *ss = s;
+						int x = 0, nsize;
+						while ( *ss != ',' && *ss ) ss++;
+						nsize = ss-s;
+						if ( *ss ) {
+							*ss++ = 0;
+							while ( FG.cTable[*ss] == 1 ) x = 10*x + (*ss++ - '0');
+							if ( x > nsize ) x = nsize;
+						}
+						else x = nsize;
+						x = nsize-x;
+						PutPreVar(namebuf,s+x,(UBYTE *)"?a",1);
 						goto dostream;
 					}
 					while ( *s ) {
@@ -368,7 +438,6 @@ higherlevel:
 					while ( *s ) s++;
 					s++;
 					t = p->argnames;
-					p_offset = p - PreVar;
 					for ( j = 0; j < p->nargs; j++ ) {
 						if ( ( nargs == p->nargs-1 ) && ( *t == '?' ) ) {
 							PutPreVar(t,0,0,0);
@@ -378,7 +447,6 @@ higherlevel:
 							while ( *s ) s++;
 							s++;
 						}
-						p = PreVar + p_offset;
 						while ( *t ) t++;
 						t++;
 					}
@@ -434,7 +502,7 @@ VOID CharOut(UBYTE c)
  		#[ UnsetAllowDelay :
 */
 
-VOID UnsetAllowDelay()
+VOID UnsetAllowDelay(VOID)
 {
 	if ( ThePreVar != 0 ) {
 		if ( ThePreVar->nargs > 0 ) AP.AllowDelay = 0;
@@ -486,13 +554,13 @@ UBYTE *GetPreVar(UBYTE *name, int flag)
 		timepart1 = timepart / 10;
 		timepart2 = timepart % 10;
 		NumToStr(millibuf,millitime);
-    	sprintf(timestring,"%s.%1d%1d",millibuf,timepart1,timepart2);
+    	snprintf(timestring,40,"%s.%1d%1d",millibuf,timepart1,timepart2);
 		return((UBYTE *)timestring);
 	}
 	else if ( ( StrICmp(name,(UBYTE *)"timer_") == 0 )
 	       || ( StrICmp(name,(UBYTE *)"stopwatch_") == 0 ) ) {
 		static char timestring[40];
-    	sprintf(timestring,"%ld",(GetRunningTime() - AP.StopWatchZero));
+    	snprintf(timestring,40,"%ld",(GetRunningTime() - AP.StopWatchZero));
 		return((UBYTE *)timestring);
 	}
 	else if ( StrICmp(name, (UBYTE *)"numactiveexprs_") == 0 ) {
@@ -871,11 +939,11 @@ VOID IniSpecialModule(int type)
  		#[ PreProcessor :
 */
 
-VOID PreProcessor()
+VOID PreProcessor(VOID)
 {
 	int moduletype = FIRSTMODULE;
 	int specialtype = 0;
-	int error1 = 0, error2 = 0, retcode, numstatement, retval;
+	int error1 = 0, error2 = 0, retcode, retval;
 	UBYTE c, *t, *s;
 	AP.StopWatchZero = GetRunningTime();
 	AC.compiletype = 0;
@@ -903,7 +971,6 @@ VOID PreProcessor()
 
 		if ( specialtype ) IniSpecialModule(specialtype);
 
-		numstatement = 0;
 		for(;;) {	/* Read a single line/statement */
 			c = GetChar(0);
 			if ( c == AP.ComChar ) {  /* This line is commentary */
@@ -1028,7 +1095,6 @@ endmodule:			if ( error2 == 0 && AM.qError == 0 ) {
 					retval = LoadStatement(OLDSTATEMENT);
 				}
 				else {
-					numstatement++;
 					AC.CurrentStream->prevline = AC.CurrentStream->linenumber;
 					retval = LoadStatement(NEWSTATEMENT);
 				}
@@ -1092,7 +1158,7 @@ endmodule:			if ( error2 == 0 && AM.qError == 0 ) {
  		#[ PreProInstruction :
 */
 
-int PreProInstruction()
+int PreProInstruction(VOID)
 {
 	UBYTE *s, *t;
 	KEYWORD *key;
@@ -1215,9 +1281,14 @@ int LoadInstruction(int mode)
 				*s++ = 'a'; *s++ = 's'; *s++ = 's'; *s++ = 'i';
 				*s++ = 'g'; *s++ = 'n'; *s++ = ' '; *s = 0;
 			}
-			AP.preFill = s; *s++ = 0; *s = c;
-			oldmode = mode;
-			return(0);
+			if ( c == '\'' || c == '`' ) { /* we do not expand preprocessor variables */
+				mode = 1;
+			}
+			else {
+				AP.preFill = s; *s++ = 0; *s = c;
+				oldmode = mode;
+				return(0);
+			}
 		}
 		if ( mode == 0 && first ) {
 			if ( c == '$' ) {
@@ -1390,9 +1461,12 @@ int LoadStatement(int type)
 		c = GetChar(0);
 		if ( c == ENDOFINPUT ) { retval = -1; break; }
 		if ( stringlevel == 0 ) {
-			if ( c == LINEFEED ) { retval = 0; break; }
+			if ( c == LINEFEED ) {
+				if ( AP.eat < 0 ) { s--; AP.eat = 0; }
+				retval = 0; break;
+			}
 			if ( c == ';' ) {
-				if ( AP.eat < 0 ) s--;
+				if ( AP.eat < 0 ) { s--; AP.eat = 0; }
 				while ( ( c = GetChar(0) ) == ' ' || c == '\t' ) {}
 				if ( c != LINEFEED ) UngetChar(c);
 				retval = 1;
@@ -4308,7 +4382,7 @@ int PreSkip(UBYTE *start, UBYTE *stop, int mode)
  		#[ StartPrepro :
 */
 
-VOID StartPrepro()
+VOID StartPrepro(VOID)
 {
 	int **ppp;
 	AP.MaxPreIfLevel = 2;
@@ -4670,6 +4744,38 @@ together:
 					else                                  { x = 0; }
 					*tt = c;
 				}
+				else if ( *t == '"' ) {	/* see whether a file exists */
+/*					UBYTE *name, *oldname; */
+					t++; tt = t;
+					for (;;) {
+						if ( *tt == '\\' ) tt++;
+						else if ( *tt == '"' ) break;
+						tt++;
+					}
+					c = *tt; *tt = 0;
+/*
+					Try to open the file. If possible, return 1.
+					Afterwards close it.
+					We do have to run through the FORMPATH. Hence we use LocateFile.
+					This routine may change the name to the full name.
+
+					oldname = name = strDup1(t,"name in exists");
+					x = LocateFile(&name,-1);
+*/
+					x = OpenFile((char *)t);
+					if ( x >= 0 ) {
+						CloseFile(x);
+						x = 1;
+/*
+						if ( name != oldname ) M_free(name,"name from LocateFile");
+*/
+					}
+					else x = 0;
+/*
+					M_free(oldname,"name in exists");
+*/
+					*tt++ = c;
+				}
 				else {
 					tt = SkipAName(t);
 					c = *tt; *tt = 0;
@@ -4875,6 +4981,44 @@ together:
 				*val2 = x;
 				return(s);
 			}
+			else if ( StrICmp(s,(UBYTE *)"flag") == 0 ) {
+				UBYTE *tt;
+				WORD x = 0, numexp;
+				{
+				*t++ = c;
+				while ( *t == ' ' || *t == '\t' ) t++;
+				if ( FG.cTable[*t] != 1 ) goto flagerror;
+				while ( FG.cTable[*t] == 1 ) x = 10*x + (*t++ - '0');
+				if ( x < 1 || x > BITSINWORD ) {
+					MesPrint("@Illegal number %d for flag in flag condition",x);
+					goto flagerror;
+				}
+				while ( *t == ' ' || *t == '\t' ) t++;
+				if ( *t != ',' ) goto flagerror;
+				t++;
+				while ( *t == ' ' || *t == '\t' ) t++;
+				tt = SkipAName(t);
+				c = *tt; *tt = 0;
+				if ( GetName(AC.exprnames,t,&numexp,NOAUTO) == NAMENOTFOUND ) {
+					MesPrint("@ %s should be the name of an expression",t);
+					goto flagerror;
+				}
+				*tt = c;
+				while ( *t == ' ' || *t == '\t' ) t++;
+				if ( *tt != ')' ) {
+flagerror:
+					MesPrint("@Improper use of flag(num,expr)");
+					Terminate(-1);
+					return(0);
+				}
+				if ( ( Expressions[numexp].uflags & ( 1 << (x-1) ) ) != 0 )
+					*val2 = 1;
+				else *val2 = 0;
+				*type = 3;
+				s = tt+1;
+				return(s);
+				}
+			}
 			else *t = c;
 		}
 		else if ( *t == '=' || *t == '<' || *t == '>' || *t == '!'
@@ -4919,7 +5063,7 @@ together:
 		a stream.
 */
 
-UBYTE *PreCalc()
+UBYTE *PreCalc(VOID)
 {
 	UBYTE *buff, *s = 0, *t, *newb, c;
 	int size, i, n, parlevel = 0, bralevel = 0;
@@ -5251,7 +5395,6 @@ int DoExternal(UBYTE *s)
 			case 10:/*'\0' fits here*/
 				MesPrint("@Can't finde closing \"");
 				Terminate(-1);
-				break;
 			case 0:case 1: continue;
 			default:
 				break;
@@ -5592,7 +5735,7 @@ int DoRmExternal(UBYTE *s)
 					stored.
 
 					FORM continues to read the running external
-					program output until the external program outputs a
+					program output until the extrenal program outputs a
 					prompt.
 
 */
@@ -5633,7 +5776,6 @@ int DoFromExternal(UBYTE *s)
 			case 10:/*'\0' fits here*/
 				MesPrint("@Can't finde closing \"");
 				Terminate(-1);
-				break;
 			case 0:case 1: continue;
 			default:
 				break;
@@ -6322,6 +6464,12 @@ noexpr:				MesPrint("@expression name expected in #write instruction");
 				if ( *fstring == 'O' ) goto dooptim;
 				else if ( *fstring == 'd' ) goto donumber;
 				else if ( *fstring == '$' ) goto dodollar;
+				else if ( *fstring == 't' ) {	/* `tab' position */
+					if ( number < (WORD)(stopper-Out) ) {
+						while ( (WORD)(to-Out) < number ) *to++ = ' ';
+					}
+					fstring++;
+				}
 				else if ( *fstring == 'X' || *fstring == 'x' ) {
 					if ( number > 0 && number <= cbuf[AM.sbufnum].numrhs ) {
 						UBYTE buffer[80], *out, *old1, *old2, *old3;
@@ -7006,5 +7154,559 @@ int DoTimeOutAfter(UBYTE *s)
 
 /*
  		#] DoTimeOutAfter : 
+ 		#[ DoNamespace :
+
+		Syntax:
+			#Namespace name
+				.....
+			#use variables
+				.....
+			#EndNamespace
+		Effect:
+			All variables/expressions defined inside the range of the
+			namespace get name_ prepended.
+			This holds also for $-variables, names of procedures and 
+			names of files.
+		Namespaces can be used in a nested way. cf this_is_deep_x
+		A leading _ takes the role of what is super:: in some other languages.
+		Remarks:
+			Names of preprocessor variables are excluded!
+			Names of built in objects are excluded! (like sum_, d_ etc.)
+*/
+
+int DoNamespace(UBYTE *s)
+{
+	UBYTE *s1, *s2, c;
+	NAMESPACE *namespace;
+	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
+	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
+	while ( *s == ' ' || *s == ',' || *s == '\t' ) s++;
+	if ( FG.cTable[*s] != 0 ) {
+		MesPrint("@Illegal name in #namespace instruction: %s",s);
+		return(-1);
+	}
+	s1 = s;
+	while ( FG.cTable[*s1] <= 1 ) s1++;
+	s2 = s1;
+	while ( *s2 == ' ' || *s2 == ',' || *s2 == '\t' ) s2++;
+	if ( *s2 != 0 ) {
+		MesPrint("@A #namespace instruction can only have one name with only alphanumeric characters.");
+		return(-1);
+	}
+	c = *s1; *s1 = 0;
+/*
+	Now we have the name and the statement is legal.
+	We can proceed creating the namespace and its use tree.
+*/
+	namespace = (NAMESPACE *)Malloc1(sizeof(NAMESPACE),"namespace");
+	namespace->name = strDup1(s,"namespace_name");
+	namespace->usenames = MakeNameTree();
+	if ( AP.firstnamespace == 0 ) {
+		namespace->previous = 0;
+		namespace->next = 0;
+		AP.firstnamespace = namespace;
+		AP.lastnamespace = namespace;
+	}
+	else {
+		AP.lastnamespace->next = namespace;
+		namespace->next = 0;
+		namespace->previous = AP.lastnamespace;
+		AP.lastnamespace = namespace;
+	}
+	*s1 = c;
+	return(0);
+}
+
+/*
+ 		#] DoNamespace : 
+ 		#[ DoEndNamespace :
+*/
+
+int DoEndNamespace(UBYTE *s)
+{
+	NAMESPACE *namespace;
+	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
+	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
+	while ( *s == ' ' || *s == ',' || *s == '\t' ) s++;
+	if ( *s != 0 ) {
+		MesPrint("@Illegal #endnamespace instruction");
+		return(-1);
+	}
+	namespace = AP.lastnamespace;
+	AP.lastnamespace = namespace->previous;
+	M_free(namespace->name,"namespace_name");
+	FreeNameTree(namespace->usenames);
+	M_free(namespace,"namespace");
+	return(0);
+}
+
+/*
+ 		#] DoEndNamespace : 
+ 		#[ SkipName :
+*/
+
+UBYTE *SkipName(UBYTE *s)
+{
+	UBYTE *t = s, *s1, c;
+	int num = 0, block = 0;
+	if ( *s == '[' ) {
+straight:
+		SKIPBRA1(s)
+		if ( *s == 0 ) {
+			MesPrint("&Illegal name: '%s'",t);
+			return(0);
+		}
+		s++; s1 = s;
+		while ( FG.cTable[*s] <= 1 || *s == '_' ) s++;
+		if ( s1 != s ) goto witherror;
+	}
+	else if ( *s == '$' ) {
+		s++;
+		while ( *s == '_' ) { s++; num++; }
+		block = 1;
+		while ( FG.cTable[*s] <= 1 || *s == '_' ) {
+			if ( FG.cTable[*s] != 0 && block == 1 ) {
+blocked:
+				MesPrint("&Illegally formed name: %s",t);
+				return(0);
+			}
+			if ( *s == '_' ) { num++; block = 1; }
+			else block = 0;
+			s++;
+		}
+		if ( s[-1] == '_' && num > 1 ) goto built;
+	}
+	else if ( FG.cTable[*s] == 0 ) {
+regular:
+		while ( FG.cTable[*s] <= 1 || *s == '_' ) {
+			if ( FG.cTable[*s] != 0 && block == 1 ) goto blocked;
+			if ( *s == '_' ) { block = 1; num++; }
+			else block = 0;
+			s++;
+		}
+		if ( *s == '[' ) goto straight;
+		if ( s[-1] == '_' && num > 1 ) {
+built:
+			c = *s; *s = 0;
+			MesPrint("&Built in objects cannot be part of namespaces: %s",t);
+			*s = c;
+			return(0);
+		}
+	}
+	else if ( *s == '_' ) {
+		while ( *s == '_' ) { s++; num++; }
+		if ( FG.cTable[*s] == 0 ) { block = 0; goto regular; }
+		goto witherror;
+	}
+	else if ( *s == '@' ) {
+		s++; block = 1;
+		if ( *s == '_' || FG.cTable[*s] == 1 ) {
+			MesPrint("@Illegally formed name: %s",s-1);
+		}
+		goto regular;
+	}
+	else if ( *s == '#' ) {	/* name of a procedure */
+		s++;
+		while ( *s == '_' ) { s++; num++; }
+		block = 1;
+		while ( FG.cTable[*s] <= 1 || *s == '_' ) {
+			if ( FG.cTable[*s] != 0 && block == 1 ) goto blocked;
+			if ( *s == '_' ) { num++; block = 1; }
+			else block = 0;
+			s++;
+		}
+		if ( s[-1] == '_' ) {
+witherror:
+			c = *s; *s = 0;
+			MesPrint("&Illegally formed name: %s",t);
+			*s = c;
+			return(0);
+		}
+	}
+	else if ( *s == '<' ) {	/* name of a file. Can be anything (more or less) */
+		s++;
+		while ( *s && *s != '>' ) s++;
+		if ( *s != '>' ) goto witherror;
+		s++;
+	}
+	return(s);
+}
+
+/*
+ 		#] SkipName : 
+ 		#[ ConstructName :
+
+		Routine gets a 'raw' name and modifies it if the namespace
+		settings ask for it. It puts the new name in a buffer that
+		may be expanded if the names become rather long.
+		Note that eventually that name needs to be copied, because
+		we do not allocate new buffers for each name.
+
+		type tells what kind of name we look for
+*/
+
+UBYTE *ConstructName(UBYTE *s,UBYTE type)
+{
+	int len;
+	UBYTE *t, *u;
+	WORD number;
+	NAMESPACE *namespace;
+	if ( AP.lastnamespace == 0 ) return(s);
+	if ( *s == '@' ) return(s+1);
+	if ( GetName(AP.lastnamespace->usenames,s,&number,NOAUTO) !=
+			NAMENOTFOUND ) return(s);
+/*
+	Now the real stuff
+	First we have to compute the size of the new name.
+*/
+	len = StrLen(s) + 1;
+	namespace = AP.firstnamespace;
+	while ( namespace ) {
+		len += StrLen(namespace->name)+1;
+		namespace = namespace->previous;
+	}
+	if ( len > AP.fullnamesize ) {
+		while ( len > AP.fullnamesize ) AP.fullnamesize *= 2;
+		M_free(AP.fullname,"AP.fullname");
+		AP.fullname = (UBYTE *)Malloc1(AP.fullnamesize*sizeof(UBYTE *),"AP.fullname");
+	}
+	namespace = AP.firstnamespace;
+	t = AP.fullname;
+	switch ( type ) {
+		case ' ':
+		case 0:
+			while ( namespace ) {
+				u = namespace->name;
+				while ( *u ) *t++ = *u++;
+				*t++ = '_';
+				namespace = namespace->previous;
+			}
+			while ( *s ) *t++ = *s++;
+			*t = 0;
+			break;
+		case '$':
+		case '#':
+			*t++ = type;
+			while ( namespace ) {
+				u = namespace->name;
+				while ( *u ) *t++ = *u++;
+				*t++ = '_';
+				namespace = namespace->previous;
+			}
+			if ( type == '$' ) s++;
+			while ( *s ) *t++ = *s++;
+			*t = 0;
+			break;
+		case '<':
+			while ( namespace ) {
+				u = namespace->name;
+				while ( *u ) *t++ = *u++;
+				*t++ = '_';
+				namespace = namespace->previous;
+			}
+			s++;
+			while ( *s ) *t++ = *s++;
+			t--;  /* strip the '>' */
+			*t = 0;
+			break;
+		default:
+			MesPrint("&Unrecognized datatype in ConstructName");
+			*t = 0;
+			break;
+	}
+	return(AP.fullname);
+}
+
+/*
+ 		#] ConstructName : 
+ 		#[ DoUse :
+
+		Routine makes (inside the confines of the current namespace)
+		a list of variables that are excluded from the namespace.
+		Once the namespace is ended, the list is removed.
+		The list can include names of variables, dollars and procedures.
+		Preprocessor variables are excluded from the namespace. Their
+		inclusion would be too complicated for the input streams.
+		Note that the preprocessor variables that are arguments in a #do
+		or in a procedure are on a stack and should not cause problems.
+		Names of variables can be just that.
+		Names of $-variables are also straightforward.
+		Names of procedures should be preceeded by a # character.
+		Names of files (like in #include) should be enclosed by <>.
+		The names are stored in a balanced tree. Each namespace may have
+		its own tree. The toplevel (no namespace) does not allow a #use.
+*/
+
+int DoUse(UBYTE *s)
+{
+	NAMESPACE *namespace;
+	UBYTE *t, c;
+	int number;
+	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
+	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
+	if ( AP.lastnamespace == 0 ) {
+		MesPrint("@It is not allowed to use #use outside the scope of a namespace.");
+		return(-1);
+	}
+	namespace = AP.lastnamespace;
+	while ( *s == ' ' || *s == ',' || *s == '\t' ) s++;
+	while ( *s ) {
+		t = s;
+		if ( ( s = SkipName(t) ) == 0 ) return(-1);
+		if ( s == t ) {
+			MesPrint("@Unrecognized object in #use instruction: %s",t);
+			return(-1);
+		}
+		c = *s; *s = 0;
+/*
+		In usenames we only need the names to know whether they are 'protected'.
+		We need to keep the $, # and <> to avoid potential double names.
+*/
+		AddName(namespace->usenames,t,0,0,&number);
+		*s = c;
+		while ( *s == ' ' || *s == ',' || *s == '\t' ) s++;
+	}
+	return(0);
+}
+
+/*
+ 		#] DoUse : 
+ 		#[ UserFlags :
+ 
+	Syntax:
+		#ClearFlag number(s),expression(s)
+		#ClearFlag number(s)
+		#ClearFlag expression(s)
+		#ClearFlag
+		#SetFlag number(s),expression(s)
+		#SetFlag number(s)
+		#SetFlag expression(s)
+		#SetFlag
+		par == 0: Clear, par == 1: Set.
+*/
+
+int UserFlags(UBYTE *s,int par)
+{
+	int mask = 0, error = 0, i;
+	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
+	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
+	while ( *s == ',' || *s == ' ' || *s == '\t' ) s++;
+	if ( *s == 0 ) {	/* Treat all flags in all active expressions */
+allexpr:
+		for ( i = 0; i < NumExpressions; i++ ) {
+			switch ( Expressions[i].status ) {
+				case UNHIDELEXPRESSION:
+				case UNHIDEGEXPRESSION:
+				case INTOHIDELEXPRESSION:
+				case INTOHIDEGEXPRESSION:
+				case LOCALEXPRESSION:
+				case GLOBALEXPRESSION:
+				case SKIPLEXPRESSION:
+				case SKIPGEXPRESSION:
+				case HIDELEXPRESSION:
+				case HIDEGEXPRESSION:
+					if ( par == 1 ) Expressions[i].uflags |= ~mask;
+					else            Expressions[i].uflags &= mask;
+					break;
+				case DROPPEDEXPRESSION:
+				case DROPLEXPRESSION:
+				case DROPGEXPRESSION:
+				case DROPHLEXPRESSION:
+				case DROPHGEXPRESSION:
+				case STOREDEXPRESSION:
+				case HIDDENLEXPRESSION:
+				case HIDDENGEXPRESSION:
+				case SPECTATOREXPRESSION:
+				default:
+					break;
+			}
+		}
+	}
+	else if ( FG.cTable[*s] == 1 ) {
+		mask = (int)WORDMASK;
+		while ( FG.cTable[*s] == 1 ) {
+			int x = 0;
+			while ( FG.cTable[*s] == 1 ) { x = 10*x + (*s++-'0'); }
+			if ( x < 1 || x > BITSINWORD ) {
+				MesPrint("@Illegal number %d for flag in #...Flag instruction",x);
+				return(1);
+			}
+			mask ^= (1<<(x-1));
+			while ( *s == ',' || *s == ' ' || *s == '\t' ) s++;
+		}
+		if ( *s == 0 ) goto allexpr;
+	}
+	else {	/* Clear all flags in all expressions that are specified */
+		mask = (int)WORDMASK;
+	}
+	while ( *s ) { /* now read the expressions */
+		UBYTE *s1, c;
+		WORD num1;
+		if ( FG.cTable[*s] != 0 && *s != '[' ) goto syntax;
+		s1 = s; s = SkipAName(s);
+		c = *s; *s = 0;
+	    if ( GetName(AC.exprnames,s1,&num1,NOAUTO) != CEXPRESSION ) {
+			MesPrint("@%s is not an active expression",s1);
+			error = 1;
+			return(error);
+		}
+		switch ( Expressions[num1].status ) {
+			case UNHIDELEXPRESSION:
+			case UNHIDEGEXPRESSION:
+			case INTOHIDELEXPRESSION:
+			case INTOHIDEGEXPRESSION:
+			case LOCALEXPRESSION:
+			case GLOBALEXPRESSION:
+			case SKIPLEXPRESSION:
+			case SKIPGEXPRESSION:
+			case HIDELEXPRESSION:
+			case HIDEGEXPRESSION:
+				if ( par == 1 ) Expressions[num1].uflags |= ~mask;
+				else            Expressions[num1].uflags &= mask;
+				break;
+			case DROPPEDEXPRESSION:
+			case DROPLEXPRESSION:
+			case DROPGEXPRESSION:
+			case DROPHLEXPRESSION:
+			case DROPHGEXPRESSION:
+			case STOREDEXPRESSION:
+			case HIDDENLEXPRESSION:
+			case HIDDENGEXPRESSION:
+			case SPECTATOREXPRESSION:
+			default:
+				MesPrint("@%s is not an active expression",s1);
+				error = 1;
+				break;
+		}
+		*s = c;
+		while ( *s == ',' || *s == ' ' || *s == '\t' ) s++;
+	}
+	return(error);
+syntax:
+	MesPrint("@Illegal name in #...Flag instruction.");
+	return(1);
+}
+
+/*
+ 		#] UserFlags : 
+ 		#[ DoClearUserFlag :
+*/
+
+int DoClearUserFlag(UBYTE *s)
+{
+	return(UserFlags(s,0));
+}
+
+/*
+ 		#] DoClearUserFlag : 
+ 		#[ DoSetUserFlag :
+*/
+
+int DoSetUserFlag(UBYTE *s)
+{
+	return(UserFlags(s,1));
+}
+
+/*
+ 		#] DoSetUserFlag : 
+ 		#[ DoStartFloat :
+
+		If there is a number follwing, it will be the new default precision.
+		If float has been started before, the old one will be removed first.
+		If there are two numbers, the second one is the maximum weight for
+		MZV's.
+*/
+#ifdef WITHFLOAT
+
+int DoStartFloat(UBYTE *s)
+{
+	GETIDENTITY
+	int error = 0;
+	LONG x;
+	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
+	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
+	if ( AR.PolyFun != 0 ) {
+		MesPrint("@Simultaneous use of Poly(Rat)Fun and float_ is not allowed.");
+		error = 1;
+	}
+	if ( AC.ncmod != 0 ) {
+		MesPrint("@Simultaneous use of floating point and modulus arithmetic makes no sense.");
+		error = 1;
+	}
+	while ( *s == ',' || *s == ' ' || *s == '\t' ) s++;
+	if ( *s >= '0' && *s <= '9' ) {
+		x = 0;
+		do {
+			x = 10*x + (*s++-'0');
+		} while ( *s >= '0' && *s <= '9' );
+		AC.tDefaultPrecision = x;
+		while ( *s == ',' || *s == ' ' || *s == '\t' ) s++;
+		if ( *s >= '0' && *s <= '9' ) {
+			x = 0;
+			do {
+				x = 10*x + (*s++ - '0');
+			} while ( *s >= '0' && *s <= '9' );
+			AC.tMaxWeight = x;
+			while ( *s == ',' || *s == ' ' || *s == '\t' ) s++;
+		}
+		else {
+			AC.tMaxWeight = 0;
+		}
+		if ( *s ) goto IllPar;
+	}
+	else if ( *s != 0 ) {
+IllPar:
+		MesPrint("@Illegal parameter in %#StartFloat instruction: %s ",s);
+		error = 1;
+	}
+	if ( error == 0 ) {
+		if ( AC.tDefaultPrecision && ( AC.tDefaultPrecision != AC.DefaultPrecision
+		|| AT.aux_ == 0 ) ) {
+			AC.DefaultPrecision = AC.tDefaultPrecision;
+			AC.tDefaultPrecision = 0;
+		}
+		if ( AC.tMaxWeight && ( AC.tMaxWeight != AC.MaxWeight
+		|| AT.aux_ == 0 ) ) {
+			AC.MaxWeight = AC.tMaxWeight;
+			AC.tMaxWeight = 0;
+		}
+		SetupMPFTables();
+		if ( AC.MaxWeight > 0 ) SetupMZVTables();
+		SetfFloatPrecision(AC.DefaultPrecision);
+	}
+	else {
+		AC.tDefaultPrecision = 0;
+		AC.tMaxWeight = 0;
+	}
+	return(error);
+}
+
+#endif
+/*
+ 		#] DoStartFloat : 
+ 		#[ DoEndFloat :
+*/
+#ifdef WITHFLOAT
+
+int DoEndFloat(UBYTE *s)
+{
+	int error = 0;
+	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
+	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
+	while ( *s == ',' || *s == ' ' || *s == '\t' ) s++;
+	if ( *s != 0 ) {
+		MesPrint("@Illegal parameter in %#EndFloat instruction: %s ",s);
+		error = 1;
+	}
+	if ( error == 0 ) {
+		ClearfFloat();
+		ClearMZVTables();
+	}
+	return(error);
+}
+
+#endif
+/*
+ 		#] DoEndFloat : 
  	# ] PreProcessor :
 */

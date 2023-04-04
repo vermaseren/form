@@ -5,7 +5,7 @@
 
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2022 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -36,7 +36,7 @@
 extern "C" {
 #include "form3.h"
 }
- 
+
 #include "gentopo.h"
 
 //using namespace std;
@@ -77,13 +77,13 @@ int GenerateVertices(TOPOTYPE *TopoInf, int pointsremaining, int level)
 		if ( TopoInf->vertmax && TopoInf->vertmax[level] >= 0
 					 && j > TopoInf->vertmax[level] ) break;
 		if ( i == 0 ) { // We got one!
-		    MGraph *mgraph;
+		    T_MGraph *mgraph;
 			TopoInf->cldeg[TopoInf->ncl] = TopoInf->vert[level];
 			TopoInf->clnum[TopoInf->ncl] = j;
 			TopoInf->clext[TopoInf->ncl] = 0;
 			TopoInf->ncl++;
 
-			mgraph = new MGraph(0, TopoInf->ncl, TopoInf->cldeg,
+			mgraph = new T_MGraph(0, TopoInf->ncl, TopoInf->cldeg,
 					     TopoInf->clnum, TopoInf->clext, TopoInf->sopi);
 
 		    mgraph->generate();
@@ -157,7 +157,6 @@ WORD GenerateTopologies(PHEAD WORD nloops, WORD nlegs, WORD setvert, WORD setmax
 	}
 	TopoInf.ncl = nlegs;
 	TopoInf.sopi = 1;  // For now
-
 	if ( GenerateVertices(&TopoInf,points,0) != 0 ) {
 		MLOCK(ErrorMessageLock);
 		MesPrint("Called from GenerateTopologies with %d loops and %d legs considered excessive",nloops,nlegs);
@@ -176,7 +175,7 @@ WORD GenerateTopologies(PHEAD WORD nloops, WORD nlegs, WORD setvert, WORD setmax
 // Output for FROM called by genTopo each time a new graph is
 // generated
 //
-void toForm(EGraph *egraph)
+void toForm(T_EGraph *egraph)
 {
 	GETIDENTITY;
 //
@@ -204,7 +203,7 @@ void toForm(EGraph *egraph)
 	for ( n = 0; n < egraph->nNodes; n++ ) {
 		if ( ( AT.TopologiesOptions[1] &1 ) == 1 && egraph->nodes[n].ext ) continue;
 		tt = t;
-		*t++ = VERTEX; t++; FILLFUN(t);
+		*t++ = NODEFUNCTION; t++; FILLFUN(t);
 		*t++ = -SNUMBER; *t++ = n;
 		for ( lg = 0; lg < egraph->nodes[n].deg; lg++ ) {
 			ed = egraph->nodes[n].edges[lg];

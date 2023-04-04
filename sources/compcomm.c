@@ -9,7 +9,7 @@
  */
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2022 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -39,12 +39,16 @@
 
 #include "form3.h"
 #include "comtool.h"
+#include <gmp.h>
 
 static KEYWORD formatoptions[] = {
 	 {"allfloat",       (TFUN)0,    ALLINTEGERDOUBLE,   0}
 	,{"c",				(TFUN)0,	CMODE,				0}
 	,{"doublefortran",	(TFUN)0,	DOUBLEFORTRANMODE,	0}
 	,{"float",			(TFUN)0,	0,					2}
+#ifdef WITHFLOAT
+	,{"floatprecision",	(TFUN)0,	0,					5}
+#endif
 	,{"fortran",		(TFUN)0,	FORTRANMODE,		0}
 	,{"fortran90",		(TFUN)0,	FORTRANMODE,		4}
 	,{"maple",			(TFUN)0,	MAPLEMODE,			0}
@@ -886,7 +890,40 @@ int CoFormat(UBYTE *s)
 				AO.DoubleFlag = 0;
 				AC.OutputMode = key->type & NODOUBLEMASK;
 			}
+#ifdef WITHFLOAT
+			else if ( key->flags == 5 ) {
+/*
+				Syntax: Format FloatPrecision number;
+				        Format FloatPrecision off;
+*/
+				while ( FG.cTable[*s] == 0 ) s++;
+				while ( *s == ' ' || *s == '\t' || *s == ',' ) s++;
+				if ( *s == 0 ) {
+					AO.FloatPrec = 0;
+				}
+				else if ( tolower(*s) == 'o' && tolower(s[1]) == 'f'
+				&& tolower(s[2]) == 'f' ) {
+					ss = s;
+					s += 3;
+					while ( *s == ' ' || *s == '\t' || *s == ',' ) s++;
+					if ( *s ) { s = ss; goto WrongOption; }
+					AO.FloatPrec = -1;
+				}
+				else if ( FG.cTable[*s] == 1 ) {
+					ss = s;
+					AO.FloatPrec = 0;
+					while ( *s <= '9' && *s >= '0' )
+						AO.FloatPrec = 10*AO.FloatPrec + (*s++ - '0');
+					while ( *s == ' ' || *s == '\t' || *s == ',' ) s++;
+					if ( *s ) { s = ss; goto WrongOption; }
+				}
+				else {
+WrongOption:		MesPrint("&Illegal option in Format FloatPrecision: %s",s);
+					error = 1;
+				}
+			}
 		}
+#endif
 		else if ( ( *s == 'c' || *s == 'C' ) && ( FG.cTable[s[1]] == 1 ) ) {
 			UBYTE *ss = s+1;
 			WORD x = 0;
@@ -898,6 +935,7 @@ int CoFormat(UBYTE *s)
 		else {
 Unknown:	MesPrint("&Unknown option: %s",s); error = 1;
 		}
+		AC.LineLength = 72;
 	}
 	return(error);
 }
@@ -3459,63 +3497,6 @@ int CoTryReplace(UBYTE *p)
 
 int CoModulus(UBYTE *inp)
 {
-#ifdef OLDMODULUS
-/*	#[ Old Syntax : */
-	UBYTE *p, c;
-	WORD sign = 1, Retval;
-	while ( *inp == '-' || *inp == '+' ) {
-		if ( *inp == '-' ) sign = -sign;
-		inp++;
-	}
-	p = inp;
-	if ( FG.cTable[*inp] != 1 ) {
-		MesPrint("&Invalid value for modulus:%s",inp);
-		if ( AC.modpowers ) M_free(AC.modpowers,"AC.modpowers");
-		AC.modpowers = 0;
-		return(1);
-	}
-	do { inp++; } while ( FG.cTable[*inp] == 1 );
-	c = *inp; *inp = 0;
-	Retval = GetLong(p,(UWORD *)AC.cmod,&AC.ncmod);
-	if ( sign < 0 ) AC.ncmod = -AC.ncmod;
-	*p = c;
-	if ( c == 0 ) goto regular;
-	else if ( c != ':' ) {
-		MesPrint("&Illegal option for modulus %s",inp);
-		if ( AC.modpowers ) M_free(AC.modpowers,"AC.modpowers");
-		AC.modpowers = 0;
-		return(1);
-	}
-	inp++;
-	p = inp;
-	while ( FG.cTable[*inp] == 1 ) inp++;
-	if ( *inp ) {
-		MesPrint("&Illegal character in option for modulus %s",inp);
-		if ( AC.modpowers ) M_free(AC.modpowers,"AC.modpowers");
-		AC.modpowers = 0;
-		return(1);
-	}
-	if ( GetLong(p,(UWORD *)AC.powmod,&AC.npowmod) ) Retval = -1;
-	if ( TakeModulus((UWORD *)AC.powmod,&AC.npowmod,AC.cmod,AC.ncmod,NOUNPACK) ) Retval = -1;
-	if ( AC.npowmod == 0 ) {
-		MesPrint("&Improper value for generator");
-		Retval = -1;
-	}
-	if ( MakeModTable() ) Retval = -1;
-	AC.DirtPow = 1;
-regular:
-	AN.ncmod = AC.ncmod;
-	if ( AC.halfmod ) {
-		M_free(AC.halfmod,"halfmod");
-		AC.halfmod = 0; AC.nhalfmod = 0;
-	}
-	if ( AC.modinverses ) {
-		M_free(AC.halfmod,"modinverses");
-		AC.modinverses = 0;
-	}
-	return(Retval);
-/*	#] Old Syntax : */ 
-#else
 	GETIDENTITY
 	int Retval = 0, sign = 1;
 	UBYTE *p, c;
@@ -3532,6 +3513,12 @@ SwitchOff:
 		AC.modmode = 0;
 		return(0);
 	}
+#ifdef WITHFLOAT
+	if ( AT.aux_ != 0 ) {
+		MesPrint("&Simultaneous use of floating point and modulus arithmetic makes no sense.");
+		Retval = 1;
+	}
+#endif
 	AC.modmode = 0;
 	if ( *inp == '-' ) {
 		sign = -1;
@@ -3639,7 +3626,6 @@ badsyntax:
 	if ( AC.halfmod ) M_free(AC.halfmod,"halfmod");
 	AC.halfmod = 0; AC.nhalfmod = 0;
 	return(Retval);
-#endif
 }
 
 /*
@@ -4186,6 +4172,9 @@ int CoIf(UBYTE *inp)
 	UBYTE *p, *pp, *ppp, c;
 	CBUF *C = cbuf+AC.cbufnum;
 	LONG x;
+#ifdef WITHFLOAT
+	int spec;
+#endif
 	if ( *inp == '(' && inp[1] == ',' ) inp += 2;
 	else if ( *inp == '(' ) inp++;	/* Usually we enter at the bracket */
 
@@ -4214,8 +4203,42 @@ int CoIf(UBYTE *inp)
 ReDo:
 		if ( FG.cTable[*p] == 1 ) {		/* Number */
 			if ( gotexp == 1 ) { MesCerr("position for )",p); error = 1; }
+#ifdef WITHFLOAT
+			pp = CheckFloat(p,&spec);
+			if ( pp > p ) {	/* Got one */
+HaveFloat:
+				if ( spec == 1 ) { /* is zero */
+					*w++ = LONGNUMBER; *w++ = 3; *w++ = 0;
+				}
+				else if ( spec == -1 ) {
+					MesPrint("&The floating point system has not been started: %s",p);
+                    if ( !error ) error = 1;
+				}
+				else {
+					WORD *ow = AT.WorkPointer;
+					AT.WorkPointer = w;
+					c = *pp; c = 0;
+					ReadFloat((SBYTE *)p);	/* Is now at AT.WorkPointer */
+					*pp = c;
+					AT.WorkPointer[0] = IFFLOATNUMBER;
+					w = AT.WorkPointer + AT.WorkPointer[1];
+					AT.WorkPointer = ow;
+					if ( level ) w[FUNHEAD+3] = -w[FUNHEAD+3];
+				}
+				goto DoneWithNumber;
+			}
+/*
+			Notation: Same as FLOATFUN but FLOATFUN replaced by IFFLOATNUMBER.
+*/
+
+#endif
 			u = w;
 			*w++ = LONGNUMBER;
+/*
+			Notation:
+			LONGNUMBER,size,reducedsize*sign,numerator,denominator
+			with the length of denominator and numerator equal to reducedsize
+*/
 			w += 2;
 			if ( GetLong(p,(UWORD *)w,&ncoef) ) { ncoef = 1; error = 1; }
 			w[-1] = ncoef;
@@ -4269,6 +4292,7 @@ OnlyNum:
 			u[1] = WORDDIF(w,u);
 			u[2] = (u[1] - 3)/2;
 			if ( level ) u[2] = -u[2];
+DoneWithNumber:
 			gotexp = 1;
 		}
 		else if ( *p == '+' ) { p++; goto ReDo; }
@@ -4342,7 +4366,7 @@ OnlyNum:
 				gotexp = 1;
 			}
 			else if ( !StrICmp(inp,(UBYTE *)"multipleof") ) {
-			if ( gotexp == 1 ) { MesCerr("position for )",p); error = 1; }
+				if ( gotexp == 1 ) { MesCerr("position for )",p); error = 1; }
 				*p = c;
 				if ( c != '(' ) {
 					MesPrint("&no ( after multipleof");
@@ -4392,8 +4416,41 @@ NoGood:			MesPrint("&Unrecognized word: %s",inp);
 				if ( w == 0 ) { error = 1; goto endofif; }
 				gotexp = 1;
 			}
+			else if ( !StrICmp(inp,(UBYTE *)"flag") ) {
+				UBYTE cc = c, *pppp;
+				*p = cc;
+				if ( cc != '(' ) {
+					MesPrint("&no ( after flag");
+					error = 1;
+					goto endofif;
+				}
+				inp = p;
+				SKIPBRA4(p);
+				cc = *++p; *p = 0; *inp = ','; pppp = p;
+				ww = w;
+				*w++ = IFUSERFLAG; *w++ = 0;
+				while ( *inp ) {
+					int x = 0;
+					while ( *inp == ',' ) inp++;
+					if ( *inp == 0 || *inp == ')' ) break;
+					while ( *inp >= '0' && *inp <= '9' ) x = 10*x+(*inp++-'0');
+					if ( x < 1 || x > BITSINWORD ) {
+						MesPrint("&Flag number %d outside the permitted range 1-%d.",BITSINWORD);
+						error = 1;
+					}
+					*w++ = x-1;
+				}
+				ww[1] = w-ww;
+				p = pppp; *p = cc; *inp = '(';
+				gotexp = 1;
+				if ( ww[1] <= 2 ) {
+					MesPrint("&The userflag condition in the if statement needs arguments.");
+					error = 1;
+				}
+				inp = p;
+				gotexp = 1;
+			}
 			else goto NoGood;
-			inp = p;
 		}
 		else if ( *p == 'e' || *p == 'E' ) { /* Expression */
 			if ( gotexp == 1 ) { MesCerr("position for )",p); error = 1; }
@@ -4633,6 +4690,12 @@ NoGood:			MesPrint("&Unrecognized word: %s",inp);
 			inp = p;
 			gotexp = 1;
 		}
+#ifdef WITHFLOAT
+		else if ( *p == '.' ) {
+			pp = CheckFloat(p,&spec);
+			if ( pp > p ) goto HaveFloat;
+		}
+#endif
 		else if ( *p == '(' ) {
 			if ( gotexp ) {
 				MesCerr("parenthesis",p);
@@ -5203,7 +5266,7 @@ int CoPolyFun(UBYTE *s)
 {
 	GETIDENTITY
 	WORD numfun;
-	int type;
+	int type, error = 0;
 	UBYTE *t;
 	AR.PolyFun = AC.lPolyFun = 0;
 	AR.PolyFunInv = AC.lPolyFunInv = 0;
@@ -5224,11 +5287,19 @@ int CoPolyFun(UBYTE *s)
 			if ( GetName(AC.exprnames,s,&numfun,NOAUTO) == NAMENOTFOUND )
 				AddFunction(s,0,0,0,0,0,-1,-1);
 		}
-		return(1);
+		error = 1;
 	}
-	AR.PolyFun = AC.lPolyFun = numfun+FUNCTION;
-	AR.PolyFunType = AC.lPolyFunType = 1;
-	return(0);
+	else {
+		AR.PolyFun = AC.lPolyFun = numfun+FUNCTION;
+		AR.PolyFunType = AC.lPolyFunType = 1;
+	}
+#ifdef WITHFLOAT
+	if ( mpfaux_ != 0 ) {
+		MesPrint("&Simultaneous use of PolyFun and float_ is not allowed.");
+		error = 1;
+	}
+#endif
+	return(error);
 }
 
 /*
@@ -5242,7 +5313,7 @@ int CoPolyRatFun(UBYTE *s)
 {
 	GETIDENTITY
 	WORD numfun;
-	int type;
+	int type, error = 0;
 	UBYTE *t, c;
 	AR.PolyFun = AC.lPolyFun = 0;
 	AR.PolyFunInv = AC.lPolyFunInv = 0;
@@ -5250,10 +5321,16 @@ int CoPolyRatFun(UBYTE *s)
 	AR.PolyFunExp = AC.lPolyFunExp = 0;
 	AR.PolyFunVar = AC.lPolyFunVar = 0;
 	AR.PolyFunPow = AC.lPolyFunPow = 0;
-	if ( *s == 0 ) return(0);
+	if ( *s == 0 ) return(error);
 	t = SkipAName(s);
 	if ( t == 0 ) goto NumErr;
 	c = *t; *t = 0;
+#ifdef WITHFLOAT
+	if ( mpfaux_ != 0 ) {
+		MesPrint("&Simultaneous use of PolyFun and float_ is not allowed.");
+		error = 1;
+	}
+#endif
 	if ( ( ( type = GetName(AC.varnames,s,&numfun,WITHAUTO) ) != CFUNCTION )
 	|| ( functions[numfun].spec != 0 ) || ( functions[numfun].commute != 0 ) ) {
 		MesPrint("&%s should be a regular commuting function",s);
@@ -5267,11 +5344,11 @@ int CoPolyRatFun(UBYTE *s)
 	AR.PolyFunInv = AC.lPolyFunInv = 0;
 	AR.PolyFunType = AC.lPolyFunType = 2;
 	AC.PolyRatFunChanged = 1;
-	if ( c == 0 ) return(0);
+	if ( c == 0 ) return(error);
 	*t = c;
 	if ( *t == '-' ) { AC.PolyRatFunChanged = 0; t++; }
 	while ( *t == ',' || *t == ' ' || *t == '\t' ) t++;
-	if ( *t == 0 ) return(0);
+	if ( *t == 0 ) return(error);
 	if ( *t != '(' ) {
 		s = t;
 		t = SkipAName(s);
@@ -5287,11 +5364,11 @@ int CoPolyRatFun(UBYTE *s)
 			return(1);
 		}
 		AR.PolyFunInv = AC.lPolyFunInv = numfun+FUNCTION;
-		if ( c == 0 ) return(0);
+		if ( c == 0 ) return(error);
 		*t = c;
 		if ( *t == '-' ) { AC.PolyRatFunChanged = 0; t++; }
 		while ( *t == ',' || *t == ' ' || *t == '\t' ) t++;
-		if ( *t == 0 ) return(0);
+		if ( *t == 0 ) return(error);
 	}
 	if ( *t == '(' ) {
 		t++;
@@ -5390,7 +5467,7 @@ ParErr:		MesPrint("&Illegal option %s in PolyRatFun statement.",s);
 		}
 		t++;
 		while ( *t == ',' || *t == ' ' || *t == '\t' ) t++;
-		if ( *t == 0 ) return(0);
+		if ( *t == 0 ) return(error);
 	}
 NumErr:;
 	MesPrint("&PolyRatFun statement needs one or two commuting function(s) for its argument(s)");
@@ -7018,7 +7095,7 @@ int DoPutInside(UBYTE *inp, int par)
   	#[ CoSwitch :
 
 	Syntax: Switch $var;
-	Be careful with illegal nestings with repeat, if, while.
+	Be carefull with illegal nestings with repeat, if, while.
 */
 
 int CoSwitch(UBYTE *s)
@@ -7235,4 +7312,354 @@ int CoEndSwitch(UBYTE *s)
 
 /*
   	#] CoEndSwitch : 
+  	#[ CoSetUserFlag :
+*/
+
+int CoSetUserFlag(UBYTE *s)
+{
+	int error = 0;
+	while ( *s && ( *s == ',' || *s == ' ' || *s == '\t' ) ) s++;
+	while ( *s && ( FG.cTable[*s] == 1 ) ) {
+		int x = 0;
+		while ( *s && ( FG.cTable[*s] == 1 ) ) x = 10*x+(*s++ - '0');
+		if ( x < 1 || x > BITSINWORD ) {
+			MesPrint("&Flag number %d outside the permitted range 1-%d.",BITSINWORD);
+			error = 1;
+		}
+		else {
+			Add3Com(TYPESETUSERFLAG,x-1);
+		}
+		while ( *s && ( *s == ',' || *s == ' ' || *s == '\t' ) ) s++;
+	}
+	if ( *s ) {
+		MesPrint("&Illegal character in SetUserFlag statement: %s",s);
+		error = 1;
+	}
+	return(error);
+}
+
+/*
+  	#] CoSetUserFlag : 
+  	#[ CoClearUserFlag :
+*/
+
+int CoClearUserFlag(UBYTE *s)
+{
+	int error = 0;
+	while ( *s && ( *s == ',' || *s == ' ' || *s == '\t' ) ) s++;
+	while ( *s && ( FG.cTable[*s] == 1 ) ) {
+		int x = 0;
+		while ( *s && ( FG.cTable[*s] == 1 ) ) x = 10*x+(*s++ - '0');
+		if ( x < 1 || x > BITSINWORD ) {
+			MesPrint("&Flag number %d outside the permitted range 1-%d.",BITSINWORD);
+			error = 1;
+		}
+		else {
+			Add3Com(TYPECLEARUSERFLAG,x);
+		}
+		while ( *s && ( *s == ',' || *s == ' ' || *s == '\t' ) ) s++;
+	}
+	if ( *s ) {
+		MesPrint("&Illegal character in SetUserFlag statement: %s",s);
+		error = 1;
+	}
+	return(error);
+}
+
+/*
+  	#] CoClearUserFlag : 
+  	#[ CoCreateAllLoops :
+
+	Syntax:
+		CoCreateAllLoops,in-function,out-function,type-argument,ifnoloop;
+	Types allowed:
+		vector, index, symbol, snumber
+	ifnoloop:
+		ifnoloop=0  or ifnoloop=1
+	in-function can be a tensor. In that case type can be only vector or index.
+	out-function can be a tensor. In that case type can be only vector or index.
+*/
+
+int CoCreateAllLoops(UBYTE *s)
+{
+	GETIDENTITY
+	UBYTE *inname, *outname, *stype, c;
+	WORD infun, outfun, x, type, tensorflag, typenum;
+	WORD *WorkSave, *to;
+	while ( *s == ',' || *s == ' ' ) s++;
+	inname = s; s = SkipAName(s);
+	c = *s; *s = 0;
+	if ( ( ( type = GetName(AC.varnames,inname,&infun,WITHAUTO) ) != CFUNCTION )
+	|| ( ( functions[infun].spec != 0 ) && ( functions[infun].spec != TENSORFUNCTION ) ) ) {
+		MesPrint("&%s should be a regular function or a tensor.",inname);
+		if ( type < 0 ) {
+			if ( GetName(AC.exprnames,s,&infun,NOAUTO) == NAMENOTFOUND )
+				AddFunction(s,0,0,0,0,0,-1,-1);
+		}
+		return(1);
+	}
+	infun += FUNCTION;
+	*s++ = c;
+	while ( *s == ',' || *s == ' ' ) s++;
+	outname = s; s = SkipAName(s);
+	c = *s; *s = 0;
+	if ( ( ( type = GetName(AC.varnames,outname,&outfun,WITHAUTO) ) != CFUNCTION )
+	|| ( ( functions[outfun].spec != 0 ) && ( functions[outfun].spec != TENSORFUNCTION ) ) ) {
+		MesPrint("&%s should be a regular function or a tensor.",outname);
+		if ( type < 0 ) {
+			if ( GetName(AC.exprnames,s,&outfun,NOAUTO) == NAMENOTFOUND )
+				AddFunction(s,0,0,0,0,0,-1,-1);
+		}
+		return(1);
+	}
+	outfun += FUNCTION;
+	*s++ = c;
+	if ( functions[infun].spec == TENSORFUNCTION ||
+	     functions[outfun].spec == TENSORFUNCTION ) tensorflag = 1;
+	else tensorflag = 0;
+/*
+	Now the type: type=....
+*/
+	while ( *s == ',' || *s == ' ' ) s++;
+	stype = s;
+	while ( FG.cTable[*s] == 0 ) s++;
+	c = *s; *s = 0;
+	if ( StrICmp(stype,(UBYTE *)"type") != 0 || c != '=' ) {
+		MesPrint("&In CreateAllLoops statement: expected type=vartype.");
+		return(1);
+	}
+	*s++ = c;
+	stype = s;
+	while ( FG.cTable[*s] == 0 ) s++;
+	c = *s; *s = 0;
+	if ( StrICmp(stype,(UBYTE *)"vector") == 0 ) {
+		typenum = -VECTOR;
+	}
+	else if ( StrICmp(stype,(UBYTE *)"index") == 0 ) {
+		typenum = -INDEX;
+	}
+	else if ( StrICmp(stype,(UBYTE *)"symbol") == 0 ) {
+		if ( tensorflag ) goto notintensor;
+		typenum = -SYMBOL;
+	}
+	else if ( StrICmp(stype,(UBYTE *)"snumber") == 0 ) {
+		if ( tensorflag ) goto notintensor;
+		typenum = -SNUMBER;
+	}
+	else {
+		MesPrint("&Unknown/not allowed variable type in CreateAllLoops: %s",stype);
+		return(1);
+	}
+	*s = c;
+	while ( *s == ',' || *s == ' ' ) s++;
+
+	stype = s;
+	while ( FG.cTable[*s] == 0 ) s++;
+	c = *s; *s = 0;
+	if ( StrICmp(stype,(UBYTE *)"ifnoloop") != 0 || c != '=' ) {
+		MesPrint("&Unrecognised option in CreateAllLoops statement: %s",stype);
+		return(1);
+	}
+	*s++ = c;
+	x = -1;
+	if ( FG.cTable[*s] == 1 ) {
+		x = 0;
+		do { x = 10*x + (*s++-'0'); } while (FG.cTable[*s] == 1);
+	}
+	if ( x != 0 && x != 1 ) {
+		MesPrint("&Only options allowed for ifnoloop are 0 or 1.");
+		return(1);
+	}
+	WorkSave = to = AT.WorkPointer;
+	*to++ = TYPEALLLOOPS;
+	*to++ = 6;
+	*to++ = infun;
+	*to++ = outfun;
+	*to++ = typenum;
+	*to++ = x;
+
+	AddNtoL(WorkSave[1],WorkSave);
+
+	return(0);
+notintensor:
+	MesPrint("&Variable type not allowed in tensors: %s",stype);
+	return(1);
+}
+
+/*
+  	#] CoCreateAllLoops : 
+  	#[ CoCreateAllPaths :
+
+	Syntax:
+		CreateAllPaths,end-function,intermediate-function,out-function,type-argument,ifnopath;
+	Types allowed:
+		vector, index, symbol, snumber
+	ifnoloop:
+		ifnoloop=0  or ifnoloop=1
+	in-function can be a tensor. In that case type can be only vector or index.
+	out-function can be a tensor. In that case type can be only vector or index.
+*/
+
+int CoCreateAllPaths(UBYTE *s)
+{
+	GETIDENTITY
+	UBYTE *endname,*inname, *outname, *stype, c;
+	WORD endfun, infun, outfun, x, type, tensorflag, typenum;
+	WORD *WorkSave, *to;
+	while ( *s == ',' || *s == ' ' ) s++;
+	endname = s; s = SkipAName(s);
+	c = *s; *s = 0;
+	if ( ( ( type = GetName(AC.varnames,endname,&endfun,WITHAUTO) ) != CFUNCTION )
+	|| ( ( functions[endfun].spec != 0 ) && ( functions[endfun].spec != TENSORFUNCTION ) ) ) {
+		MesPrint("&%s should be a regular function or a tensor.",endname);
+		if ( type < 0 ) {
+			if ( GetName(AC.exprnames,s,&endfun,NOAUTO) == NAMENOTFOUND )
+				AddFunction(s,0,0,0,0,0,-1,-1);
+		}
+		return(1);
+	}
+	endfun += FUNCTION;
+	*s++ = c;
+	while ( *s == ',' || *s == ' ' ) s++;
+	inname = s; s = SkipAName(s);
+	c = *s; *s = 0;
+	if ( ( ( type = GetName(AC.varnames,inname,&infun,WITHAUTO) ) != CFUNCTION )
+	|| ( ( functions[infun].spec != 0 ) && ( functions[infun].spec != TENSORFUNCTION ) ) ) {
+		MesPrint("&%s should be a regular function or a tensor.",inname);
+		if ( type < 0 ) {
+			if ( GetName(AC.exprnames,s,&infun,NOAUTO) == NAMENOTFOUND )
+				AddFunction(s,0,0,0,0,0,-1,-1);
+		}
+		return(1);
+	}
+	infun += FUNCTION;
+	*s++ = c;
+	while ( *s == ',' || *s == ' ' ) s++;
+	outname = s; s = SkipAName(s);
+	c = *s; *s = 0;
+	if ( ( ( type = GetName(AC.varnames,outname,&outfun,WITHAUTO) ) != CFUNCTION )
+	|| ( ( functions[outfun].spec != 0 ) && ( functions[outfun].spec != TENSORFUNCTION ) ) ) {
+		MesPrint("&%s should be a regular function or a tensor.",outname);
+		if ( type < 0 ) {
+			if ( GetName(AC.exprnames,s,&outfun,NOAUTO) == NAMENOTFOUND )
+				AddFunction(s,0,0,0,0,0,-1,-1);
+		}
+		return(1);
+	}
+	outfun += FUNCTION;
+	*s++ = c;
+	if ( functions[infun].spec == TENSORFUNCTION ||
+	     functions[outfun].spec == TENSORFUNCTION ) tensorflag = 1;
+	else tensorflag = 0;
+/*
+	Now the type: type=....
+*/
+	while ( *s == ',' || *s == ' ' ) s++;
+	stype = s;
+	while ( FG.cTable[*s] == 0 ) s++;
+	c = *s; *s = 0;
+	if ( StrICmp(stype,(UBYTE *)"type") != 0 || c != '=' ) {
+		MesPrint("&In CreateAllPaths statement: expected type=vartype.");
+		return(1);
+	}
+	*s++ = c;
+	stype = s;
+	while ( FG.cTable[*s] == 0 ) s++;
+	c = *s; *s = 0;
+	if ( StrICmp(stype,(UBYTE *)"vector") == 0 ) {
+		typenum = -VECTOR;
+	}
+	else if ( StrICmp(stype,(UBYTE *)"index") == 0 ) {
+		typenum = -INDEX;
+	}
+	else if ( StrICmp(stype,(UBYTE *)"symbol") == 0 ) {
+		if ( tensorflag ) goto notintensor;
+		typenum = -SYMBOL;
+	}
+	else if ( StrICmp(stype,(UBYTE *)"snumber") == 0 ) {
+		if ( tensorflag ) goto notintensor;
+		typenum = -SNUMBER;
+	}
+	else {
+		MesPrint("&Unknown/not allowed variable type in CreateAllPaths: %s",stype);
+		return(1);
+	}
+	*s = c;
+	while ( *s == ',' || *s == ' ' ) s++;
+
+	stype = s;
+	while ( FG.cTable[*s] == 0 ) s++;
+	c = *s; *s = 0;
+	if ( StrICmp(stype,(UBYTE *)"ifnopath") != 0 || c != '=' ) {
+		MesPrint("&Unrecognised option in CreateAllPaths statement: %s",stype);
+		return(1);
+	}
+	*s++ = c;
+	x = -1;
+	if ( FG.cTable[*s] == 1 ) {
+		x = 0;
+		do { x = 10*x + (*s++-'0'); } while (FG.cTable[*s] == 1);
+	}
+	if ( x != 0 && x != 1 ) {
+		MesPrint("&Only options allowed for ifnopath are 0 or 1.");
+		return(1);
+	}
+	WorkSave = to = AT.WorkPointer;
+	*to++ = TYPEALLPATHS;
+	*to++ = 7;
+	*to++ = endfun;
+	*to++ = infun;
+	*to++ = outfun;
+	*to++ = typenum;
+	*to++ = x;
+
+	AddNtoL(WorkSave[1],WorkSave);
+
+	return(0);
+notintensor:
+	MesPrint("&CreateAllPaths: Variable type not allowed in tensors: %s",stype);
+	return(1);
+}
+
+/*
+  	#] CoCreateAllPaths : 
+  	#[ CoCreateAll :
+
+	Syntax: subkey, two or three functions, type, ifnone
+*/
+
+int CoCreateAll(UBYTE *s)
+{
+	UBYTE *subkey;
+	while ( *s == ' ' || *s == ',' || *s == '\t' ) s++;
+	subkey = s;
+	while ( FG.cTable[*s] == 0 ) s++;
+	if ( *s != ' ' && *s != ',' && *s != '\t' ) {
+		MesPrint("&Illegal subkey in CoCreate statement.");
+		return(1);
+	}
+	/* c = *s; */ *s++ = 0;
+	while ( *s == ' ' || *s == ',' || *s == '\t' ) s++;
+	if ( StrICmp(subkey,(UBYTE *)"loops") == 0 ) {
+		return(CoCreateAllLoops(s));
+	}
+	else if ( StrICmp(subkey,(UBYTE *)"paths") == 0 ) {
+		return(CoCreateAllPaths(s));
+	}
+/*
+	else if ( StrICmp(subkey,(UBYTE *)"motics") == 0 ) {
+	}
+	else if ( StrICmp(subkey,(UBYTE *)"onepi") == 0 ) {
+	}
+	else if ( StrICmp(subkey,(UBYTE *)"cuts") == 0 ) {
+	}
+*/
+	else {
+		MesPrint("&Illegal subkey in CoCreate statement: %s.",subkey);
+		return(1);
+	}
+}
+
+/*
+  	#] CoCreateAll : 
 */

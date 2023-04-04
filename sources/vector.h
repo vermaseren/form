@@ -19,7 +19,7 @@
  */
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2022 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -189,7 +189,7 @@
  * Returns the size of the vector X.
  *
  * @param  X  the vector object.
- * @return    the size of the vector.
+ * @return    the size of the vetor.
  */
 #define VectorSize(X) \
 	((X).size)
@@ -203,7 +203,7 @@
  * Returns the capacity (the number of the already allocated elements) of the vector X.
  *
  * @param  X  the vector object.
- * @return    the capacity of the vector.
+ * @return    the capacity of the vetor.
  */
 #define VectorCapacity(X) \
 	((X).capacity)

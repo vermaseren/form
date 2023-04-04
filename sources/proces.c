@@ -5,7 +5,7 @@
  */
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2022 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -61,7 +61,7 @@ WORD printscratch[2];
  *	        return on the spot by calling Terminate.
  */
  
-WORD Processor()
+WORD Processor(VOID)
 {
 	GETIDENTITY
 	WORD *term, *t, i, retval = 0, size;
@@ -133,6 +133,7 @@ WORD Processor()
 		AS.OldNumFactors[i] = Expressions[i].numfactors;
 /*		AS.Oldvflags[i] = e[i].vflags; */
 		AS.Oldvflags[i] = Expressions[i].vflags;
+		AS.Olduflags[i] = Expressions[i].uflags;
 		Expressions[i].vflags &= ~(ISUNMODIFIED|ISZERO);
 	}
 #ifdef WITHPTHREADS
@@ -678,19 +679,21 @@ ProcErr:
  *	This routine is one of the most important routines in FORM.
  */
 
+#define DONE(x) { retvalue = x; goto Done; }
+
 WORD TestSub(PHEAD WORD *term, WORD level)
 {
 	GETBIDENTITY
-	WORD *m, *t, *r, retvalue, funflag, j, oldncmod, nexpr;
+	WORD *m, *t, *r, retvalue = 0, funflag, j, oldncmod, nexpr, *Tpattern = 0;
 	WORD *stop, *t1, *t2, funnum, wilds, tbufnum, stilldirty = 0;
 	NESTING n;
 	CBUF *C = cbuf+AT.ebufnum;
 	LONG isp, i;
 	TABLES T;
-	COMPARE oldcompareroutine = AR.CompareRoutine;
+	COMPARE oldcompareroutine = (COMPARE)(AR.CompareRoutine);
 	WORD oldsorttype = AR.SortType;
 ReStart:
-	tbufnum = 0; i = 0;
+	tbufnum = 0; i = 0; retvalue = 0;
 	AT.TMbuff = AM.rbufnum;
 	funflag = 0;
 	t = term;
@@ -755,7 +758,7 @@ ReStart:
 					else if ( t[2] >= 0 ) {
 /*
 						Compute Binom(numterms+power-1,power-1)
-						We need potentially long arithmetic.
+						We need potentially long arrithmetic.
 						That is why we had to allocate AN.BinoScrat
 */
 						if ( AN.last1 == t[3] && AN.last2 == cbuf[t[4]].NumTerms[t[2]] + t[3] - 1 ) {
@@ -849,7 +852,7 @@ TooMuch:;
 				if ( t[3] < 0 ) {
 					AN.TeInFun = 1;
 					AR.TePos = WORDDIF(t,term);
-					return(t[2]);
+					DONE(t[2])
 				}
 				else {
 					AN.TeInFun = 0;
@@ -857,9 +860,9 @@ TooMuch:;
 				}
 				if ( t[2] < 0 ) {
 					AN.TeSuOut = -t[3];
-					return(-t[2]);
+					DONE(-t[2])
 				}
-				return(t[2]);
+				DONE(t[2])
 			}
 		}
 		else if ( *t == EXPRESSION ) {
@@ -868,7 +871,7 @@ TooMuch:;
 			if ( t[3] < 0 ) {
 				AN.TeInFun = 1;
 				AR.TePos = WORDDIF(t,term);
-				return(i);
+				DONE(i)
 			}
 			nexpr = t[3];
 			toTMaddr = m = AT.WorkPointer;
@@ -967,7 +970,7 @@ TooMuch:;
 			AR.TePos = 0;
 			AN.TeSuOut = nexpr;
 			AT.TMaddr = toTMaddr;
-			return(i);
+			DONE(i)
 		}
 		else if ( *t >= FUNCTION ) {
             if ( t[0] == EXPONENT ) {
@@ -1174,7 +1177,7 @@ Important: we may not have enough spots here
 						AR.TePos = 0;
 						AN.TeSuOut = 0;
 						AT.TMbuff = AT.ebufnum;
-						return(C->numrhs);
+						DONE(C->numrhs)
 					}
 				}
 			}
@@ -1197,14 +1200,105 @@ Important: we may not have enough spots here
 						AN.TeInFun = -15;
 						AN.TeSuOut = 0;
 						AR.TePos = -1;
-						return(1);
+						AR.funoffset = t - term;
+						DONE(1)
 					}
 				}
 			}
 			else if ( *t == DIAGRAMS ) {
+/*
+				Syntax:
+				diagrams_(model,setinparticles,setoutparticles,
+					setextmomenta,setintmomenta,couplings or loops)
+*/
+				if ( AC.nummodels > 0 ) { /* No model, no diagrams */
+				  t1 = t+FUNHEAD; t2 = t+t[1];
+				  if ( 
+				  t1[0] == -SETSET && Sets[t1[1]].type == CMODEL &&
+				  t1[2] == -SETSET && ( Sets[t1[3]].type == CFUNCTION 
+					|| ( Sets[t1[3]].type == ANYTYPE && ( Sets[t1[3]].first == Sets[t1[3]].last ) ) ) &&
+				  t1[4] == -SETSET && ( Sets[t1[5]].type == CFUNCTION
+					|| ( Sets[t1[5]].type == ANYTYPE && ( Sets[t1[5]].first == Sets[t1[5]].last ) ) ) &&
+				  t1[6] == -SETSET && Sets[t1[7]].type == CVECTOR &&
+				  t1[8] == -SETSET && Sets[t1[9]].type == CVECTOR &&
+				  t1+12 <= t2 ) {
+/*
+					Test that the sets of particles correspond to particles
+					of the set model.
+*/
+					MODEL *m = AC.models[SetElements[Sets[t1[1]].first]];
+					int nn0,nn1,nn2;
+					for ( nn0 = 3; nn0 <= 5; nn0 += 2 ) {
+					  for ( nn1 = Sets[t1[nn0]].first; nn1 < Sets[t1[nn0]].last; nn1++ ) {
+						for ( nn2 = 0; nn2 < m->nparticles; nn2++ ) {
+							if ( m->vertices[nn2]->particles[0].number == SetElements[nn1]
+							  || m->vertices[nn2]->particles[1].number == SetElements[nn1] ) break;
+						}
+						if ( nn2 >= m->nparticles ) goto doesnotwork;
+					  }
+					}
+/*
+					Now test for a single argument indicating the order
+					in perturbation theory.
+*/
+					if ( ( t1[10] == -SNUMBER && t1[11] >= 0 && t1+12 == t2 )
+					|| ( t1[10] == -SYMBOL && t1+12 == t2 )
+					|| ( t1+10+t1[10] == t2 && t1+10+ARGHEAD+t1[10+ARGHEAD] == t2
+					&& t1[11+ARGHEAD] == SYMBOL ) ) {
+/*
+						Now test that all symbols are valid coupling constants.
+*/
+						if ( t1+12 > t2 ) {
+							WORD *tt1 = t1+13+ARGHEAD, im;
+							t2 -=  ABS(t2[-1]);
+							while ( tt1 < t2 ) {
+								for ( im = 0; im < m->ncouplings; im++ ) {
+									if ( *tt1 == m->couplings[im] ) break;
+								}
+								if ( im >= m->ncouplings ) goto doesnotwork;
+								tt1 += 2;
+							}
+						}
+						AN.TeInFun = -16;
+						AN.TeSuOut = 0;
+						AR.TePos = -1;
+						AR.funoffset = t - term;
+						DONE(1)
+					}
+					else if ( ( ( t1[10] == -SNUMBER && t1[11] >= 0 && t1+12 == t2-2 )
+					|| ( t1[10] == -SYMBOL && t1+12 == t2-2 )
+					|| ( t1+10+t1[10] == t2-2 && t1+10+ARGHEAD+t1[10+ARGHEAD] == t2-2
+					&& t1[11+ARGHEAD] == SYMBOL ) ) && t2[-2] == -SNUMBER ) {
+/*
+						With options at t2[-2],t2[-1]
+						Now test that all symbols are valid coupling constants.
+*/
+						t2 -= 2;
+						if ( t1+12 > t2 ) {
+							WORD *tt1 = t1+13+ARGHEAD, im;
+							t2 -=  ABS(t2[-1]);
+							while ( tt1 < t2 ) {
+								for ( im = 0; im < m->ncouplings; im++ ) {
+									if ( *tt1 == m->couplings[im] ) break;
+								}
+								if ( im >= m->ncouplings ) goto doesnotwork;
+								tt1 += 2;
+							}
+						}
+						AN.TeInFun = -16;
+						AN.TeSuOut = 0;
+						AR.TePos = -1;
+						AR.funoffset = t - term;
+						DONE(1)
+					}
+doesnotwork:;
+				  }
+				}
 			}
-			if ( functions[funnum-FUNCTION].spec == 0
-				|| ( t[2] & (DIRTYFLAG|MUSTCLEANPRF) ) != 0 ) { funflag = 1; }
+			if ( functions[funnum-FUNCTION].spec <= 0
+				|| ( t[2] & (DIRTYFLAG|MUSTCLEANPRF) ) != 0 ) {
+				funflag = 1;
+			}
 			if ( *t <= MAXBUILTINFUNCTION ) {
 			  if ( *t <= DELTAP && *t >= THETA ) { /* Speeds up by 2 or 3 compares */
 			  if ( *t == THETA || *t == THETA2 ) {
@@ -1218,7 +1312,7 @@ Important: we may not have enough spots here
 				if ( !AT.RecFlag ) {
 					if ( ( kk = DoTheta(BHEAD t) ) == 0 ) {
 						*term = 0;
-						return(0);
+						DONE(0)
 					}
 					else if ( kk > 0 ) {
 						m = t + t[1];
@@ -1240,7 +1334,7 @@ Important: we may not have enough spots here
 				if ( !AT.RecFlag ) {
 					if ( ( kk = DoDelta(t) ) == 0 ) {
 						*term = 0;
-						return(0);
+						DONE(0)
 					}
 					else if ( kk > 0 ) {
 						m = t + t[1];
@@ -1265,30 +1359,30 @@ Important: we may not have enough spots here
 					AN.TeInFun = -1;
 					AN.TeSuOut = 0;
 					AR.TePos = -1;
-					return(1);
+					DONE(1)
 				}
 			  }
 			  else if ( *t == DELTA3 && ((t[1]-FUNHEAD) & 1 ) == 0 ) {
 				AN.TeInFun = -2;
 				AN.TeSuOut = 0;
 				AR.TePos = -1;
-				return(1);
+				DONE(1)
 			  }
 			  else if ( ( *t == TABLEFUNCTION ) && ( t[FUNHEAD] <= -FUNCTION )
 			  && ( T = functions[-t[FUNHEAD]-FUNCTION].tabl ) != 0
-			  && ( t[1] >= FUNHEAD+1+2*T->numind )
+			  && ( t[1] >= FUNHEAD+1+2*ABS(T->numind) )
 			  && ( t[FUNHEAD+1] == -SYMBOL ) ) {
 /*
 				The case of table_(tab,sym1,...,symn)
 */
-				for ( isp = 0; isp < T->numind; isp++ ) {
+				for ( isp = 0; isp < ABS(T->numind); isp++ ) {
 					if ( t[FUNHEAD+1+2*isp] != -SYMBOL ) break;
 				}
-				if ( isp >= T->numind ) {
+				if ( isp >= ABS(T->numind) ) {
 					AN.TeInFun = -3;
 					AN.TeSuOut = 0;
 					AR.TePos = -1;
-					return(1);
+					DONE(1)
 				}
 			  }
 			  else if ( *t == TABLEFUNCTION && t[FUNHEAD] <= -FUNCTION
@@ -1301,20 +1395,20 @@ Important: we may not have enough spots here
 				AN.TeInFun = -3;
 				AN.TeSuOut = 0;
 				AR.TePos = -1;
-				return(1);
+				DONE(1)
 			  }
 			  else if ( *t == FACTORIN ) {
 				if ( t[1] == FUNHEAD+2 && t[FUNHEAD] == -DOLLAREXPRESSION ) {
 					AN.TeInFun = -4;
 					AN.TeSuOut = 0;
 					AR.TePos = -1;
-					return(1);
+					DONE(1)
 				}
 				else if ( t[1] == FUNHEAD+2 && t[FUNHEAD] == -EXPRESSION ) {
 					AN.TeInFun = -5;
 					AN.TeSuOut = 0;
 					AR.TePos = -1;
-					return(1);
+					DONE(1)
 				}
 			  }
 			  else if ( *t == TERMSINBRACKET ) {
@@ -1326,7 +1420,7 @@ Important: we may not have enough spots here
 					AN.TeInFun = -6;
 					AN.TeSuOut = 0;
 					AR.TePos = -1;
-					return(1);
+					DONE(1)
 				}
 /*
 				The other cases have not yet been implemented
@@ -1342,7 +1436,7 @@ Important: we may not have enough spots here
 					AN.TeInFun = -6;
 					AN.TeSuOut = 0;
 					AR.TePos = -1;
-					return(1);
+					DONE(1)
 				}
 
 				Next the bracket in an other expression
@@ -1357,7 +1451,7 @@ Important: we may not have enough spots here
 					AN.TeInFun = -6;
 					AN.TeSuOut = 0;
 					AR.TePos = -1;
-					return(1);
+					DONE(1)
 				}
 */
 			  }
@@ -1370,13 +1464,13 @@ Important: we may not have enough spots here
 					AN.TeInFun = -7;
 					AN.TeSuOut = 0;
 					AR.TePos = -1;
-					return(1);
+					DONE(1)
 				}
 				else if ( t[1] == FUNHEAD ) {
 					AN.TeInFun = -7;
 					AN.TeSuOut = 0;
 					AR.TePos = -1;
-					return(1);
+					DONE(1)
 				}
 			  }
               else if ( *t == DIVFUNCTION || *t == REMFUNCTION
@@ -1441,7 +1535,7 @@ Important: we may not have enough spots here
 					else if ( *t == GCDFUNCTION ) AN.TeInFun = -8;
 					AN.TeSuOut = 0;
 					AR.TePos = -1;
-					return(1);
+					DONE(1)
 				}
 				else if ( todo && numargs == 3 ) {
 					if ( *t == DIVFUNCTION ) AN.TeInFun = -9;
@@ -1449,13 +1543,13 @@ Important: we may not have enough spots here
 					else if ( *t == GCDFUNCTION ) AN.TeInFun = -8;
 					AN.TeSuOut = 0;
 					AR.TePos = -1;
-					return(1);
+					DONE(1)
 				}
 				else if ( todo && *t == GCDFUNCTION ) {
 					AN.TeInFun = -8;
 					AN.TeSuOut = 0;
 					AR.TePos = -1;
-					return(1);
+					DONE(1)
 				}
 			  }
 			  else if ( *t == PERMUTATIONS && ( ( t[1] >= FUNHEAD+1
@@ -1464,7 +1558,7 @@ Important: we may not have enough spots here
 				AN.TeInFun = -12;
 				AN.TeSuOut = 0;
 				AR.TePos = -1;
-				return(1);
+				DONE(1)
 			  }
 			  else if ( *t == PARTITIONS ) {
 				if ( TestPartitions(t,&(AT.partitions)) ) {
@@ -1472,7 +1566,7 @@ Important: we may not have enough spots here
 					AN.TeInFun = -13;
 					AN.TeSuOut = 0;
 					AR.TePos = -1;
-					return(1);
+					DONE(1)
 				}
 			  }
 			}
@@ -1506,7 +1600,7 @@ DoSpec:
 				}
 */				
 			}
-			else if ( functions[funnum-FUNCTION].spec == 0 ) {
+			else if ( functions[funnum-FUNCTION].spec <= 0 ) {
 				AT.NestPoin->funsize = t + 1;
 				t1 = t;
 				t += FUNHEAD;
@@ -1537,10 +1631,6 @@ DoSpec:
 redosize:
 								if ( i > *t ) {
 /*
-		Provisionally we replace this code with the code that also fixes
-		up the NestPoin stack. That was the cause of other bugs some 60
-		lines down. Presumably the same could happen here, although nobody
-		has complained yet. (28-jul-2020)
 									i -= *t;
 									*t2 -= i;
 									t1[1] -= i;
@@ -1555,6 +1645,7 @@ redosize:
 									r = t + i;
 									m = AN.EndNest;
 									while ( r < m ) *t++ = *r++;
+									t = AT.NestPoin[-1].argsize + ARGHEAD;
 									n = AT.Nest;
 									while ( n < AT.NestPoin ) {
 										*(n->argsize) -= i;
@@ -1563,7 +1654,6 @@ redosize:
 										n++;
 									}
 									AN.EndNest -= i;
-
 								}
 								AN.subsubveto = 0;
 								t1[2] = 1;
@@ -1574,7 +1664,7 @@ redosize:
 								AN.TeInFun++;
 								AR.TePos = 0;
 								AN.ncmod = oldncmod;
-								return(retvalue);
+								DONE(retvalue)
 							}
 							else {
 								/*
@@ -1592,7 +1682,7 @@ redosize:
 									stilldirty = 0;
 									tend -= ABS(tend[-1]);
 									while ( tt < tend ) {
-										if ( *tt == SUBEXPRESSION ) {
+										if ( *tt == SUBEXPRESSION || *tt == EXPRESSION ) {
 											stilldirty = 1; break;
 										}
 										tt += tt[1];
@@ -1601,7 +1691,7 @@ redosize:
 								if ( i > *t ) {
 /*
 									We should not forget to correct the Nest
-									stack. That caused trouble in the past. (28-jul-2020)
+									stack. That caused trouble in the past.
 */
 									retvalue = 1;
 									i -= *t;
@@ -1635,7 +1725,7 @@ redosize:
 						t += ARGHEAD;
 						NewSort(BHEAD0);
 						if ( *t1 == AR.PolyFun && AR.PolyFunType == 2 ) {
-							AR.CompareRoutine = &CompareSymbols;
+							AR.CompareRoutine = (COMPAREDUMMY)(&CompareSymbols);
 							AR.SortType = SORTHIGHFIRST;
 						}
 						if ( AT.WorkPointer < term + *term )
@@ -1650,7 +1740,7 @@ redosize:
 							if ( Normalize(BHEAD r) ) {
 								if ( *t1 == AR.PolyFun && AR.PolyFunType == 2 ) {
 									AR.SortType = oldsorttype;
-									AR.CompareRoutine = oldcompareroutine;
+									AR.CompareRoutine = (COMPAREDUMMY)oldcompareroutine;
 									t1[2] |= MUSTCLEANPRF;
 								}
 								LowerSortLevel(); goto EndTest;
@@ -1662,7 +1752,7 @@ redosize:
 										AT.WorkPointer = r;
 										if ( *t1 == AR.PolyFun && AR.PolyFunType == 2 ) {
 											AR.SortType = oldsorttype;
-											AR.CompareRoutine = oldcompareroutine;
+											AR.CompareRoutine = (COMPAREDUMMY)oldcompareroutine;
 											t1[2] |= MUSTCLEANPRF;
 										}
 										goto EndTest;
@@ -1675,12 +1765,11 @@ redosize:
 							if ( *r ) StoreTerm(BHEAD r);
 							AT.WorkPointer = r;
 						}
-/* the next call had parameter 0. That was wrong!!!!!) */
 						if ( EndSort(BHEAD AT.WorkPointer+ARGHEAD,1) < 0 ) goto EndTest;
 						m = AT.WorkPointer+ARGHEAD;
 						if ( *t1 == AR.PolyFun && AR.PolyFunType == 2 ) {
 							AR.SortType = oldsorttype;
-							AR.CompareRoutine = oldcompareroutine;
+							AR.CompareRoutine = (COMPAREDUMMY)oldcompareroutine;
 							t1[2] |= MUSTCLEANPRF;
 						}
 						while ( *m ) m += *m;
@@ -1754,7 +1843,7 @@ redosize:
 								AN.TeInFun = 1; AR.TePos = 0;
 								AT.TMbuff = AM.dbufnum; t1[2] |= DIRTYFLAG;
 								AN.ncmod = oldncmod;
-								return(1);
+								DONE(1)
 							}
 							AC.lhdollarflag = 1;
 						}
@@ -1764,7 +1853,7 @@ redosize:
 							AN.TeInFun = 1; AR.TePos = 0;
 							t1[2] |= DIRTYFLAG;
 							AN.ncmod = oldncmod;
-							return(1);
+							DONE(1)
 						}
 					}
 					else if ( AN.ncmod != 0 && *t == -SNUMBER ) {
@@ -1791,36 +1880,48 @@ redosize:
 					Test 1: index arguments and range. i will be the number
 						of the element in the table.
 */
-					WORD rhsnumber, *oldwork = AT.WorkPointer, *Tpattern;
-					WORD ii, *p;
+					WORD rhsnumber, *oldwork = AT.WorkPointer;
+					WORD ii, *p, *pp, *ppstop;
 					MINMAX *mm;
 					T = functions[funnum-FUNCTION].tabl;
 /*
-					The next application of T->pattern isn't thread safe.
-					p = T->pattern + FUNHEAD+1;
-					The new code is in the next three lines and in the application
-					ii = T->pattern[1]; p = Tpattern; pp = T->pattern;
-					for ( i = 0; i < ii; i++ ) *p++ = *pp++;
-					AT.WorkPointer = p; 
+					Because of tables with a variable number of indices
+					we need to make a copy of the pattern.
+					If we do this in the WorkSpace we get problems with EndNest.
+					This is why we use TermMalloc.
+					Now Tpattern is a copy that can be modified.
 */
 #ifdef WITHPTHREADS
-					Tpattern = T->pattern[AT.identity];
+					pp = T->pattern[AT.identity];
 #else
-					Tpattern = T->pattern;
+					pp = T->pattern;
 #endif
-					p = Tpattern + FUNHEAD+1;
+					if ( Tpattern == 0 ) Tpattern = TermMalloc("Tpattern");
+					p = Tpattern;
+					ii = pp[1];
+					for ( i = 0; i < ii; i++ ) *p++ = *pp++;
 
+					p = Tpattern + FUNHEAD+1;
 					mm = T->mm;
 					if ( T->sparse ) {
+						WORD xx;
 						t = t1+FUNHEAD;
-						if ( T->numind == 0 ) { isp = 0; }
+						if ( T->numind == 0 ) { isp = 0; xx = 0; }
 						else {
-						  for ( i = 0; i < T->numind; i++, t += 2 ) {
-							if ( *t != -SNUMBER ) break;
-						  }
-						  if ( i < T->numind ) goto teststrict;
-
-						  isp = FindTableTree(T,t1+FUNHEAD,2);
+							if ( T->numind < 0 ) {
+							  if ( *t != -SNUMBER && t[2] != -SNUMBER ) {
+								xx = ABS(T->numind);
+								goto teststrict;
+							  }
+							  xx = t[1]+1;
+							  if ( xx < 2 || xx > -T->numind ) goto teststrict;
+							}
+							else xx = T->numind;
+							for ( i = 0; i < xx; i++, t += 2 ) {
+								if ( *t != -SNUMBER ) break;
+							}
+							if ( i < xx ) goto teststrict;
+							isp = FindTableTree(T,t1+FUNHEAD,2);
 						}
 						if ( isp < 0 ) {
 teststrict:					if ( T->strict == -2 ) {
@@ -1835,28 +1936,38 @@ teststrict:					if ( T->strict == -2 ) {
 							else {
 								MLOCK(ErrorMessageLock);
 								MesPrint("Element in table is undefined");
+								if ( Tpattern ) {
+									TermFree(Tpattern,"Tpattern");
+									Tpattern = 0;
+								}
 								goto showtable;
 							}
 /*
 							Copy the indices;
 */
 							t = t1+FUNHEAD+1;
-							for ( i = 0; i < T->numind; i++ ) {
+							for ( i = 0; i < xx; i++ ) {
 								*p = *t; p+=2; t+=2;
 							}
 						}
 						else {
-							rhsnumber = T->tablepointers[isp+T->numind];
+							rhsnumber = T->tablepointers[isp+ABS(T->numind)];
 #if ( TABLEEXTENSION == 2 )
 							tbufnum = T->bufnum;
 #else
-							tbufnum = T->tablepointers[isp+T->numind+1];
+							tbufnum = T->tablepointers[isp+ABS(T->numind)+1];
 #endif
 							t = t1+FUNHEAD+1;
-							ii = T->numind;
+							ii = xx;
 							while ( --ii >= 0 ) {
 								*p = *t; t += 2; p += 2;
 							}
+						}
+						if ( xx < ABS(T->numind) ) {
+							p--; ppstop = Tpattern+Tpattern[1];
+							pp = p+2*(-T->numind-xx);
+							while ( pp < ppstop ) *p++ = *pp++;
+							Tpattern[1] = p - Tpattern;
 						}
 						goto caughttable;
 					}
@@ -1878,7 +1989,15 @@ showtable:							AO.OutFill = AO.OutputLine = (UBYTE *)m;
 									WriteSubTerm(t1,1);
 									FiniLine();
 									MUNLOCK(ErrorMessageLock);
+									if ( Tpattern ) {
+										TermFree(Tpattern,"Tpattern");
+										Tpattern = 0;
+									}
 									SETERROR(-1)
+								}
+								if ( Tpattern ) {
+									TermFree(Tpattern,"Tpattern");
+									Tpattern = 0;
 								}
 								goto NextFun;
 							}
@@ -1900,10 +2019,20 @@ showtable:							AO.OutFill = AO.OutputLine = (UBYTE *)m;
 								rhsnumber = AM.onerhs;
 								tbufnum = AM.zbufnum;
 							}
-							else if ( T->strict < 0 ) goto NextFun;
+							else if ( T->strict < 0 ) {
+								if ( Tpattern ) {
+									TermFree(Tpattern,"Tpattern");
+									Tpattern = 0;
+								}
+								goto NextFun;
+							}
 							else {
 								MLOCK(ErrorMessageLock);
 								MesPrint("Element in table is undefined");
+								if ( Tpattern ) {
+									TermFree(Tpattern,"Tpattern");
+									Tpattern = 0;
+								}
 								goto showtable;
 							}
 						}
@@ -1918,7 +2047,7 @@ showtable:							AO.OutFill = AO.OutputLine = (UBYTE *)m;
 					}
 /*
 					If there are more arguments we have to do some
-					pattern matching. This should be easy. We adapted the
+					pattern matching. This should be easy. We addapted the
 					pattern, so that the array indices match already.
 					Note that if there is no match the program will become
 					very slow.
@@ -1941,12 +2070,15 @@ caughttable:
 						MUNLOCK(ErrorMessageLock);
 					}
 					wilds = 0;
-/*					if ( MatchFunction(BHEAD T->pattern,t1,&wilds) > 0 ) {  } */
 					if ( MatchFunction(BHEAD Tpattern,t1,&wilds) > 0 ) {
 						AT.WorkPointer = oldwork;
 						if ( AT.NestPoin != AT.Nest ) {
 							AN.ncmod = oldncmod;
-							return(1);
+							if ( Tpattern ) {
+								TermFree(Tpattern,"Tpattern");
+								Tpattern = 0;
+							}
+							DONE(1)
 						}
 
 						m = AN.FullProto;
@@ -1979,9 +2111,13 @@ caughttable:
 						if ( AT.WorkPointer < term + *term ) AT.WorkPointer = term + *term;
 						AT.TMbuff = tbufnum;
 						AN.ncmod = oldncmod;
-						return(retvalue);
+						DONE(retvalue);
 					}
 					AT.WorkPointer = oldwork;
+					if ( Tpattern ) {
+						TermFree(Tpattern,"Tpattern");
+						Tpattern = 0;
+					}
 				}
 NextFun:;
 			}
@@ -1994,7 +2130,7 @@ NextFun:;
 							AR.TePos = 0;
 							AT.TMbuff = AM.dbufnum;
 							AN.ncmod = oldncmod;
-							return(1);
+							DONE(1)
 						}
 						AC.lhdollarflag = 1;
 					}
@@ -2005,7 +2141,12 @@ NextFun:;
 			AN.ncmod = oldncmod;
 		} while ( t < m );
 	}
-	return(0);
+Done:
+	if ( Tpattern ) {
+		TermFree(Tpattern,"Tpattern");
+		Tpattern = 0;
+	}
+	return(retvalue);
 EndTest:;
 	MLOCK(ErrorMessageLock);
 EndTest2:;
@@ -2070,7 +2211,7 @@ WORD InFunction(PHEAD WORD *term, WORD *termout)
 				return(0);
 			}
 		}
-		else if ( ( *t >= FUNCTION && functions[ipp-FUNCTION].spec == 0 )
+		else if ( ( *t >= FUNCTION && functions[ipp-FUNCTION].spec <= 0 )
 		&& ( t[2] & DIRTYFLAG ) == DIRTYFLAG ) {
 			m = termout;
 			r = t + t[1];
@@ -2096,7 +2237,7 @@ WORD InFunction(PHEAD WORD *term, WORD *termout)
 					to = m;
 					NewSort(BHEAD0);
 					if ( *u == AR.PolyFun && AR.PolyFunType == 2 ) {
-						AR.CompareRoutine = &CompareSymbols;
+						AR.CompareRoutine = (COMPAREDUMMY)(&CompareSymbols);
 						AR.SortType = SORTHIGHFIRST;
 					}
 /*
@@ -2124,7 +2265,7 @@ WORD InFunction(PHEAD WORD *term, WORD *termout)
 					}
 					AR.PolyFun = oldPolyFun;
 					if ( *u == AR.PolyFun && AR.PolyFunType == 2 ) {
-						AR.CompareRoutine = &Compare1;
+						AR.CompareRoutine = (COMPAREDUMMY)(&Compare1);
 						AR.SortType = oldsorttype;
 					}
 					while ( *m ) m += *m;
@@ -2221,20 +2362,20 @@ WORD InFunction(PHEAD WORD *term, WORD *termout)
 							else if ( *u == AR.PolyFun && AR.PolyFunType == 2 ) {
 								AR.PolyFun = 0;
 								NewSort(BHEAD0);
-								AR.CompareRoutine = &CompareSymbols;
+								AR.CompareRoutine = (COMPAREDUMMY)(&CompareSymbols);
 								r = to + ARGHEAD;
 								while ( r < m ) {
 									rr = r; r += *r;
 									if ( SymbolNormalize(rr) ) goto InFunc;
 									if ( StoreTerm(BHEAD rr) ) {
-										AR.CompareRoutine = &Compare1;
+										AR.CompareRoutine = (COMPAREDUMMY)(&Compare1);
 										LowerSortLevel();
 										Terminate(-1);
 									}
 								}
 								if ( EndSort(BHEAD to+ARGHEAD,1) < 0 ) goto InFunc;
 								AR.PolyFun = oldPolyFun;
-								AR.CompareRoutine = &Compare1;
+								AR.CompareRoutine = (COMPAREDUMMY)(&Compare1);
 								m = to+ARGHEAD;
 								if ( *m == 0 ) {
 									*to = -SNUMBER;
@@ -2372,7 +2513,7 @@ WORD InFunction(PHEAD WORD *term, WORD *termout)
 			}
 			t = u;
 		}
-		else if ( ( *t >= FUNCTION && functions[ipp-FUNCTION].spec )
+		else if ( ( *t >= FUNCTION && functions[ipp-FUNCTION].spec > 0 )
 		&& ( t[2] & DIRTYFLAG ) == DIRTYFLAG ) { /* Could be FUNNYDOLLAR */
 			u = t; v = t + t[1];
 			t += FUNHEAD;
@@ -3670,14 +3811,20 @@ CommonEnd:
 					break;
 */
 				  case TYPECHAININ:
+					{ int lter = *term;
 					AT.WorkPointer = term + *term;
 					if ( ChainIn(BHEAD term,C->lhs[level][2]) ) goto GenCall;
 					AT.WorkPointer = term + *term;
+					if ( *term != lter ) *AN.RepPoint = 1;
+					}
 					break;
 				  case TYPECHAINOUT:
+					{ int lter = *term;
 					AT.WorkPointer = term + *term;
 					if ( ChainOut(BHEAD term,C->lhs[level][2]) ) goto GenCall;
 					AT.WorkPointer = term + *term;
+					if ( *term != lter ) *AN.RepPoint = 1;
+					}
 					break;
 				  case TYPEFACTOR:
 					AT.WorkPointer = term + *term;
@@ -3760,6 +3907,54 @@ CommonEnd:
 					AT.WorkPointer = term + *term;
 					if ( DoEndSwitch(BHEAD term,C->lhs[level]) ) goto GenCall;
 					goto Return0;
+				  case TYPESETUSERFLAG:
+					Expressions[AR.CurExpr].uflags |= 1 << (C->lhs[level][2]);
+					break;
+				  case TYPECLEARUSERFLAG:
+					Expressions[AR.CurExpr].uflags &= ~(1 << (C->lhs[level][2]));
+					break;
+				  case TYPEALLLOOPS:
+					AT.WorkPointer = term + *term;
+					if ( AllLoops(BHEAD term,level) ) goto GenCall;
+					goto Return0;
+				  case TYPEALLPATHS:
+					AT.WorkPointer = term + *term;
+					if ( AllPaths(BHEAD term,level) ) goto GenCall;
+					goto Return0;
+#ifdef WITHFLOAT
+				  case TYPEEVALUATE:
+					AT.WorkPointer = term + *term;
+					if ( C->lhs[level][2] == MZV
+						 || C->lhs[level][2] == EULER
+						 || C->lhs[level][2] == MZVHALF
+						 || C->lhs[level][2] == ALLMZVFUNCTIONS
+						 ) {
+						if ( EvaluateEuler(BHEAD term,level,C->lhs[level][2]) ) goto GenCall;
+					}
+					else {
+						if ( EvaluateFun(BHEAD term,level,C->lhs[level]) ) goto GenCall;
+					}
+/*
+					else if ( C->lhs[level][2] == SQRTFUNCTION ) {
+						if ( EvaluateSqrt(BHEAD term,level,C->lhs[level][2]) ) goto GenCall;
+					}
+					else {
+						MLOCK(ErrorMessageLock);
+						MesPrint("Illegal function %d in evaluate statement.",C->lhs[level][2]);
+						MUNLOCK(ErrorMessageLock);
+						goto GenCall;
+					}
+*/
+					goto Return0;
+				  case TYPETOFLOAT:
+					AT.WorkPointer = term + *term;
+					if ( ToFloat(BHEAD term,level) ) goto GenCall;
+					goto Return0;
+				  case TYPETORAT:
+					AT.WorkPointer = term + *term;
+					if ( ToRat(BHEAD term,level) ) goto GenCall;
+					goto Return0;
+#endif
 				}
 				goto SkipCount;
 /*
@@ -3786,7 +3981,6 @@ AutoGen:	i = *AT.TMout;
 		}
 	}
 	if ( applyflag ) { TableReset(); applyflag = 0; }
-/*	DumNow = AR.CurDum; */
 
 	if ( AN.TeInFun ) {	/* Match in function argument */
 		if ( AN.TeInFun < 0 && !AN.TeSuOut ) {
@@ -4369,7 +4563,7 @@ OverWork:
  *		If there are more powers needed there will be a recursion.
  *
  *		No attempt is made to use binomials because we have no
- *		information about commuting properties.
+ *		information about commutating properties.
  *
  *		There is a searching for the contents of brackets if needed.
  *		This searching may be rather slow because of the single links.

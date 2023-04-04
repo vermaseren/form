@@ -7,7 +7,7 @@
 
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2022 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -110,7 +110,7 @@ POSITION *FindBracket(WORD nexp, WORD *bracket)
 		else i = -1;
 	}
 	else if ( bracketinfo->bracketbuffer[bi->bracket] == 7 ) i = 1;
-	else i = CompareTerms(bracketh,bracketinfo->bracketbuffer+bi->bracket,0);
+	else i = CompareTerms(BHEAD bracketh,bracketinfo->bracketbuffer+bi->bracket,0);
 	if ( i < 0 ) {
 		AR.SortType = oldsorttype;
 		AT.fromindex = 0;
@@ -127,7 +127,7 @@ POSITION *FindBracket(WORD nexp, WORD *bracket)
 			else i = -1;
 		}
 		else if ( bracketinfo->bracketbuffer[bi->bracket] == 7 ) i = 1;
-		else i = CompareTerms(bracketh,bracketinfo->bracketbuffer+bi->bracket,0);
+		else i = CompareTerms(BHEAD bracketh,bracketinfo->bracketbuffer+bi->bracket,0);
 		if ( i == 0 ) { break; }
 		if ( i > 0 ) {
 			if ( low == med ) { /* no occurrence */
@@ -218,7 +218,7 @@ POSITION *FindBracket(WORD nexp, WORD *bracket)
 					else i = -1;
 				}
 				else if ( AR.CompressPointer[0] == 7 ) i = 1;
-				else i = CompareTerms(bracketh,AR.CompressPointer,0);
+				else i = CompareTerms(BHEAD bracketh,AR.CompressPointer,0);
 				t2[-3] = a[1]; t2[-2] = a[2]; t2[-1] = a[3];
 				if ( i == 0 ) {
 					SETBASEPOSITION(AN.theposition,(pp-fi->PObuffer)*sizeof(WORD));
@@ -248,7 +248,7 @@ POSITION *FindBracket(WORD nexp, WORD *bracket)
 				}
 				else if ( t3[0] == 7 ) i = 1;
 				else {
-					i = CompareTerms(bracketh,t3,0);
+					i = CompareTerms(BHEAD bracketh,t3,0);
 				}
 				AT.WorkPointer = oldworkpointer;
 				if ( i == 0 ) {
@@ -362,7 +362,7 @@ VOID PutBracketInIndex(PHEAD WORD *term, POSITION *newpos)
 			else i = -1;
 		}
 		else if ( b->bracketbuffer[bi->bracket] == 7 ) i = 1;
-		else i = CompareTerms(term,b->bracketbuffer+bi->bracket,0);
+		else i = CompareTerms(BHEAD term,b->bracketbuffer+bi->bracket,0);
 		if ( i == 0 ) {	/* still the same bracket */
 			bi->termsinbracket++;
 			goto bracketdone;

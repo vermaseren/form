@@ -11,7 +11,7 @@
  */
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2022 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -1855,7 +1855,7 @@ int TestSelect(WORD *term, WORD *setp)
 				}
 				s++;
 			}
-			if ( functions[*term-FUNCTION].spec ) {
+			if ( functions[*term-FUNCTION].spec > 0 ) {
 				n = term[1] - FUNHEAD;
 				t = term + FUNHEAD;
 dotensor:

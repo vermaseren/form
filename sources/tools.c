@@ -10,7 +10,7 @@
  */
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2022 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -499,7 +499,7 @@ STREAM *OpenStream(UBYTE *name, int type, int prevarmode, int raiselow)
 			{/*Block*/
 				int n, *tmpn;
 				if( (n=getCurrentExternalChannel()) == 0 )
-					Error0("@No current external channel");
+					Error0("@No current extrenal channel");
 				stream = CreateStream((UBYTE *)"externalchannel");
 				stream->handle = CreateHandle();
 				tmpn = (int *)Malloc1(sizeof(int),"external channel handle");
@@ -651,7 +651,7 @@ int LocateFile(UBYTE **name, int type)
 			if ( *u1 ) u1++;
 		}
 	}
-	if ( type != SETUPFILE ) Error1("LocateFile: Cannot find file",*name);
+	if ( type != SETUPFILE && type >= -1 ) Error1("LocateFile: Cannot find file",*name);
 	return(-1);
 }
 
@@ -953,7 +953,7 @@ irrend:					MesPrint("@Irregular end of reverse include file.");
  		#[ StartFiles :
 */
 
-VOID StartFiles()
+VOID StartFiles(VOID)
 {
 	int i = CreateHandle();
 	filelist[i] = Ustdout;
@@ -1159,7 +1159,7 @@ int CopyFile(char *source, char *dest)
 		Conclusion: MALLOCDEBUG will have to be a bit unsafe
 */
 
-int CreateHandle()
+int CreateHandle(VOID)
 {
 	int i, j;
 #ifndef MALLOCDEBUG
@@ -1607,7 +1607,7 @@ int CloseChannel(char *name)
 		currently ignored.
 */
 
-void UpdateMaxSize()
+void UpdateMaxSize(VOID)
 {
 	POSITION position, sumsize;
 	int i;
@@ -2087,7 +2087,7 @@ static char notime[] = "";
 #endif
 #endif
 
-UBYTE *MakeDate()
+UBYTE *MakeDate(VOID)
 {
 #ifdef ANSI
 	time_t tp;
@@ -2512,8 +2512,8 @@ void M_print()
 
 #else
 
-void M_check1() {}
-void M_print() {}
+void M_check1(VOID) {}
+void M_print(VOID) {}
 
 #endif
 
@@ -3425,7 +3425,7 @@ int CompArg(WORD *s1, WORD *s2)
 		s1 += ARGHEAD; s2 += ARGHEAD;
 docompare:
 		while ( s1 < st1 && s2 < st2 ) {
-			if ( ( k = CompareTerms(s1,s2,(WORD)2) ) != 0 ) {
+			if ( ( k = CompareTerms(BHEAD s1,s2,(WORD)2) ) != 0 ) {
 				AT.comsym[3] = x[1];
 				AT.comnum[1] = x[2];
 				AT.comnum[3] = x[3];
@@ -3830,7 +3830,7 @@ LONG Timer(int par)
 		Routine for debugging purposes
 */
 
-int Crash()
+int Crash(VOID)
 {
 	int retval;
 #ifdef DEBUGGING
@@ -4041,5 +4041,45 @@ finish:
 
 /*
  		#] TestTerm : 
+ 		#[ DistrN :
+*/
+ 
+int DistrN(int n, int *cpl, int ncpl, int *scratch)
+{
+/*
+	Divides n objects over ncpl bins (cpl), each time returning one
+	of those distributions until there are no more after which the 
+	routine returns the value zero (otherwise one).
+	The array scratch (size n) is kept for the intermediate information.
+	The whole starts with scratch[0] == -2;
+*/
+	int i, j;
+	if ( ncpl == 0 ) {
+		if ( scratch[0] == -2 ) { scratch[0] = 0; return(1); }
+		else return(0);
+	}
+	if ( scratch[0] == ncpl-1 ) {
+		return(0);
+	}
+	else if ( scratch[0] == -2 ) {
+		for ( i = 0; i < n; i++ ) scratch[i] = 0;
+	}
+	else {
+		j = n-1;
+		while ( j >= 0 ) {
+			scratch[j]++;
+			if ( scratch[j] < ncpl ) break;
+			j--;
+		}
+		j++;
+		while ( j < n ) { scratch[j] = scratch[j-1]; j++; }
+	}
+	for ( i = 0; i < ncpl; i++ ) cpl[i] = 0;
+	for ( i = 0; i < n; i++ ) { cpl[scratch[i]]++; }
+	return(1);
+}
+
+/*
+ 		#] DistrN : 
   	#] Mixed : 
 */

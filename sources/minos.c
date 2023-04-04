@@ -6,7 +6,7 @@
  */
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2022 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -1428,7 +1428,7 @@ int ExistsObject(DBASE *d,MLONG tablenumber,char *arguments)
   	#] ExistsObject : 
   	#[ DeleteObject :
 
-	Returns 1 if Object has been deleted.
+	Returns 1 if Object has been deleteted.
 	We leave a hole. Actually the object is still there but has been
 	inactivated. It can be reactivated by calling this routine again.
 */

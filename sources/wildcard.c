@@ -11,7 +11,7 @@
  */
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2022 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -2521,7 +2521,7 @@ int DenToFunction(WORD *term, WORD numfun)
 			*t = numfun; t[2] |= DIRTYFLAG; action = 1;
 		}
 		tnext = t + t[1];
-		if ( *t >= FUNCTION && functions[*t-FUNCTION].spec == 0 ) {
+		if ( *t >= FUNCTION && functions[*t-FUNCTION].spec <= 0 ) {
 			arg = t + FUNHEAD;
 			while ( arg < tnext ) {
 				if ( *arg > 0 ) {

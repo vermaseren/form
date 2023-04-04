@@ -8,7 +8,7 @@
  */
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2022 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -249,11 +249,13 @@ int AddName(NAMETREE *nametree, UBYTE *name, WORD type, WORD number, int *nodenu
 	3: call GetAutoName and return its values.
 */
 
-int GetName(NAMETREE *nametree, UBYTE *name, WORD *number, int par)
+int GetName(NAMETREE *nametree, UBYTE *namein, WORD *number, int par)
 {
 	NAMENODE *n;
 	int node, newnode, i;
-	UBYTE *s, *t, *u;
+	UBYTE *s, *t, *u, *name;
+/*	name = ConstructName(namein,0); */
+	name = namein;
 	if ( nametree->namenode == 0 || nametree->namefill == 0 ) goto NotFound;
 	newnode = nametree->headnode;
 	do {
@@ -358,7 +360,7 @@ UBYTE *GetFunction(UBYTE *s,WORD *funnum)
 		t1 = SkipAName(s);
 		c = *t1; *t1 = 0;
 		if ( ( ( type = GetName(AC.varnames,s,&numfun,WITHAUTO) ) != CFUNCTION )
-			|| ( functions[numfun].spec != 0 ) ) {
+			|| ( functions[numfun].spec > 0 ) ) {
 			MesPrint("&%s should be a regular function",s);
 			*funnum = 0;
 			if ( type < 0 ) {
@@ -810,7 +812,7 @@ VOID LinkTree(NAMETREE *tree, WORD offset, WORD numnodes)
   	#[ MakeNameTree :
 */
 
-NAMETREE *MakeNameTree()
+NAMETREE *MakeNameTree(VOID)
 {
 	NAMETREE *n;
 	n = (NAMETREE *)Malloc1(sizeof(NAMETREE),"new nametree");
@@ -844,7 +846,7 @@ VOID FreeNameTree(NAMETREE *n)
   	#[ WildcardNames :
 */
 
-void ClearWildcardNames()
+void ClearWildcardNames(VOID)
 {
 	AC.NumWildcardNames = 0;
 }
@@ -1161,7 +1163,6 @@ UBYTE *DoDimension(UBYTE *s, int *dim, int *dim4)
 	int type, error = 0;
 	WORD numsymbol;
 	NAMETREE **oldtree = AC.activenames;
-	LIST* oldsymbols = AC.Symbols;
 	*dim4 = -NMIN4SHIFT;
 	if ( FG.cTable[*s] == 1 ) {
 retry:
@@ -1175,7 +1176,6 @@ retry:
 	else if ( ( (FG.cTable[*s] == 0 ) || ( *s == '[' ) )
 		&& ( s = SkipAName(s) ) != 0 ) {
 		AC.activenames = &(AC.varnames);
-		AC.Symbols = &(AC.SymbolList);
 		c = *s; *s = 0;
 		if ( ( ( type = GetName(AC.exprnames,t,&numsymbol,NOAUTO) ) != NAMENOTFOUND )
 		|| ( ( type = GetName(AC.varnames,t,&numsymbol,WITHAUTO) ) != NAMENOTFOUND ) ) {
@@ -1183,7 +1183,7 @@ retry:
 		}
 		else {
 			numsymbol = AddSymbol(t,-MAXPOWER,MAXPOWER,0,0);
-			if ( AC.WarnFlag )
+			if ( *oldtree != AC.autonames && AC.WarnFlag )
 			MesPrint("&Warning: Implicit declaration of %s as a symbol",t);
 		}
 		*dim = -numsymbol;
@@ -1197,7 +1197,7 @@ retry:
 			}
 			else {
 				numsymbol = AddSymbol(t,-MAXPOWER,MAXPOWER,0,0);
-				if ( AC.WarnFlag )
+				if ( *oldtree != AC.autonames && AC.WarnFlag )
 				MesPrint("&Warning: Implicit declaration of %s as a symbol",t);
 			}
 			*dim4 = -numsymbol-NMIN4SHIFT;
@@ -1210,7 +1210,6 @@ retry:
 illeg:	MesPrint("&Illegal dimension specification. Should be number >= 0, symbol or symbol:symbol");
 		return(0);
 	}
-	AC.Symbols = oldsymbols;
 	AC.activenames = oldtree;
 	if ( error ) return(0);
 	return(s);
@@ -1597,7 +1596,7 @@ retry:;
 					MesPrint("&Function %s changed to tensor",name);
 					error = 1;
 				}
-				else if ( istensor == 0 && fun->spec ) {
+				else if ( istensor == 0 && fun->spec > 0 ) {
 					MesPrint("&Tensor %s changed to function",name);
 					error = 1;
 				}
@@ -1648,6 +1647,11 @@ int CoCTensor(UBYTE *s) { return(CoFunction(s,0,2)); }
 			and in tablepointers we will have numind+1 positions for each
 			element. The first numind elements for the indices and the
 			last one for the element in cbuf[T->bufnum].rhs
+
+			If the number of dimensions is *<number>, there is not a fixed
+			number of dimensions. Just a maximum. In that case the first
+			index should be the number of other dimensions. This first index
+			does not count in <number>.
 
 		Complication: to preserve speed we need a prototype and a pattern
 		for each thread when we use WITHPTHREADS. This is because we write
@@ -1794,16 +1798,34 @@ IllForm:	MesPrint("&Illegal name or option in table declaration");
 		Now the regular compilation
 */
 		inp = p++;
-		ParseNumber(x,p)
-		if ( FG.cTable[p[-1]] != 1 || ( *p != ',' && *p != ')' ) ) {
-			p = inp;
-			MesPrint("&First argument in a sparse table must be a number of dimensions");
-			error = 1;
-			x = 1;
+		if ( *p == '<' ) {
+			WORD inc = 1;
+			p++;
+			if ( *p == '=' ) { inc++; p++; }
+/*
+			We will use one extra number for telling how many there really are.
+*/
+			x = 0;
+			while ( *p <= '9' && *p >= '0' ) x = 10*x + (*p++-'0');
+			x = -x-inc;
+			if ( x == -1 ) {
+				MesPrint("&Maximum number of dimensions in *-table should be at least one.");
+				error = 1;
+				goto FinishUp2;
+			}
+		}
+		else {
+			ParseNumber(x,p)
+			if ( FG.cTable[p[-1]] != 1 || ( *p != ',' && *p != ')' ) ) {
+				p = inp;
+				MesPrint("&First argument in a sparse table must be a number of dimensions");
+				error = 1;
+				x = 1;
+			}
 		}
 		T->numind = x;
-		T->mm = (MINMAX *)Malloc1(x*sizeof(MINMAX),"table dimensions");
-		T->flags = (WORD *)Malloc1(x*sizeof(WORD),"table flags");
+		T->mm = (MINMAX *)Malloc1(ABS(x)*sizeof(MINMAX),"table dimensions");
+		T->flags = (WORD *)Malloc1(ABS(x)*sizeof(WORD),"table flags");
 		mm = T->mm;
 		inp = p;
 		if ( *inp != ')' ) inp++;
@@ -1851,7 +1873,7 @@ IllForm:	MesPrint("&Illegal name or option in table declaration");
 	Now we redo the 'function part' and send it to the compiler.
 	The prototype has to be picked up properly.
 */
-	AT.WorkPointer++; /* We needs one extra word later */
+	AT.WorkPointer++; /* We need one extra word later */
 	OldWork = AT.WorkPointer;
 	oldcbufnum = AC.cbufnum;
 	AC.cbufnum = T->bufnum;
@@ -1939,7 +1961,7 @@ IllForm:	MesPrint("&Illegal name or option in table declaration");
 	Now we have to allocate space for prototype+pattern
 	In the case of TFORM we need extra pointers, because each worker has its own
 */
-	j = *w + T->numind*2-3;
+	j = *w + ABS(T->numind)*2-3;
 #ifdef WITHPTHREADS
 	{ int n;
 	T->prototypeSize = ((i+j)*sizeof(WORD)+2*sizeof(WORD *)) * AM.totalnumberofthreads;
@@ -1952,10 +1974,10 @@ IllForm:	MesPrint("&Illegal name or option in table declaration");
 	}
 	T->pattern[0] = t;
 	j--; w++;
-	w[1] += T->numind*2;
+	w[1] += ABS(T->numind)*2;
 	for ( k = 0; k < FUNHEAD; k++ ) *t++ = *w++;
 	j -= FUNHEAD;
-	for ( k = 0; k < T->numind; k++ ) { *t++ = -SNUMBER; *t++ = 0; j -= 2; }
+	for ( k = 0; k < ABS(T->numind); k++ ) { *t++ = -SNUMBER; *t++ = 0; j -= 2; }
 	for ( k = 0; k < j; k++ ) *t++ = *w++;
 	if ( sparseflag ) T->pattern[0][1] = t - T->pattern[0];
 	k = t - T->pattern[0];
@@ -1971,10 +1993,10 @@ IllForm:	MesPrint("&Illegal name or option in table declaration");
 	for ( k = 0; k < i; k++ ) T->prototype[k] = OldWork[k];
 	t = T->pattern;
 	j--; w++;
-	w[1] += T->numind*2;
+	w[1] += ABS(T->numind)*2;
 	for ( k = 0; k < FUNHEAD; k++ ) *t++ = *w++;
 	j -= FUNHEAD;
-	for ( k = 0; k < T->numind; k++ ) { *t++ = -SNUMBER; *t++ = 0; j -= 2; }
+	for ( k = 0; k < ABS(T->numind); k++ ) { *t++ = -SNUMBER; *t++ = 0; j -= 2; }
 	for ( k = 0; k < j; k++ ) *t++ = *w++;
 	if ( sparseflag ) T->pattern[1] = t - T->pattern;
 #endif
@@ -2007,6 +2029,7 @@ IllForm:	MesPrint("&Illegal name or option in table declaration");
 FinishUp:;
 	AT.WorkPointer = OldWork - 1;
 	AC.cbufnum = oldcbufnum;
+FinishUp2:;
 	if ( T->sparse ) ClearTableTree(T);
 	if ( ( sparseflag & 2 ) != 0 ) {
 		if ( T->spare == 0 ) { SpareTable(T); }
@@ -2326,10 +2349,41 @@ int DoElements(UBYTE *s, SETS set, UBYTE *name)
 int CoSet(UBYTE *s)
 {
 	int type, error = 0, ordered = 0;
-	UBYTE *name, c, *ss;
+	UBYTE *name = s, c, *ss;
 	SETS set;
 	WORD numberofset, dim = MAXPOSITIVE;
-	name = s;
+#ifdef WITHFLOAT
+/*----------------------------------------------------------------*/
+	{
+		WORD numeq = 0;
+		LONG x;
+		ss = s;
+		while ( *ss && *ss != ':' ) { if ( *ss == '=' ) numeq++; ss++; }
+		if ( *ss == 0 && numeq == 1 ) { /* We have the Set var = value; variety */
+			while ( FG.cTable[*s] == 0 ) s++;
+			ss = s; c = *s; *s = 0;
+			if ( c != '=' ) {
+Proper:
+				MesPrint("&Proper syntax for value-set is `Set name = value'");
+				return(1);
+			}
+			x = 0; s++;
+			while ( *s >= '0' && *s <= '9' ) x = 10*x + (*s++-'0');
+			if ( *s ) goto Proper;
+			if ( StrICmp(name,(UBYTE *)"maxweight") == 0 ) {
+				AC.tMaxWeight = x;   /* Temporary. Made permanent later */
+			}
+			else if ( StrICmp(name,(UBYTE *)"defaultprecision") == 0 ) {
+				AC.tDefaultPrecision = x;   /* Temporary. Made permanent later */
+			}
+			else {
+				MesPrint("&Illegal subkey in value set: %s",name);
+				return(1);
+			}
+		}		
+	}
+/*----------------------------------------------------------------*/
+#endif
 	if ( ( s = SkipAName(s) ) == 0 ) {
 IllForm:MesPrint("&Illegal name for set");
 		return(1);
@@ -2715,6 +2769,7 @@ int AddExpression(UBYTE *name, int x, int y)
 #ifdef PARALLELCODE
 	expr->partodo = 0;
 #endif
+	expr->uflags = 0;
 	return(numexpr);
 }
 
@@ -2947,7 +3002,7 @@ void ResetVariables(int par)
 				if ( T->sparse ) {
 					T->totind = T->mdefined;
 					for ( j = 0, tp = T->tablepointers; j < T->totind; j++ ) {
-						tp += T->numind;
+						tp += ABS(T->numind);
 #if TABLEEXTENSION == 2
 						tp[0] = tp[1];
 #else
@@ -2962,7 +3017,7 @@ void ResetVariables(int par)
 						TABLES TT = T->spare;
 						TT->totind = TT->mdefined;
 						for ( j = 0, tp = TT->tablepointers; j < TT->totind; j++ ) {
-							tp += TT->numind;
+							tp += ABS(TT->numind);
 #if TABLEEXTENSION == 2
 							tp[0] = tp[1];
 #else
@@ -3064,7 +3119,7 @@ void ResetVariables(int par)
   	#[ RemoveDollars :
 */
 
-void RemoveDollars()
+void RemoveDollars(VOID)
 {
 	DOLLARS d;
 	CBUF *C = cbuf + AM.dbufnum;
@@ -3124,7 +3179,7 @@ void Globalize(int par)
 			if ( T->sparse ) {
 				T->mdefined = T->totind;
 				for ( j = 0, tp = T->tablepointers; j < T->totind; j++ ) {
-					tp += T->numind;
+					tp += ABS(T->numind);
 #if TABLEEXTENSION == 2
 					tp[1] = tp[0];
 #else
@@ -3136,7 +3191,7 @@ void Globalize(int par)
 					TABLES TT = T->spare;
 					TT->mdefined = TT->totind;
 					for ( j = 0, tp = TT->tablepointers; j < TT->totind; j++ ) {
-						tp += TT->numind;
+						tp += ABS(TT->numind);
 #if TABLEEXTENSION == 2
 						tp[1] = tp[0];
 #else

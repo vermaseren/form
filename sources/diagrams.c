@@ -4,7 +4,7 @@
  */
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2022 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -345,6 +345,8 @@ NoWildArg:
 	the GenTopologies routine.
 */
 
+#ifdef OLDTOPO
+
 WORD GenTopologies(PHEAD WORD *term,WORD level)
 {
 	WORD *t1, *tt1, *tstop, *t, *tt;
@@ -393,23 +395,10 @@ WORD GenTopologies(PHEAD WORD *term,WORD level)
 
 }
 
+#endif
+
 /*
   	#] GenTopologies : 
-  	#[ GenDiagrams :
-*/
-
-WORD GenDiagrams(PHEAD WORD *term,WORD level)
-{
-#ifdef WITHPTHREADS
-	DUMMYUSE(B)
-#endif
-	DUMMYUSE(term)
-	DUMMYUSE(level)
-	return(0);
-}
-
-/*
-  	#] GenDiagrams : 
   	#[ DoTopologyCanonicalize :
 
 	term: The term
@@ -427,7 +416,7 @@ WORD GenDiagrams(PHEAD WORD *term,WORD level)
 
 int DoTopologyCanonicalize(PHEAD WORD *term,WORD vert,WORD edge,WORD *args)
 {
-	int nvert = 0, nvert2, i, ii, jj, flipnames = 0, nparts, level, num;
+	int nvert = 0, nvert2, i, ii, jj, flipnames = 0, nparts/*, level, num */;
 	WORD *tstop, *t, *tt, *tend, *td;
 	WORD *oldworkpointer = AT.WorkPointer;
 	WORD *termcopy = TermMalloc("TopologyCanonize1");
@@ -595,20 +584,18 @@ MesPrint("connectivity: %d -- %a",i,nvert,connect+i*nvert);
 */
 	WantAddPointers(nvert+1);
 	for ( i = 0; i < nvert2; i++ ) environ[i] = 0;
-	level = 0;
+	/* level = 0; */
 	pparts = partition;
 	while ( nparts < nvert ) {
 		nparts = DoShattering(BHEAD connect,environ,pparts,nvert);
 		if ( nparts < nvert ) { /* raise level and make a copy and split a part */
 			p = pparts + 2*nvert;
-			level++; 
+			/* level++; */
 			for ( i = 0; i < 2*nvert; i++ ) p[i] = pparts[i];
 			for ( ii = 0; ii < 2*nvert; ii += 2 ) {
 				if ( p[ii+1] == 0 ) { /* found a part with more than one */
-					num = 2; i = ii+2;
-					while ( p[i+1] == 0 ) { num++; i += 2; }
-
-
+					/* num = 2; */ i = ii+2;
+					while ( p[i+1] == 0 ) { /* num++; */ i += 2; }
 					p[ii+1] = -1; pparts = p;
 					break;
 				}

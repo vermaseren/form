@@ -8,7 +8,7 @@
  */
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2022 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -361,7 +361,7 @@ int FullRenumber(PHEAD WORD *term, WORD par)
 				AT.WorkPointer = w;
 				if ( Normalize(BHEAD termtry) == 0 ) {
 					if ( *termtry == 0 ) goto Return0;
-					if ( ( ii = CompareTerms(termtry,best,0) ) > 0 ) {
+					if ( ( ii = CompareTerms(BHEAD termtry,best,0) ) > 0 ) {
 						t = termtry; w = best;
 						for ( ii = 0; ii < *termtry; ii++ ) *w++ = *t++;
 						i = 0; break; /* restart from beginning */
@@ -399,7 +399,7 @@ int FullRenumber(PHEAD WORD *term, WORD par)
 				AT.WorkPointer = w;
 				if ( Normalize(BHEAD termtry) == 0 ) {
 					if ( *termtry == 0 ) goto Return0;
-					if ( ( ii = CompareTerms(termtry,best,0) ) > 0 ) {
+					if ( ( ii = CompareTerms(BHEAD termtry,best,0) ) > 0 ) {
 						t = termtry; w = best;
 						for ( i = 0; i < *termtry; i++ ) *w++ = *t++;
 					}
@@ -1089,7 +1089,7 @@ WORD TryDo(PHEAD WORD *term, WORD *pattern, WORD level)
 		if ( *r == 0 ) return(0);
 		ReNumber(BHEAD r); Normalize(BHEAD r);
 		if ( *r == 0 ) return(0);
-		if ( ( i = CompareTerms(term,r,0) ) < 0 ) {
+		if ( ( i = CompareTerms(BHEAD term,r,0) ) < 0 ) {
 			*AN.RepPoint = 1;
 			AR.expchanged = 1;
 			return(Generator(BHEAD r,level));
@@ -1175,7 +1175,7 @@ WORD DoDistrib(PHEAD WORD *term, WORD level)
 		0:	Make all possible divisions:  2^nargs
 		1:	fun1 should get n arguments:  nargs! / ( n! (nargs-n)! )
 		2:	fun2 should get n arguments:  nargs! / ( n! (nargs-n)! )
-	The distinction between 1 and two is for noncommuting objects.
+	The distiction between 1 and two is for noncommuting objects.
 		3:  fun1 should get n arguments. Super symmetric option.
 		4:	fun2 idem
 	The super symmetric option involves:
@@ -1733,7 +1733,7 @@ WORD DoPartitions(PHEAD WORD *term, WORD level)
 	Start with bubble sorting the list of arguments. And the list of partitions.
 */
 	fun = term + part.where;
-	if ( functions[*fun-FUNCTION].spec ) tensorflag = 1;
+	if ( functions[*fun-FUNCTION].spec > 0 ) tensorflag = 1;
 	for ( i = 1; i < part.numargs; i++ ) {
 		for ( j = i-1; j >= 0; j-- ) {
 			if ( CompArg(fun+part.args[j+1],fun+part.args[j]) >= 0 ) break;

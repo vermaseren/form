@@ -5,7 +5,7 @@
 
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2022 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -867,6 +867,20 @@ vector<WORD> Horner_tree (const WORD *expr, const vector<WORD> &order) {
 
 	// sort variables in individual terms using bubble sort
 	WORD *sorted = AT.WorkPointer;
+	LONG sumsize = 0;
+
+	for (const WORD *t=expr; *t!=0; t+=*t) {
+		sumsize += *t; t += *t;
+	}
+	if ( sorted + sumsize > AT.WorkTop ) {
+		MLOCK(ErrorMessageLock);
+		MesPrint("=== Workspace overflow. %l bytes is not enough.",AM.WorkSize);
+		MesPrint("=== Change parameter WorkSpace in %s",setupfilename);
+		sumsize = (AT.WorkPointer-AT.WorkSpace+sumsize)*sizeof(WORD);
+		MesPrint("=== At least %l bytes are needed.",sumsize);
+		MUNLOCK(ErrorMessageLock);
+		Terminate(-1);
+	}
 
 	for (const WORD *t=expr; *t!=0; t+=*t) {
 		memcpy(sorted, t, *t*sizeof(WORD));
@@ -2956,7 +2970,7 @@ bool do_optimization (const optimization optim, vector<WORD> &instr, int newid) 
 		instr.push_back(varnumx);  // symbol id
 		instr.push_back(n); 	   // power
 		instr.push_back(1);
-		instr.push_back(1); 	   // coefficient 1
+		instr.push_back(1); 	   // coeffient 1
 		instr.push_back(3);
 		instr.push_back(0); 	   // trailing 0
 	}
@@ -3273,7 +3287,7 @@ bool do_optimization (const optimization optim, vector<WORD> &instr, int newid) 
 			// check signs (type=4: x+y and -x-y, type=5: x-y and -x+y) ??????
 			// check signs (type=4: x+y, type=5: x-y) !!!!!!!!!!
 			if (SGN(ncoeffx) * SGN(ncoeffy) * (optim.type==4 ? 1 : -1) == 1) {
-				// check absolute value of coefficients
+				// check absolute value of coeeficients
 				if (BigLong((UWORD *)coeffx, ABS(ncoeffx)-1, (UWORD *)coeffy, ABS(ncoeffy)-1) == 0) {
 					// substitute
 					vector<WORD> coeff(coeffx, coeffx+ABS(ncoeffx));
@@ -4330,12 +4344,16 @@ VOID generate_output (const vector<WORD> &instr, int exprnr, int extraoffset, co
 			WORD *now = start;
 			int b=0;
 			for (const WORD *t=AT.WorkPointer; *t!=0; t+=*t) {
+ 				if (brackets[b].size() != 0) {
+ 					memcpy(now, &brackets[b][0], brackets[b].size()*sizeof(WORD));
+ 					now += brackets[b].size();
+ 				}
+/*
 				if ( ( brackets[b].size() != 0 ) && ( brackets[b][0] == 0 ) ) break;
 				*now++ = *t + brackets[b].size();
-				if (brackets[b].size() != 0) {
-					memcpy(now, &brackets[b][0], brackets[b].size()*sizeof(WORD));
-					now += brackets[b].size();
-				}
+*/
+				memcpy(now, &brackets[b][0], brackets[b].size()*sizeof(WORD));
+				now += brackets[b].size();
 				memcpy(now, t+1, (*t-1)*sizeof(WORD));
 				now += *t-1;
 				b++;

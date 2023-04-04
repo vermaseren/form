@@ -5,7 +5,7 @@
 
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2022 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -185,3 +185,15 @@
 #define MINALLOC 32
 
 #define JUMPRATIO 4
+/*
+	Note: MAXCOUPLINGS should be at least MAXPARTICLES/2+1
+*/ 
+#define MAXPARTICLES 20
+#define MAXCOUPLINGS 20
+#define NUMOPTIONS 20
+#define MAXLEGS 20
+
+#ifdef WITHFLOAT
+#define MAXWEIGHT 40
+#define DEFAULTPRECISION 1000
+#endif

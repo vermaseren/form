@@ -5,7 +5,7 @@
  */
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2022 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -886,9 +886,7 @@ int PutTermInDollar(WORD *term, WORD numdollar)
   	#[ WildDollars :
 
 	Note that we cannot upload wildcards into dollar variables when WITHPTHREADS.
-LONG alloccounter = 0;
 */
-
 
 void WildDollars(PHEAD WORD *term)
 {
@@ -897,11 +895,9 @@ void WildDollars(PHEAD WORD *term)
 	WORD *m, *t, *w, *ww, *orig = 0, *wildvalue, *wildstop;
 	int numdollar;
 	LONG weneed, i;
-	struct DoLlArS;
 #ifdef WITHPTHREADS
 	int dtype = -1;
 #endif
-/*	alloccounter++; */
 	if ( term == 0 ) {
 		m = wildvalue = AN.WildValue;
 		wildstop = AN.WildStop;
@@ -2471,7 +2467,7 @@ int TwoExprCompare(WORD *buf1, WORD *buf2, int oprtr)
 	WORD *t1, *t2, cond;
 	t1 = buf1; t2 = buf2;
 	while ( *t1 && *t2 ) {
-		cond = CompareTerms(t1,t2,1);
+		cond = CompareTerms(BHEAD t1,t2,1);
 		if ( cond != 0 ) {
 			if ( cond > 0 ) { /* t1 comes first */
 				switch ( oprtr ) {  /* t1 is less */
@@ -2630,7 +2626,7 @@ int DollarRaiseLow(UBYTE *name, LONG value)
 /**
  *	Evaluates one argument of a do loop. Such an argument is constructed
  *	from SNUMBERs DOLLAREXPRESSIONs and possibly DOLLAREXPR2s which indicate
- *	factors of the preceding dollar. Hence we have
+ *	factors of the preceeding dollar. Hence we have
  *	SNUMBER,num
  *	DOLLAREXPRESSION,numdollar
  *	DOLLAREXPRESSION,numdollar,DOLLAREXPR2,numfactor
@@ -3512,7 +3508,7 @@ getout2:			AR.SortType = oldsorttype;
 nextj1:;
 				s1 = *(fac[j1]); s2 = *(fac[j2]);
 				while ( *s1 && *s2 ) {
-					if ( ( ret = CompareTerms(s2, s1, (WORD)2) ) == 0 ) {
+					if ( ( ret = CompareTerms(BHEAD s2, s1, (WORD)2) ) == 0 ) {
 						s1 += *s1; s2 += *s2;
 					}
 					else if ( ret > 0 ) goto nextj;

@@ -6,7 +6,7 @@
  */
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2022 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -271,6 +271,21 @@ VOID MakeGlobal()
 
 int ExecModule(int moduletype)
 {
+/*
+	Here we check module options and other things that should
+	be done at the start of a module.
+*/
+#ifdef WITHFLOAT
+	if ( ( AC.tMaxWeight != 0 && AC.tMaxWeight != AC.MaxWeight )
+	  || ( AC.tDefaultPrecision != 0 && AC.tDefaultPrecision != AC.DefaultPrecision ) ) {
+		AC.DefaultPrecision = AC.tDefaultPrecision;
+		AC.tDefaultPrecision = 0;
+		AC.MaxWeight = AC.tMaxWeight;
+		AC.tMaxWeight = 0;
+		ClearMZVTables();
+		SetupMZVTables();
+	}
+#endif
 	return(DoExecute(moduletype,0));
 }
 
@@ -279,7 +294,7 @@ int ExecModule(int moduletype)
  		#[ ExecStore :
 */
 
-int ExecStore()
+int ExecStore(VOID)
 {
 	return(0);
 }
@@ -294,7 +309,7 @@ int ExecStore()
 			What to do with files we write to
 */
 
-VOID FullCleanUp()
+VOID FullCleanUp(VOID)
 {
 	int j;
 
@@ -354,6 +369,10 @@ VOID FullCleanUp()
 	AC.ThreadSortFileSynch = AM.gThreadSortFileSynch = AM.ggThreadSortFileSynch;
 	AC.ShortStatsMax = AM.gShortStatsMax = AM.ggShortStatsMax;
 	AC.SizeCommuteInSet = AM.gSizeCommuteInSet = 0;
+#ifdef WITHFLOAT
+	AC.MaxWeight = AM.gMaxWeight = AM.ggMaxWeight;
+	AC.DefaultPrecision = AM.gDefaultPrecision = AM.ggDefaultPrecision;
+#endif
 
 	NumExpressions = 0;
 	if ( DeleteStore(0) < 0 ) {
@@ -412,7 +431,7 @@ int DoPolyfun(UBYTE *s)
 		*t = c;
 		return(-1);
 	}
-	if ( functions[funnum].spec != 0 || functions[funnum].commute != 0 ) {
+	if ( functions[funnum].spec > 0 || functions[funnum].commute != 0 ) {
 		MesPrint("@The PolyFun must be a regular commuting function!");
 		*t = c;
 		return(-1);
@@ -470,7 +489,7 @@ Error1:;
 		*t = c;
 		return(-1);
 	}
-	if ( functions[funnum].spec != 0 || functions[funnum].commute != 0 ) {
+	if ( functions[funnum].spec > 0 || functions[funnum].commute != 0 ) {
 Error2:;
 		MesPrint("@The PolyRatFun must be a regular commuting function!");
 		*t = c;
@@ -486,7 +505,7 @@ Error2:;
 		t = EndOfToken(s);
 		c = *t; *t = 0;
 		if ( GetName(AC.varnames,s,&funnum,WITHAUTO) != CFUNCTION ) goto Error1;
-		if ( functions[funnum].spec != 0 || functions[funnum].commute != 0 ) goto Error2;
+		if ( functions[funnum].spec > 0 || functions[funnum].commute != 0 ) goto Error2;
 		AR.PolyFunInv = funnum+FUNCTION;
 		*t = c;
 	}
@@ -756,7 +775,7 @@ int DonotinParallel(UBYTE *s)
  		#[ DoExecStatement :
 */
 
-int DoExecStatement()
+int DoExecStatement(VOID)
 {
 #ifdef WITHSYSTEM
 	FLUSHCONSOLE;
@@ -773,7 +792,7 @@ int DoExecStatement()
  		#[ DoPipeStatement :
 */
 
-int DoPipeStatement()
+int DoPipeStatement(VOID)
 {
 #ifdef WITHPIPE
 	FLUSHCONSOLE;

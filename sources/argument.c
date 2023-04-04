@@ -6,7 +6,7 @@
 
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2022 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -158,9 +158,14 @@ WORD execarg(PHEAD WORD *term, WORD level)
 					}
 RightNum:
 					if ( m[1] == 2 ) {
-						m += 2;
-						m += *m;
-						goto HaveTodo;
+#ifdef WITHFLOAT
+						if ( *t != FLOATFUN || AT.aux_ == 0 || TestFloat(t) == 0 )
+#endif
+						{
+							m += 2;
+							m += *m;
+							goto HaveTodo;
+						}
 					}
 					else {
 						r = m + m[1];
@@ -525,7 +530,7 @@ ScaledVariety:;
 					}
 /*
                   	We generate a statement for adapting all terms in the
-					argument successively
+					argument sucessively
 */
 					r4 = AddRHS(AT.ebufnum,1);
 					while ( (r4+j+12) > CC->Top ) r4 = DoubleCbuffer(AT.ebufnum,r4,3);
@@ -1139,35 +1144,35 @@ do_shift:
 						EAscrat = (UWORD *)(TermMalloc("execarg"));
 						if ( t + *t == r3 ) {
 							if ( factor == 0 || *factor > 2 ) {
-							if ( pow > 0 ) {
+							  if ( pow > 0 ) {
 								*r1++ = -SNUMBER; *r1++ = -1;
 								t = r5;
 								while ( t < r3 ) {
 									t += *t; t[-1] = -t[-1];
 								}
-							}
-							t = rr; *r1++ = *t++; *r1++ = 1; t++;
-							COPYARG(r1,t);
-							while ( t < m ) *r1++ = *t++;
+							  }
+							  t = rr; *r1++ = *t++; *r1++ = 1; t++;
+							  COPYARG(r1,t);
+							  while ( t < m ) *r1++ = *t++;
 							}
 						}
 						else {
-						 GETSTOP(t,r6);
-						 ngcd = t[t[0]-1];
-						 i = abs(ngcd)-1;
-						 while ( --i >= 0 ) EAscrat[i] = r6[i];
-						 t += *t;
-						 while ( t < r3 ) {
+						GETSTOP(t,r6);
+						ngcd = t[t[0]-1];
+						i = abs(ngcd)-1;
+						while ( --i >= 0 ) EAscrat[i] = r6[i];
+						t += *t;
+						while ( t < r3 ) {
 							GETSTOP(t,r6);
 							i = t[t[0]-1];
 							if ( AccumGCD(BHEAD EAscrat,&ngcd,(UWORD *)r6,i) ) goto execargerr;
 							if ( ngcd == 3 && EAscrat[0] == 1 && EAscrat[1] == 1 ) break;
 							t += *t;
-						 }
+						}
 /*
-	 					 if ( ngcd != 3 || EAscrat[0] != 1 || EAscrat[1] != 1 ) {
+	 					if ( ngcd != 3 || EAscrat[0] != 1 || EAscrat[1] != 1 )
 */
-						 {
+						{
 							if ( pow ) ngcd = -ngcd;
 							t = r5; r9 = r1; *r1++ = t[-ARGHEAD]; *r1++ = 1;
 							FILLARG(r1); ngcd = REDLENG(ngcd);
@@ -1215,9 +1220,26 @@ do_shift:
 									if ( ToFast(r9,r9) ) r1 = r9+2;
 								}
 							}
-	 					 }
+	 					}
 /*
-			#] Numerical factor :
+			#] Numerical factor : 
+						else {
+onetermnew:;
+
+							if ( factor == 0 || *factor > 2 ) {
+							  if ( pow > 0 ) {
+								*r1++ = -SNUMBER; *r1++ = -1;
+								t = r5;
+								while ( t < r3 ) {
+									t += *t; t[-1] = -t[-1];
+								}
+							  }
+							  t = rr; *r1++ = *t++; *r1++ = 1; t++;
+							  COPYARG(r1,t);
+							  while ( t < m ) *r1++ = *t++;
+							}
+						}
+onetermnew:;
 */
 						}
 						TermFree(EAscrat,"execarg");
@@ -1689,6 +1711,7 @@ oneterm:;
 					}
                 	} /* AC.OldFactArgFlag */
 				}
+/* r1 is fout in ons voorbeeld. */
 				r2[1] = r1 - r2;
 				action = 1;
 				v[2] = DIRTYFLAG;
@@ -1707,7 +1730,7 @@ oneterm:;
 		if ( AT.WorkPointer < t ) AT.WorkPointer = t;
 	}
 /*
-  	#] FACTARG :
+  	#] FACTARG : 
 */
 	AR.Cnumlhs = oldnumlhs;
 	if ( action && Normalize(BHEAD term) ) goto execargerr;
@@ -1726,7 +1749,7 @@ execargerr:
 }
 
 /*
-  	#] execarg :
+  	#] execarg : 
   	#[ execterm :
 */
 

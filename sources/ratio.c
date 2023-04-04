@@ -7,7 +7,7 @@
  */
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2022 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -139,7 +139,7 @@ We have to revise the code for the second case.
  		#] RatioFind : 
  		#[ RatioGen :
 
-		The algorithm:
+		The algoritm:
 		x1^-n1*x2^n2	==>  x2 --> x1 + x3
 		x1^n1*x2^-n2	==>  x1 --> x2 - x3
 		x1^-n1*x2^-n2	==>
@@ -1314,8 +1314,8 @@ WORD *MultiplyWithTerm(PHEAD WORD *in, WORD *term, WORD par)
 	WORD *termout, *t, *tt, *tstop, *ttstop;
 	WORD length, length1, length2;
 	WORD oldsorttype = AR.SortType;
-	COMPARE oldcompareroutine = AR.CompareRoutine;
-	AR.CompareRoutine = &CompareSymbols;
+	COMPARE oldcompareroutine = (COMPARE)(AR.CompareRoutine);
+	AR.CompareRoutine = (COMPAREDUMMY)(&CompareSymbols);
 
 	if ( par == 0 || par == 2 ) AR.SortType = SORTHIGHFIRST;
 	else            AR.SortType = SORTLOWFIRST;
@@ -1346,7 +1346,7 @@ WORD *MultiplyWithTerm(PHEAD WORD *in, WORD *term, WORD par)
 		if ( EndSort(BHEAD termout,1) < 0 ) goto CalledFrom;
 	}
 
-	AR.CompareRoutine = oldcompareroutine;
+	AR.CompareRoutine = (COMPAREDUMMY)oldcompareroutine;
 
 	AR.SortType = oldsorttype;
 	return(termout);
@@ -2269,9 +2269,9 @@ int ReadPolyRatFun(PHEAD WORD *term)
 	WORD *term1, *term2, *confree1, *confree2, *gcd, *num1, *den1, move, *newnum, *newden;
 	WORD *tstop, *m1, *m2;
 	WORD oldsorttype = AR.SortType;
-	COMPARE oldcompareroutine = AR.CompareRoutine;
+	COMPARE oldcompareroutine = (COMPARE)(AR.CompareRoutine);
 	AR.SortType = SORTHIGHFIRST;
-	AR.CompareRoutine = &CompareSymbols;
+	AR.CompareRoutine = (COMPAREDUMMY)(&CompareSymbols);
 
 	tstop = term + *term; tstop -= ABS(tstop[-1]);
 	if ( term + *term == AT.WorkPointer ) flag = 1;
@@ -2370,7 +2370,7 @@ int ReadPolyRatFun(PHEAD WORD *term)
 
 	if ( flag ) AT.WorkPointer = term +*term;
 	else AT.WorkPointer = oldworkpointer;
-	AR.CompareRoutine = oldcompareroutine;
+	AR.CompareRoutine = (COMPAREDUMMY)oldcompareroutine;
 	AR.SortType = oldsorttype;
 	return(0);
 }
@@ -2960,9 +2960,9 @@ WORD *MULfunc(PHEAD WORD *p1, WORD *p2)
 	UWORD *num1, *num2, *num3;
 	int i;
 	WORD oldsorttype = AR.SortType;
-	COMPARE oldcompareroutine = AR.CompareRoutine;
+	COMPARE oldcompareroutine = (COMPARE)(AR.CompareRoutine);
 	AR.SortType = SORTHIGHFIRST;
-	AR.CompareRoutine = &CompareSymbols;
+	AR.CompareRoutine = (COMPAREDUMMY)(&CompareSymbols);
 	num3 = NumberMalloc("MULfunc");
 	prod = TermMalloc("MULfunc");
 	NewSort(BHEAD0);
@@ -3003,7 +3003,7 @@ CalledFrom:
 	}
 	NumberFree(num3,"MULfunc");
 	EndSort(BHEAD prod,1);
-	AR.CompareRoutine = oldcompareroutine;
+	AR.CompareRoutine = (COMPAREDUMMY)oldcompareroutine;
 	AR.SortType = oldsorttype;
 	return(prod);
 }

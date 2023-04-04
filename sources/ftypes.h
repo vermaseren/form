@@ -8,7 +8,7 @@
 
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2022 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -31,7 +31,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */
+/* #] License : */ 
  
 /**
  *	The next macros were introduced when TFORM was programmed. In the case of
@@ -161,6 +161,7 @@
 #define STATEMENT     4
 #define TOOUTPUT      5
 #define ATENDOFMODULE 6
+#define MIXED2        8
 #define MIXED         9
 
 /*
@@ -229,6 +230,7 @@ typedef int (*TFUN1)();
 #define CDOLLAR 10
 #define CDUBIOUS 11
 #define CRANGE 12
+#define CMODEL 13
 #define CVECTOR1 21
 #define CDOUBLEDOT 22
 
@@ -278,6 +280,7 @@ typedef int (*TFUN1)();
 #define TSETNUM -38
 #define TSGAMMA -39
 #define TSETDOL -40
+#define TFLOAT -41
 
 #define TYPEISFUN 0
 #define TYPEISSUB 1
@@ -452,13 +455,31 @@ typedef int (*TFUN1)();
 #define MOEBIUS 106
 #define TOPOLOGIES 107
 #define DIAGRAMS 108
-#define VERTEX 109
-#define EDGE 110
-/*#define ALLWILD 109 ???? */
-#define SIZEOFFUNCTION 111
+#define TOPO 109
+#define NODEFUNCTION 110
+#define EDGE 111
+#define SIZEOFFUNCTION 112
+#define BLOCK 113
+#define ONEPI 114
+#define PHI 115
+#ifdef WITHFLOAT
+#define FLOATFUN 116
+#define TOFLOAT 117
+#define TORAT 118
+#define MZV 119
+#define EULER 120
+#define MZVHALF 121
+#define AGMFUNCTION 122
+#define GAMMAFUN 123
+#define MAXBUILTINFUNCTION 123
+#else
+#define MAXBUILTINFUNCTION 115
+#endif
 
-#define MAXBUILTINFUNCTION 111
 #define FIRSTUSERFUNCTION 150
+
+#define ALLFUNCTIONS -1
+#define ALLMZVFUNCTIONS -2
 
 /*
 	Note: if we add a builtin table we have to look also inside names.c
@@ -567,6 +588,16 @@ typedef int (*TFUN1)();
 #define TYPECANONICALIZE 80
 #define TYPESWITCH 81
 #define TYPEENDSWITCH 82
+#define TYPESETUSERFLAG 83
+#define TYPECLEARUSERFLAG 84
+#define TYPEALLLOOPS 85
+#define TYPEALLPATHS 86
+#ifdef WITHFLOAT
+#define TYPEEVALUATE 87
+#define TYPEEXPAND 88
+#define TYPETOFLOAT 89
+#define TYPETORAT 90
+#endif
 
 /*
 	The codes for the 'operations' that are part of TYPEOPERATION.
@@ -692,8 +723,8 @@ typedef int (*TFUN1)();
  */
 
 /*@{*/
+#define VERTEXFUNCTION -1
 #define GENERALFUNCTION 0
-#define FASTFUNCTION 1
 #define TENSORFUNCTION 2
 #define GAMMAFUNCTION 4
 /*@}*/
@@ -810,6 +841,8 @@ typedef int (*TFUN1)();
 #define IFDOLLAREXTRA 8
 #define IFISFACTORIZED 9
 #define IFOCCURS 10
+#define IFUSERFLAG 11
+#define IFFLOATNUMBER 12
 #define GREATER	0
 #define GREATEREQUAL 1
 #define LESS 2
@@ -977,6 +1010,14 @@ typedef int (*TFUN1)();
 #define DROPARG     19
 #define SELECTARG   20
 #define DEDUPARG    21
+#define ZTOHARG     22
+#define HTOZARG     23
+/*
+#define ZTOSARG     24
+#define STOZARG     25
+#define HTOSARG     26
+#define STOHARG     27
+*/
 
 #define BASECODE 1
 #define YESLYNDON 1
@@ -1047,4 +1088,17 @@ typedef int (*TFUN1)();
 
 #define DENSETABLE 1
 #define SPARSETABLE 0
+
+#define ONEPARTICLEIRREDUCIBLE 1
+#define WITHINSERTIONS         2
+#define NOTADPOLES             4
+#define WITHSYMMETRIZE         8
+#define TOPOLOGIESONLY        16
+#define NONODES               32
+#define WITHEDGES             64
+#define CHECKEXTERN          128
+#define WITHBLOCKS           256
+#define WITHONEPI            512
+#define NOSNAILS            1024
+#define NOEXTSELF           2048
 

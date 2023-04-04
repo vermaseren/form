@@ -6,7 +6,7 @@
 
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2022 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -91,6 +91,8 @@ FIXEDGLOBALS FG = {
 	,(char *)0
 	,(char *)0
 	,(UBYTE *)"1"
+	,(WORD)0
+	,(WORD)0
 	,(WORD)0
 	,(WORD)0
 
@@ -231,12 +233,26 @@ static struct fixedfun {
 	,{"perm_"       ,1 ,0             ,0               ,0} /* PERMUTATIONS */
 	,{"partitions_" ,1 ,0             ,0               ,0} /* PARTITIONS */
 	,{"mul_"        ,0 ,0             ,0               ,0} /* MULFUNCTION */
-	,{"moebius_"    ,0 ,0             ,0               ,0} /* MOEBIUS */
+    ,{"moebius_"    ,0 ,0             ,0               ,0} /* MOEBIUS */
 	,{"topologies_" ,0 ,0             ,0               ,0} /* TOPOLOGIES */
 	,{"diagrams_"   ,0 ,0             ,0               ,0} /* DIAGRAMS */
+	,{"topo_"       ,0 ,0             ,0               ,0} /* TOPO */
 	,{"node_"       ,0 ,0             ,0               ,0} /* VERTEX */
 	,{"edge_"       ,0 ,0             ,0               ,0} /* EDGE */
     ,{"sizeof_"     ,0 ,0             ,0               ,0} /* SIZEOFFUNCTION */
+	,{"block_"      ,0 ,0             ,0               ,0} /* BLOCK */
+	,{"onepi_"      ,0 ,0             ,0               ,0} /* ONEPI */
+	,{"phi_"        ,0 ,VERTEXFUNCTION,0               ,0} /* PHI */
+#ifdef WITHFLOAT
+	,{"float_"      ,0 ,0             ,0               ,0} /* FLOATFUN */
+	,{"tofloat_"    ,0 ,0             ,0               ,0} /* TOFLOAT */
+	,{"torat_"      ,0 ,0             ,0               ,0} /* TORAT */
+	,{"mzv_"        ,0 ,0             ,0               ,0} /* MZV */
+	,{"euler_"      ,0 ,0             ,0               ,0} /* EULER */
+	,{"mzvhalf_"    ,0 ,0             ,0               ,0} /* MZVHALF */
+	,{"agm_"        ,0 ,0             ,0               ,0} /* AGMFUNCTION */
+	,{"gamma_"      ,0 ,0             ,0               ,0} /* GAMMAFUN */
+#endif
 };
 
 FIXEDSET fixedsets[] = {

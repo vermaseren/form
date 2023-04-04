@@ -6,13 +6,13 @@
  *
  *  Contains a number of defines to make the coding easier.
  *	Especially the defines for the use of the lists are very nice.
- *	And of course the AC for A.C and AT for either A.T of B->T
- *	are indispensable to keep FORM and TFORM in one set of sources.
+ *	And of course the AC for A.Cc and AT for either A.T of B->T
+ *	are indispensible to keep FORM and TFORM in one set of sources.
  */
 
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2022 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -129,7 +129,7 @@ extern FILE **FileStructs;
 #define BUG A.bug;
 
 #ifdef WITHPTHREADS
-#define AC A.C
+#define AC A.Cc
 #define AM A.M
 #define AO A.O
 #define AP A.P
@@ -142,7 +142,7 @@ extern FILE **FileStructs;
 #define AR0 B0->R
 #define AT0 B0->T
 #else
-#define AC A.C
+#define AC A.Cc
 #define AM A.M
 #define AN A.N
 #define AO A.O

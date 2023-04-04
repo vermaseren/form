@@ -9,7 +9,7 @@
  */
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2022 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -38,7 +38,13 @@
 */
 
 #include "form3.h"
+#ifdef WITHFLOAT
+#include <gmp.h>
 
+int PackFloat(WORD *,mpf_t);
+int UnpackFloat(mpf_t, WORD *);
+void RatToFloat(mpf_t result, UWORD *formrat, int ratsize);
+#endif
 /*
   	#] Includes : 
  	#[ Normalize :
@@ -194,9 +200,8 @@ WORD Normalize(PHEAD WORD *term)
 	WORD shortnum, stype;
 	WORD *stop, *to = 0, *from = 0;
 /*
-	The next variables would be better off in the AT.WorkSpace (?)
-	or as static global variables. Now they make stackallocations
-	rather bothersome.
+	The next variables could be better off in the AT.WorkSpace (?)
+	Now they make stackallocations rather bothersome.
 */
 	WORD psym[7*NORMSIZE],*ppsym;
 	WORD pvec[NORMSIZE],*ppvec,nvec;
@@ -216,11 +221,14 @@ WORD Normalize(PHEAD WORD *term)
 	WORD *fillsetexp;
 	CBUF *C = cbuf+AT.ebufnum;
 	WORD *ANsc = 0, *ANsm = 0, *ANsr = 0, PolyFunMode;
+#ifdef WITHFLOAT
+	WORD withfloat = 0;
+	WORD *firstfloat = 0;
+#endif
 	LONG oldcpointer = 0, x;
 	n_coef = TermMalloc("NormCoef");
 	n_llnum = TermMalloc("n_llnum");
 	lnum = n_llnum+1;
-
 /*
 	int termflag;
 */
@@ -2334,6 +2342,26 @@ redoshort:
 				}
 				else pnco[nnco++] = t;
 				break;
+#ifdef WITHFLOAT
+			case FLOATFUN :
+/*
+				If it is a proper float_ we give it special treatment.
+				If it is not proper, we treat it as a regular commuting function.
+*/
+				if ( withfloat == 0 ) {
+					if ( TestFloat(t) == 0 ) goto defaultcase;
+					firstfloat = t;
+					withfloat = 1;
+				}
+				else { /* There are now at least two float_'s. Time for action. */
+					if ( TestFloat(t) == 0 ) goto defaultcase;
+					if ( withfloat == 1 ) UnpackFloat(aux4,firstfloat);
+					withfloat++;
+					UnpackFloat(aux5,t);
+					mpf_mul(aux4,aux4,aux5);
+				}
+				break;
+#endif
 			case INTFUNCTION :
 /*
 				Can be resolved if the first argument is a number
@@ -2672,6 +2700,31 @@ TryAgain:;
 						while ( to < stop ) *to++ = *from++;
 						r = tt;
 					}
+#ifdef WITHFLOAT
+					else if ( *t == FLOATFUN && TestFloat(t) ) {
+						k = t[1];
+						pden[i][1] -= k;
+						pden[i][FUNHEAD] -= k;
+						pden[i][FUNHEAD+ARGHEAD] -= k;
+						UnpackFloat(aux5,t);
+						if ( withfloat == 0 ) {
+							mpf_ui_div(aux4,1,aux5);
+							withfloat = 2;
+						}
+						else {
+							if ( withfloat == 1 ) UnpackFloat(aux4,firstfloat);
+							mpf_div(aux4,aux4,aux5);
+							withfloat++;
+						}
+						tt = to = t;
+						while ( r < m ) *to++ = *r++;
+						*to++ = 1; *to++ = 1; *to++ = 3;
+						if ( ncoef < 0 ) t[-1] = -t[-1];
+						m -= k;
+						stop = m + 3;
+						r = tt;
+					}
+#endif
 					t = r;
 				}
 				if ( pden[i][1] == 4+FUNHEAD+ARGHEAD ) {
@@ -2934,9 +2987,9 @@ HaveCon:
 		for ( i = 0; i < nnco; i++ ) {
 			t = pnco[i];
 			if ( ( *t >= (FUNCTION+WILDOFFSET)
-			&& functions[*t-FUNCTION-WILDOFFSET].spec == 0 )
+			&& functions[*t-FUNCTION-WILDOFFSET].spec <= 0 )
 			|| ( *t >= FUNCTION && *t < (FUNCTION + WILDOFFSET)
-			&& functions[*t-FUNCTION].spec == 0 ) ) {
+			&& functions[*t-FUNCTION].spec <= 0 ) ) {
 				DoRevert(t,m);
 				if ( didcontr ) {
 					r = t + FUNHEAD;
@@ -3088,9 +3141,9 @@ onegammamatrix:
 		for ( i = 0; i < ncom; i++ ) {
 			t = pcom[i];
 			if ( ( *t >= (FUNCTION+WILDOFFSET)
-			&& functions[*t-FUNCTION-WILDOFFSET].spec == 0 )
+			&& functions[*t-FUNCTION-WILDOFFSET].spec <= 0 )
 			|| ( *t >= FUNCTION && *t < (FUNCTION + WILDOFFSET)
-			&& functions[*t-FUNCTION].spec == 0 ) ) {
+			&& functions[*t-FUNCTION].spec <= 0 ) ) {
 				DoRevert(t,m);
 				if ( didcontr ) {
 					r = t + FUNHEAD;
@@ -3936,6 +3989,66 @@ NoRep:
 	}
 /*
   	#] Symbols : 
+  	#[ float_ :
+
+	Here we treat float_ functions and combined them with the regular
+	coefficient.
+*/
+
+#ifdef WITHFLOAT
+	if ( withfloat ) {
+		WORD floatsign = 3;
+/*
+		First check whether the coefficient is already 1/1
+*/
+		if ( ABS(ncoef) == 3 && n_coef[0] == 1 && n_coef[1] == 1 ) {
+			if ( withfloat == 1 ) {
+				t = firstfloat;
+/*
+				We only interfere by making the sign positive.
+				The float_ function has already been tested.
+*/
+				if ( t[FUNHEAD+3] < 0 ) {
+					t[FUNHEAD+3] = -t[FUNHEAD+3];
+					floatsign = -floatsign;
+				}
+				if ( ncoef < 0 ) floatsign = -floatsign;
+/*
+				Copy to output;
+*/
+				AT.FloatPos = m-termout;
+				i = t[1]; NCOPY(m,t,i)
+			}
+			else {
+				PackFloat(m,aux4);
+				if ( m[FUNHEAD+3] < 0 ) {
+					m[FUNHEAD+3] = -m[FUNHEAD+3];
+					floatsign = -floatsign;
+				}
+				if ( ncoef < 0 ) floatsign = -floatsign;
+				AT.FloatPos = m-termout;
+				m += m[1];
+			}
+		}
+		else {
+			if ( withfloat == 1 ) UnpackFloat(aux4,firstfloat);
+			RatToFloat(aux5,(UWORD *)n_coef,ncoef);
+			mpf_mul(aux4,aux4,aux5);
+			PackFloat(m,aux4);
+			AT.FloatPos = m-termout;
+			if ( m[FUNHEAD+3] < 0 ) {
+				m[FUNHEAD+3] = -m[FUNHEAD+3];
+				floatsign = -floatsign;
+			}
+			m += m[1];
+		}
+		n_coef[0] = 1; n_coef[1] = 1; ncoef = floatsign;
+	}
+	else AT.FloatPos = 0;
+#endif
+
+/*
+  	#] float_ : 
   	#[ Do Replace_ :
 */
     stop = (WORD *)(((UBYTE *)(termout)) + AM.MaxTer);
@@ -4208,7 +4321,7 @@ WORD DoTheta(PHEAD WORD *t)
 	ta += ARGHEAD; tb += ARGHEAD;
 	while ( ta < stopa ) {
 		if ( tb >= stopb ) return(0);
-		if ( ( ia = CompareTerms(ta,tb,(WORD)1) ) < 0 ) return(0);
+		if ( ( ia = CompareTerms(BHEAD ta,tb,(WORD)1) ) < 0 ) return(0);
 		if ( ia > 0 ) return(1);
 		ta += *ta;
 		tb += *tb;
@@ -4468,24 +4581,24 @@ WORD *PolyNormPoly (PHEAD WORD *Poly) {
 	WORD *buffer = AT.WorkPointer;
 	WORD *p;
 	if ( NewSort(BHEAD0) ) { Terminate(-1); }
-	AR.CompareRoutine = &CompareSymbols;
+	AR.CompareRoutine = (COMPAREDUMMY)(&CompareSymbols);
 	while ( *Poly ) {
 		p = Poly + *Poly;
 		if ( SymbolNormalize(Poly) < 0 ) return(0);
 		if ( StoreTerm(BHEAD Poly) ) {
-			AR.CompareRoutine = &Compare1;
+			AR.CompareRoutine = (COMPAREDUMMY)(&Compare1);
 			LowerSortLevel();
 			Terminate(-1);
 		}
 		Poly = p;
 	}
 	if ( EndSort(BHEAD buffer,1) < 0 ) {
-		AR.CompareRoutine = &Compare1;
+		AR.CompareRoutine = (COMPAREDUMMY)(&Compare1);
 		Terminate(-1);
 	}
 	p = buffer;
 	while ( *p ) p += *p;
-	AR.CompareRoutine = &Compare1;
+	AR.CompareRoutine = (COMPAREDUMMY)(&Compare1);
 	AT.WorkPointer = p + 1;
 	return(buffer);
 }
@@ -5110,7 +5223,7 @@ Nexti:;
 int TestFunFlag(PHEAD WORD *tfun)
 {
 	WORD *t, *tstop, *r, *rstop, *m, *mstop;
-	if ( functions[*tfun-FUNCTION].spec ) return(0);
+	if ( functions[*tfun-FUNCTION].spec <= 0 ) return(0);
 	tstop = tfun + tfun[1];
 	t = tfun + FUNHEAD;
 	while ( t < tstop ) {

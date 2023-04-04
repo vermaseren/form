@@ -5,7 +5,7 @@
  */
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2022 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -83,7 +83,7 @@ template<class T> ostream& operator<< (ostream &out, const vector<T> &x) {
  *   Notes
  *   =====
  *   - The input and output integers are represented as polynomials.
- *     These polynomials must consist of one term with all powers
+ *     These polynonials must consist of one term with all powers
  *     equal to zero.
  *   - The result is always positive.
  *   - Over ZZ/p^n, the gcd is defined as 1.
@@ -666,7 +666,7 @@ const poly polygcd::sparse_interpolation_fix_poly (const poly &a, int x) {
  *     e.g. "Computing the Greatest Common Divisor of Multivariate
  *     Polynomials over Finite Fields" by Suling Yang. [TODO]
  *   - For calculation modulo small prime numbers, such a Vandermonde
- *     matrix does not exist, because there are not enough different
+ *     matrix doesnot exist, because there are not enough different
  *     numbers. In that case, we should resort to random equations of
  *     which enough exist. [TODO]
  *   - Non-monic cases are handled inefficiently. Implement LINZIP? [TODO]
@@ -705,10 +705,8 @@ const poly polygcd::gcd_modular_sparse_interpolation (const poly &origa, const p
 	poly lred(sparse_interpolation_reduce_poly(lcgcd,x));
 
 	// set all coefficients to 1
-	int N=0;
 	for (int i=1; i<sred[0]; i+=sred[i]) {
 		sred[i+sred[i]-2] = sred[i+sred[i]-1] = 1;
-		N++;
 	}
 	
 	// generate random numbers and check there this set doesn't result

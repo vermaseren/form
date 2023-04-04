@@ -16,7 +16,7 @@
 
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2022 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -39,7 +39,7 @@
  *   You should have received a copy of the GNU General Public License along
  *   with FORM.  If not, see <http://www.gnu.org/licenses/>.
  */
-/* #] License : */ 
+/* #] License : */
  
 #ifndef __STRUCTS__
 
@@ -47,6 +47,7 @@
 #ifdef _MSC_VER
 #include <wchar.h>  /* off_t */
 #endif
+
 /*
   	#[ sav&store :
 */
@@ -190,13 +191,13 @@ typedef struct ReNuMbEr {
 } *RENUMBER;
 
 /*
-  	#] sav&store : 
+  	#] sav&store :
   	#[ Variables :
 */
 
 /**
  *  Much information is stored in arrays of which we can double the size
- *  if the array proves to be too small. Such arrays are controlled by
+ *  if the array proves to be too small. Such arrays are controled by
  *  a variable of type #LIST. The routines that expand the lists are in the
  *  file tools.c
  */
@@ -411,11 +412,12 @@ typedef struct ExPrEsSiOn {
 	WORD	numdummies;
 	WORD	numfactors;
 	WORD	sizeprototype;
+    WORD    uflags;         /* User flags */
 #ifdef PARALLELCODE
     WORD    partodo;        /* Whether to be done in parallel mode */
-	PADPOSITION(5,2,0,13,0);
+	PADPOSITION(5,2,0,14,0);
 #else
-	PADPOSITION(5,2,0,12,0);
+	PADPOSITION(5,2,0,13,0);
 #endif
 } *EXPRESSIONS;
 
@@ -613,9 +615,56 @@ typedef struct {
 	int commute;
 	PADPOINTER(0,6,0,0);
 } FUN_INFO;
+
+typedef struct PaRtIcLe {
+	WORD number; /* Number of the function */
+	WORD spin;   /* +/- dimension of SU(2) representation */
+	WORD mass;   /* Number of symbol or 0 */
+	WORD type;   /* -1: anti particle, 1: particle, 0: own antiparticle */
+} PARTICLE;
+
+typedef struct VeRtEx {
+	PARTICLE particles[MAXPARTICLES];
+	WORD couplings[2*MAXCOUPLINGS];
+	WORD nparticles;
+	WORD ncouplings;
+	WORD type;
+	WORD error;
+    WORD externonly;
+    WORD spare;
+} VERTEX;
+
+typedef struct MoDeL {
+	VERTEX **vertices;
+	WORD *couplings;
+	UBYTE *name;
+	void *grccmodel;
+    WORD legcouple[MAXLEGS+2];
+	WORD nparticles;
+	WORD nvertices;
+	WORD invertices;
+	WORD sizevertices;
+	WORD sizecouplings;
+	WORD ncouplings;
+	WORD error;
+	WORD dummy;
+} MODEL;
  
 /*
-  	#] Variables : 
+ *	The struct NAMESPACE is used for the namespace info. It is a
+ *	doubly linked list of nested namespaces.
+ */
+
+typedef struct NaMeSpAcE {
+	struct NaMeSpAcE *previous;
+	struct NaMeSpAcE *next;
+	NAMETREE  *usenames;
+	UBYTE     *name;
+} NAMESPACE;
+
+
+/*
+  	#] Variables :
   	#[ Files :
 */
 
@@ -724,7 +773,7 @@ typedef struct SpecTatoR {
 } SPECTATOR;
 
 /*
-  	#] Files : 
+  	#] Files :
   	#[ Traces :
 */
 
@@ -781,7 +830,7 @@ typedef struct TrAcEn {			/* For computing n dimensional traces */
 } *TRACEN;
 
 /*
-  	#] Traces : 
+  	#] Traces :
   	#[ Preprocessor :
 */
 
@@ -922,13 +971,18 @@ typedef struct {
 } HANDLERS;
 
 /*
-  	#] Preprocessor : 
+  	#] Preprocessor :
   	#[ Varia :
 */
 
 typedef WORD (*FINISHUFFLE)(WORD *);
 typedef WORD (*DO_UFFLE)(WORD *,WORD,WORD,WORD);
-typedef WORD (*COMPARE)(WORD *,WORD *,WORD);
+
+#ifdef WITHPTHREADS
+typedef WORD (*COMPAREDUMMY)(VOID *,WORD *,WORD *,WORD);
+#else
+typedef WORD (*COMPAREDUMMY)(WORD *,WORD *,WORD);
+#endif
 
 /**
  *  The CBUF struct is used by the compiler. It is a compiler buffer of which
@@ -1339,13 +1393,23 @@ typedef struct {
     WORD padding;
 } SWITCH;
 
-/*
-	The next typedef comes originally from declare.h but because new compilers
-	do not like casting from void * to a function address we have to put it here
-*/
+typedef struct {
+	WORD *term;
+	void *currentModel;
+	void *currentMODEL;
+    WORD *legcouple[MAXLEGS+1];
+	LONG numtopo;
+	LONG numdia;
+	WORD diaoffset;
+	WORD level;
+	WORD externalset;
+	WORD internalset;
+	WORD numextern;
+	WORD flags;
+} TERMINFO;
 
 /*
-  	#] Varia : 
+  	#] Varia :
     #[ A :
  		#[ M : The M struct is for global settings at startup or .clear
 */
@@ -1387,7 +1451,7 @@ struct M_const {
     LONG    CompressSize;          /* (M) Size of Compress buffer */
     LONG    ScratSize;             /* (M) Size of Fscr[] buffers */
     LONG    HideSize;              /* (M) Size of Fscr[2] buffer */
-    LONG    SizeStoreCache;        /* (M) Size of the caches for reading global expr. */
+    LONG    SizeStoreCache;        /* (M) Size of the chaches for reading global expr. */
     LONG    MaxStreamSize;         /* (M) Maximum buffer size in reading streams */
     LONG    SIOsize;               /* (M) Sort InputOutput buffer size */
     LONG    SLargeSize;            /* (M) */
@@ -1407,9 +1471,15 @@ struct M_const {
     LONG    SumTime;               /*     Used in .clear */
     LONG    SpectatorSize;         /*     Size of the buffer in bytes */
     LONG    TimeLimit;             /*     Limit in sec to the total real time */
+#ifdef WITHFLOAT
+    LONG    gDefaultPrecision;     /* (M) Default precision in bits for float_ */
+    LONG    gMaxWeight;            /* (M) Maximum weight for MZV or Euler */
+    LONG    ggDefaultPrecision;    /* (M) Default precision in bits for float_ */
+    LONG    ggMaxWeight;           /* (M) Maximum weight for MZV or Euler */
+#endif
     int     FileOnlyFlag;          /* (M) Writing only to file */
     int     Interact;              /* (M) Interactive mode flag */
-    int     MaxParLevel;           /* (M) Maximum nesting of parentheses */
+    int     MaxParLevel;           /* (M) Maximum nesting of parantheses */
     int     OutBufSize;            /* (M) size of OutBuffer */
     int     SMaxFpatches;          /* (M) */
     int     SMaxPatches;           /* (M) */
@@ -1527,16 +1597,25 @@ struct M_const {
     WORD    havesortdir;
     WORD    vectorzero;            /* p0_ */
     WORD    ClearStore;
+    WORD    numpi;
     WORD    BracketFactors[8];
     BOOL    FromStdin;             /* read the input from STDIN */
+#ifdef WITHFLOAT
 #ifdef WITHPTHREADS
-	PADPOSITION(17,26,62,83,(sizeof(pthread_rwlock_t)+sizeof(pthread_mutex_t)*2+1));
+	PADPOSITION(17,30,62,84,(sizeof(pthread_rwlock_t)+sizeof(pthread_mutex_t)*2)+1);
 #else
-	PADPOSITION(17,24,62,83,1);
+	PADPOSITION(17,28,62,84,1);
+#endif
+#else
+#ifdef WITHPTHREADS
+	PADPOSITION(17,30,62,84,(sizeof(pthread_rwlock_t)+sizeof(pthread_mutex_t)*2)+1);
+#else
+	PADPOSITION(17,28,62,84,1);
+#endif
 #endif
 };
 /*
- 		#] M : 
+ 		#] M :
  		#[ P : The P struct defines objects set by the preprocessor
 */
 /**
@@ -1554,6 +1633,9 @@ struct P_const {
     LIST LoopList;                 /* (P) List of do loops */
     LIST ProcList;                 /* (P) List of procedures */
     INSIDEINFO inside;             /*     Information during #inside/#endinside */
+    NAMESPACE *firstnamespace;     /* is zero when no namespace spacified */
+    NAMESPACE *lastnamespace;      /* is zero when no namespace spacified */
+    UBYTE *fullname;               /* buffer for namespace expanded names */
     UBYTE **PreSwitchStrings;      /* (P) The string in a switch */
     UBYTE *preStart;               /* (P) Preprocessor instruction buffer */
     UBYTE *preStop;                /* (P) end of preStart */
@@ -1591,15 +1673,16 @@ struct P_const {
     int     OpenDictionary;
     int     PreAssignLevel;        /* For nesting #$name = ...; assignments */
     int     MaxPreAssignLevel;     /* For nesting #$name = ...; assignments */
+    int     fullnamesize;          /* size of the fullname buffer */
     WORD    DebugFlag;             /* (P) For debugging purposes */
     WORD    preError;              /* (P) Blocks certain types of execution */
     UBYTE   ComChar;               /* (P) Commentary character */
     UBYTE   cComChar;              /* (P) Old commentary character for .clear */
-    PADPOINTER(3,21,2,2);
+    PADPOINTER(3,22,2,2);
 };
 
 /*
- 		#] P : 
+ 		#] P :
  		#[ C : The C struct defines objects changed by the compiler
 */
 
@@ -1655,6 +1738,7 @@ struct C_const {
     STREAM  *CurrentStream;        /**< (C) The current input stream.
                                        Streams are: do loop, file, prevariable. points into Streams memory. */
     SWITCH  *SwitchArray;
+    MODEL   **models;
     WORD    *SwitchHeap;
     LONG    *termstack;            /**< [D] Last term statement {offset} */
     LONG    *termsortstack;        /**< [D] Last sort statement {offset} */
@@ -1712,6 +1796,12 @@ struct C_const {
     LONG    CheckpointStamp;       /**< Timestamp of the last created snapshot (set to Timer(0)).*/
     LONG    CheckpointInterval;    /**< Time interval in milliseconds for snapshots. =0 if
                                         snapshots shall be created at the end of _every_ module.*/
+#ifdef WITHFLOAT
+    LONG    DefaultPrecision;      /* (C) Default precision in bits for float_ */
+    LONG    MaxWeight;             /* (C) Maximum weight for MZV or Euler */
+    LONG    tDefaultPrecision;     /* (C) Default precision in bits for float_ */
+    LONG    tMaxWeight;            /* (C) Maximum weight for MZV or Euler */
+#endif
     int     cbufnum;               /**< Current compiler buffer */
     int     AutoDeclareFlag;       /** (C) Mode of looking for names. Set to NOAUTO (=0) or
                                            WITHAUTO (=2), cf. AutoDeclare statement */
@@ -1790,6 +1880,9 @@ struct C_const {
 #endif
     int     origin;                /* Determines whether .sort or ModuleOption */
     int     vectorlikeLHS;
+    int     nummodels;
+    int     modelspace;
+    int     ModelLevel;
     WORD    argsumcheck[MAXNEST];  /* (C) Checking of nesting */
     WORD    insidesumcheck[MAXNEST];/* (C) Checking of nesting */
     WORD    inexprsumcheck[MAXNEST];/* (C) Checking of nesting */
@@ -1835,7 +1928,7 @@ struct C_const {
     WORD    SymChangeFlag;         /* (C) */
     WORD    CollectPercentage;     /* (C) Collect function percentage */
     WORD    ShortStatsMax;         /* For  On FewerStatistics 10; */
-	WORD	extrasymbols;          /* Flag for the extra symbols output mode */
+	WORD	extrasymbols;          /* Flag for the extra symbsols output mode */
     WORD    PolyRatFunChanged;     /* Keeps track whether we changed in the compiler */
     WORD    ToBeInFactors;
     WORD    InnerTest;            /* For debugging */
@@ -1844,16 +1937,26 @@ struct C_const {
 #endif
     UBYTE   Commercial[COMMERCIALSIZE+2]; /* (C) Message to be printed in statistics */
     UBYTE   debugFlags[MAXFLAGS+2];    /* On/Off Flag number(s) */
+#ifdef WITHFLOAT
 #if defined(WITHPTHREADS)
-	PADPOSITION(49,8+3*MAXNEST,72,48+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17+sizeof(pthread_mutex_t));
+	PADPOSITION(50,12+3*MAXNEST,75,48+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17+sizeof(pthread_mutex_t));
 #elif defined(WITHMPI)
-	PADPOSITION(49,8+3*MAXNEST,72,49+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17);
+	PADPOSITION(50,12+3*MAXNEST,75,49+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17);
 #else
-	PADPOSITION(47,8+3*MAXNEST,70,48+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17);
+	PADPOSITION(48,12+3*MAXNEST,73,48+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17);
+#endif
+#else
+#if defined(WITHPTHREADS)
+	PADPOSITION(50,8+3*MAXNEST,75,48+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17+sizeof(pthread_mutex_t));
+#elif defined(WITHMPI)
+	PADPOSITION(50,8+3*MAXNEST,75,49+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17);
+#else
+	PADPOSITION(48,8+3*MAXNEST,73,48+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17);
+#endif
 #endif
 };
 /*
- 		#] C : 
+ 		#] C :
  		#[ S : The S struct defines objects changed at the start of the run (Processor)
 		       Basically only set by the master.
 */
@@ -1874,6 +1977,10 @@ struct S_const {
     POSITION *OldOnFile;           /* (S) File positions of expressions */
     WORD    *OldNumFactors;        /* ( ) NumFactors in (old) expression */
     WORD    *Oldvflags;            /* ( ) vflags in (old) expression */
+    WORD    *Olduflags;            /* ( ) uflags in (old) expression */
+#ifdef WITHFLOAT
+    VOID    *delta_1;
+#endif
     int     NumOldOnFile;          /* (S) Number of expressions in OldOnFile */
     int     NumOldNumFactors;      /* (S) Number of expressions in OldNumFactors */
     int     MultiThreaded;         /* (S) Are we running multi-threaded? */
@@ -1893,13 +2000,13 @@ struct S_const {
 #if defined(WITHPTHREADS)
 	PADPOSITION(3,0,5,3,sizeof(pthread_mutex_t)*3);
 #elif defined(WITHMPI)
-	PADPOSITION(3,0,5,2,0);
+	PADPOSITION(4,0,5,2,0);
 #else
-	PADPOSITION(3,0,4,2,0);
+	PADPOSITION(4,0,4,2,0);
 #endif
 };
 /*
- 		#] S : 
+ 		#] S :
  		#[ R : The R struct defines objects changed at run time.
                They determine the environment that has to be transfered
                together with a term during multithreaded execution.
@@ -1924,7 +2031,7 @@ struct R_const {
     WORD    *CompressBuffer;       /* (M) */
     WORD    *ComprTop;             /* (M) */
     WORD    *CompressPointer;      /* (R) */
-    COMPARE CompareRoutine;
+    COMPAREDUMMY CompareRoutine;
     ULONG   *wranfia;
     char    *moebiustable;
 
@@ -1974,24 +2081,26 @@ struct R_const {
     WORD    CurExpr;               /* (S) Number of current expression */
     WORD    SortType;              /* A copy of AC.SortType to play with */
     WORD    ShortSortCount;        /* For On FewerStatistics 10; */
+    WORD    modeloptions;
+    WORD    funoffset;
     WORD    moebiustablesize;
 #if ( BITSINWORD == 32 )
 #ifdef WITHPTHREADS
-	PADPOSITION(8,7,8,5027,0);
+	PADPOSITION(8,7,8,5029,0);
 #else
-	PADPOSITION(8,7,7,5027,0);
+	PADPOSITION(8,7,7,5029,0);
 #endif
 #else
 #ifdef WITHPTHREADS
-	PADPOSITION(8,7,8,25,0);
+	PADPOSITION(8,7,8,27,0);
 #else
-	PADPOSITION(8,7,7,25,0);
+	PADPOSITION(8,7,7,27,0);
 #endif
 #endif
 };
 
 /*
- 		#] R : 
+ 		#] R :
  		#[ T : These are variables that stay in each thread during multi threaded execution.
 */
 /**
@@ -2024,10 +2133,10 @@ struct T_const {
     int     *RepTop;               /* (M) Top of RepCount buffer */
     WORD    *WildArgTaken;         /* (N) Stack for wildcard pattern matching */
     UWORD   *factorials;           /* (T) buffer of factorials. Dynamic. */
-  	WORD    *small_power_n;        /*     length of the number */
-	  UWORD  **small_power;          /*     the number*/	
-    UWORD   *bernoullis;           /* (T) The buffer with Bernoulli numbers. Dynamic. */
-	WORD    *primelist;
+    WORD    *small_power_n;        /*     length of the number */
+    UWORD  **small_power;          /*     the number*/	
+    UWORD   *bernoullis;           /* (T) The buffer with bernoulli numbers. Dynamic. */
+    WORD    *primelist;
     LONG    *pfac;                 /* (T) array of positions of factorials. Dynamic. */
     LONG    *pBer;                 /* (T) array of positions of Bernoulli's. Dynamic. */
     WORD    *TMaddr;               /* (R) buffer for TestSub */
@@ -2036,14 +2145,22 @@ struct T_const {
     WORD    **TermMemHeap;        /* For TermMalloc. Set zero in Checkpoint */
     UWORD    **NumberMemHeap;      /* For NumberMalloc. Set zero in Checkpoint */
     UWORD    **CacheNumberMemHeap; /* For CacheNumberMalloc. Set zero in Checkpoint */
-	BRACKETINFO *bracketinfo;
+    BRACKETINFO *bracketinfo;
     WORD    **ListPoly;
     WORD    *ListSymbols;
     UWORD   *NumMem;
     WORD    *TopologiesTerm;
     WORD    *TopologiesStart;
+#ifdef WITHFLOAT
+    int     *indi1;
+    int     *indi2;
+    VOID    *mpf_tab1;
+    VOID    *mpf_tab2;
+    VOID    *aux_;
+    VOID    *auxr_;
+#endif
     PARTI   partitions;
-    LONG    sBer;                  /* (T) Size of the Bernoullis buffer */
+    LONG    sBer;                  /* (T) Size of the bernoullis buffer */
     LONG    pWorkPointer;          /* (R) Offset-pointer in pWorkSpace */
     LONG    lWorkPointer;          /* (R) Offset-pointer in lWorkSpace */
     LONG    posWorkPointer;        /* (R) Offset-pointer in posWorkSpace */
@@ -2097,7 +2214,7 @@ struct T_const {
     WORD    TMbuff;                /* (R) Communication between TestSub and Genera */
 	WORD	TMdolfac;              /* factor number for dollar */
     WORD    nfac;                  /* (T) Number of highest stored factorial */
-    WORD    nBer;                  /* (T) Number of highest Bernoulli number. */
+    WORD    nBer;                  /* (T) Number of highest bernoulli number. */
     WORD    mBer;                  /* (T) Size of buffer pBer. */
     WORD    PolyAct;               /* (R) Used for putting the PolyFun at end. ini at 0 */
     WORD    RecFlag;               /* (R) Used in TestSub. ini at zero. */
@@ -2108,18 +2225,34 @@ struct T_const {
     WORD    setexterntopo;         /* Set of external momenta for topogen */
     WORD    TopologiesLevel;
     WORD    TopologiesOptions[2];
-#ifdef WITHPTHREADS
-#ifdef WITHSORTBOTS
-	PADPOINTER(5,27,105+SUBEXPSIZE*4+FUNHEAD*2+ARGHEAD*2,0);
-#else
-	PADPOINTER(5,25,105+SUBEXPSIZE*4+FUNHEAD*2+ARGHEAD*2,0);
+#ifdef WITHFLOAT
+    WORD    FloatPos;
+    WORD    SortFloatMode;
 #endif
+#ifdef WITHFLOAT
+ #ifdef WITHPTHREADS
+  #ifdef WITHSORTBOTS
+	PADPOINTER(5,27,107+SUBEXPSIZE*4+FUNHEAD*2+ARGHEAD*2,0);
+  #else
+	PADPOINTER(5,25,107+SUBEXPSIZE*4+FUNHEAD*2+ARGHEAD*2,0);
+  #endif
+ #else
+	PADPOINTER(5,23,107+SUBEXPSIZE*4+FUNHEAD*2+ARGHEAD*2,0);
+ #endif
 #else
+ #ifdef WITHPTHREADS
+  #ifdef WITHSORTBOTS
+	PADPOINTER(5,27,105+SUBEXPSIZE*4+FUNHEAD*2+ARGHEAD*2,0);
+  #else
+	PADPOINTER(5,25,105+SUBEXPSIZE*4+FUNHEAD*2+ARGHEAD*2,0);
+  #endif
+ #else
 	PADPOINTER(5,23,105+SUBEXPSIZE*4+FUNHEAD*2+ARGHEAD*2,0);
+ #endif
 #endif
 };
 /*
- 		#] T : 
+ 		#] T :
  		#[ N : The N struct contains variables used in running information
                that is inside blocks that should not be split, like pattern
                matching, traces etc. They are local for each thread.
@@ -2299,7 +2432,7 @@ struct N_const {
 };
 
 /*
- 		#] N : 
+ 		#] N :
  		#[ O : The O struct concerns output variables
 */
 /**
@@ -2339,6 +2472,10 @@ struct O_const {
 	DICTIONARY **Dictionaries;
 	UBYTE	*tensorList;           /* Dynamically allocated list with functions that are tensorial. */
     WORD    *inscheme;             /* for feeding a Horner scheme to Optimize */
+#ifdef WITHFLOAT
+    UBYTE   *floatspace;
+    LONG    floatsize;
+#endif
 /*----Leave NumInBrack as first non-pointer. This is used by the checkpoints--*/
     LONG    NumInBrack;            /* (O) For typing [] option in print */
     LONG    wlen;                  /* (O) Used to store files. */
@@ -2363,6 +2500,9 @@ struct O_const {
     int     CurDictNotInFunctions;
     int     CurDictInDollars;
     int     gNumDictionaries;
+#ifdef WITHFLOAT
+    int     FloatPrec;
+#endif
     WORD    schemenum;             /* for feeding a Horner scheme to Optimize */
     WORD    transFlag;             /* ()  >0 indicades that translations have to be done */
     WORD    powerFlag;             /* ()  >0 indicades that some exponents/powers had to be adjusted */
@@ -2384,14 +2524,22 @@ struct O_const {
 /*
 	For the padding, please count also the number of int's in the OPTIMIZE struct.
 */
+#ifdef WITHFLOAT
 #if defined(mBSD) && defined(MICROTIME)
-	PADPOSITION(25,6,35,17,1);
+	PADPOSITION(25,7,36,17,1);
 #else
-	PADPOSITION(25,4,35,17,1);
+	PADPOSITION(25,5,36,17,1);
+#endif
+#else
+#if defined(mBSD) && defined(MICROTIME)
+	PADPOSITION(25,6,36,17,1);
+#else
+	PADPOSITION(25,4,36,17,1);
+#endif
 #endif
 };
 /*
- 		#] O : 
+ 		#] O :
  		#[ X : The X struct contains variables that deal with the external channel
 */
 /**
@@ -2418,8 +2566,13 @@ struct X_const {
 	PADPOINTER(0,5,0,0);
 };
 /*
- 		#] X : 
+ 		#] X :
  		#[ Definitions :
+
+	Note: we changed the definition from C to Cc in version 5.
+	The reason is that everywhere the pointer to the compiler
+	buffer was called C as well. Somehow that gave no problems but
+	who knows what the future might bring.
 */
 
 #ifdef WITHPTHREADS
@@ -2431,7 +2584,7 @@ struct X_const {
 
 typedef struct AllGlobals {
     struct M_const M;
-    struct C_const C;
+    struct C_const Cc;
     struct S_const S;
     struct O_const O;
     struct P_const P;
@@ -2459,7 +2612,7 @@ typedef struct AllPrivates {
 
 typedef struct AllGlobals {
     struct M_const M;
-    struct C_const C;
+    struct C_const Cc;
     struct S_const S;
     struct R_const R;
     struct N_const N;
@@ -2473,11 +2626,11 @@ typedef struct AllGlobals {
 #endif
 
 /*
- 		#] Definitions : 
+ 		#] Definitions :
     #] A : 
   	#[ FG :
 */
-
+ 
 #ifdef WITHPTHREADS
 #define PHEAD  ALLPRIVATES *B,
 #define PHEAD0 ALLPRIVATES *B
@@ -2497,6 +2650,8 @@ typedef WORD (*WCN2)(PHEAD WORD *,WORD *);
 typedef WORD (*WCN)();
 typedef WORD (*WCN2)();
 #endif
+ 
+typedef WORD (*COMPARE)(PHEAD WORD *,WORD *,WORD);
 
 /**
  *	The FIXEDGLOBALS struct is an anachronism. It started as the struct
@@ -2521,11 +2676,13 @@ typedef struct FixedGlobals {
 	UBYTE	*s_one;
 	WORD	fnamebase;
 	WORD	fname2base;
+	WORD	fnamesize;
+	WORD	fname2size;
 	UINT	cTable[256];
 } FIXEDGLOBALS;
 
 /*
-  	#] FG : 
+  	#] FG :
 */
 
 #endif

@@ -1,11 +1,11 @@
 /** @file tables.c
  * 
  *  Contains all functions that deal with the table bases on the 'FORM level'
- *  The low level database routines are in minos.c
+ *  The low level databse routines are in minos.c
  */
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2022 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -102,7 +102,7 @@ void ClearTableTree(TABLES T)
 int InsTableTree(TABLES T, WORD *tp)
 {
 	COMPTREE *boomlijst, *q, *p, *s;
-	WORD *v1, *v2, *v3;
+	WORD *v1, *v2, *v3, xstop;
 	int ip, iq, is;
 	if ( T->numtree + 1 >= T->MaxTreeSize ) {
 		if ( T->MaxTreeSize == 0 ) ClearTableTree(T);
@@ -129,10 +129,12 @@ int InsTableTree(TABLES T, WORD *tp)
 		return(T->numtree);
 	}
 	ip = q->right;
+	if ( T->numind >= 0 ) xstop = T->numind;
+	else xstop = *tp + 1;
 	while ( ip >= 0 ) {
 		p = boomlijst + ip;
 		v1 = T->tablepointers + p->value;
-		v2 = tp; v3 = tp + T->numind;
+		v2 = tp; v3 = tp + xstop;
 		while ( *v1 == *v2 && v2 < v3 ) { v1++; v2++; }
 		if ( v2 >= v3 ) return(-p->value);
 		if ( *v1 > *v2 ) {
@@ -267,7 +269,7 @@ void RedoTableTree(TABLES T, int newsize)
 	ClearTableTree(T);
 	for ( i = 0, tp = T->tablepointers; i < newsize; i++ ) {
 		InsTableTree(T,tp);
-		tp += T->numind+TABLEEXTENSION;
+		tp += ABS(T->numind)+TABLEEXTENSION;
 	}
 }
 
@@ -288,15 +290,20 @@ void RedoTableTree(TABLES T, int newsize)
 int FindTableTree(TABLES T, WORD *tp, int inc)
 {
 	COMPTREE *boomlijst = T->boomlijst, *q = boomlijst + T->rootnum, *p;
-	WORD *v1, *v2, *v3;
+	WORD *v1, *v2, *v3, xstop;
 	int ip, iq;
 	if ( q->right == -1 ) return(-1);
 	ip = q->right;
 	if ( inc > 1 ) tp += inc-1;
+	if ( T->numind >= 0 ) xstop = T->numind;
+	else {	/* We have to read the number of arguments first */
+		if ( *tp <= 0 ) return(-1); /* Cannot be! */
+		xstop = *tp+1;
+	}
 	while ( ip >= 0 ) {
 		p = boomlijst + ip;
 		v1 = T->tablepointers + p->value;
-		v2 = tp; v3 = v1 + T->numind;
+		v2 = tp; v3 = v1 + xstop;
 		while ( *v1 == *v2 && v1 < v3 ) { v1++; v2 += inc; }
 		if ( v1 == v3 ) {
 			p->usage++;
@@ -326,7 +333,8 @@ int FindTableTree(TABLES T, WORD *tp, int inc)
 WORD DoTableExpansion(WORD *term, WORD level)
 {
 	GETIDENTITY
-	WORD *t, *tstop, *stopper, *termout, *m, *mm, *tp, *r;
+	WORD *t, *tstop, *stopper, *termout, *m, *mm, *tp, *r, xx;
+	WORD numsubexp, numbuf;
 	TABLES T = 0;
 	int i, j, num;
 	AN.TeInFun = AR.TePos = 0;
@@ -340,11 +348,11 @@ WORD DoTableExpansion(WORD *term, WORD level)
 		if ( T == 0 ) { t += t[1]; continue; }
 		if ( T->spare ) T = T->spare;
 		if ( t[1] == FUNHEAD+2 && t[FUNHEAD+1] <= -FUNCTION ) break;
-		if ( t[1] < FUNHEAD+1+2*T->numind ) { t += t[1]; continue; }
-		for ( i = 0; i < T->numind; i++ ) {
+		if ( t[1] < FUNHEAD+1+2*ABS(T->numind) ) { t += t[1]; continue; }
+		for ( i = 0; i < ABS(T->numind); i++ ) {
 			if ( t[FUNHEAD+1+2*i] != -SYMBOL ) break;
 		}
-		if ( i >= T->numind ) break;
+		if ( i >= ABS(T->numind) ) break;
 		t += t[1];
 	}
 	if ( t >= stopper ) {
@@ -365,12 +373,32 @@ WORD DoTableExpansion(WORD *term, WORD level)
 			r = m;
 			if ( t[1] == FUNHEAD+2 && t[FUNHEAD+1] <= -FUNCTION ) {
 				*m++ = -t[FUNHEAD+1];
-				*m++ = FUNHEAD+T->numind*2;
-				for ( j = 2; j < FUNHEAD; j++ ) *m++ = 0;
-				tp = T->tablepointers + (T->numind+TABLEEXTENSION)*i;
-				for ( j = 0; j < T->numind; j++ ) {
-					*m++ = -SNUMBER; *m++ = *tp++;
+				tp = T->tablepointers + (ABS(T->numind)+TABLEEXTENSION)*i;
+				if ( T->numind < 0 ) {
+					xx = tp[0]+1;
+					*m++ = FUNHEAD+xx*2;
+					for ( j = 2; j < FUNHEAD; j++ ) *m++ = 0;
+					for ( j = 0; j < xx; j++ ) {
+						*m++ = -SNUMBER; *m++ = *tp++;
+					}
 				}
+				else {
+					*m++ = FUNHEAD+T->numind*2;
+					for ( j = 2; j < FUNHEAD; j++ ) *m++ = 0;
+					for ( j = 0; j < T->numind; j++ ) {
+						*m++ = -SNUMBER; *m++ = *tp++;
+					}
+				}
+			}
+			else if ( T->numind < 0 ) {
+				tp = T->tablepointers + (ABS(T->numind)+TABLEEXTENSION)*i;
+				xx = tp[0]+1;
+				*m++ = SYMBOL; *m++ = 2+xx*2; mm = t + FUNHEAD+1;
+				for ( j = 0; j < xx; j++, mm += 2, tp++ ) {
+					if ( *tp != 0 ) { *m++ = mm[1]; *m++ = *tp; }
+				}
+				r[1] = m-r;
+				if ( r[1] == 2 ) m = r;
 			}
 			else {
 				*m++ = SYMBOL; *m++ = 2+T->numind*2; mm = t + FUNHEAD+1;
@@ -398,21 +426,42 @@ WORD DoTableExpansion(WORD *term, WORD level)
 			any risks. There is still one problem. We have not checked
 			that the prototype matches.
 */
+			tp = T->tablepointers + (ABS(T->numind)+TABLEEXTENSION)*i
+					+ABS(T->numind);
+			numsubexp = tp[0]; numbuf = tp[1];
 			r = m;
+#ifdef WITHPTHREADS
+			tp = T->prototype[identity];
+#else
+			tp = T->prototype;
+#endif
+			for ( j = 0; j < tp[1]; j++ ) *m++ = tp[j];
+			r[2] = numsubexp; r[4] = numbuf;
+/*
+			r = m;
+			tp = T->tablepointers + (ABS(T->numind)+TABLEEXTENSION)*i;
 			*m++ = -t[FUNHEAD];
-			*m++ = t[1] - 1;
+			if ( T->numind < 0 ) {
+				xx = tp[0]+1;
+				*m++ = t[1] - xx - T->numind - 1;
+			}
+			else {
+				xx = T->numind;
+				*m++ = t[1] - 1;
+			}
 			for ( j = 2; j < FUNHEAD; j++ ) *m++ = t[j];
-			tp = T->tablepointers + (T->numind+TABLEEXTENSION)*i;
-			for ( j = 0; j < T->numind; j++ ) {
+			for ( j = 0; j < xx; j++ ) {
 				*m++ = -SNUMBER; *m++ = *tp++;
 			}
 			tp = t + FUNHEAD + 1 + 2*T->numind;
 			mm = t + t[1];
 			while ( tp < mm ) *m++ = *tp++;
 			r[1] = m-r;
+*/
 /*
 			From now on is old code
 */
+			mm = t + t[1];
 			while ( mm < tstop ) *m++ = *mm++;
 			*termout = m - termout;
 			AT.WorkPointer = m;
@@ -420,6 +469,7 @@ WORD DoTableExpansion(WORD *term, WORD level)
 				MesCall("DoTableExpand");
 				return(-1);
 			}
+			AT.WorkPointer = termout;
 		}
 	}
 	else {
@@ -664,8 +714,8 @@ int SpareTable(TABLES TT)
 	T->reserved = 0;
 	T->tablenum = 0;
 	T->numdummies = 0;
-	T->mm = (MINMAX *)Malloc1(T->numind*sizeof(MINMAX),"table dimensions");
-	T->flags = (WORD *)Malloc1(T->numind*sizeof(WORD),"table flags");
+	T->mm = (MINMAX *)Malloc1(ABS(T->numind)*sizeof(MINMAX),"table dimensions");
+	T->flags = (WORD *)Malloc1(ABS(T->numind)*sizeof(WORD),"table flags");
 	ClearTableTree(T);
 	TT->spare = T;
 	TT->mode = 1;
@@ -776,7 +826,7 @@ int CoTBaddto(UBYTE *s)
 		*s = c;
 		if ( *s == '(' ) { /* Addition of single element */
 			s++; es = s;
-			for ( i = 0, w = AT.WorkPointer; i < T->numind; i++ ) {
+			for ( i = 0, w = AT.WorkPointer; i < ABS(T->numind); i++ ) {
 			  ParseSignedNumber(x,s);
 		      if ( FG.cTable[s[-1]] != 1 || ( *s != ',' && *s != ')' ) ) {
 				MesPrint("&Table arguments in TableBase addto statement should be numbers");
@@ -786,9 +836,9 @@ int CoTBaddto(UBYTE *s)
 			  if ( *s == ')' ) break;
 			  s++;
 			}
-			if ( *s != ')' || i < ( T->numind - 1 ) ) {
+			if ( *s != ')' || i < ( ABS(T->numind) - 1 ) ) {
 			  MesPrint("&Incorrect number of table arguments in TableBase addto statement. Should be %d"
-				,T->numind);
+				,ABS(T->numind));
 			  error = 1;
 			}
 			c = *s; *s = 0;
@@ -802,7 +852,7 @@ int CoTBaddto(UBYTE *s)
 			else {
 			  int dict = AO.CurrentDictionary;
 			  AO.CurrentDictionary = 0;
-			  sum = i + T->numind;
+			  sum = i + ABS(T->numind);
 /*
 			  See also commentary below
 */
@@ -840,9 +890,9 @@ int CoTBaddto(UBYTE *s)
 #else
 			if ( !T->sparse && T->tablepointers[TABLEEXTENSION*i] < 0 ) continue;
 #endif
-			sum = i * ( T->numind + TABLEEXTENSION );
+			sum = i * ( ABS(T->numind) + TABLEEXTENSION );
 			t = elementstring;
-			for ( j = 0; j < T->numind; j++, sum++ ) {
+			for ( j = 0; j < ABS(T->numind); j++, sum++ ) {
 				if ( j > 0 ) *t++ = ',';
 				num = T->tablepointers[sum];
 				t = NumCopy(num,t);
@@ -1380,13 +1430,13 @@ WORD TestUse(WORD *term, WORD level)
 		Note: we only allow sparse tables (for now)
 */
 		m++;
-		for ( i = 0; i < T->numind; i++, m += 2 ) {
+		for ( i = 0; i < ABS(T->numind); i++, m += 2 ) {
 			if ( m >= t || *m != -SNUMBER ) break;
 		}
-		if ( ( i == T->numind ) &&
+		if ( ( i == ABS(T->numind) ) &&
 		 ( ( isp = FindTableTree(T,tstart+FUNHEAD+1,2) ) >= 0 ) ) {
-			if ( ( T->tablepointers[isp+T->numind+4] & ELEMENTLOADED ) == 0 ) {
-					T->tablepointers[isp+T->numind+4] |= ELEMENTUSED;
+			if ( ( T->tablepointers[isp+ABS(T->numind)+4] & ELEMENTLOADED ) == 0 ) {
+					T->tablepointers[isp+ABS(T->numind)+4] |= ELEMENTUSED;
 			}
 		}
 		else {
@@ -1571,7 +1621,7 @@ int CoTBuse(UBYTE *s)
 					Now translate the arguments and see whether we need
 					this one....
 */
-					for ( k = 0, w = AT.WorkPointer; k < T->numind; k++ ) {
+					for ( k = 0, w = AT.WorkPointer; k < ABS(T->numind); k++ ) {
 						ParseSignedNumber(x,p);
 						*w++ = x; p++;
 					}
@@ -1582,7 +1632,7 @@ int CoTBuse(UBYTE *s)
 						error = 1;
 						continue;
 					}
-					sum += T->numind + 4;
+					sum += ABS(T->numind) + 4;
 					mode = T->tablepointers[sum];
 					if ( ( mode & ELEMENTLOADED ) == ELEMENTLOADED ) {
 						T->tablepointers[sum] &= ~ELEMENTUSED;
@@ -1658,7 +1708,7 @@ int CoTBuse(UBYTE *s)
 					Now translate the arguments and see whether we need
 					this one....
 */
-					for ( k = 0, w = AT.WorkPointer; k < T->numind; k++ ) {
+					for ( k = 0, w = AT.WorkPointer; k < ABS(T->numind); k++ ) {
 						ParseSignedNumber(x,p);
 						*w++ = x; p++;
 					}
@@ -1669,7 +1719,7 @@ int CoTBuse(UBYTE *s)
 						error = 1;
 						continue;
 					}
-					sum += T->numind + 4;
+					sum += ABS(T->numind) + 4;
 					mode = T->tablepointers[sum];
 					if ( ( mode & ELEMENTLOADED ) == ELEMENTLOADED ) {
 						T->tablepointers[sum] &= ~ELEMENTUSED;
@@ -1957,7 +2007,7 @@ WORD Apply(WORD *term, WORD level)
 	rhs of table(indices,pattern). It does this up to maxtogo times
 	in the given term. It starts with the occurrences inside the
 	arguments of functions. If necessary it finishes at groundlevel.
-	An infinite number of tries is indicated by maxtogo = 2^15-1 or 2^31-1.
+	An infite number of tries is indicates by maxtogo = 2^15-1 or 2^31-1.
 	The occurrences are replaced by subexpressions. This allows TestSub
 	to finish the job properly.
 
@@ -2067,20 +2117,20 @@ int ApplyExec(WORD *term, int maxtogo, WORD level)
 		Tpattern = T->pattern;
 #endif
 		p = Tpattern+FUNHEAD+1;
-		for ( i = 0; i < T->numind; i++, t += 2 ) {
+		for ( i = 0; i < ABS(T->numind); i++, t += 2 ) {
 			if ( *t != -SNUMBER ) break;
 		}
-		if ( i < T->numind ) { t = r; continue; }
+		if ( i < ABS(T->numind) ) { t = r; continue; }
 		isp = FindTableTree(T,t1+FUNHEAD+1,2);
 		if ( isp < 0 ) { t = r; continue; }
-		rhsnumber = T->tablepointers[isp+T->numind];
+		rhsnumber = T->tablepointers[isp+ABS(T->numind)];
 #if ( TABLEEXTENSION == 2 )
 		tbufnum = T->bufnum;
 #else
-		tbufnum = T->tablepointers[isp+T->numind+1];
+		tbufnum = T->tablepointers[isp+ABS(T->numind)+1];
 #endif
 		t = t1+FUNHEAD+2;
-		ii = T->numind;
+		ii = ABS(T->numind);
 		while ( --ii >= 0 ) {
 			*p = *t; t += 2; p += 2;
 		}
@@ -2221,7 +2271,7 @@ WORD ApplyReset(WORD level)
   	#[ TableReset :
 */
 
-WORD TableReset()
+WORD TableReset(VOID)
 {
 	TABLES T;
 	int i;
@@ -2248,7 +2298,7 @@ int LoadTableElement(DBASE *d, TABLE *T, WORD num)
 	Releases all TableBases
 */
 
-int ReleaseTB()
+int ReleaseTB(VOID)
 {
 	DBASE *d;
 	int i;

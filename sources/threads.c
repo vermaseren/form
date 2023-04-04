@@ -21,7 +21,7 @@
  */
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2022 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -60,8 +60,15 @@
 	for a large part a copy of the MergePatches routine in sort.c and hence
 	even though complex the bad part has been thoroughly debugged.
 */
- 
+
 #include "form3.h"
+#ifdef WITHFLOAT
+#include <gmp.h>
+
+int PackFloat(WORD *,mpf_t);
+int UnpackFloat(mpf_t, WORD *);
+void RatToFloat(mpf_t result, UWORD *formrat, int ratsize);
+#endif
  
 static int numberofthreads;
 static int numberofworkers;
@@ -117,7 +124,7 @@ static LONG numberofterms;
  *	Starts our identity administration.
  */
 
-void StartIdentity()
+void StartIdentity(VOID)
 {
 	pthread_key_create(&identitykey,FinishIdentity);
 }
@@ -174,7 +181,7 @@ int SetIdentity(int *identityretval)
  *	one of the BARG macros rather than the ARG macros.
  */
 
-int WhoAmI()
+int WhoAmI(VOID)
 {
 	int *identity;
 /*
@@ -202,7 +209,7 @@ int WhoAmI()
  *	at the startup of TFORM.
  */
 
-VOID BeginIdentities()
+VOID BeginIdentities(VOID)
 {
 	StartIdentity();
 	SetIdentity(&identityretval);
@@ -219,7 +226,7 @@ VOID BeginIdentities()
  *	specific data in this file.
  */
 
-void StartHandleLock()
+void StartHandleLock(VOID)
 {
 	AM.handlelock = dummyrwlock;
 }
@@ -469,7 +476,7 @@ ALLPRIVATES *InitializeOneThread(int identity)
 		AT.primelist = 0;
 		AT.bracketinfo = 0;
 		
-		AR.CompareRoutine = &Compare1;
+		AR.CompareRoutine = (COMPAREDUMMY)(&Compare1);
 
 		AR.sLevel = 0;
 		AR.wranfia = 0;
@@ -558,20 +565,20 @@ ALLPRIVATES *InitializeOneThread(int identity)
 		s = (UBYTE *)(FG.fname); i = 0;
 		while ( *s ) { s++; i++; }
 		s = (UBYTE *)Malloc1(sizeof(char)*(i+12),"name for Fscr[0] file");
-		sprintf((char *)s,"%s.%d",FG.fname,identity);
+		snprintf((char *)s,i+12,"%s.%d",FG.fname,identity);
 		s[i-3] = 's'; s[i-2] = 'c'; s[i-1] = '0';
 		AR.Fscr[0].name = (char *)s;
 		s = (UBYTE *)(FG.fname); i = 0;
 		while ( *s ) { s++; i++; }
 		s = (UBYTE *)Malloc1(sizeof(char)*(i+12),"name for Fscr[1] file");
-		sprintf((char *)s,"%s.%d",FG.fname,identity);
+		snprintf((char *)s,i+12,"%s.%d",FG.fname,identity);
 		s[i-3] = 's'; s[i-2] = 'c'; s[i-1] = '1';
 		AR.Fscr[1].name = (char *)s;
 	}
 
 	AR.CompressBuffer = (WORD *)Malloc1((AM.CompressSize+10)*sizeof(WORD),"compresssize");
 	AR.ComprTop = AR.CompressBuffer + AM.CompressSize;
-	AR.CompareRoutine = &Compare1;
+	AR.CompareRoutine = (COMPAREDUMMY)(&Compare1);
 /*
 	Here we make all allocations for the struct AT
 	(which is AB[identity].T or B->T with B = AB+identity).
@@ -797,7 +804,7 @@ void FinalizeOneThread(int identity)
  *	to do it ourselves.
  */
 
-VOID ClearAllThreads()
+VOID ClearAllThreads(VOID)
 {
 	int i;
 	MasterWaitAll();
@@ -821,7 +828,7 @@ VOID ClearAllThreads()
  *	to do it ourselves.
  */
 
-VOID TerminateAllThreads()
+VOID TerminateAllThreads(VOID)
 {
 	int i;
 	for ( i = 1; i <= numberofworkers; i++ ) {
@@ -975,7 +982,7 @@ void WriteTimerInfo(LONG* ti,LONG* sti)
  *	To be called at the end of the TFORM run.
  */
 
-LONG GetWorkerTimes()
+LONG GetWorkerTimes(VOID)
 {
 	LONG retval = 0;
 	int i;
@@ -1025,7 +1032,7 @@ int UpdateOneThread(int identity)
  *	because this is part of the 'overhead'.
  *
  *	@param from     the source thread which has all the variables already
- *	@param identity the TFORM defined integer thread identifier of the thread that needs the copy
+ *	@param identity the TFORM defined integer thread identitier of the thread that needs the copy
  *	@param thr      the bucket that contains the terms to be processed by 'identity'
  *	@param par		if 1 copies the already active pieces in the (de)compress buffer
  *	@return Standard return convention (OK -> 0)
@@ -1165,7 +1172,7 @@ int BalanceRunThread(PHEAD int identity, WORD *term, WORD level)
  *	Initializes the scratch files at the start of the execution of a module.
  */
 
-void SetWorkerFiles()
+void SetWorkerFiles(VOID)
 {
 	int id;
 	ALLPRIVATES *B, *B0 = AB[0];
@@ -2040,7 +2047,7 @@ void IAmAvailable(int identity)
  *	(writing point and reading point). Still to be investigated.
  */
 
-int GetAvailableThread()
+int GetAvailableThread(VOID)
 {
 	int retval = -1;
 	LOCK(availabilitylock);
@@ -2068,7 +2075,7 @@ int GetAvailableThread()
  *	@return the identity of an available thread or -1 if none is available.
  */
 
-int ConditionalGetAvailableThread()
+int ConditionalGetAvailableThread(VOID)
 {
 	int retval = -1;
 	if ( topofavailables > 0 ) {
@@ -2246,7 +2253,7 @@ int ThreadClaimedBlock(int identity)
  *	The return value is the identity of the process that wakes up the master.
  */
 
-int MasterWait()
+int MasterWait(VOID)
 {
 	int retval;
 	LOCK(wakeupmasterlock);
@@ -2293,7 +2300,7 @@ int MasterWaitThread(int identity)
  *	It goes to sleep and waits for a wakeup call in ThreadWait
  */
 
-void MasterWaitAll()
+void MasterWaitAll(VOID)
 {
 	LOCK(wakeupmasterlock);
 	while ( topofavailables < numberofworkers ) {
@@ -2315,7 +2322,7 @@ void MasterWaitAll()
  *	sortbots to start their task.
  */
 
-void MasterWaitAllSortBots()
+void MasterWaitAllSortBots(VOID)
 {
 	LOCK(wakeupsortbotlock);
 	while ( topsortbotavailables < numberofsortbots ) {
@@ -2337,7 +2344,7 @@ void MasterWaitAllSortBots()
  *	It goes to sleep and waits for a wakeup call.
  */
 
-void MasterWaitAllBlocks()
+void MasterWaitAllBlocks(VOID)
 {
 	LOCK(wakeupmasterlock);
 	while ( numberclaimed < numberofworkers ) {
@@ -2450,7 +2457,7 @@ int SendOneBucket(int type)
 /**
  *	We divide the expressions marked by partodo over the workers.
  *	The workers are responsible for writing their results into the buffers
- *	of the master (output). This is to be controlled by locks.
+ *	of the master (output). This is to be controled by locks.
  *	The order of the expressions may get changed this way.
  *
  *	The InParallel statement allows the execution of complete expressions
@@ -2466,7 +2473,7 @@ int SendOneBucket(int type)
  *	efficiency in the running of the Multiple Zeta Values program.
  */
 
-int InParallelProcessor()
+int InParallelProcessor(VOID)
 {
 	GETIDENTITY
 	int i, id, retval = 0, num = 0;
@@ -2754,6 +2761,20 @@ Found2:;
 		}
 		else {
 			ter = GetTermP(B0,thr->threadbuffer);
+/*
+			At this point we could check whether the input term is
+			just an expression that resides in a scratch file.
+			If this is the case we should store the current input info
+			(file and buffer content) and redirect the input.
+			At the end we can go back to where we were.
+			There are two possibilities: we are in the same scratchfile
+			as the main input and the other expression is still in the
+			input buffer, or we have to do some reading. The reading is
+			of course done in GetTerm.
+
+			How to set this up can also be studied in TestSub (in file proces.c)
+			where it checks for EXPRESSION.
+*/
 		}
 		if ( ter < 0 ) break;
 		if ( ter == 0 ) { endofinput = 1; goto Finalize; }
@@ -3190,7 +3211,7 @@ ProcErr:;
  *	from a thread that has not done anything yet.
  */
 
-int LoadReadjusted()
+int LoadReadjusted(VOID)
 {
 	ALLPRIVATES *B0 = AB[0];
 	THREADBUCKET *thr = 0, *thrtogo = 0;
@@ -3250,7 +3271,7 @@ restart:;
 */
 		if ( thr->totnum-thr->usenum < numtogo ) goto restart;
 /*
-		If the thread is in the term loading phase
+		If the thread is in the term loading phace
 		(thr->busy == BUCKETPREPARINGTERM) we better stay away from it.
 		We wait now for the thread to be busy, and don't allow it
 		now to drop out of this state till we are done here.
@@ -3556,13 +3577,13 @@ SortBotOut(PHEAD WORD *term)
  *	but now also each worker part is divided into blocks. This allows the
  *	worker to fill blocks while the master is already working on blocks that
  *	were filled before. The blocks are arranged in a circular fashion.
- *	The whole is controlled by locks which seems faster than setting it up
+ *	The whole is controled by locks which seems faster than setting it up
  *	with signals.
  *
  *	This routine is run by the master when we don't use the sortbots.
  */
 
-int MasterMerge()
+int MasterMerge(VOID)
 {
 	ALLPRIVATES *B0 = AB[0], *B = 0;
 	SORTING *S = AT0.SS;
@@ -3715,7 +3736,7 @@ OneTerm:
 /*
 			In the old setup we had here B0 for the first argument
 */
-			if ( ( c = CompareTerms(poin[S->tree[i]],poin[k],(WORD)0) ) > 0 ) {
+			if ( ( c = CompareTerms(BHEAD poin[S->tree[i]],poin[k],(WORD)0) ) > 0 ) {
 /*
 				S->tree[i] is the smaller. Exchange and go on.
 */
@@ -3789,6 +3810,16 @@ OneTerm:
 						NCOPY(m2,w,r1);
 					}
 				}
+#ifdef WITHFLOAT
+				else if ( AT.SortFloatMode ) {
+					WORD *term1, *term2;
+					term1 = poin[S->tree[i]];
+					term2 = poin[k];
+					if ( MergeWithFloat(BHEAD &term1,&term2) == 0 )
+						goto cancelled;
+					poin[S->tree[i]] = term1;
+				}
+#endif
 				else {
 					r1 = *( m1 += l1 - 1 );
 					m1 -= ABS(r1) - 1;
@@ -3866,7 +3897,6 @@ cancelled:
 							poin2[ul] += im;
 						}
 						S->used[++level] = k;
-/*						S->TermsLeft--; */
 					}
 					else if ( !r31 ) {		/* copy coef into term1 */
 						goto CopCof2;
@@ -4037,7 +4067,7 @@ ReturnError:
  *	This routine is run as master. Hence B = B0. Etc.
  */
 
-int SortBotMasterMerge()
+int SortBotMasterMerge(VOID)
 {
 	FILEHANDLE *fin, *fout;
 	ALLPRIVATES *B = AB[0], *BB;
@@ -4163,6 +4193,9 @@ int SortBotMerge(PHEAD0)
 	WORD *to, *from, im, c;
 	UWORD *coef;
 	SORTING *S = AT.SS;
+#ifdef WITHFLOAT
+	WORD *fun1, *fun2, *fun3, *tstop1, *tstop2, size1, size2, size3, l3, jj, *m3;
+#endif
 /*
 	Set the pointers to the input terms and the output space
 */
@@ -4190,7 +4223,7 @@ int SortBotMerge(PHEAD0)
 	Now the main loop. Keep going until one of the two hits the end.
 */
 	while ( *term1 && *term2 ) {
-		if ( ( c = CompareTerms(term1,term2,(WORD)0) ) > 0 ) {
+		if ( ( c = CompareTerms(BHEAD term1,term2,(WORD)0) ) > 0 ) {
 /*
 			#[ One is smallest :
 */
@@ -4343,6 +4376,95 @@ next2:		im = *term2;
 					NCOPY(m2,w,r1);
 				}
 			}
+#ifdef WITHFLOAT
+			else if ( AT.SortFloatMode ) {
+/*
+				The terms are in m1/term1 and m2/term2 and their length in l1 and l2.
+				We have to locate the floats which have already been
+				verified in the compare routine. Once we have the new
+				term we can jump to the code that writes away the
+				result after adding the rationals.
+*/
+				tstop1 = m1+l1; size1 = tstop1[-1]; tstop1 -= ABS(size1);
+				tstop2 = m2+l2; size2 = tstop2[-1]; tstop2 -= ABS(size2);
+				if ( AT.SortFloatMode == 3 ) {
+					fun1 = m1+1;
+					while ( fun1[0] != FLOATFUN && fun1+fun1[1] < tstop1 ) {
+						fun1 += fun1[1];
+					}
+					if ( size1 < 0 ) fun1[FUNHEAD+3] = -fun1[FUNHEAD+3];
+					UnpackFloat(aux1,fun1);
+					fun2 = m2+1;
+					while ( fun2[0] != FLOATFUN && fun2+fun2[1] < tstop2 ) {
+						fun2 += fun2[1];
+					}
+					if ( size2 < 0 ) fun2[FUNHEAD+3] = -fun2[FUNHEAD+3];
+					UnpackFloat(aux2,fun2);
+				}
+				else if ( AT.SortFloatMode == 1 ) {
+					fun1 = m1+1;
+					while ( fun1[0] != FLOATFUN && fun1+fun1[1] < tstop1 ) {
+						fun1 += fun1[1];
+					}
+					if ( size1 < 0 ) fun1[FUNHEAD+3] = -fun1[FUNHEAD+3];
+					UnpackFloat(aux1,fun1);
+					fun2 = tstop2;
+					RatToFloat(aux2,(UWORD *)fun2,size2);
+				}
+				else if ( AT.SortFloatMode == 2 ) {
+					fun1 = tstop1;
+					RatToFloat(aux1,(UWORD *)fun1,size1);
+					fun2 = m2+1;
+					while ( fun2[0] != FLOATFUN && fun2+fun2[1] < tstop2 ) {
+						fun2 += fun2[1];
+					}
+					if ( size2 < 0 ) fun2[FUNHEAD+3] = -fun2[FUNHEAD+3];
+					UnpackFloat(aux2,fun2);
+				}
+				else {
+					MLOCK(ErrorMessageLock);
+					MesPrint("Illegal value %d for AT.SortFloatMode in SortBotMerge.",AT.SortFloatMode);
+					MUNLOCK(ErrorMessageLock);
+					Terminate(-1);
+					return(0);
+				}
+				mpf_add(aux3,aux1,aux2);
+				size3 = mpf_sgn(aux3);
+				if ( size3 == 0 ) { /* Cancelling! Rare! */
+					goto cancelled;
+				}
+				else if ( size3 < 0 ) mpf_neg(aux3,aux3);
+				fun3 = TermMalloc("MasterMerge");
+				PackFloat(fun3,aux3);
+				l3 = fun3[1]+(fun1-m1)+3; /* new size */
+
+				if ( l3 != l1 ) {
+/*
+					Copy it all to wp
+*/
+					if ( (l3)*((LONG)sizeof(WORD)) >= AM.MaxTer ) {
+						MLOCK(ErrorMessageLock);
+						MesPrint("MasterMerge: Coefficient overflow during sort");
+						MUNLOCK(ErrorMessageLock);
+						goto ReturnError;
+					}
+                    m3 = wp; m2 = term1;
+					while ( m2 < fun1 ) *m3++ = *m2++;
+					for ( jj = 0; jj < fun3[1]; jj++ ) *m3++ = fun3[jj];
+					*m3++ = 1; *m3++ = 1;
+					*m3++ = size3 < 0 ? -3: 3;
+					*wp = m3-wp;
+					TermFree(fun3,"MasterMerge");
+					goto PutOutwp;
+				}
+				for ( jj = 0; jj < fun3[1]; jj++ ) fun1[jj] = fun3[jj];
+				fun1 += fun3[1];
+				*fun1++ = 1; *fun1++ = 1;
+				*fun1++ = size3 < 0 ? -3: 3;
+				*term1 = fun1-term1;
+				TermFree(fun3,"MasterMerge");
+			}
+#endif
 			else {
 				r1 = *( m1 += l1 - 1 );
 				m1 -= ABS(r1) - 1;
@@ -4380,14 +4502,6 @@ next2:		im = *term2;
 					NCOPY(m1,m2,im);
 					*m1 = r33;
 				}
-/*
-				else if ( r31 < 0 ) {
-					*term1 += r31;
-					m2 = (WORD *)coef; im = r3;
-					NCOPY(m1,m2,im);
-					*m1 = r33;
-				}
-*/
 				else {
 					to = wp; from = term1;
 					while ( from < m1 ) *to++ = *from++;
@@ -4395,6 +4509,7 @@ next2:		im = *term2;
 					NCOPY(to,from,im);
 					*to++ = r33;
 					wp[0] = to - wp;
+PutOutwp:
 					if ( SortBotOut(BHEAD wp) < 0 ) {
 						MLOCK(ErrorMessageLock);
 						MesPrint("Called from SortBotMerge with thread = %d",AT.identity);
@@ -4664,7 +4779,7 @@ int IniSortBlocks(int numworkers)
  *	system by telling the sortbot which threads provide their input.
  */
 
-void DefineSortBotTree()
+void DefineSortBotTree(VOID)
 {
 	ALLPRIVATES *B;
 	int n, i, from;
@@ -4836,7 +4951,7 @@ int TreatIndexEntry(PHEAD LONG n)
   	#[ SetHideFiles :
 */
 
-void SetHideFiles() {
+void SetHideFiles(VOID) {
 	int i;
 	ALLPRIVATES *B, *B0 = AB[0];
 	for ( i = 1; i <= numberofworkers; i++ ) {
@@ -4880,7 +4995,7 @@ void IniFbufs(VOID)
   	#[ SetMods :
 */
 
-void SetMods()
+void SetMods(VOID)
 {
 	ALLPRIVATES *B;
 	int i, n, j;
@@ -4899,7 +5014,7 @@ void SetMods()
   	#[ UnSetMods :
 */
 
-void UnSetMods()
+void UnSetMods(VOID)
 {
 	ALLPRIVATES *B;
 	int j;
@@ -4915,7 +5030,7 @@ void UnSetMods()
   	#[ find_Horner_MCTS_expand_tree_threaded :
 */
  
-void find_Horner_MCTS_expand_tree_threaded() {
+void find_Horner_MCTS_expand_tree_threaded(VOID) {
 	int id;
 	while (( id = GetAvailableThread() ) < 0)
 		MasterWait();	
@@ -4927,7 +5042,7 @@ void find_Horner_MCTS_expand_tree_threaded() {
   	#[ optimize_expression_given_Horner_threaded :
 */
  
-extern void optimize_expression_given_Horner_threaded() {
+extern void optimize_expression_given_Horner_threaded(VOID) {
 	int id;
 	while (( id = GetAvailableThread() ) < 0)
 		MasterWait();	

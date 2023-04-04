@@ -53,7 +53,7 @@
   	#] Explanations : 
   	#[ License :
  *
- *   Copyright (C) 1984-2022 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -275,7 +275,7 @@ static int PF_CheckRecoveryFile()
 }
 #endif
 
-int CheckRecoveryFile()
+int CheckRecoveryFile(VOID)
 {
 	int ret = 0;
 #ifdef WITHMPI
@@ -330,7 +330,7 @@ int CheckRecoveryFile()
  *  Deletes the recovery files. It is called by CleanUp() in the case of a
  *  successful completion.
  */
-void DeleteRecoveryFile()
+void DeleteRecoveryFile(VOID)
 {
 	if ( done_snapshot ) {
 		remove(recoveryfile);
@@ -361,7 +361,7 @@ void DeleteRecoveryFile()
 /**
  *  Returns pointer to recovery filename. 
  */
-char *RecoveryFilename()
+char *RecoveryFilename(VOID)
 {
 	return(recoveryfile);
 }
@@ -396,7 +396,7 @@ static char *InitName(char *str, char *ext)
  *  This functions should only be called once to avoid memory leaks and after
  *  AM.TempDir has been initialized.
  */
-void InitRecovery()
+void InitRecovery(VOID)
 {
 	int lenpath = AM.TempDir ? strlen((char*)AM.TempDir)+1 : 0;
 #ifdef WITHMPI
@@ -2343,9 +2343,9 @@ int DoRecovery(int *moduletype)
 	R_SET(AR.SortType, WORD);
 	R_SET(AR.ShortSortCount, WORD);
 
-	/* this is usually done in Process(), but sometimes FORM does not
+	/* this is usually done in Process(), but sometimes FORM doesn't
 	   end up executing Process() before it uses the AR.CompressPointer,
-	   so we need to explicitly set it here. */
+	   so we need to explicitely set it here. */
 	AR.CompressPointer = AR.CompressBuffer;
 
 #ifdef WITHPTHREADS

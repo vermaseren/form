@@ -4,7 +4,7 @@
  */
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2022 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -33,17 +33,19 @@
 
 	This module is written by M.Tentyukov as a part of implementation of
 	interaction between FORM and external processes, first release
-	09.04.2004. A part of this code is copied from the DIANA project, which was
+	09.04.2004. A part of this code is copyied from the DIANA project
 	written by M. Tentyukov and published under the GPL version 2 as
-	published by the Free Software Foundation.
+	published by the Free Software Foundation.  The code of this module
+	is NOT covered by GPL; it can be used under the terms of the FORM 
+	License http://www.nikhef.nl/~form/license.html
 
 	This file is completely re-written by M.Tentyukov in May 2006.
 	Since the interface was changed, the public function were changed,
-	also. A new public functions were added: initPresetExternalChannels()
+	also. A new publc functions were added: initPresetExternalChannels()
 	(see comments just before this function in the present file) and
 	setKillModeForExternalChannel (a pointer, not a function).
 
-	If a macro WITHEXTERNALCHANNEL is not defined, all public functions
+	If a macro WITHEXTERNALCHANNEL is not defined, all public punctions
 	are stubs returning failure.
 
 	The idea is to start an external command  swallowing
@@ -73,7 +75,7 @@
 
 	By default, the terminator if an empty line. For the current external
 	channel it can be set by means of the function
-	int setTerminatorForExternalChannel(newterminator).
+	int setTerminatorForExternalChannel(newterminaror).
 	The function returns 0 in success, or !0 if something is wrong (no
 	current channel, too long terminator).
 
@@ -108,7 +110,7 @@
 	List of all public functions:
 	int openExternalChannel(UBYTE *cmd,int daemonize,UBYTE *shellname, UBYTE * stderrname);
 	int initPresetExternalChannels(UBYTE *theline, int thetimeout);
-	int setTerminatorForExternalChannel(char *newterminator);
+	int setTerminatorForExternalChannel(char *newterminaror);
 	int setKillModeForExternalChannel(int signum, int sentToWholeGroup);
 	int closeExternalChannel(int n);
 	int selectExternalChannel(int n);
@@ -213,7 +215,7 @@ int setKillModeForExternalChannelFailure(int signum, int sentToWholeGroup)
 	return(-1);
 }/*setKillModeForExternalChannelFailure*/
 
-int getcFromExtChannelFailure()
+int getcFromExtChannelFailure(VOID)
 {
 	return(-2);
 }/*getcFromExtChannelFailure*/
@@ -223,7 +225,7 @@ int (*setTerminatorForExternalChannel)(char *buffer) =
 	&setTerminatorForExternalChannelFailure;
 int (*setKillModeForExternalChannel)(int signum, int sentToWholeGroup) =
 	&setKillModeForExternalChannelFailure;
-int (*getcFromExtChannel)() = &getcFromExtChannelFailure;
+int (*getcFromExtChannel)(VOID) = &getcFromExtChannelFailure;
 #endif
 /*
   	#] FailureFunctions: 
@@ -236,8 +238,8 @@ int openExternalChannel(UBYTE *cmd, int daemonize, UBYTE *shellname, UBYTE *stde
 int initPresetExternalChannels(UBYTE *theline, int thetimeout) { DUMMYUSE(theline); DUMMYUSE(thetimeout); return(-1); };
 int closeExternalChannel(int n) { DUMMYUSE(n); return(-1); };
 int selectExternalChannel(int n) { DUMMYUSE(n); return(-1); };
-int getCurrentExternalChannel() { return(0); };
-void closeAllExternalChannels() {};
+int getCurrentExternalChannel(VOID) { return(0); };
+void closeAllExternalChannels(VOID) {};
 #else /*ifndef WITHEXTERNALCHANNEL*/
 /*
   	#] Stubs : 
@@ -534,7 +536,7 @@ static VOID pushDescriptor(int *fifo, int top, int fd)
 	}
 }/*pushDescriptor*/
 
-/*Close all descriptors greater or equal than startFrom except those
+/*Close all descriptors greate or equal than startFrom except those
   listed in the ascendantly ordered array usedFd of length top:*/
 static FORM_INLINE VOID closeAllDescriptors(int startFrom, int *usedFd, int top)
 {
@@ -560,7 +562,7 @@ static VOID closepipe(L_APIPE *thepipe)
 }/*closepipe*/
 
 /*Parses the cmd line like "sh -c myprg", passes each option to the
-  corresponding element of argv, ends agrv by NULL. Returns the 
+  correspondinig element of argv, ends agrv by NULL. Returns the 
   number of stored argv elements, or -1 if fails:*/
 static FORM_INLINE int parseline(char **argv, char *cmd)
 {
@@ -772,7 +774,7 @@ int setKillModeForExternalChannelOk(int signum, int sentToWholeGroup)
 returns EOF. If the external process is finished completely, the function closes 
 the channel (and returns EOF). If the external process was finished, the function
 returns EOF:*/
-int getcFromExtChannelOk()
+int getcFromExtChannelOk(VOID)
 {
 mysighandler_t oldPIPE = 0;
 EXTHANDLE *h;
@@ -1052,7 +1054,7 @@ mysighandler_t oldPIPE=NULL;
 				  /*Ignore SIGPIPE (up to the end of the process):*/
 				  signal(SIGPIPE,SIG_IGN);
 
-				  /*Wait on read() while the grandchild close the pipe 
+				  /*Wait on read() while the granchild close the pipe 
 					 (on success) or send -2 (if exec() fails).*/
 				  /*There are two possibilities: 
 					  -1 -- this is ok, the pipe was closed on exec,
@@ -1062,7 +1064,7 @@ mysighandler_t oldPIPE=NULL;
 				  */
 				  if( readpid(fdsig2[0]) != (pid_t)-1 )/*something is wrong*/
 					  writepid(fdsig[1],(pid_t)-1);
-				  else/*ok, send PID of the grandchild to the father:*/
+				  else/*ok, send PID of the granchild to the father:*/
 					  writepid(fdsig[1],childpid);
 				  /*Die and free the life space for the grandchild:*/
 				  _exit(0);/*The child, just exit, not return*/
@@ -1209,7 +1211,7 @@ typedef struct{
 }ECINFOSTRUCT;
 
 /* Creates a new external channel starting the command cmd (if cmd !=NULL)
-	or using information from (ECINFOSTRUCT *)shellname, if cmd ==NULL:*/
+	or using informaion from (ECINFOSTRUCT *)shellname, if cmd ==NULL:*/
 static FORM_INLINE void *createExternalChannel(
 					  EXTHANDLE *h,
 					  char *cmd, /*Command to run or NULL*/
@@ -1251,7 +1253,7 @@ static FORM_INLINE void *createExternalChannel(
 		}
 #ifdef WITHMPI
 		if(h->pid<0)
-			statusbuf[0]='!';/*Broadcast fail to slaves*/
+			statusbuf[0]='!';/*Brodcast fail to slaves*/
 	}
 	 /*else: Keep h->pid = 0 and h->fsend = 0 for slaves in parallel mode!*/
 
@@ -1337,7 +1339,7 @@ int i=0;
   	#] openExternalChannel : 
   	#[ initPresetExternalChannels :
 */
-/*Just simple wrapper to invoke  openExternalChannel()
+/*Just simpe wrapper to invoke  openExternalChannel()
 	from initPresetExternalChannels():*/
 static FORM_INLINE int openPresetExternalChannel(int fdin, int fdout, pid_t theppid)
 {
@@ -1366,7 +1368,7 @@ r#,w# where r# is a read-only descriptor and w# is a write-only
 descriptor. Alternatively, the environment variable FORM_PIPES can be
 used.
 	The following function expects as the first argument 
-this comma-separated list of the  descriptor pairs and tries to 
+this comma-separated list of the  desctiptor pairs and tries to 
 initialize each of channel during thetimeout milliseconds:*/
 
 int initPresetExternalChannels(UBYTE *theline, int thetimeout)
@@ -1396,7 +1398,7 @@ int initPresetExternalChannels(UBYTE *theline, int thetimeout)
 		theline = (UBYTE *)c + 1;
 		/*Now we have two descriptors.
 		  According to the protocol, FORM must send to external channel 
-		  it's PID with added '\n' and read back two comma-separated
+		  it's PID with added '\n' and read back two comma-separaetd
 		  decimals with added '\n'. The first must be repeated FORM PID,
 		  the second must be the parent PID
 		*/
@@ -1410,7 +1412,7 @@ int initPresetExternalChannels(UBYTE *theline, int thetimeout)
 		if( ( *b != ',' ) || ( ppid != getpid() ) )goto presetFails;
 		/*read the parent PID:*/
 		/*The problem is that we do not know the the real type of pid_t.
-		  But long should be enough. On obsolete systems (when LONG_MAX
+		  But long should be ehough. On obsolete systems (when LONG_MAX
 		  is not defined) we assume pid_t is 32-bit integer.
 		  This can lead to problem with portability: */
 		ppid = (pid_t)str2i(b+1,&b,LONG_MAX);
@@ -1519,7 +1521,7 @@ int closeExternalChannel(int n)
   	#] closeExternalChannel : 
   	#[ closeAllExternalChannels :
 */
-void closeAllExternalChannels()
+void closeAllExternalChannels(VOID)
 {
 int i;
 	for(i=0; i<externalChannelsListFill; i++)
@@ -1542,7 +1544,7 @@ int i;
   	#[ getExternalChannelPid :
 */
 #ifdef SELFTEST
-pid_t getExternalChannelPid()
+pid_t getExternalChannelPid(VOID)
 {
   if(externalChannelsListTop!=0)
 		return(externalChannelsListTop ->pid);
@@ -1554,7 +1556,7 @@ pid_t getExternalChannelPid()
   	#[ getCurrentExternalChannel :
 */
 
-int getCurrentExternalChannel()
+int getCurrentExternalChannel(VOID)
 {
 
 	if ( externalChannelsListTop != 0 )
@@ -1600,7 +1602,7 @@ int main (void)
 	printf("Initial channel:%d\n",last=openExternalChannel((UBYTE*)"cat",0,NULL,NULL));
 
 	if( ( i = setTerminatorForExternalChannel("qu") ) != 0 ) return 1;
-	printf("Terminator is 'qu'\n");
+	printf("Terminaror is 'qu'\n");
 
 	while ( fgets(buf, 1024, stdin) != NULL ) {
 		if ( *buf == 'N' ) {

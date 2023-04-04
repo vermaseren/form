@@ -8,7 +8,7 @@
  */
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2022 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -693,7 +693,7 @@ int PF_Unpack(void *buffer, size_t count, MPI_Datatype type)
  * the string. If the string does not fit to the buffer PF_packbuf,
  * the function packs only the initial portion. It returns
  * the number of packed bytes, so if (str[length-1]=='\0') then the whole
- * string fits to the buffer, if not, then the rest (str+length) must be
+ * string fits to the buffer, if not, then the rest (str+length) bust be
  * packed and send again. On error, the function returns the negative
  * error code.
  *

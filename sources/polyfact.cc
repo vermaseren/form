@@ -4,7 +4,7 @@
  */
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2022 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -176,7 +176,7 @@ const vector<poly> polyfact::extended_gcd_Euclidean_lifted (const poly &a, const
 	sa /= s.integer_lcoeff();
 	sb /= s.integer_lcoeff();
 
-	// Lift the result to modulo p^n with p-adic Newton's iteration.
+	// Lift the result to modolu p^n with p-adic Newton's iteration.
 	poly samodp(sa);
 	poly sbmodp(sb);
 	poly term(BHEAD 1);

@@ -4,7 +4,7 @@
  */
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2022 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -57,6 +57,9 @@ SETUPPARAMETERS setupparameters[] =
 	,{(UBYTE *)"compresssize",          NUMERICALVALUE, 0, (LONG)COMPRESSBUFFER}
 	,{(UBYTE *)"constindex",            NUMERICALVALUE, 0, (LONG)NUMFIXED}
 	,{(UBYTE *)"continuationlines",     NUMERICALVALUE, 0, (LONG)FORTRANCONTINUATIONLINES}
+#ifdef WITHFLOAT
+	,{(UBYTE *)"defaultprecision",      NUMERICALVALUE, 0, (LONG)DEFAULTPRECISION}
+#endif
 	,{(UBYTE *)"define",                   DEFINEVALUE, 0, (LONG)0}
 	,{(UBYTE *)"dotchar",                  STRINGVALUE, 0, (LONG)dotchar}
 	,{(UBYTE *)"factorizationcache",    NUMERICALVALUE, 0, (LONG)FBUFFERSIZE}
@@ -72,6 +75,9 @@ SETUPPARAMETERS setupparameters[] =
 	,{(UBYTE *)"maxnumbersize",         NUMERICALVALUE, 0, (LONG)0}
 /*	,{(UBYTE *)"maxnumbersize",         NUMERICALVALUE, 0, (LONG)MAXNUMBERSIZE} */
 	,{(UBYTE *)"maxtermsize",           NUMERICALVALUE, 0, (LONG)MAXTER}
+#ifdef WITHFLOAT
+	,{(UBYTE *)"maxweight",             NUMERICALVALUE, 0, (LONG)MAXWEIGHT}
+#endif
 	,{(UBYTE *)"maxwildcards",          NUMERICALVALUE, 0, (LONG)MAXWILDC}
 	,{(UBYTE *)"nospacesinnumbers",         ONOFFVALUE, 0, (LONG)0}
 	,{(UBYTE *)"numstorecaches",        NUMERICALVALUE, 0, (LONG)NUMSTORECACHES}
@@ -123,7 +129,7 @@ SETUPPARAMETERS setupparameters[] =
  		#[ DoSetups :
 */
 
-int DoSetups()
+int DoSetups(VOID)
 {
 	UBYTE *setbuffer, *s, *t, *u /*, c */;
 	int errors = 0;
@@ -348,7 +354,7 @@ SETUPPARAMETERS *GetSetupPar(UBYTE *s)
  		#[ RecalcSetups :
 */
 
-int RecalcSetups()
+int RecalcSetups(VOID)
 {
 	SETUPPARAMETERS *sp, *sp1;
 
@@ -395,7 +401,7 @@ int RecalcSetups()
  		#[ AllocSetups :
 */
 
-int AllocSetups()
+int AllocSetups(VOID)
 {
 	SETUPPARAMETERS *sp;
 	LONG LargeSize, SmallSize, SmallEsize, TermsInSmall, IOsize;
@@ -665,6 +671,7 @@ int AllocSetups()
 
 	sp = GetSetupPar((UBYTE *)"continuationlines");
 	AM.FortranCont = sp->value;
+	if ( AM.FortranCont <= 0 ) AM.FortranCont = 1;
 	sp = GetSetupPar((UBYTE *)"oldorder");
 	AM.OldOrderFlag = sp->value;
 	sp = GetSetupPar((UBYTE *)"resettimeonclear");
@@ -692,6 +699,12 @@ int AllocSetups()
 	sp = GetSetupPar((UBYTE *)"wtimestats");
 	if ( sp->value == 2 ) sp->value = AM.ggWTimeStatsFlag;
 	AC.WTimeStatsFlag = AM.gWTimeStatsFlag = AM.ggWTimeStatsFlag = sp->value;
+#ifdef WITHFLOAT
+	sp = GetSetupPar((UBYTE *)"maxweight");
+	AC.MaxWeight = AM.gMaxWeight = AM.ggMaxWeight = sp->value;
+	sp = GetSetupPar((UBYTE *)"defaultprecision");
+	AC.DefaultPrecision = AM.gDefaultPrecision = AM.ggDefaultPrecision = sp->value;
+#endif
 	sp = GetSetupPar((UBYTE *)"sorttype");
 	if ( StrICmp((UBYTE *)"lowfirst",(UBYTE *)sp->value) == 0 ) {
 		AC.lSortType = SORTLOWFIRST;
@@ -779,7 +792,7 @@ int AllocSetups()
 	and have that included into the LaTeX file.
 */
 
-VOID WriteSetup()
+VOID WriteSetup(VOID)
 {
 	int n = sizeof(setupparameters)/sizeof(SETUPPARAMETERS);
 	SETUPPARAMETERS *sp;
@@ -982,10 +995,10 @@ VOID AllocSortFileName(SORTING *sort)
 	while ( *s ) *t++ = *s++;
 #ifdef WITHPTHREADS
 	t[-2] = 'F';
-	sprintf(t-1,"%d.%d",identity,AN.filenum);
+	snprintf(t-1,FG.fname2size-(t-1-FG.fname2),"%d.%d",identity,AN.filenum);
 #else
 	t[-2] = 'f';
-	sprintf(t-1,"%d",AN.filenum);
+	snprintf(t-1,FG.fname2size-(t-1-FG.fname2),"%d",AN.filenum);
 #endif
 	AN.filenum++;
 }
@@ -1008,7 +1021,8 @@ FILEHANDLE *AllocFileHandle(WORD par,char *name)
 	if ( par == 0 ) { i += 16; Ssize = AM.SIOsize; }
 	else { s = name; while ( *s ) { i++; s++; } i+= 2; Ssize = AM.SpectatorSize; }
 
-	allocation = sizeof(FILEHANDLE) + (Ssize+1)*sizeof(WORD) + i*sizeof(char);
+	allocation = sizeof(FILEHANDLE) + (Ssize+1)*sizeof(WORD) + i*sizeof(char)
+			+FG.fname2size+20;
 	fh = (FILEHANDLE *)Malloc1(allocation,"FileHandle");
 
 	fh->PObuffer = (WORD *)(fh+1);
@@ -1027,10 +1041,10 @@ FILEHANDLE *AllocFileHandle(WORD par,char *name)
 		while ( *s ) *t++ = *s++;
 #ifdef WITHPTHREADS
 		t[-2] = 'F';
-		sprintf(t-1,"%d-%d",identity,AN.filenum);
+		snprintf(t-1,20,"%d-%d",identity,AN.filenum);
 #else
 		t[-2] = 'f';
-		sprintf(t-1,"%d",AN.filenum);
+		snprintf(t-1,20,"%d",AN.filenum);
 #endif
 		AN.filenum++;
 	  }
@@ -1072,7 +1086,7 @@ void DeAllocFileHandle(FILEHANDLE *fh)
  		#[ MakeSetupAllocs :
 */
 
-int MakeSetupAllocs()
+int MakeSetupAllocs(VOID)
 {
 	if ( RecalcSetups() || AllocSetups() ) return(1);
 	else return(0);
@@ -1092,7 +1106,7 @@ int MakeSetupAllocs()
 
 #define SETBUFSIZE 257
 
-int TryFileSetups()
+int TryFileSetups(VOID)
 {
 	LONG oldstreamposition;
 	int oldstream;
@@ -1178,7 +1192,7 @@ eoi:
  		#[ TryEnvironment :
 */
 
-int TryEnvironment()
+int TryEnvironment(VOID)
 {
 	char *s, *t, *u, varname[100];
 	int i,imax = sizeof(setupparameters)/sizeof(SETUPPARAMETERS);

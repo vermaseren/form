@@ -5,12 +5,12 @@
  *	Hence there are routines for dealing with integers and with rational
  *	of 'arbitrary precision' (within limits)
  *	There are also routines for that calculus modulus an integer.
- *	In addition there are the routines for factorials and Bernoulli numbers.
+ *	In addition there are the routines for factorials and bernoulli numbers.
  *	The random number function is currently only for internal purposes.
  */
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2022 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -522,7 +522,7 @@ WORD DivRat(PHEAD UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
  		#[ Simplify :		WORD Simplify(a,na,b,nb)
 
 	Determines the greatest common denominator of a and b and
-	divides both by it. A possible sign is put in a. This is
+	devides both by it. A possible sign is put in a. This is
 	the simplification of the fraction a/b.
 
 */
@@ -1071,10 +1071,10 @@ WORD DivLong(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c,
 		  }
 #if ( GMPSPREAD != 1 )
 /*
-		  Not recognizing this case was a nasty and extremely rare bug.
-		  In the case that c == a and na is odd and nc == na and b
-		  still needs to be used, the least significant UWORD of b got
-		  overwritten by zero. (22-mar-2023)
+          Not recognizing this case was a nasty and extremely rare bug.
+          In the case that c == a and na is odd and nc == na and b
+          still needs to be used, the least significant UWORD of b got
+          overwritten by zero. (22-mar-2023)
 */
 		  ic = DLscratB; id = DLscratC;
 #else
@@ -1437,7 +1437,7 @@ int NormalModulus(UWORD *a,WORD *na)
  *	becomes too difficult and the table too long.
  */
 
-int MakeInverses()
+int MakeInverses(VOID)
 {
 	WORD n = AC.cmod[0], i, inv2;
 	if ( AC.ncmod != 1 ) return(1);
@@ -1651,7 +1651,7 @@ UWORD Quotient(UWORD *a, WORD *na, WORD b)
  		#] Quotient : 
  		#[ Remain10 :		WORD Remain10(a,na)
 
-	Routine divides a by 10 and gives the remainder as return value.
+	Routine devides a by 10 and gives the remainder as return value.
 	The value of a will be the quotient! a must be positive.
 
 */
@@ -1678,7 +1678,7 @@ WORD Remain10(UWORD *a, WORD *na)
  		#] Remain10 : 
  		#[ Remain4 :		WORD Remain4(a,na)
 
-	Routine divides a by 10000 and gives the remainder as return value.
+	Routine devides a by 10000 and gives the remainder as return value.
 	The value of a will be the quotient! a must be positive.
 
 */
@@ -2233,7 +2233,7 @@ GcdErr:
 	digit Lehmer-Euclid algorithm of Jebelean it seems.
 
 	Maybe this can be programmed slightly better and we can get another
-	few percent speed increase. Further improvements for the asymptotic
+	few percent speed increase. Further improvements for the assymptotic
 	case come from splitting the calculation as in Karatsuba and working
 	with FFT divisions and multiplications etc. But this is when hundreds
 	of words are involved at the least.
@@ -3360,7 +3360,7 @@ WORD TakeNormalModulus (UWORD *a, WORD *na, UWORD *c, WORD nc, WORD par)
  		#[ MakeModTable :	WORD MakeModTable()
 */
 
-WORD MakeModTable()
+WORD MakeModTable(VOID)
 {
 	LONG size, i, j, n;
 	n = ABS(AC.ncmod);
@@ -3478,7 +3478,7 @@ int Factorial(PHEAD WORD n, UWORD *a, WORD *na)
 				p = (LONG *)Malloc1((AT.mfac*2+2)*sizeof(LONG),"factorials");
 				i = AT.mfac;
 				for ( i = AT.mfac+1; i >= 0; i-- ) p[i] = AT.pfac[i];
-				M_free(AT.pfac,"factorial pointers"); AT.pfac = p; AT.mfac *= 2;
+				M_free(AT.pfac,"factorial offsets"); AT.pfac = p; AT.mfac *= 2;
 			}
 			if ( AT.pfac[j] + nc >= AT.sfact ) { /* double the factorials buffer */
 				UWORD *f;
@@ -3516,7 +3516,7 @@ int Factorial(PHEAD WORD n, UWORD *a, WORD *na)
 	Builds up what is needed and remembers it for the next time.
 	b_0 = 1
 	(n+1)*b_n = -b_{n-1}-sum_(i,1,n-1,b_i*b_{n-i})
-	The n-1 plays only a role for b_2.
+	The n-1 playes only a role for b_2.
 	We have hard coded b_0,b_1,b_2 and b_odd. After that:
 	(2n+1)*b_2n = -sum_(i,1,n-1,b_2i*b_{2n-2i})
 
@@ -3739,8 +3739,8 @@ WORD Moebius(PHEAD WORD nn)
 		b: the number is not already in the table.
 */
 	if ( nn >= AR.moebiustablesize ) {
-		if ( AR.moebiustablesize <= 0 ) { newsize = (LONG)nn + 20; }
-		else { newsize = (LONG)nn*2; }
+		if ( AR.moebiustablesize <= 0 ) { newsize = nn + 20; }
+		else { newsize = nn*2; }
 		if ( newsize > MAXPOSITIVE ) newsize = MAXPOSITIVE;
 		newtable = (char *)Malloc1(newsize*sizeof(char),"Moebius");
 		for ( i = 0; i < AR.moebiustablesize; i++ ) newtable[i] = AR.moebiustable[i];
@@ -3749,8 +3749,7 @@ WORD Moebius(PHEAD WORD nn)
 		AR.moebiustable = newtable;			
 		AR.moebiustablesize = newsize;
 	}
-	/* NOTE: nn == MAXPOSITIVE never fits in moebiustable. */
-	if ( nn != MAXPOSITIVE && AR.moebiustable[nn] != 2 ) return((WORD)AR.moebiustable[nn]);
+	if ( AR.moebiustable[nn] != 2 ) return((WORD)AR.moebiustable[nn]);
 	mu = 1;
 	if ( n == 1 ) goto putvalue;
 	if ( n % 2 == 0 ) {
@@ -3760,12 +3759,8 @@ WORD Moebius(PHEAD WORD nn)
 		mu = -mu;
 		if ( n == 1 ) goto putvalue;
 	}
-#if ( BITSINWORD == 32 )
 	for ( i = 0; i < AR.numinprimelist; i++ ) {
 		x = AR.PrimeList[i];
-#else
-	for ( x = 3; x < MAXPOSITIVE; x += 2 ) {
-#endif
 		if ( n % x == 0 ) {
 			n /= x;
 			if ( n % x == 0 ) { mu = 0; goto putvalue; }
@@ -3777,7 +3772,7 @@ WORD Moebius(PHEAD WORD nn)
 	}
 	mu = -mu;
 putvalue:
-	if ( nn != MAXPOSITIVE ) AR.moebiustable[nn] = mu;
+	AR.moebiustable[nn] = mu;
 	return((WORD)mu);
 }
 
@@ -3970,18 +3965,18 @@ UBYTE *PreRandom(UBYTE *s)
 
 	outval = (UBYTE *)Malloc1(64,"PreRandom");
 	if ( ABS(value) < 0.00001 || ABS(value) > 1000000. ) {
-		sprintf((char *)outval,"%e",value);
+		snprintf((char *)outval,64,"%e",value);
 	}
-	else if ( ABS(value) < 0.0001 ) { sprintf((char *)outval,"%10f",value); }
-	else if ( ABS(value) < 0.001 ) { sprintf((char *)outval,"%9f",value); }
-	else if ( ABS(value) < 0.01 ) { sprintf((char *)outval,"%8f",value); }
-	else if ( ABS(value) < 0.1 ) { sprintf((char *)outval,"%7f",value); }
-	else if ( ABS(value) < 1. ) { sprintf((char *)outval,"%6f",value); }
-	else if ( ABS(value) < 10. ) { sprintf((char *)outval,"%5f",value); }
-	else if ( ABS(value) < 100. ) { sprintf((char *)outval,"%4f",value); }
-	else if ( ABS(value) < 1000. ) { sprintf((char *)outval,"%3f",value); }
-	else if ( ABS(value) < 10000. ) { sprintf((char *)outval,"%2f",value); }
-	else { sprintf((char *)outval,"%1f",value); }
+	else if ( ABS(value) < 0.0001 ) { snprintf((char *)outval,64,"%10f",value); }
+	else if ( ABS(value) < 0.001 ) { snprintf((char *)outval,64,"%9f",value); }
+	else if ( ABS(value) < 0.01 ) { snprintf((char *)outval,64,"%8f",value); }
+	else if ( ABS(value) < 0.1 ) { snprintf((char *)outval,64,"%7f",value); }
+	else if ( ABS(value) < 1. ) { snprintf((char *)outval,64,"%6f",value); }
+	else if ( ABS(value) < 10. ) { snprintf((char *)outval,64,"%5f",value); }
+	else if ( ABS(value) < 100. ) { snprintf((char *)outval,64,"%4f",value); }
+	else if ( ABS(value) < 1000. ) { snprintf((char *)outval,64,"%3f",value); }
+	else if ( ABS(value) < 10000. ) { snprintf((char *)outval,64,"%2f",value); }
+	else { snprintf((char *)outval,64,"%1f",value); }
 	return(outval);
 }
 

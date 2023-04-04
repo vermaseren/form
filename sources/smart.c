@@ -11,7 +11,7 @@
  */
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2022 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -84,7 +84,7 @@ int StudyPattern(WORD *lhs)
 			if ( ( functions[nn].symmetric == SYMMETRIC ) ||
 				 ( functions[nn].symmetric == ANTISYMMETRIC ) ) {
 			  p2 = p+p[1]; p1 = p+FUNHEAD;
-			  if ( functions[nn].spec ) {
+			  if ( functions[nn].spec > 0 ) {
 				while ( p1 < p2 ) {
 					if ( *p1 == FUNNYWILD ) {
 						MesPrint("&Argument field wildcards are not allowed inside (anti)symmetric functions or tensors");

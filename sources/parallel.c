@@ -10,7 +10,7 @@
  */
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2022 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -462,7 +462,7 @@ static int PF_InitTree(void)
 	}
 
 	if ( PF_root == NULL )
-	if ( ( PF_root = (NODE*)Malloc1(sizeof(NODE)*numnodes,"nodes in mergetree") ) == NULL )
+	if ( ( PF_root = (NODE*)Malloc1(sizeof(NODE)*numnodes,"nodes in mergtree") ) == NULL )
 		return(-1);
 /*
 		then initialize all the nodes
@@ -683,7 +683,7 @@ newright:
 		}
 	}
 	if ( n->lloser > 0 && n->rloser > 0 ) {
-		comp = CompareTerms(PF_term[n->lloser],PF_term[n->rloser],(WORD)0);
+		comp = CompareTerms(BHEAD PF_term[n->lloser],PF_term[n->rloser],(WORD)0);
 		if ( comp > 0 )     return(n->lloser);
 		else if (comp < 0 ) return(n->rloser);
 		else {
@@ -847,10 +847,10 @@ cancelled:
  * outputfile.
  *
  * @return   1  if the sorting on the master was done.
- *           0  if EndSort() still must perform a regular sorting because it is not
+ *           0  if EndSort() still must perform a regular sorting becuase it is not
  *              at the ground level or not on the master or in the sequential mode
  *              or in the InParallel mode.
- *          -1  if an error occurred.
+ *          -1  if an error occured.
  *
  * @remark  The slaves will send the sorted terms back to the master in the regular
  *          sorting (after the initialization of the send buffer in PF_EndSort()).
@@ -993,7 +993,7 @@ static  WORD *PF_CurrentBracket;
  *
  * To enable keep-brackets when AR.DeferFlag is set, we need to do some
  * preparation here:
- *   \li  copy the part outside brackets to current_bracket
+ *   \li  copy the part ouside brackets to current_bracket
  *   \li  skip term if part outside brackets is same as for last term
  *   \li  if POfill >= POfull receive new terms as usual
  *
@@ -1514,7 +1514,7 @@ static int PF_WaitAllSlaves(void)
 
 	if ( has_sent ) M_free(has_sent,"PF_WaitAllSlaves");
 /*
-		0 on success (exit from the main loop by loop condition), or -1 if fails
+		0 on sucess (exit from the main loop by loop condition), or -1 if fails
 		(exit from the main loop since readySlaves=PF.numtasks+1):
 */
 	return(PF.numtasks-readySlaves);
@@ -1691,7 +1691,7 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 				PACK_LONG(sb->fill[0], AN.ninterms);
 				/*
 				 * For the "slow startup". We double maxinterms up to ProcessBucketSize
-				 * after (hopefully) the all workers got some terms.
+				 * after (houpefully) the all workers got some terms.
 				 */
 				if ( cmaxinterms >= PF.numtasks - 2 ) {
 					maxinterms *= 2;
@@ -1953,7 +1953,7 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 int PF_Init(int *argc, char ***argv)
 {
 /*
-		this should definitely be somewhere else ...
+		this should definitly be somewhere else ...
 */
 	PF_CurrentBracket = 0;
 
@@ -1974,7 +1974,7 @@ int PF_Init(int *argc, char ***argv)
 	if ( PF.me == MASTER ) {
 		char *c;
 /*
-			get these from the environment at the moment should be in setfile/tail
+			get these from the environment at the moment sould be in setfile/tail
 */
 		if ( ( c = getenv("PF_LOG") ) != 0 ) {
 			if ( *c ) PF.log = (int)atoi(c);
@@ -2216,7 +2216,7 @@ int PF_BroadcastPreDollar(WORD **dbuffer, LONG *newsize, int *numterms)
 /*
 			The problem is that sometimes dollar variables are longer
 			than PF_packbuf! So we split long expression into chunks.
-			There are n filled chunks and one partially filled chunk:
+			There are n filled chunks and one portially filled chunk:
 */
 		LONG n = ((*newsize)+1)/PF_maxDollarChunkSize;
 /*
@@ -2447,7 +2447,7 @@ static inline int compare_two_expressions(const WORD *e1, const WORD *e2)
 	}
 	/* The expressions are not so simple. Define the order by each term. */
 	while ( e1[0] && e2[0] ) {
-		int c = CompareTerms((WORD *)e1, (WORD *)e2, 1);
+		int c = CompareTerms(BHEAD (WORD *)e1, (WORD *)e2, 1);
 		if ( c < 0 )
 			return(-1);
 		else if ( c > 0 )
@@ -3255,6 +3255,7 @@ int PF_BroadcastExpFlags(void)
 			e = &Expressions[i];
 			PF_LongMultiPack(&e->counter,    1, PF_WORD);
 			PF_LongMultiPack(&e->vflags,     1, PF_WORD);
+			PF_LongMultiPack(&e->uflags,     1, PF_WORD);
 			PF_LongMultiPack(&e->numdummies, 1, PF_WORD);
 			PF_LongMultiPack(&e->numfactors, 1, PF_WORD);
 #ifdef PF_DEBUG_BCAST_EXPRFLAGS
@@ -3275,6 +3276,7 @@ int PF_BroadcastExpFlags(void)
 			e = &Expressions[i];
 			PF_LongMultiUnpack(&e->counter,    1, PF_WORD);
 			PF_LongMultiUnpack(&e->vflags,     1, PF_WORD);
+			PF_LongMultiUnpack(&e->uflags,     1, PF_WORD);
 			PF_LongMultiUnpack(&e->numdummies, 1, PF_WORD);
 			PF_LongMultiUnpack(&e->numfactors, 1, PF_WORD);
 		}
@@ -3968,6 +3970,7 @@ static int PF_Slave2MasterIP(int src)/*both master and slave*/
 /*	memcpy(e, &(exprData.e), sizeof(struct ExPrEsSiOn)); */
 	e->counter    = exprData.e.counter;
 	e->vflags     = exprData.e.vflags;
+	e->uflags     = exprData.e.uflags;
 	e->numdummies = exprData.e.numdummies;
 	e->numfactors = exprData.e.numfactors;
 	if ( !(e->vflags & ISZERO) )       AR.expflags |= ISZERO;

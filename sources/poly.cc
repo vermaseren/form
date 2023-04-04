@@ -5,7 +5,7 @@
  */
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2022 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -1990,7 +1990,7 @@ int poly::number_of_terms () const {
   	#[ first_variable :
 */
 
-// returns the lexicographically first variable of a polynomial
+// returns the lexcicographically first variable of a polynomial
 int poly::first_variable () const {
 	
 	POLY_GETIDENTITY(*this);

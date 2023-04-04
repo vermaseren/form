@@ -7,7 +7,7 @@
 
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2022 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -46,16 +46,16 @@ static struct id_options {
 	int code;
 	int dummy;
 } IdOptions[] = {
-	 {(UBYTE *)"multi",      SUBMULTI    ,0}
-	,{(UBYTE *)"many",       SUBMANY     ,0}
-	,{(UBYTE *)"only",       SUBONLY     ,0}
-	,{(UBYTE *)"once",       SUBONCE     ,0}
-	,{(UBYTE *)"ifmatch",    SUBAFTER    ,0}
-	,{(UBYTE *)"ifnomatch",  SUBAFTERNOT ,0}
-	,{(UBYTE *)"ifnotmatch", SUBAFTERNOT ,0}
-	,{(UBYTE *)"disorder",   SUBDISORDER ,0}
-	,{(UBYTE *)"select",     SUBSELECT   ,0}
-	,{(UBYTE *)"all",        SUBALL      ,0}
+	 {(UBYTE *)"multi",      SUBMULTI     ,0}
+	,{(UBYTE *)"many",       SUBMANY      ,0}
+	,{(UBYTE *)"only",       SUBONLY      ,0}
+	,{(UBYTE *)"once",       SUBONCE      ,0}
+	,{(UBYTE *)"ifmatch",    SUBAFTER     ,0}
+	,{(UBYTE *)"ifnomatch",  SUBAFTERNOT  ,0}
+	,{(UBYTE *)"ifnotmatch", SUBAFTERNOT  ,0}
+	,{(UBYTE *)"disorder",   SUBDISORDER  ,0}
+	,{(UBYTE *)"select",     SUBSELECT    ,0}
+	,{(UBYTE *)"all",        SUBALL       ,0}
 };
 
 /*
@@ -1070,7 +1070,7 @@ int CoMultiply(UBYTE *inp)
 int CoFill(UBYTE *inp)
 {
 	GETIDENTITY
-	WORD error = 0, x, funnum, type, *oldwp = AT.WorkPointer;
+	WORD error = 0, x, xx, funnum, type, *oldwp = AT.WorkPointer;
 	int i, oldcbufnum = AC.cbufnum, nofill = 0, numover, redef = 0;
 	WORD *w, *wold, *Tprototype;
 	UBYTE *p = inp, c, *inp1;
@@ -1107,7 +1107,18 @@ int CoFill(UBYTE *inp)
 		p3 = p;
 		goto andagain;
 	}
-	for ( sum = 0, i = 0, w = oldwp; i < T->numind; i++ ) {
+	w = oldwp;
+	if ( T->numind < 0 ) { /* Pick up the first index */
+		ParseSignedNumber(xx,p);
+		if ( FG.cTable[p[-1]] != 1 || *p != ',' || xx < 1 || ( xx > ( -T->numind - 1 ) ) ) {
+			MesPrint("&No valid number of table indices in *-table fill statement.");
+			return(1);
+		}
+		*w++ = xx;
+		p++;
+	}
+	else { xx = T->numind; }
+	for ( sum = 0, i = 0; i < xx; i++ ) {
 		ParseSignedNumber(x,p);
 		if ( FG.cTable[p[-1]] != 1 || ( *p != ',' && *p != ')' ) ) {
 			MesPrint("&Table arguments in fill statement should be numbers");
@@ -1123,7 +1134,11 @@ int CoFill(UBYTE *inp)
 		p++;
 	}
 	p3 = p;
-	if ( *p != ')' || i < ( T->numind - 1 ) ) {
+	if ( T->numind < 0 ) {
+		for ( ; i < ABS(T->numind)-1; i++ ) *w++ = 0;
+		xx = -T->numind;
+	}
+	if ( *p != ')' || i < ( xx - 1 ) ) {
 		MesPrint("&Incorrect number of table arguments in fill statement. Should be %d"
 		,T->numind);
 		error = 1; nofill = 1;
@@ -1135,7 +1150,7 @@ andagain:;
 	if ( T->sparse ) {
 		i = FindTableTree(T,oldwp,1);
 		if ( i >= 0 ) {
-			sum = i + T->numind;
+			sum = i + ABS(T->numind);
 			if ( tablestub == 0 && ( ( T->sparse & 2 ) == 2 ) && ( T->mode != 0 )
 			&& ( AC.vetotablebasefill == 0 ) ) {
 /*
@@ -1151,12 +1166,6 @@ andagain:;
 		if ( T->totind >= T->reserved ) {
 			if ( T->reserved == 0 ) newreservation = 20;
 			else newreservation = T->reserved;
-/*
-			while ( T->totind >= newreservation && newreservation <
-					MAXTABLECOMBUF*(T->numind+TABLEEXTENSION) )
-			if ( newreservation > MAXTABLECOMBUF*T->numind ) newreservation =
-					5*(T->numind+TABLEEXTENSION);
-*/
 			while ( T->totind >= newreservation && newreservation < MAXTABLECOMBUF )
 					newreservation = 2*newreservation;
 			if ( newreservation > MAXTABLECOMBUF ) newreservation = MAXTABLECOMBUF;
@@ -1166,18 +1175,18 @@ andagain:;
 				Terminate(-1);
 			}
 			wold = (WORD *)Malloc1(newreservation*sizeof(WORD)*
-								(T->numind+TABLEEXTENSION),"tablepointers");
-			for ( i = T->reserved*(T->numind+TABLEEXTENSION)-1; i >= 0; i-- )
+								(ABS(T->numind)+TABLEEXTENSION),"tablepointers");
+			for ( i = T->reserved*(ABS(T->numind)+TABLEEXTENSION)-1; i >= 0; i-- )
 				wold[i] = T->tablepointers[i];
 			if ( T->tablepointers ) M_free(T->tablepointers,"tablepointers");
 			T->tablepointers = wold;
 			T->reserved = newreservation;
 		}
 		w = oldwp;
-		for ( sum = T->totind*(T->numind+TABLEEXTENSION), i = 0; i < T->numind; i++ ) {
+		for ( sum = T->totind*(ABS(T->numind)+TABLEEXTENSION), i = 0; i < ABS(T->numind); i++ ) {
 			T->tablepointers[sum++] = *w++;
 		}
-		InsTableTree(T,T->tablepointers+sum-T->numind);
+		InsTableTree(T,T->tablepointers+sum-ABS(T->numind));
 #if TABLEEXTENSION == 2
 		T->tablepointers[sum+TABLEEXTENSION-1] = -1;  /* New element! */
 #else
@@ -1252,7 +1261,6 @@ redef:;
 		*p++ = ')';
 		*p = 0;
 		inp1 = fake;
-/*		AT.WorkPointer += T->numind; */
 	}
 	else {
 		inp1 = ++p;
@@ -1352,7 +1360,7 @@ int CoFillExpression(UBYTE *inp)
 	WORD type, funnum, expnum, symnum, numsym = 0, *oldwork = AT.WorkPointer;
 	WORD *brackets, *term, brasize, *b, *m, *w, *pw, *tstop, zero = 0;
 	WORD oldcbuf = AC.cbufnum, curelement = 0;
-	int weneedit, i, j, numzero, pow;
+	int weneedit, i, j, numzero, pow, numfirst;
 	TABLES T = 0;
 	LONG newreservation, numcommu, sum;
 	POSITION oldposition;
@@ -1423,32 +1431,6 @@ int CoFillExpression(UBYTE *inp)
 			MesPrint("&%s should be a previously declared symbol or function",inp);
 			*p = c; return(1);
 		}
-/*
-		if ( GetVar(inp,&type,&symnum,CSYMBOL,NOAUTO) == NAMENOTFOUND ) {
-			if ( numsym > 0 ) {
-				MesPrint("&%s should be a previously declared symbol",inp);
-				*p = c; return(1);
-			}
-			else {
-				if ( GetVar(inp,&type,&symnum,CFUNCTION,NOAUTO) == NAMENOTFOUND ) {
-					MesPrint("&%s should be a previously declared symbol or function",inp);
-					*p = c; return(1);
-				}
-				numsym = -1;
-				*p++ = c;
-				if ( c != ')' ) {
-					MesPrint("&Argument should be a single function or a list of symbols");
-					*p = c; return(1);
-				}
-				symnum += FUNCTION;
-				*AT.WorkPointer++ = symnum;
-				break;
-			}
-		}
-		*p++ = c;
-		*AT.WorkPointer++ = symnum;
-		numsym++;
-*/
 		if ( c == ')' ) break;
 		if ( c != ',' ) {
 			MesPrint("&Illegal separator in FillExpression statement");
@@ -1466,7 +1448,7 @@ int CoFillExpression(UBYTE *inp)
 	or the number of the function in oldwork (just one and numsym = -1).
 	We don't sort them!!!!
 */
-	if ( ( numsym > 0 ) && ( T->numind != numsym ) ) {
+	if ( ( numsym > 0 ) && ( ABS(T->numind) != numsym ) ) {
 		MesPrint("&This table needs %d symbols for its array indices");
 		goto noway;
 	}
@@ -1490,7 +1472,6 @@ int CoFillExpression(UBYTE *inp)
 		PUTZERO(oldposition);
 		SeekFile(fi->handle,&oldposition,SEEK_CUR);
 		SetScratch(fi,&(Expressions[expnum].onfile));
-/*		SeekFile(fi->handle,&(Expressions[expnum].onfile),SEEK_SET); */
 		if ( ISNEGPOS(Expressions[expnum].onfile) ) {
 			MesPrint("&File error in FillExpression");
 			BACKINOUT
@@ -1551,7 +1532,7 @@ int CoFillExpression(UBYTE *inp)
 			Now compute the element. See whether we need it
 */
 			if ( numsym < 0 ) {
-				WORD *bb;
+				WORD *bb, bnum;
 				if ( *brackets != symnum || brasize != brackets[1] ) {
 					weneedit = 0; continue;	/* Cannot work! */
 				}
@@ -1561,12 +1542,19 @@ int CoFillExpression(UBYTE *inp)
 				b = brackets + FUNHEAD;
 				bb = brackets+brackets[1];
 				i = 0;
+				if ( T->numind < 0 ) {
+					bnum = b[1]+1;
+					if ( bnum > -T->numind ) {
+						weneedit = 0; continue;	/* Cannot work! */
+					}
+				}
+				else bnum = T->numind;
 				while ( b < bb ) {
 					if ( *b != -SNUMBER ) break;
 					i++;
 					b += 2;
 				}
-				if ( b < bb || i != T->numind ) {
+				if ( b < bb || i != bnum ) {
 					weneedit = 0; continue;	/* Cannot work! */
 				}
 			}
@@ -1575,6 +1563,7 @@ int CoFillExpression(UBYTE *inp)
 				weneedit = 0; continue;	/* Cannot work! */
 			}
 			numzero = 0; sum = 0;
+			numfirst = 0;
 			if ( numsym > 0 ) {
 			  for ( i = 0; i < numsym; i++ ) {
 				if ( brasize > 0 ) {
@@ -1592,7 +1581,20 @@ int CoFillExpression(UBYTE *inp)
 					else pow = b[1];
 				}
 				else pow = 0;
-				if ( T->sparse ) *pw++ = pow;
+				if ( T->sparse ) {
+					if ( T->numind < 0 ) {
+						if ( i == 0 ) {
+							numfirst = pow;
+							if ( pow > -T->numind ) {
+								weneedit = 0; goto nextterm;
+							}
+						}
+						else if ( i > pow ) {
+							weneedit = 0; goto nextterm;
+						}
+					}
+					*pw++ = pow;
+				}
 				else if ( pow < T->mm[i].mini || pow > T->mm[i].maxi ) {
 					weneedit = 0; goto nextterm;
 				}
@@ -1600,25 +1602,44 @@ int CoFillExpression(UBYTE *inp)
 			  }
 			}
 			else {
+			  WORD xx;
 			  b = brackets + FUNHEAD;
 			  sum = 0;
-			  for ( i = 0; i < T->numind; i++ ) {
+/*
+			  Now scan the arguments of the function.
+			  We did check already the number and type of the arguments.
+*/
+			  xx = (brackets[1]-FUNHEAD)/2;
+			  for ( i = 0; i < xx; i++ ) {
 				pow = b[1];
 				b += 2;
-				if ( T->sparse ) { *pw++ = pow; }
+				if ( T->sparse ) {
+					if ( T->numind < 0 ) {
+						if ( i == 0 ) {
+							numfirst = pow;
+							if ( pow >= -T->numind ) {
+								weneedit = 0; goto nextterm;
+							}
+						}
+					}
+					*pw++ = pow;
+				}
 				else if ( pow < T->mm[i].mini || pow > T->mm[i].maxi ) {
 					weneedit = 0; goto nextterm;
 				}
 				else sum += ( pow - T->mm[i].mini ) * T->mm[i].size;
 			  }
 			}
+			if ( T->numind < 0 ) {
+				for ( i = numfirst+1; i < -T->numind; i++ ) *pw++ = 0;
+			}
 			weneedit = 1;
 			if ( T->sparse ) {
 				if ( numsym < 0 ) pw = oldwork + 1;
-				else              pw = oldwork + T->numind;
+				else              pw = oldwork + ABS(T->numind);
 				i = FindTableTree(T,pw,1);
 				if ( i >= 0 ) {
-					sum = i+T->numind;
+					sum = i+ABS(T->numind);
 /*
 Wrong!!!!			C->rhs[T->tablepointers[sum]] = C->Pointer;
 */
@@ -1628,13 +1649,6 @@ Wrong!!!!			C->rhs[T->tablepointers[sum]] = C->Pointer;
 				if ( T->totind >= T->reserved ) {
 					if ( T->reserved == 0 ) newreservation = 20;
 					else newreservation = T->reserved;
-/*
-					while ( T->totind >= newreservation && newreservation <
-								MAXTABLECOMBUF*(T->numind+TABLEEXTENSION) )
-							newreservation = 2*newreservation;
-					if ( newreservation > MAXTABLECOMBUF*T->numind ) newreservation =
-								MAXTABLECOMBUF*(T->numind+TABLEEXTENSION);
-*/
 /*---Copied from Fill---------------------------*/
 					while ( T->totind >= newreservation && newreservation < MAXTABLECOMBUF )
 							newreservation = 2*newreservation;
@@ -1653,8 +1667,8 @@ Wrong!!!!			C->rhs[T->tablepointers[sum]] = C->Pointer;
 						Terminate(-1);
 					}
 					w = (WORD *)Malloc1(newreservation*sizeof(WORD)*
-							(T->numind+TABLEEXTENSION),"tablepointers");
-					for ( i = T->reserved*(T->numind+TABLEEXTENSION)-1; i >= 0; i-- )
+							(ABS(T->numind)+TABLEEXTENSION),"tablepointers");
+					for ( i = T->reserved*(ABS(T->numind)+TABLEEXTENSION)-1; i >= 0; i-- )
 						w[i] = T->tablepointers[i];
 					if ( T->tablepointers ) M_free(T->tablepointers,"tablepointers");
 					T->tablepointers = w;
@@ -1662,10 +1676,10 @@ Wrong!!!!			C->rhs[T->tablepointers[sum]] = C->Pointer;
 				}
 				if ( numsym < 0 ) pw = oldwork + 1;
 				else              pw = oldwork + numsym;
-				for ( sum = T->totind*(T->numind+TABLEEXTENSION), i = 0; i < T->numind; i++ ) {
+				for ( sum = T->totind*(ABS(T->numind)+TABLEEXTENSION), i = 0; i < ABS(T->numind); i++ ) {
 					T->tablepointers[sum++] = *pw++;
 				}
-				InsTableTree(T,T->tablepointers+sum-T->numind);
+				InsTableTree(T,T->tablepointers+sum-ABS(T->numind));
 				(T->totind)++;
 			}
 #if ( TABLEEXTENSION != 2 )

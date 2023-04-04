@@ -4,7 +4,7 @@
  */
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2022 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -88,12 +88,12 @@ int CoTransform(UBYTE *in)
 {
 	GETIDENTITY
 	UBYTE *s = in, c, *ss, *Tempbuf;
-	WORD number, type, num, i, *work = AT.WorkPointer+2, *wp, range[2], one = 1;
+	WORD number, type, i, *work = AT.WorkPointer+2, *wp, range[2], one = 1;
 	WORD numdol, *wstart;
 	int error = 0, irhs;
 	LONG x;
 	while ( *in == ',' ) in++;
-	num = 0; wp = work + 1;
+	wp = work + 1;
 /*
   	#[ Sets :
 
@@ -146,7 +146,6 @@ int CoTransform(UBYTE *in)
 		Now write the number to the right place
 */
 		*wp++ = number;
-		num++;
 		while ( *in == ',' ) in++;
 	}
 	*work = wp - work;
@@ -660,6 +659,50 @@ illsize:					MesPrint("&Illegal value for base in encode/decode transformation")
 		}
 /*
  		#] selectarg : 
+ 		#[ ZtoH :
+*/
+		else if ( StrICmp(s,(UBYTE *)"ztoh") == 0 ) {
+/*
+				Subkeys: ?
+*/
+			type = ZTOHARG;
+			*ss = c;
+			if ( ( in = ReadRange(in,range,1) ) == 0 ) {
+				if ( error == 0 ) error = 1;
+				return(error);
+			}
+			*wp++ = ARGRANGE;
+			*wp++ = range[0];
+			*wp++ = range[1];
+			*wp++ = type;
+			*work = wp-work;
+			work = wp; *wp++ = 0;
+			s = in;
+		}
+/*
+ 		#] ZtoH : 
+ 		#[ HtoZ :
+*/
+		else if ( StrICmp(s,(UBYTE *)"htoz") == 0 ) {
+/*
+				Subkeys: ?
+*/
+			type = HTOZARG;
+			*ss = c;
+			if ( ( in = ReadRange(in,range,1) ) == 0 ) {
+				if ( error == 0 ) error = 1;
+				return(error);
+			}
+			*wp++ = ARGRANGE;
+			*wp++ = range[0];
+			*wp++ = range[1];
+			*wp++ = type;
+			*work = wp-work;
+			work = wp; *wp++ = 0;
+			s = in;
+		}
+/*
+ 		#] HtoZ : 
 */
 		else {
 			MesPrint("&Unknown transformation inside a Transform statement: %s",s);
@@ -690,7 +733,7 @@ WORD RunTransform(PHEAD WORD *term, WORD *params)
 {
 	WORD *t, *tstop, *w, *m, *out, *in, *tt, retval;
 	WORD *fun, *args, *info, *infoend, *onetransform, *funs, *endfun;
-	WORD *thearg = 0, *iterm, *newterm, *nt, *oldwork = AT.WorkPointer;
+	WORD *thearg = 0, *iterm, *newterm, *nt, *oldwork = AT.WorkPointer, sign = 1;
 	int i;
 	out = tstop = term + *term;
 	tstop -= ABS(tstop[-1]);
@@ -866,6 +909,22 @@ abortlyndon:;
 						if ( RunSelectArg(BHEAD fun,args) ) goto abo;
 						out = fun + fun[1];
 						break;
+					case ZTOHARG:
+						{
+						  WORD s = RunZtoHArg(BHEAD fun,args);
+						  if ( s < 0 ) goto abo;
+						  if ( s == 1 ) sign = -sign;
+						  out = fun + fun[1];
+						}
+						break;
+					case HTOZARG:
+						{
+						  WORD s = RunHtoZArg(BHEAD fun,args);
+						  if ( s < 0 ) goto abo;
+						  if ( s == 1 ) sign = -sign;
+						  out = fun + fun[1];
+						}
+						break;
 					default:
 						MLOCK(ErrorMessageLock);
 						MesPrint("Irregular code in execution of transform statement");
@@ -894,6 +953,7 @@ abortlyndon:;
 		t += t[1];
 	}
 	tt = term + *term; while ( in < tt ) *out++ = *in++;
+	if ( sign == -1 ) out[-1] = -out[-1];
 	*tt = i = out - tt;
 /*
 	Now copy the whole thing back
@@ -1757,7 +1817,7 @@ nextt:;
 WORD RunImplode(WORD *fun, WORD *args)
 {
 	GETIDENTITY
-	WORD *tt, *tstop, totarg, arg1, arg2, num1, num2, i, i1, n;
+	WORD *tt, *tstop, totarg, arg1, arg2, num1, num2, i1, n;
 	WORD *f, *t, *ttt, *t4, *ff, *fff;
 	WORD moveup, numzero, outspace;
 	if ( functions[fun[0]-FUNCTION].spec != 0 ) return(0);
@@ -1798,7 +1858,7 @@ WORD RunImplode(WORD *fun, WORD *args)
 	We do it this way because otherwise stepping backwards (as in range=(4,1))
 	would be very difficult.
 */
-	tt = tstop; i = 0;
+	tt = tstop;
 	while ( n <= num2 ) {
 		if ( f >= tstop ) return(0);
 		if ( *f == -SNUMBER ) { *tt++ = -1; *tt++ = 0;
@@ -1832,7 +1892,7 @@ WORD RunImplode(WORD *fun, WORD *args)
 			}
 			f += *f;
 		}
-		i++; n++;
+		n++;
 	}
 	fff = f;
 /*
@@ -2107,7 +2167,7 @@ WORD RunPermute(PHEAD WORD *fun, WORD *args, WORD *info)
 		if ( *info > totarg ) return(0);
 /*
 		Now we have a look whether there are dollar variables to be expanded
-		We also shift out all values that are out of range.
+		We also sift out all values that are out of range.
 */
 		withdollar = 0;  in = info;
 		while ( in < infostop ) {
@@ -2846,7 +2906,7 @@ WORD RunMulArg(PHEAD WORD *fun, WORD *args)
  		#[ RunIsLyndon :
 
 		Determines whether the range constitutes a Lyndon word.
-		The two cases of ordering are distinguished by the order of
+		The two cases of ordering are distinguised by the order of
 		the numbers of the arguments in the range.
 */
 
@@ -2924,7 +2984,7 @@ nexti1:;
 		Determines whether the range constitutes a Lyndon word.
 		If not, we rotate it to a Lyndon word. If this is not possible
 		we return the noLyndon condition.
-		The two cases of ordering are distinguished by the order of
+		The two cases of ordering are distinguised by the order of
 		the numbers of the arguments in the range.
 */
 
@@ -3091,6 +3151,116 @@ WORD RunSelectArg(PHEAD WORD *fun, WORD *args)
 
 /*
  		#] RunSelectArg : 
+ 		#[ RunZtoHArg :
+*/
+
+WORD RunZtoHArg(PHEAD WORD *fun, WORD *args)
+{
+	WORD *tt, totarg, *tstop, arg1, arg2, n, i, *f, *f1, sign = 0;
+	WORD *t, *t1, *t2, *t3;
+	if ( *args != ARGRANGE ) {
+		MLOCK(ErrorMessageLock);
+		MesPrint("Illegal range encountered in RunZtoHArg.");
+		MUNLOCK(ErrorMessageLock);
+		Terminate(-1);
+	}
+	if ( functions[fun[0]-FUNCTION].spec != 0 ) {
+		MLOCK(ErrorMessageLock);
+		MesPrint("The ZtoH transformation can only be executed on regular functions with nonzero integer arguments.");
+		MUNLOCK(ErrorMessageLock);
+		Terminate(-1);
+	}
+	tt = fun+FUNHEAD; tstop = fun+fun[1]; totarg = 0;
+	while ( tt < tstop ) { totarg++; NEXTARG(tt); }
+	if ( FindRange(BHEAD args,&arg1,&arg2,totarg) ) return(-1);
+/*
+	Check the arguments. Should be -SNUMBER x!=0
+*/
+	f = fun+FUNHEAD; n = 1;
+	while ( n < arg1 ) { n++; NEXTARG(f) }
+	f1 = f;
+	for ( i = arg1; i <= arg2; i++, f += 2 ) {
+		if ( *f != -SNUMBER || f[1] == 0 ) return(-1);
+	}
+/*
+	Now we need a copy. 
+*/
+	t = f1; t1 = t2 = tt = TermMalloc("RunZtoHArg");
+	while ( t < f ) { *t1++ = *t++; *t1++ = *t++; }
+	t = f1; 
+	while ( t2 < t1 ) {
+		t += 2;
+		if ( t2[1] < 0 ) {
+			t3 = t;
+			while ( t3 < f ) { t3[1] = -t3[1]; t3 += 2; }
+		}
+		t2 += 2;
+	}
+	TermFree(tt,"RunZtoHArg");
+/*
+	Now the overal sign.
+*/
+	while ( f1 < f ) { if ( f1[1] < 0 ) sign = 1-sign; f1 += 2; }
+	return(sign);
+}
+
+/*
+ 		#] RunZtoHArg : 
+ 		#[ RunHtoZArg :
+*/
+
+WORD RunHtoZArg(PHEAD WORD *fun, WORD *args)
+{
+	WORD *tt, totarg, *tstop, arg1, arg2, n, i, *f, *f1, *f2, sign = 0;
+	WORD *t, *t1, *t2;
+	if ( *args != ARGRANGE ) {
+		MLOCK(ErrorMessageLock);
+		MesPrint("Illegal range encountered in RunZtoHArg.");
+		MUNLOCK(ErrorMessageLock);
+		Terminate(-1);
+	}
+	if ( functions[fun[0]-FUNCTION].spec != 0 ) {
+		MLOCK(ErrorMessageLock);
+		MesPrint("The HtoZ transformation can only be executed on regular functions with nonzero integer arguments.");
+		MUNLOCK(ErrorMessageLock);
+		Terminate(-1);
+	}
+	tt = fun+FUNHEAD; tstop = fun+fun[1]; totarg = 0;
+	while ( tt < tstop ) { totarg++; NEXTARG(tt); }
+	if ( FindRange(BHEAD args,&arg1,&arg2,totarg) ) return(-1);
+/*
+	Check the arguments. Should be -SNUMBER x!=0
+*/
+	f = fun+FUNHEAD; n = 1;
+	while ( n < arg1 ) { n++; NEXTARG(f) }
+	f2 = f1 = f;
+	for ( i = arg1; i <= arg2; i++, f += 2 ) {
+		if ( *f != -SNUMBER || f[1] == 0 ) return(-1);
+	}
+/*
+	First the overal sign.
+*/
+	while ( f2 < f ) { if ( f2[1] < 0 ) sign = 1-sign; f2 += 2; }
+/*
+	Now we need a copy. 
+*/
+	t = f1; t1 = tt = TermMalloc("RunHtoZArg");
+	while ( t < f ) { *t1++ = *t++; *t1++ = *t++; }
+/*
+	Now the transformation.
+*/
+	t = f1; t2 = tt + 2;
+	while ( t2 < t1 ) {
+		t += 2;
+		if ( t2[-1] < 0 ) t[1] = -t[1];
+		t2 += 2;
+	}
+	TermFree(tt,"RunHtoZArg");
+	return(sign);
+}
+
+/*
+ 		#] RunHtoZArg : 
  		#[ TestArgNum :
 
 		Looks whether argument n is contained in any of the ranges

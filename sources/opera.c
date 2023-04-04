@@ -8,7 +8,7 @@
  */
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2022 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -1438,7 +1438,7 @@ WORD TraceN(PHEAD WORD *term, WORD *params, WORD num, WORD level)
 
 		This routine is a simplified version of Trace4Gen. We know here
 		only three cases: Adjacent objects, same objects and all different.
-		The other difference lies of course in the struct which is now
+		The othere difference lies of course in the struct which is now
 		not of type TRACES, but of type TRACES.
 
 */

@@ -11,12 +11,12 @@
  *
  *	Special routines for the parallel sorting are in the file threads.c
  *	Also the sorting of terms in polynomials is special but most of that is
- *	controlled by changing the address of the compare routine. Other routines
+ *	controled by changing the address of the compare routine. Other routines
  *	relevant for adding rational polynomials are in the file polynito.c
  */
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2022 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -108,7 +108,7 @@ VOID WriteStats(POSITION *plspace, WORD par)
 		if ( Expressions == 0 ) return;
 
 		if ( par == 0 ) {
-			if ( AC.ShortStatsMax == 0 ) return;
+/*			if ( AC.ShortStatsMax == 0 ) return; */
 			AR.ShortSortCount++;
 			if ( AR.ShortSortCount < AC.ShortStatsMax ) return;
 		}
@@ -1488,7 +1488,7 @@ WORD PutOut(PHEAD WORD *term, POSITION *position, FILEHANDLE *fi, WORD ncomp)
 	if ( ( AP.PreDebug & DUMPOUTTERMS ) == DUMPOUTTERMS ) {
 			MLOCK(ErrorMessageLock);
 #ifdef WITHPTHREADS
-			sprintf((char *)(THRbuf),"PutOut(%d)",AT.identity);
+			snprintf((char *)(THRbuf),100,"PutOut(%d)",AT.identity);
 			PrintTerm(term,(char *)(THRbuf));
 #else
 			PrintTerm(term,"PutOut");
@@ -1538,6 +1538,25 @@ WORD PutOut(PHEAD WORD *term, POSITION *position, FILEHANDLE *fi, WORD ncomp)
 					while ( i > 0 && j > 0 && *p == *r && p < sa ) { i--; j--; k--; p++; r++; }
 				}
 			}
+#ifdef WITHFLOAT
+			else if ( AC.DefaultPrecision ) {
+				WORD *floatstop, *sa;
+				sa = p + i;
+				sa -= ABS(sa[-1]);
+				floatstop = p;
+				while ( floatstop < sa && *floatstop != FLOATFUN ) {
+					floatstop += floatstop[1];
+				}
+				if ( floatstop < sa ) {
+					while ( i > 0 && j > 0 && *p == *r && p < floatstop ) {
+						i--; j--; k--; p++; r++;
+					}
+				}
+				else {
+					while ( i > 0 && j > 0 && *p == *r && p < sa ) { i--; j--; k--; p++; r++; }
+				}
+			}
+#endif
 			else {
 				WORD *sa;
 				sa = p + i;
@@ -1949,7 +1968,7 @@ WORD FlushOut(POSITION *position, FILEHANDLE *fi, int compr)
  *		Adds the coefficients of the terms *ps1 and *ps2.
  *		The problem comes when there is not enough space for a new
  *		longer coefficient. First a local solution is tried.
- *		If this is not successful we need to move terms around.
+ *		If this is not succesfull we need to move terms around.
  *		The possibility of a garbage collection should not be
  *		ignored, as avoiding this costs very much extra space which
  *		is nearly wasted otherwise.
@@ -1967,6 +1986,9 @@ WORD AddCoef(PHEAD WORD **ps1, WORD **ps2)
 	WORD l1, l2, i;
 	WORD OutLen, *t, j;
 	UWORD *OutCoef;
+#ifdef WITHFLOAT
+	if ( AT.SortFloatMode ) return(AddWithFloat(BHEAD ps1,ps2));
+#endif
 	OutCoef = AN.SoScratC;
 	s1 = *ps1; s2 = *ps2;
 	GETCOEF(s1,l1);
@@ -2029,7 +2051,6 @@ WORD AddCoef(PHEAD WORD **ps1, WORD **ps2)
 	j = *s1++ + i - l1;		/* Space needed */
 	if ( (S->sFill + j) >= S->sTop2 ) {
 		GarbHand();
-
 		s1 = *ps1;
 		t = s1 + *s1 - 1;
 		j = *s1++ + i - l1;		/* Space needed */
@@ -2049,7 +2070,7 @@ RegEnd:
 	*ps2 = 0;
 	if ( **ps1 > AM.MaxTer/((LONG)(sizeof(WORD))) ) {
 		MLOCK(ErrorMessageLock);
-		MesPrint("Term to complex after polynomial addition. MaxTermSize = %10l",
+		MesPrint("Term too complex after addition in sort. MaxTermSize = %10l",
 		AM.MaxTer/sizeof(WORD));
 		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
@@ -2081,8 +2102,8 @@ RegEnd:
  *		At first we allow only univariate polynomials in the PolyFun.
  *		This restriction will be lifted a.s.a.p.
  *
- *		@param ps1 A pointer to the position of the first term
- *		@param ps2 A pointer to the position of the second term
+ *		@param ps1 A pointer to the postion of the first term
+ *		@param ps2 A pointer to the postion of the second term
  *		@return If zero the terms cancel. Otherwise the new term is in *ps1.
  */
 
@@ -2225,7 +2246,7 @@ WORD AddPoly(PHEAD WORD **ps1, WORD **ps2)
 		S->sFill = s2;
 		if ( *m > AM.MaxTer/((LONG)sizeof(WORD)) ) {
 			MLOCK(ErrorMessageLock);
-			MesPrint("Term to complex after polynomial addition. MaxTermSize = %10l",
+			MesPrint("Term too complex after polynomial addition. MaxTermSize = %10l",
 			AM.MaxTer/sizeof(WORD));
 			MUNLOCK(ErrorMessageLock);
 			Terminate(-1);
@@ -2440,7 +2461,7 @@ twogen:
 		oldPolyFlag = AT.SS->PolyFlag;
 		AT.SS->PolyFlag = 0;
 		while ( s1 < tstop1 && s2 < tstop2 ) {
-			i1 = CompareTerms(s1,s2,(WORD)(-1));
+			i1 = CompareTerms(BHEAD s1,s2,(WORD)(-1));
 			if ( i1 > 0 ) {
 				i2 = *s1;
 				NCOPY(m,s1,i2);
@@ -2531,11 +2552,18 @@ twogen:
  *	@return 0	equal ( with exception of the coefficient if level == 0. )
  *	        >0	term1 comes first.
  *	        <0	term2 comes first.
+ *
+ *  When there are floating point numbers active (float_ = FLOATFUN)
+ *  the presence of one or more float_ functions is returned in
+ *  AT.SortFloatMode:
+ *	0: no float_
+ *	1: float_ in term1 only
+ *	2: float_ in term2 only
+ *	3: float_ in both terms
  */
 
-WORD Compare1(WORD *term1, WORD *term2, WORD level)
+WORD Compare1(PHEAD WORD *term1, WORD *term2, WORD level)
 {
-	GETIDENTITY
 	SORTING *S = AT.SS;
 	WORD *stopper1, *stopper2, *t2;
 	WORD *s1, *s2, *t1;
@@ -2562,6 +2590,9 @@ WORD Compare1(WORD *term1, WORD *term2, WORD level)
 			 ( AR.PolyFunExp == 2 || AR.PolyFunExp == 3 ) ) S->PolyFlag = 1;
 	}
 	else { localPoly = 0; }
+#ifdef WITHFLOAT
+	AT.SortFloatMode = 0;
+#endif
 	prevorder = 0;
 	GETSTOP(term1,s1);
 	stopper1 = s1;
@@ -2599,7 +2630,7 @@ WORD Compare1(WORD *term1, WORD *term2, WORD level)
 			polyhit = 1;
 		}
 		if ( c1 <= (FUNCTION-1)
-		|| ( c1 >= FUNCTION && functions[c1-FUNCTION].spec ) ) {
+		|| ( c1 >= FUNCTION && functions[c1-FUNCTION].spec > 0 ) ) {
 			if ( c1 == SYMBOL ) {
 				if ( *s1 == FACTORSYMBOL && *s2 == FACTORSYMBOL
 				 && s1[-1] == 4 && s2[-1] == 4
@@ -2880,16 +2911,28 @@ NoPoly:
 					continue;
 				}
 			}
+#ifdef WITHFLOAT
+			if ( c1 == FLOATFUN && t1 == stopper1 && t2 == stopper2 && AT.aux_ != 0 ) {
+/*
+				We have two FLOATFUN's. Test whether they are 'legal'
+*/
+				if ( TestFloat(s1-FUNHEAD) ) {
+					if ( TestFloat(s2-FUNHEAD) ) { AT.SortFloatMode = 3; return(0); }
+					else { return(1); }
+				}
+				else if ( TestFloat(s2-FUNHEAD) ) { return(-1); }
+			}
+#endif
 			while ( s1 < t1 ) {
 /*
-				The next statement was added 9-nov-2001. It made a bad error
+				The next statement was added 9-nov-2001. It repaired a bad error
 */
 				if ( s2 >= t2 ) return(PREV(-1));
 /*
 				There is a little problem here with fast arguments
 				We don't want to sacrifice speed, but we like to
 				keep a rational ordering. This last one suffers in
-				the solution that has been chosen here.
+				the solution that has been choosen here.
 */
 				if ( AC.properorderflag ) {
 					WORD oldpolyflag;
@@ -2916,7 +2959,7 @@ NoPoly:
 								if ( s2 >= stopex2 ) {
 									S->PolyFlag = oldpolyflag; return(PREV(-1));
 								}
-								if ( ( c2 = CompareTerms(s1,s2,(WORD)1) ) != 0 ) {
+								if ( ( c2 = CompareTerms(BHEAD s1,s2,(WORD)1) ) != 0 ) {
 									S->PolyFlag = oldpolyflag; return(PREV(c2));
 								}
 								s1 += *s1;
@@ -2940,6 +2983,16 @@ NoPoly:
 			if ( s2 < t2 ) return(PREV(1));
 		}
 	}
+#ifdef WITHFLOAT
+	if ( t1 < stopper1 && *t1 == FLOATFUN && t1+t1[1] == stopper1
+			&& TestFloat(t1) ) {
+		AT.SortFloatMode = 1; return(0);
+	}
+	else if ( t2 < stopper2 && *t2 == FLOATFUN && t2+t2[1] == stopper2
+			&& TestFloat(t2) ) {
+		AT.SortFloatMode = 2; return(0);
+	}
+#endif
 	{
 		if ( AR.SortType != SORTLOWFIRST ) {
 			if ( t1 < stopper1 ) return(PREV(1));
@@ -2973,9 +3026,8 @@ NoPoly:
  *	to that of Compare1 which is the regular compare routine in sort.c
  */
 
-WORD CompareSymbols(WORD *term1, WORD *term2, WORD par)
+WORD CompareSymbols(PHEAD WORD *term1, WORD *term2, WORD par)
 {
-	GETIDENTITY
 	int sum1, sum2;
 	WORD *t1, *t2, *tt1, *tt2;
 	int low, high;
@@ -3017,9 +3069,8 @@ WORD CompareSymbols(WORD *term1, WORD *term2, WORD par)
  *	to that of Compare1 which is the regular compare routine in sort.c
  */
 
-WORD CompareHSymbols(WORD *term1, WORD *term2, WORD par)
+WORD CompareHSymbols(PHEAD WORD *term1, WORD *term2, WORD par)
 {
-	GETIDENTITY
 	WORD *t1, *t2, *tt1, *tt2, *ttt1, *ttt2;
 	DUMMYUSE(par);
 	DUMMYUSE(AT.WorkPointer);
@@ -3247,7 +3298,7 @@ LONG SplitMerge(PHEAD WORD **Pointer, LONG number)
 	if ( number < 2 ) return(number);
 	if ( number == 2 ) {
 		pp1 = Pointer; pp2 = pp1 + 1;
-		if ( ( i = CompareTerms(*pp1,*pp2,(WORD)0) ) < 0 ) {
+		if ( ( i = CompareTerms(BHEAD *pp1,*pp2,(WORD)0) ) < 0 ) {
 			pp3 = (WORD **)(*pp1); *pp1 = *pp2; *pp2 = (WORD *)pp3;
 		}
 		else if ( i == 0 ) {
@@ -3269,7 +3320,7 @@ LONG SplitMerge(PHEAD WORD **Pointer, LONG number)
 	Addition of 23-jul-1999. It makes things a bit faster.
 */
 	if ( newleft > 0 && newright > 0 &&
-	( i = CompareTerms(Pointer[newleft-1],Pointer[split],(WORD)0) ) >= 0 ) {
+	( i = CompareTerms(BHEAD Pointer[newleft-1],Pointer[split],(WORD)0) ) >= 0 ) {
 		pp2 = Pointer+split; pp1 = Pointer+newleft-1;
 		if ( i == 0 ) {
 		  if ( S->PolyWise ) {
@@ -3306,7 +3357,7 @@ LONG SplitMerge(PHEAD WORD **Pointer, LONG number)
 */
 	while ( newleft > 8 ) {
 		LONG nnleft = newleft/2;
-		if ( ( i = CompareTerms(pp1[nnleft],*pp2,(WORD)0) ) < 0 ) break;
+		if ( ( i = CompareTerms(BHEAD pp1[nnleft],*pp2,(WORD)0) ) < 0 ) break;
 		pp3 += nnleft+1;
 		pp1 += nnleft+1;
 		newleft -= nnleft+1;
@@ -3321,7 +3372,7 @@ LONG SplitMerge(PHEAD WORD **Pointer, LONG number)
 	}
 
 	while ( newleft > 0 && newright > 0 ) {
-		if ( ( i = CompareTerms(*pp1,*pp2,(WORD)0) ) < 0 ) {
+		if ( ( i = CompareTerms(BHEAD *pp1,*pp2,(WORD)0) ) < 0 ) {
 			*pp3++ = *pp2++;
 			newright--;
 		}
@@ -3358,7 +3409,7 @@ LONG SplitMerge(PHEAD WORD **Pointer, LONG number)
 	if ( number < 2 ) return(number);
 	if ( number == 2 ) {
 		pp1 = Pointer; pp2 = pp1 + 1;
-		if ( ( i = CompareTerms(*pp1,*pp2,(WORD)0) ) < 0 ) {
+		if ( ( i = CompareTerms(BHEAD *pp1,*pp2,(WORD)0) ) < 0 ) {
 			pp3 = (WORD **)(*pp1); *pp1 = *pp2; *pp2 = (WORD *)pp3;
 		}
 		else if ( i == 0 ) {
@@ -3380,7 +3431,7 @@ LONG SplitMerge(PHEAD WORD **Pointer, LONG number)
 	Addition of 23-jul-1999. It makes things a bit faster.
 */
 	if ( newleft > 0 && newright > 0 &&
-	( i = CompareTerms(Pointer[newleft-1],Pointer[nleft],(WORD)0) ) >= 0 ) {
+	( i = CompareTerms(BHEAD Pointer[newleft-1],Pointer[nleft],(WORD)0) ) >= 0 ) {
 		pp2 = Pointer+nleft; pp1 = Pointer+newleft-1;
 		if ( i == 0 ) {
 		  if ( S->PolyWise ) {
@@ -3414,7 +3465,7 @@ LONG SplitMerge(PHEAD WORD **Pointer, LONG number)
 	AN.InScratch = nleft - i;
 	pp1 = AN.SplitScratch; pp2 = Pointer + nleft; pp3 = Pointer;
 	while ( nleft > 0 && nright > 0 && *pp1 && *pp2 ) {
-		if ( ( i = CompareTerms(*pp1,*pp2,(WORD)0) ) < 0 ) {
+		if ( ( i = CompareTerms(BHEAD *pp1,*pp2,(WORD)0) ) < 0 ) {
 			*pp3++ = *pp2;
 			*pp2++ = 0;
 			nright--;
@@ -3459,7 +3510,7 @@ LONG SplitMerge(PHEAD WORD **Pointer, LONG number)
  *		polyfun or polyratfun is active.
  */
 
-VOID GarbHand()
+VOID GarbHand(VOID)
 {
 	GETIDENTITY
 	SORTING *S = AT.SS;
@@ -3952,7 +4003,7 @@ OneTerm:
 */
 		while ( i >>= 1 ) {
 			if ( S->tree[i] > 0 ) {
-				if ( ( c = CompareTerms(poin[S->tree[i]],poin[k],(WORD)0) ) > 0 ) {
+				if ( ( c = CompareTerms(BHEAD poin[S->tree[i]],poin[k],(WORD)0) ) > 0 ) {
 /*
 					S->tree[i] is the smaller. Exchange and go on.
 */
@@ -4023,6 +4074,16 @@ OneTerm:
 							NCOPY(m2,w,r1);
 						}
 					}
+#ifdef WITHFLOAT
+					else if ( AT.SortFloatMode ) {
+						WORD *term1, *term2;
+						term1 = poin[S->tree[i]];
+						term2 = poin[k];
+						if ( MergeWithFloat(BHEAD &term1,&term2) == 0 )
+							goto cancelled;
+						poin[S->tree[i]] = term1;
+					}
+#endif
 					else {
 					  r1 = *( m1 += l1 - 1 );
 					  m1 -= ABS(r1) - 1;
@@ -4340,7 +4401,7 @@ WORD StoreTerm(PHEAD WORD *term)
 
 	if ( ( ( AP.PreDebug & DUMPTOSORT ) == DUMPTOSORT ) && AR.sLevel == 0 ) {
 #ifdef WITHPTHREADS
-		sprintf((char *)(THRbuf),"StoreTerm(%d)",AT.identity);
+		snprintf((char *)(THRbuf),100,"StoreTerm(%d)",AT.identity);
 		PrintTerm(term,(char *)(THRbuf));
 #else
 		PrintTerm(term,"StoreTerm");
@@ -4724,7 +4785,7 @@ void CleanUpSort(int num)
  *		Lowers the level in the sort system.
  */
 
-VOID LowerSortLevel()
+VOID LowerSortLevel(VOID)
 {
 	GETIDENTITY
 	if ( AR.sLevel >= 0 ) {

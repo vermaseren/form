@@ -7,7 +7,7 @@
  */
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2022 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -851,6 +851,10 @@ WORD MatchFunction(PHEAD WORD *pattern, WORD *interm, WORD *wilds)
 			i = *pattern - WILDOFFSET;
 			if ( i >= FUNCTION ) {
 				if ( *interm != GAMMA
+#ifdef WITHFLOAT
+				&& ( *interm != FLOATFUN )
+#endif
+
 				&& !CheckWild(BHEAD i,FUNTOFUN,*interm,&newvalue) ) {
 					AddWild(BHEAD i,FUNTOFUN,newvalue);
 					return(1);
@@ -1585,7 +1589,7 @@ NoCaseB:
 		possibilities when a first assignment doesn't work.
 		Important note: this was completely forgotten in the symmetric
 		functions till 6-jan-2009. As of the moment this still has to
-		be fixed.
+		be fixed.  ??????21-mar-2023????? Is this still unfixed?????
 
 		Functions inside functions can cause problems when antisymmetric
 		functions are involved. The sign of the term may be at stake.
@@ -1736,9 +1740,9 @@ trythis:;
 					}
 					else goto rewild;
 				}
-				else if ( functions[*inter-FUNCTION].spec == 0
+				else if ( functions[*inter-FUNCTION].spec <= 0
 				&& ( *inter == *inpat ||
-				functions[*inpat-FUNCTION-WILDOFFSET].spec == 0 ) ) {
+				functions[*inpat-FUNCTION-WILDOFFSET].spec <= 0 ) ) {
 					sym = functions[*inter-FUNCTION].symmetric & ~REVERSEORDER;
 					if ( *inpat == *inter ) psym = sym;
 					else psym = functions[*inpat-FUNCTION-WILDOFFSET].symmetric & ~REVERSEORDER;

@@ -8,7 +8,7 @@
 
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2022 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -331,6 +331,33 @@ TP=T+1;while(TP<TT){if(*TP==AR.PolyFun){TP[2]|=(DIRTYFLAG|MUSTCLEANPRF);}TP+=TP[
 	AP.PreContinuation = *--AT.WorkPointer; \
 	*AC.iPointer = 0; }
 
+#ifdef WITHFLOAT
+/*
+	The following macro's are needed to avoid prblems with the compilers
+	and gmp.h. For the C++ files we need the Form include files to be inside
+	and extern C {} environment, but then the structs.h needs gmp.h to
+	recognise the mpf_t datatype. This causes no end of problems.
+	Hence we collect the sensitve objects as (void *) and cast them to
+	something usable with the macro's below. This way the gmp.h file
+	needs to be included only in a very limited number of .c files.
+*/
+#define mpftab1 ((mpf_t *)(AT.mpf_tab1))
+#define mpftab2 ((mpf_t *)(AT.mpf_tab2))
+#define mpfaux_ ((mpf_t *)(AT.aux_))
+#define aux1 (((mpf_t *)(AT.aux_))[0])
+#define aux2 (((mpf_t *)(AT.aux_))[1])
+#define aux3 (((mpf_t *)(AT.aux_))[2])
+#define aux4 (((mpf_t *)(AT.aux_))[3])
+#define aux5 (((mpf_t *)(AT.aux_))[4])
+#define auxjm (((mpf_t *)(AT.aux_))[5])
+#define auxjjm (((mpf_t *)(AT.aux_))[6])
+#define auxsum (((mpf_t *)(AT.aux_))[7])
+
+#define mpfdelta1 (((mpf_t *)(AS.delta_1))[0])
+
+#endif
+
+
 /*
 	MesPrint("P-level popped to %d with %d",AP.PreAssignLevel,(WORD)(AC.iPointer - AC.iBuffer));
 
@@ -383,7 +410,8 @@ static inline int UnsignedToInt(unsigned int x)
 {
 	extern void Terminate(int);
 	if ( x <= INT_MAX ) return(x);
-	if ( x >= (unsigned int)INT_MIN ) return((int)(x - INT_MIN) + INT_MIN);
+	if ( x >= (unsigned int)INT_MIN )
+		return((int)(x - (unsigned int)INT_MIN) + INT_MIN);
 	Terminate(1);
 	return(0);
 }
@@ -392,7 +420,8 @@ static inline WORD UWordToWord(UWORD x)
 {
 	extern void Terminate(int);
 	if ( x <= WORD_MAX_VALUE ) return(x);
-	if ( x >= (UWORD)WORD_MIN_VALUE ) return((WORD)(x - WORD_MIN_VALUE) + WORD_MIN_VALUE);
+	if ( x >= (UWORD)WORD_MIN_VALUE )
+		return((WORD)(x - (UWORD)WORD_MIN_VALUE) + WORD_MIN_VALUE);
 	Terminate(1);
 	return(0);
 }
@@ -401,7 +430,8 @@ static inline LONG ULongToLong(ULONG x)
 {
 	extern void Terminate(int);
 	if ( x <= LONG_MAX_VALUE ) return(x);
-	if ( x >= (ULONG)LONG_MIN_VALUE ) return((LONG)(x - LONG_MIN_VALUE) + LONG_MIN_VALUE);
+	if ( x >= (ULONG)LONG_MIN_VALUE )
+		return((LONG)(x - (ULONG)LONG_MIN_VALUE) + LONG_MIN_VALUE);
 	Terminate(1);
 	return(0);
 }
@@ -476,7 +506,7 @@ extern WORD **DebugHeap1, **DebugHeap2;
  *	All functions (well, nearly all) are declared here.
  */
 
-extern VOID   StartVariables();
+extern VOID   StartVariables(VOID);
 extern VOID   setSignalHandlers(VOID);
 extern UBYTE *CodeToLine(WORD,UBYTE *);
 extern UBYTE *AddArrayIndex(WORD ,UBYTE *);
@@ -508,7 +538,7 @@ extern WORD   DoesCommu(WORD *);
 extern int    CompArg(WORD *,WORD *);
 extern WORD   CompCoef(WORD *, WORD *);
 extern WORD   CompGroup(PHEAD WORD,WORD **,WORD *,WORD *,WORD);
-extern WORD   Compare1(WORD *,WORD *,WORD);
+extern WORD   Compare1(PHEAD WORD *,WORD *,WORD);
 extern WORD   CountDo(WORD *,WORD *);
 extern WORD   CountFun(WORD *,WORD *);
 extern WORD   DimensionSubterm(WORD *);
@@ -728,8 +758,8 @@ extern WORD   WriteTerm(WORD *,WORD *,WORD,WORD,WORD);
 extern WORD   execarg(PHEAD WORD *,WORD);
 extern WORD   execterm(PHEAD WORD *,WORD);
 extern VOID   SpecialCleanup(PHEAD0);
-extern void   SetMods();
-extern void   UnSetMods();
+extern void   SetMods(VOID);
+extern void   UnSetMods(VOID);
  
 /*---------------------------------------------------------------------*/
 
@@ -1472,8 +1502,8 @@ extern int    ReleaseTB(VOID);
 
 extern int    SymbolNormalize(WORD *);
 extern int    TestFunFlag(PHEAD WORD *);
-extern WORD   CompareSymbols(WORD *,WORD *,WORD);
-extern WORD   CompareHSymbols(WORD *,WORD *,WORD);
+extern WORD   CompareSymbols(PHEAD WORD *,WORD *,WORD);
+extern WORD   CompareHSymbols(PHEAD WORD *,WORD *,WORD);
 extern WORD   NextPrime(PHEAD WORD);
 extern WORD   Moebius(PHEAD WORD);
 extern UWORD  wranf(PHEAD0);
@@ -1535,6 +1565,8 @@ extern WORD RunToLyndon(PHEAD WORD *fun, WORD *args, int par);
 extern WORD RunDropArg(PHEAD WORD *fun, WORD *args);
 extern WORD RunSelectArg(PHEAD WORD *fun, WORD *args);
 extern WORD RunDedup(PHEAD WORD *fun, WORD *args);
+extern WORD RunZtoHArg(PHEAD WORD *fun, WORD *args);
+extern WORD RunHtoZArg(PHEAD WORD *fun, WORD *args);
 
 extern int NormPolyTerm(PHEAD WORD *);
 extern WORD ComparePoly(WORD *, WORD *, WORD);
@@ -1606,10 +1638,10 @@ extern void  poly_free_poly_vars(PHEAD const char *);
 extern VOID optimize_print_code (int);
 
 #ifdef WITHPTHREADS
-extern void find_Horner_MCTS_expand_tree();
-extern void find_Horner_MCTS_expand_tree_threaded();
-extern void optimize_expression_given_Horner();
-extern void optimize_expression_given_Horner_threaded();
+extern void find_Horner_MCTS_expand_tree(VOID);
+extern void find_Horner_MCTS_expand_tree_threaded(VOID);
+extern void optimize_expression_given_Horner(VOID);
+extern void optimize_expression_given_Horner_threaded(VOID);
 #endif
  
 extern int DoPreAdd(UBYTE *s);
@@ -1667,6 +1699,63 @@ extern VOID SwitchSplitMerge(SWITCHTABLE *, WORD);
 extern int DoubleSwitchBuffers(VOID);
 
 extern int DistrN(int, int *, int, int *);
+
+extern int DoNamespace(UBYTE *);
+extern int DoEndNamespace(UBYTE *);
+extern int DoUse(UBYTE *);
+extern UBYTE *SkipName(UBYTE *);
+extern UBYTE *ConstructName(UBYTE *,UBYTE);
+extern int DoSetUserFlag(UBYTE *);
+extern int DoClearUserFlag(UBYTE *);
+extern int DoUserFlag(UBYTE *,int);
+
+VERTEX *CreateVertex(MODEL *);
+UBYTE *ReadParticle(UBYTE *, VERTEX *,MODEL *, int);
+int CoModel(UBYTE *);
+int CoParticle(UBYTE *);
+int CoVertex(UBYTE *);
+int CoEndModel(UBYTE *);
+int LoadModel(MODEL *);
+
+int CoSetUserFlag(UBYTE *);
+int CoClearUserFlag(UBYTE *);
+int CoCreateAllLoops(UBYTE *);
+int CoCreateAllPaths(UBYTE *);
+int CoCreateAll(UBYTE *);
+
+WORD AllLoops(PHEAD WORD *,WORD);
+LONG StartLoops(PHEAD WORD *,WORD,LONG,WORD,WORD *,WORD,WORD *,WORD);
+LONG GenLoops(PHEAD WORD *,WORD,LONG,WORD,WORD *,WORD,WORD *,WORD);
+void LoopOutput(PHEAD WORD *,WORD,WORD *,WORD);
+WORD AllPaths(PHEAD WORD *,WORD);
+LONG GenPaths(PHEAD WORD *,WORD,LONG,WORD,WORD *,WORD,WORD *,WORD);
+void PathOutput(PHEAD WORD *,WORD,WORD *,WORD);
+
+#ifdef WITHFLOAT
+int DoStartFloat(UBYTE *);
+int DoEndFloat(UBYTE *);
+void SetupMZVTables(VOID);
+void SetupMPFTables(VOID);
+void ClearMZVTables(VOID);
+int EvaluateEuler(PHEAD WORD *,WORD,WORD);
+int EvaluateMZVhalf(PHEAD WORD *,WORD,WORD);
+int EvaluateSqrt(PHEAD WORD *,WORD,WORD);
+int CoEvaluate(UBYTE *);
+int PrintFloat(WORD *fun,int numdigits);
+int CoToRat(UBYTE *);
+int CoToFloat(UBYTE *);
+int ToRat(PHEAD WORD *,WORD);
+int ToFloat(PHEAD WORD *,WORD);
+WORD FloatFunToRat(PHEAD UWORD *,WORD *);
+WORD AddWithFloat(PHEAD WORD **,WORD **);
+WORD MergeWithFloat(PHEAD WORD **,WORD **);
+void ClearfFloat(VOID);
+int TestFloat(WORD *);
+SBYTE *ReadFloat(SBYTE *);
+UBYTE *CheckFloat(UBYTE *,int *);
+void SetfFloatPrecision(LONG);
+int EvaluateFun(PHEAD WORD *, WORD, WORD *);
+#endif
 
 /*
   	#] Declarations : 

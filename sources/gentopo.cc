@@ -13,6 +13,7 @@
 #include <cstdio>
 #include <stdlib.h>
 
+#include "grcc.h"
 #include "gentopo.h"
 
 #define DUMMYUSE(x) (void)(x)
@@ -30,33 +31,33 @@ using namespace std;
 //==============================================================
 
 typedef int Bool;
-const int True  = 1;
-const int False = 0;
+const int T_True  = 1;
+const int T_False = 0;
 
 // compile options
-const int CHECK    = True;
-//const int MONITOR  = True;
-const int MONITOR  = False;
+const int CHECK    = T_True;
+//const int MONITOR  = T_True;
+const int MONITOR  = T_False;
 
-const int OPTPRINT = False;
+const int OPTPRINT = T_False;
 
-const int DEBUG0 = False;
-//const int DEBUG1 = False;
-const int DEBUG  = False;
+const int DEBUG0 = T_False;
+//const int DEBUG1 = T_False;
+const int DEBUG  = T_False;
 
 // for debugging memory use
-#define DEBUGM   False
+#define DEBUGM   T_False
 
 //==============================================================
-class MGraph;
-class EGraph;
+class T_MGraph;
+class T_EGraph;
 
 #define Extern 
 #define Global
 #define Local 
 
 // External functions
-Extern void toForm(EGraph *egraph);
+Extern void toForm(T_EGraph *egraph);
 Extern int  countPhiCon(int ex, int lp, int v4);
 
 // Temporal definition: they should be replaced by FROM functions.
@@ -82,30 +83,30 @@ static int countMG = 0;
 #endif
 
 //==============================================================
-// class EGraph
+// class T_EGraph
 
-EGraph::EGraph(int nnodes, int nedges, int mxdeg)
+T_EGraph::T_EGraph(int nnodes, int nedges, int mxdeg)
 {
     int j;
 
     nNodes  = nnodes;
     nEdges  = nedges;
-    maxdeg  = mxdeg;    // maximum value of degree of nodes
+    maxdeg  = mxdeg;    // maxmum value of degree of nodes
     nExtern = 0;
 
-    nodes = new ENode[nNodes];
-    edges = new EEdge[nEdges+1];
+    nodes = new T_ENode[nNodes];
+    edges = new T_EEdge[nEdges+1];
     for (j = 0; j < nNodes; j++) {
       nodes[j].deg   = 0;
       nodes[j].edges = new int[maxdeg];
     }
 #if DEBUGM
-    printf("+++ new    EGraph %d\n", ++countEG);
+    printf("+++ new    T_EGraph %d\n", ++countEG);
     if(countEG > 100) { exit(1); }
 #endif
 }
 
-EGraph::~EGraph()
+T_EGraph::~T_EGraph()
 {
     int j;
 
@@ -115,12 +116,12 @@ EGraph::~EGraph()
     delete[] nodes;
     delete[] edges;
 #if DEBUGM
-    printf("+++ delete EGraph %d\n", countEG--);
+    printf("+++ delete T_EGraph %d\n", countEG--);
 #endif
 }
 
-// construct EGraph from adjacency matrix
-void EGraph::init(int pid, long gid, int **adjmat, Bool sopi, BigInt nsm, BigInt esm)
+// construct T_EGraph from adjacency matrix
+void T_EGraph::init(int pid, long gid, int **adjmat, Bool sopi, BigInt nsm, BigInt esm)
 {
     int n0, n1, ed, e, eext, eint;
 //    Bool ok;
@@ -155,8 +156,8 @@ void EGraph::init(int pid, long gid, int **adjmat, Bool sopi, BigInt nsm, BigInt
     }
     if (CHECK) {
       if (ed != nEdges+1) {
-        printf("*** EGraph::init: ed=%d != nEdges=%d\n", ed, nEdges);
-        erEnd("*** EGraph::init: illegal connection\n");
+        printf("*** T_EGraph::init: ed=%d != nEdges=%d\n", ed, nEdges);
+        erEnd("*** T_EGraph::init: illegal connection\n");
       }
     }
 
@@ -177,13 +178,13 @@ void EGraph::init(int pid, long gid, int **adjmat, Bool sopi, BigInt nsm, BigInt
 }
 
 // set external particle to node 'nd'
-void EGraph::setExtern(int nd, Bool val)
+void T_EGraph::setExtern(int nd, Bool val)
 {
     nodes[nd].ext = val;
 }
 
 // end of calling 'setExtern'
-void EGraph::endSetExtern(void)
+void T_EGraph::endSetExtern(void)
 {
     int n;
 
@@ -195,14 +196,14 @@ void EGraph::endSetExtern(void)
     }
 }
 
-// print the EGraph
-void EGraph::print()
+// print the T_EGraph
+void T_EGraph::print()
 {
   int nd, lg, ed, nlp;
 
   nlp = nEdges - nNodes + 1;
   printf("\n");
-  printf("EGraph: pId=%d gId=%ld nExtern=%d nLoops=%d nNodes=%d nEdges=%d\n",
+  printf("T_EGraph: pId=%d gId=%ld nExtern=%d nLoops=%d nNodes=%d nEdges=%d\n",
          pId, gId, nExtern, nlp, nNodes, nEdges);
   printf("        sym = (%ld * %ld) maxdeg=%d\n", nsym, esym, maxdeg);
   printf("  Nodes\n");
@@ -231,9 +232,9 @@ void EGraph::print()
 }
 
 //==============================================================
-// class MNode : nodes in MGraph
+// class T_MNode : nodes in T_MGraph
 
-MNode::MNode(int vid, int vdeg, Bool vext, int vclss)
+T_MNode::T_MNode(int vid, int vdeg, Bool vext, int vclss)
 {
     id     = vid;    // id of the node
     deg    = vdeg;   // degree of the node
@@ -243,9 +244,9 @@ MNode::MNode(int vid, int vdeg, Bool vext, int vclss)
 }
 
 //===============================================================
-//  class of node-classes for MGraph
+//  class of node-classes for T_MGraph
 //
-class MNodeClass {
+class T_MNodeClass {
   public:
     int   nNodes;                  // the number of nodes
     int   nClasses;                // the number of classes
@@ -256,10 +257,10 @@ class MNodeClass {
     int   maxdeg;                  // maximal value of degree(node)
     int   forallignment;
 
-    MNodeClass(int nnodes, int ncl);
-    ~MNodeClass();
+    T_MNodeClass(int nnodes, int ncl);
+    ~T_MNodeClass();
     void  init(int *cl, int mxdeg, int **adjmat);
-    void  copy(MNodeClass* mnc);
+    void  copy(T_MNodeClass* mnc);
     int   clCmp(int nd0, int nd1, int cn);
     void  printMat(void);
 
@@ -267,11 +268,11 @@ class MNodeClass {
     void  mkNdCl(void);
     void  mkClMat(int **adjmat);
     void  incMat(int nd, int td, int val);
-    Bool  chkOrd(int nd, int ndc, MNodeClass *cl, int *dtcl);
+    Bool  chkOrd(int nd, int ndc, T_MNodeClass *cl, int *dtcl);
     int   cmpArray(int *a0, int *a1, int ma);
 };
 
-MNodeClass::MNodeClass(int nnodes, int ncl)
+T_MNodeClass::T_MNodeClass(int nnodes, int ncl)
 {
     nNodes   = nnodes;
     nClasses = ncl;
@@ -281,12 +282,12 @@ MNodeClass::MNodeClass(int nnodes, int ncl)
     flist    = new int[nClasses+1];
 
 #if DEBUGM
-    printf("+++ new    MNodeClass %d\n", ++countNMC);
+    printf("+++ new    T_MNodeClass %d\n", ++countNMC);
     if(countNMC > 100) { exit(1); }
 #endif
 }
 
-MNodeClass::~MNodeClass()
+T_MNodeClass::~T_MNodeClass()
 {
     delete[] clist;
     delete[] ndcl;
@@ -294,11 +295,11 @@ MNodeClass::~MNodeClass()
     delete[] flist;
 
 #if DEBUGM
-    printf("+++ delete MNodeClass %d\n", countNMC--);
+    printf("+++ delete T_MNodeClass %d\n", countNMC--);
 #endif
 }
 
-void MNodeClass::init(int *cl, int mxdeg, int **adjmat)
+void T_MNodeClass::init(int *cl, int mxdeg, int **adjmat)
 {
     int j;
 
@@ -311,7 +312,7 @@ void MNodeClass::init(int *cl, int mxdeg, int **adjmat)
     mkFlist();
 }
 
-void MNodeClass::copy(MNodeClass* mnc)
+void T_MNodeClass::copy(T_MNodeClass* mnc)
 {
     int j, k;
 
@@ -332,7 +333,7 @@ void MNodeClass::copy(MNodeClass* mnc)
 
 //  Construct flist
 //    The set of nodes in class 'cl' is [flist[cl],...,flist[cl+1]-1]
-void MNodeClass::mkFlist(void)
+void T_MNodeClass::mkFlist(void)
 {
     int  j, f;
 
@@ -346,7 +347,7 @@ void MNodeClass::mkFlist(void)
 
 //  Construct ndcl
 //    ndcl[nd] = (the class id in which node 'nd' belongs)
-void MNodeClass::mkNdCl(void)
+void T_MNodeClass::mkNdCl(void)
 {
     int  c, k;
     int  nd = 0;
@@ -360,10 +361,10 @@ void MNodeClass::mkNdCl(void)
 
 //  Comparison of two nodes 'nd0' and 'nd1'
 //    Ordering is lexicographic (class, connection configuration)
-int MNodeClass::clCmp(int nd0, int nd1, int cn)
+int T_MNodeClass::clCmp(int nd0, int nd1, int cn)
 {
 
-    // Whether two nodes are in a same class or not.
+    // Wether two nodes are in a same class or not.
     int cmp = ndcl[nd0] - ndcl[nd1];
     if (cmp != 0) {
       return cmp;
@@ -380,7 +381,7 @@ int MNodeClass::clCmp(int nd0, int nd1, int cn)
     
 //  Construct a matrix 'clmat[nd][tc]' which is the number
 //  of edges connecting 'nd' and all nodes in class 'tc'.
-void MNodeClass::mkClMat(int **adjmat)
+void T_MNodeClass::mkClMat(int **adjmat)
 {
     int  nd, td, tc;
 
@@ -394,14 +395,14 @@ void MNodeClass::mkClMat(int **adjmat)
 }
 
 //  Increase the number of edges by 'val' between 'nd' and 'td'.
-void MNodeClass::incMat(int nd, int td, int val)
+void T_MNodeClass::incMat(int nd, int td, int val)
 {
     int tdc = ndcl[td];             // class of 'td'
     clmat[nd][tdc] += val;          // modify matrix 'clmat'.
 }
 
 //  Check whether the configuration satisfies the ordering condition or not.
-Bool MNodeClass::chkOrd(int nd, int ndc, MNodeClass *cl, int *dtcl)
+Bool T_MNodeClass::chkOrd(int nd, int ndc, T_MNodeClass *cl, int *dtcl)
 {
     Bool tcl[MAXNCLASSES];
 //    Bool tcl[cl->nClasses];
@@ -409,11 +410,11 @@ Bool MNodeClass::chkOrd(int nd, int ndc, MNodeClass *cl, int *dtcl)
 	DUMMYUSE(nd);
 
     for (tc = 0; tc < cl->nClasses; tc++) {
-        tcl[tc] = False;
+        tcl[tc] = T_False;
     }
     for (tn = 0; tn < nNodes; tn++) {
       if (dtcl[tn] == 0) {
-        tcl[cl->ndcl[tn]] = False;
+        tcl[cl->ndcl[tn]] = T_False;
       }
     }
     for (tc = 0; tc < cl->nClasses; tc++) {
@@ -422,16 +423,16 @@ Bool MNodeClass::chkOrd(int nd, int ndc, MNodeClass *cl, int *dtcl)
         for (n = flist[tc]+1; n < mxn; n++) {
           cmp = - clmat[n-1][tc] + clmat[n][tc];
           if (cmp > 0) {
-            return False;
+            return T_False;
           }
         }
       }
     }
-    return True;
+    return T_True;
 }
 
 //  Print configuration matrix.
-void MNodeClass::printMat(void)
+void T_MNodeClass::printMat(void)
 {
     int j1, j2;
 
@@ -454,7 +455,7 @@ void MNodeClass::printMat(void)
     }
 }
 
-int MNodeClass::cmpArray(int *a0, int *a1, int ma)
+int T_MNodeClass::cmpArray(int *a0, int *a1, int ma)
 {
   for (int j = 0; j < ma; j++) {
     if (a0[j] < a1[j]) {
@@ -467,9 +468,9 @@ int MNodeClass::cmpArray(int *a0, int *a1, int ma)
 }
 
 //===============================================================
-//  class MGraph : scalar graph expressed by matrix form
+//  class T_MGraph : scalar graph expressed by matrix form
 
-MGraph::MGraph(int pid, int ncl, int *cldeg, int *clnum, int *clext, Bool sopi)
+T_MGraph::T_MGraph(int pid, int ncl, int *cldeg, int *clnum, int *clext, Bool sopi)
 {
     int nn, ne, j, k;
 
@@ -506,18 +507,18 @@ MGraph::MGraph(int pid, int ncl, int *cldeg, int *clnum, int *clext, Bool sopi)
     }
     pId    = pid;
     nNodes = nn;
-    nodes = new MNode*[nNodes];
+    nodes = new T_MNode*[nNodes];
 
     selOPI = sopi;
 
     nEdges = ne / 2;
     nLoops = nEdges - nNodes + 1;
 
-    egraph = new EGraph(nNodes, nEdges, maxdeg);
+    egraph = new T_EGraph(nNodes, nEdges, maxdeg);
     nn = 0;
     for (j = 0; j < nClasses; j++) {
       for (k = 0; k < clist[j]; k++, nn++) {
-        nodes[nn] = new MNode(nn, cldeg[j], clext[j], j);
+        nodes[nn] = new T_MNode(nn, cldeg[j], clext[j], j);
         egraph->setExtern(nn, clext[j]);
       }
     }
@@ -536,7 +537,7 @@ MGraph::MGraph(int pid, int ncl, int *cldeg, int *clnum, int *clext, Bool sopi)
     wsopi = ToFraction(0, 1);
 
     // current node classification
-    curcl    = new MNodeClass(nNodes, nClasses);
+    curcl    = new T_MNodeClass(nNodes, nClasses);
 
     // measures of efficiency
     ngen     = 0;
@@ -563,12 +564,12 @@ MGraph::MGraph(int pid, int ncl, int *cldeg, int *clnum, int *clext, Bool sopi)
 	DUMMYUSE(padding);
 
 #if DEBUGM
-    printf("+++ new    MGraph %d\n", ++countMG);
+    printf("+++ new    T_MGraph %d\n", ++countMG);
     if(countEG > 100) { exit(1); }
 #endif
 }
 
-MGraph::~MGraph()
+T_MGraph::~T_MGraph()
 {
     int j;
 
@@ -589,12 +590,12 @@ MGraph::~MGraph()
     delete[] clist;
 
 #if DEBUGM
-    printf("+++ delete MGraph %d\n", countMG++);
+    printf("+++ delete T_MGraph %d\n", countMG++);
 #endif
 }
   
 
-void MGraph::printAdjMat(MNodeClass *cl)
+void T_MGraph::printAdjMat(T_MNodeClass *cl)
 {
     int j1, j2;
 
@@ -615,8 +616,8 @@ void MGraph::printAdjMat(MNodeClass *cl)
 //---------------------------------------------------------------
 //  Check graph can be a connected one.
 //  If a connected component without free leg is not the whole graph then
-//  return False, otherwise return True.
-Bool MGraph::isConnected(void)
+//  return T_False, otherwise return T_True.
+Bool T_MGraph::isConnected(void)
 {
     int j, n, nv;
 
@@ -624,7 +625,7 @@ Bool MGraph::isConnected(void)
       nodes[j]->visited = -1;
     }
     if (visit(0)) {
-      return True;
+      return T_True;
     }
     nv = 0;
     for (n = 0; n < nNodes; n++) {
@@ -636,33 +637,33 @@ Bool MGraph::isConnected(void)
 }
 
 //  Visiting connected node used for 'isConnected'
-//  If child nodes has free legs, then this function returns True.
-//  otherwise it returns False.
-Bool MGraph::visit(int nd)
+//  If child nodes has free legs, then this function returns T_True.
+//  otherwise it returns T_False.
+Bool T_MGraph::visit(int nd)
 {
   int td;
 
   // This node has free legs.
   if (nodes[nd]->freelg > 0) {
-    return True;
+    return T_True;
   }
   nodes[nd]->visited = 0;
   for (td = 0; td < nNodes; td++) {
     if ((adjMat[nd][td] > 0) and (nodes[td]->visited < 0)) {
       if (visit(td)) {
-        return True;
+        return T_True;
       }
     }
   }
   // all the child nodes has no free legs.
-  return False;
+  return T_False;
 }
 
 //  Check whether the current graph is the Representative of a isomorphic class.
 //    nsym = symmetry factor by the permutation of nodes.
 //    esym = symmetry factor by the permutation of edge.
-//  If this graph is not a representative, then returns False.
-Bool MGraph::isIsomorphic(MNodeClass *cl)
+//  If this graph is not a representative, then returns T_False.
+Bool T_MGraph::isIsomorphic(T_MNodeClass *cl)
 {
     int j1, j2, cmp, count, nself;
 
@@ -670,7 +671,7 @@ Bool MGraph::isIsomorphic(MNodeClass *cl)
     esym = ToBigInt(1);
 
     count = 0;
-    while (True) {
+    while (T_True) {
       count = nextPerm(nNodes, cl->nClasses, cl->clist, 
                        permr, permq, permp, count);
 
@@ -689,13 +690,13 @@ Bool MGraph::isIsomorphic(MNodeClass *cl)
             }
           }
         }
-        return True;
+        return T_True;
       }
 
       permMat(nNodes, permp, adjMat, modmat);
       cmp = compMat(nNodes, adjMat, modmat);
       if (cmp < 0) {
-        return False;
+        return T_False;
       } else if (cmp == 0) {
         // save permutation ???
         nsym = nsym + ToBigInt(1);
@@ -704,7 +705,7 @@ Bool MGraph::isIsomorphic(MNodeClass *cl)
 }
 
 // apply permutation to matrix 'mat0' and obtain 'mat1'
-void MGraph::permMat(int size, int *perm, int **mat0, int **mat1)
+void T_MGraph::permMat(int size, int *perm, int **mat0, int **mat1)
 {
     int j1, j2;
 
@@ -716,7 +717,7 @@ void MGraph::permMat(int size, int *perm, int **mat0, int **mat1)
 }
 
 // comparison of matrix
-int MGraph::compMat(int size, int **mat0, int **mat1)
+int T_MGraph::compMat(int size, int **mat0, int **mat1)
 {
     int j1, j2, cmp;
 
@@ -733,15 +734,15 @@ int MGraph::compMat(int size, int **mat0, int **mat1)
 
 
 //  Refine the classification
-//    cl : the current 'MNodeClass' object
+//    cl : the current 'T_MNodeClass' object
 //    cn : the class number
 //  Returns (the new class number corresponds to 'cn') if OK, or
 //          'None' if ordering condition is not satisfied
-MNodeClass *MGraph::refineClass(MNodeClass *cl, int cn)
+T_MNodeClass *T_MGraph::refineClass(T_MNodeClass *cl, int cn)
 {
-    MNodeClass *ccl = cl;
+    T_MNodeClass *ccl = cl;
     int         ccn = cn;
-    MNodeClass *ncl = NULL;
+    T_MNodeClass *ncl = NULL;
     int         ucl[MAXNODES];
     int         nucl, nce;
     int         td, cmp;
@@ -805,7 +806,7 @@ MNodeClass *MGraph::refineClass(MNodeClass *cl, int cn)
         if (ccl != cl) {
           delete ccl;
         }
-        ccl = new MNodeClass(nNodes, nucl);
+        ccl = new T_MNodeClass(nNodes, nucl);
         ccl->init(ucl, maxdeg, adjMat);
         if (td == nNodes) {
           ccn = ccl->nClasses;
@@ -828,7 +829,7 @@ MNodeClass *MGraph::refineClass(MNodeClass *cl, int cn)
 //  Search biconnected component
 //    visit : pd --> nd --> td
 //    ne : the number of edges between pd and nd.
-void MGraph::bisearchM(int nd, int pd, int ne)
+void T_MGraph::bisearchM(int nd, int pd, int ne)
 {
     int td;
 
@@ -882,7 +883,7 @@ void MGraph::bisearchM(int nd, int pd, int ne)
 //   'The Design and Analysis of Computer Algorithms', Chap. 5
 //   1974, Addison-Wesley.
 
-int MGraph::count1PI(void)
+int T_MGraph::count1PI(void)
 {
     int j;
 
@@ -907,18 +908,18 @@ int MGraph::count1PI(void)
 //  Generate graphs
 //    the generation process starts from 'connectClass'.
 
-long MGraph::generate(void)
+long T_MGraph::generate(void)
 {
-    MNodeClass *cl;
+    T_MNodeClass *cl;
     int dscl[MAXNODES];
     int n;
 
     for (n = 0; n < nNodes; n++) {
-      dscl[n] = False;
+      dscl[n] = T_False;
     }
 
     // Initial classification of nodes.
-    cl = new MNodeClass(nNodes, nClasses);
+    cl = new T_MNodeClass(nNodes, nClasses);
     cl->init(clist, maxdeg, adjMat);
     connectClass(cl, dscl);
 
@@ -945,7 +946,7 @@ long MGraph::generate(void)
     return ndiag;
 }
 
-int MGraph::findNextCl(MNodeClass *cl, int *dscl)
+int T_MGraph::findNextCl(T_MNodeClass *cl, int *dscl)
 {
     int mine, cr, c, n, me;
 
@@ -969,7 +970,7 @@ int MGraph::findNextCl(MNodeClass *cl, int *dscl)
     return cr;
 }
 
-int MGraph::findNextTCl(MNodeClass *cl, int *dtcl)
+int T_MGraph::findNextTCl(T_MNodeClass *cl, int *dtcl)
 {
     int c, n, mine, cr, me;
 
@@ -995,10 +996,10 @@ int MGraph::findNextTCl(MNodeClass *cl, int *dtcl)
 }
 
 // Connect nodes in a class to others
-void MGraph::connectClass(MNodeClass *cl, int *dscl)
+void T_MGraph::connectClass(T_MNodeClass *cl, int *dscl)
 {
     int sc, sn;
-    MNodeClass *xcl;
+    T_MNodeClass *xcl;
 
     if (DEBUG0) {
       printf("connectClass:begin:");
@@ -1029,7 +1030,7 @@ void MGraph::connectClass(MNodeClass *cl, int *dscl)
 }
 
 //------------------------------------------------------------
-void MGraph::connectNode(int sc, int ss, MNodeClass *cl, int *dscl)
+void T_MGraph::connectNode(int sc, int ss, T_MNodeClass *cl, int *dscl)
 {
     int sn;
     int dtcl[MAXNODES];
@@ -1072,7 +1073,7 @@ void MGraph::connectNode(int sc, int ss, MNodeClass *cl, int *dscl)
 //     nextnd : {nextnd, ...} is the possible target node of the connection.
 //     cl     : the current node class
 
-void MGraph::connectLeg(int sc, int sn, int tc, int ts, MNodeClass *cl, int *dscl, int* dtcl)
+void T_MGraph::connectLeg(int sc, int sn, int tc, int ts, T_MNodeClass *cl, int *dscl, int* dtcl)
 {
     int tn, maxself, nc2, nc, maxcon, ts1, wc, ncm;
     int dtcl1[MAXNODES];
@@ -1103,12 +1104,12 @@ void MGraph::connectLeg(int sc, int sn, int tc, int ts, MNodeClass *cl, int *dsc
         if (DEBUG0) {
           printf("connectLeg: call conNode\n");
         }
-        dscl[sn] = True;
+        dscl[sn] = T_True;
 
         // next node in the current class.
         connectNode(sc, sn+1, cl, dscl);
 
-        dscl[sn] = False;
+        dscl[sn] = T_False;
       }
 
     // connect a free leg of the current node 'sn'.
@@ -1157,7 +1158,7 @@ void MGraph::connectLeg(int sc, int sn, int tc, int ts, MNodeClass *cl, int *dsc
             }
             continue;
           }
-          dtcl1[tn] = True;
+          dtcl1[tn] = T_True;
   
           if (sc == tc && sn > tn) {
             if (DEBUG0) {
@@ -1276,10 +1277,10 @@ void MGraph::connectLeg(int sc, int sn, int tc, int ts, MNodeClass *cl, int *dsc
 //  A new candidate diagram is obtained.
 //  It may be a disconnected graph
 
-void MGraph::newGraph(MNodeClass *cl)
+void T_MGraph::newGraph(T_MNodeClass *cl)
 {
     int connected;
-    MNodeClass *xcl;
+    T_MNodeClass *xcl;
     Bool sopi;
 
     ngen++;
@@ -1403,14 +1404,14 @@ Local int nextPerm(int nelem, int nclass, int *cl, int *r, int *q, int *p, int c
         }
         return 1;
     }
-    b = False;
+    b = T_False;
     for (j = nelem-1; j >= 0; j--) {
         if (q[j] < r[j]) {
             for (k = j+1; k < nelem; k++) {
                 q[k] = 0;
             }
             q[j]++;
-            b = True;
+            b = T_True;
             break;
         }
     }
@@ -1556,7 +1557,7 @@ Global void testPerm()
     q  = new int[nelem];
     r  = new int[nelem];
     count = 0;
-    while (True) {
+    while (T_True) {
         count = nextPerm(nelem, nclist, clist, r, q, p, count);
         if (count < 0) {
             count = - count;

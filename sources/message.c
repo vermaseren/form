@@ -8,7 +8,7 @@
  */
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2022 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -86,7 +86,7 @@ VOID Error2(char *s1, char *s2, UBYTE *t)
  		#[ MesWork :
 */
 
-int MesWork()
+int MesWork(VOID)
 {
 	MesPrint("=== Workspace overflow. %l bytes is not enough.",AM.WorkSize);
 	MesPrint("=== Change parameter WorkSpace in %s",setupfilename);

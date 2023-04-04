@@ -1,7 +1,7 @@
 #pragma once
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2022 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -30,11 +30,11 @@
 #include <string>
 
 // First prime modulo which factorization is tried. Too small results
-// in more unsuccessful attempts; too large is slower.
+// in more unsuccesful attempts; too large is slower.
 const int POLYFACT_FIRST_PRIME = 17;
 
 // Fraction of [1,p) that is used for substitutions of variables. Too
-// small results in more unsuccessful attempts; too large is slower.
+// small results in more unsuccesful attempts; too large is slower.
 const int POLYFACT_IDEAL_FRACTION = 5;
 
 // Number of ideals that are tried before failure due to unlucky

@@ -9,7 +9,7 @@
 
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2022 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -355,7 +355,7 @@ static void *mprotectMalloc(size_t theSize)
 #if MALLOCPROTECT > 0
 
 	/*Potential problems with alignment if the requested size is not 
-	a multiple of items. But no problems on x86-64:*/
+	a multiple of items. But no poblems on x86-64:*/
 	return ret+ (theSize-pageSize-requestedSize);
 #endif
 }/*mprotectMalloc*/

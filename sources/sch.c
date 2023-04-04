@@ -5,7 +5,7 @@
  */
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2022 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -179,7 +179,7 @@ VOID AddToLine(UBYTE *s)
  		#[ FiniLine :			VOID FiniLine()
 */
 
-VOID FiniLine()
+VOID FiniLine(VOID)
 {
 	UBYTE *Out;
 	WORD i;
@@ -680,7 +680,7 @@ UBYTE *CodeToLine(WORD number, UBYTE *Out)
  		#[ MultiplyToLine :
 */
 
-void MultiplyToLine()
+void MultiplyToLine(VOID)
 {
 	int i;
 	if ( AO.CurrentDictionary > 0 && AO.CurDictSpecials > 0
@@ -725,7 +725,7 @@ UBYTE *AddArrayIndex(WORD num,UBYTE *out)
  		#[ PrtTerms :			VOID PrtTerms()
 */
 
-VOID PrtTerms()
+VOID PrtTerms(VOID)
 {
 	UWORD a[2];
 	WORD na;
@@ -819,7 +819,7 @@ static UBYTE *rsymname[] = {
 	 (UBYTE *)"(-cyclic)",(UBYTE *)"(-reversecyclic)"
 	,(UBYTE *)"(-symmetric)",(UBYTE *)"(-antisymmetric)" };
 
-VOID WriteLists()
+VOID WriteLists(VOID)
 {
 	GETIDENTITY
 	WORD i, j, k, *skip;
@@ -959,7 +959,10 @@ VOID WriteLists()
 				else if ( ( functions[i].complex & VARTYPECOMPLEX ) == VARTYPECOMPLEX ) {
 					Out = StrCopy((UBYTE *)"#c",Out);
 				}
-				if ( functions[i].spec >= TENSORFUNCTION ) {
+				if ( functions[i].spec == VERTEXFUNCTION ) {
+					Out = StrCopy((UBYTE *)"(Particle)",Out);
+				}
+				else if ( functions[i].spec >= TENSORFUNCTION ) {
 					Out = StrCopy((UBYTE *)"(Tensor)",Out);
 				}
 				if ( functions[i].symmetric > 0 ) {
@@ -1273,7 +1276,7 @@ VOID WriteLists()
 			MesPrint("\nCurrently dictionary %s is active\n",
 				AO.Dictionaries[olddict-1]->name);
 		else
-			MesPrint("\nCurrently there is no active dictionary\n");
+			MesPrint("\nCurrently there is no actice dictionary\n");
 	}
 	if ( AC.CodesFlag ) {
 		if ( C->numlhs > 0 ) {
@@ -1954,6 +1957,10 @@ WORD WriteSubTerm(WORD *sterm, WORD first)
 WORD WriteInnerTerm(WORD *term, WORD first)
 {
 	WORD *t, *s, *s1, *s2, n, i, pow;
+#ifdef WITHFLOAT
+	int FloatChars = 0;
+	GETIDENTITY
+#endif
 	t = term;
 	s = t+1;
 	GETCOEF(t,n);
@@ -2005,6 +2012,28 @@ WORD WriteInnerTerm(WORD *term, WORD first)
 		else                            RatToLine((UWORD *)t,n);
 		first = 0;
 	}
+#ifdef WITHFLOAT
+/*
+	Check whether there is a 'proper' float_ function and no raw mode.
+	If so, print as float.
+	Raw mode is indicated as AO.FloatPrec < 0.
+	AO.FloatPrec == 0 indicated as many digits as the precision allows.
+*/
+	else if ( AO.FloatPrec >= 0 && AT.aux_ != 0 ) {
+		WORD *ss = s;
+		while ( ss < t ) {
+			if ( *ss == FLOATFUN ) {
+				if ( ( FloatChars = PrintFloat(ss,AO.FloatPrec) ) != 0 ) {
+					TokenToLine(AO.floatspace);
+					first = 0;
+				}
+				break;
+			}
+			ss += ss[1];
+		}
+		if ( ss >= t ) first = 1;
+	}
+#endif
 	else first = 1;
 	while ( s < t ) {
 		if ( lowestlevel && ( (AO.PrintType & (PRINTONEFUNCTION | PRINTALL)) == PRINTONEFUNCTION ) ) {
@@ -2050,6 +2079,11 @@ WORD WriteInnerTerm(WORD *term, WORD first)
 /*
  		#] NEWGAMMA : 
 */
+#ifdef WITHFLOAT
+		if ( *s == FLOATFUN && AO.FloatPrec >= 0 && AT.aux_ != 0 ) {
+		}
+		else 
+#endif
 		{
 			if ( *s >= FUNCTION && AC.funpowers > 0
 			&& functions[*s-FUNCTION].spec == 0 && ( AC.funpowers == ALLFUNPOWERS ||
@@ -2470,7 +2504,7 @@ WORD WriteExpression(WORD *terms, LONG ltot)
 		Writes all expressions that should be written
 */
 
-WORD WriteAll()
+WORD WriteAll(VOID)
 {
 	GETIDENTITY
 	WORD lbrac, first;

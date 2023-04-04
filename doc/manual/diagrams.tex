@@ -1,30 +1,295 @@
-
+ 
 \chapter{Diagram generation}
 \label{diagrams}
 
-For an accurate calculation of particle reactions a good, fast and flexible 
-diagram generator is a necessity. It was noticed that the fastest available 
-generator is the one by Toshiaki Kaneko, which was constructed for the 
-Grace system. Hence he was asked whether he would be willing to provide a 
-version that could be implemented into Form, thereby making intermediate 
-files with diagrams superfluous. He gracefully accepted.
+Starting with version 5.0 \FORM is equiped with the diagram generator of 
+Toshiaki Kaneko "A Feynman graph generator for any order of coupling 
+constants", Toshiaki Kaneko(Meiji Gakuin U.): Comput.Phys.Commun. 92 (1995) 
+127-152, e-Print: hep-th/9408107. Recently he has reprogrammed it in C++ 
+and made it into a library, accompanied with a manual (to be published). 
+\FORM makes use of this library and has built its own syntax around it, 
+based on many years of experience working with the QGRAF generator 
+("Automatic Feynman graph generation", Paulo Nogueira: J.Comput.Phys. 105 
+(1993) 279-289) and the problems encountered with the large number of 
+diagrams used with the Mincer and Forcer programs. The whole has been set 
+up in such a way that if more features are needed they should not be 
+exceptionally hard to be implemented.
 
-In the current version the diagram generator is not complete yet. 
-Effectively it only accepts one type of scalar particles, but one can have 
-any number of particles at the vertices. Hence it can be used as a fast 
-topology generator. Because all source code is present and has been 
-commented it will be possible to extend the user interface on demand.
+In version 4.3 the diagram generator was not complete yet. Effectively it 
+only accepted one type of scalar particles, but one could have any number 
+of particles at the vertices. Hence it could be used as a fast topology 
+generator.
 
-The completion of the full diagram generator is planned for late-2018/ 
-early-2019, depending on the availability of time. The source code of the 
-generator is in C++, which makes it rather accessible from Form and possibly 
-from other programs as well. For more information about that one should 
-contact Prof. Toshiaki Kaneko directly.
+For the \FORM implementation in version 5.0 and later two new types of 
+variables are introduced, a number of new functions and a number of new 
+preprocessor variables. In addition the special concept of models is new.
 
-The current interface is rather simple, due to the fact that one can 
-generate only 'topologies'. First one needs two sets of vectors, one for 
-the momenta of the external particles and one for the momenta of internal 
-particles. The call is then with the function topologies\_ as in
+Let us start with models, particles and vertices:
+\begin{description}
+\item[Model] Particles and vertices exist only inside the scope of a model. 
+A model is a very special set of which the elements will be the particles 
+and the vertices. It is defined by
+\begin{verbatim}
+    Model name;
+        Particle .....;
+             .
+             .
+        Particle .....;
+        Vertex ....;
+             .
+             .
+        Vertex ....;
+    EndModel;
+\end{verbatim}
+in which the particle and vertex statements are declarations that will be 
+explained below. The order is important. All Particle declarations must 
+come before the vertex declarations.
+\item[Particle] A particle is a very special type of function. It is 
+declared with
+\begin{verbatim}
+    Particle particlename[,antiparticlename][,<sign><number>][,external];
+\end{verbatim}
+A particle has an antiparticle assigned to it. If no name of an 
+antiparticle is specified the particle will be its own antiparticle as is 
+the case with for instance a photon or a gluon. The sign indicates whether 
+a particle is a fermion (-) or a boson (+) and the number is the dimension 
+of its SU(2) representation. Hence a scalar particle has the number 1, an 
+electron the number 2, etc. If no spin information is provided it is 
+assumed that the particle is a scalar. After the spin option there is the 
+external option to indicate that particle will not be considered for the 
+choice of propagators (edges). To avoid that a scalar particle has an 
+antiparticle by the name external one should avoid
+\begin{verbatim}
+    Particle MyScalar,external;
+\end{verbatim}
+and use
+\begin{verbatim}
+    Particle MyScalar,1,external;
+\end{verbatim}
+instead.
+\item[Vertex] A vertex is also a very special type of function. It is 
+declared with
+\begin{verbatim}
+    Vertex particle1,...,particlen:coupling;
+\end{verbatim}
+for an npoint vertex. The coupling constant is either the number 1, or a 
+(product of) symbol(s) to an integer power. If the symbols have not been 
+declared before they will be declared during the reading of the vertex 
+declaration.
+\end{description}
+Some examples:
+\begin{verbatim}
+    Model PHI3;
+        Particle phi,1;
+        Vertex phi,phi,phi:g;
+    EndModel;
+    Model QCD;
+        Particle qua,QUA,-2;
+        Particle gho,GHO,-1;
+        Particle glu,+3;
+        Vertex qua,QUA,glu:g;
+        Vertex gho,GHO,glu:g;
+        Vertex glu,glu,glu:g;
+        Vertex glu,glu,glu,glu:g^2;
+    EndModel;
+\end{verbatim}
+It is possible to have several models simultaneously.
+
+In some cases one might want to generate diagrams in which the internal 
+(multi)loop propagators are represented as special edges. This requires the 
+definition of more complicated models as in
+\begin{verbatim}
+    #do i = 0,`LOOPS'
+    Model QCD`i';
+        Particle qua,QUA,-2;
+        Particle gho,GHO,-1;
+        Particle glu,+3;
+        Vertex qua,QUA,glu:g;
+        Vertex gho,GHO,glu:g;
+        Vertex glu,glu,glu:g;
+        Vertex glu,glu,glu,glu:g^2;
+        #do j = 1,`i'-1
+            Vertex qua,QUA:g^{2*`j'};
+            Vertex gho,GHO:g^{2*`j'};
+            Vertex glu,glu:g^{2*`j'};
+        #enddo
+    EndModel;
+    #enddo
+\end{verbatim}
+in which the two-point vertices are the propagators with j loops. As one 
+can see in this example, one can have vertices with identical particle 
+contents but different powers of the coupling constants.
+
+One can generate diagrams with the diagrams\_ function. Its syntax is
+\begin{verbatim}
+    diagrams_(model,set_of_input_particles,set_of_output_particles,
+             set_of_external_momenta,set_of_internal_momenta,
+             number_of_loops_or_coupling_constants,options) 
+\end{verbatim}
+In the case of generating a boson propagator the external symmetry can be 
+used  most effectively by declaring both as input particles as in {glu,glu} 
+and have the set of output particles empty. The output is given in terms of 
+a few functions. These functions are
+\begin{description}
+\item[topo\_] Its argument is the number of the topology. This numbering is 
+consistent in the sense that whether one generates only topologies (with 
+the option TOPOLOGIESONLY\_) or the full diagrams makes no difference for 
+the number of the topology of the diagrams. This allows relative 
+simple programs to match topologies and renumberings to a predefined list 
+of topologies, after which this renumbering can then be done later in an 
+economical way for the full set of diagrams.
+\item[node\_] Indicates a vertex. The first argument is the number of the 
+vertex, the second the combined coupling constants of the vertex and after 
+that the momenta of the particles if only the topologies are determined, or 
+the  particles with their momentum in their argument when the full diagrams 
+are generated as in:
+\begin{verbatim}
+     - 2*topo_(1)*node_(1,1,glu(-Q1))*node_(2,1,glu(-Q2))*node_(3,g,qua(-p1)
+    ,QUA(-p2),glu(Q1))*node_(4,g,qua(-p3),QUA(p1),glu(Q2))*node_(5,g,qua(p2)
+    ,QUA(-p4),glu(-p5))*node_(6,g,qua(p4),QUA(p3),glu(p5))
+\end{verbatim}
+The external lines are connected by a vertex to the vacuum. Those are the 
+nodes with the lowest numbers as in \verb:node_(1,1,glu(-Q1)): and only a 
+single particle. If we would have generated the topologies only we would 
+have gotten for the first diagram
+\begin{verbatim}
+     + 1/4*topo_(1)*node_(1,1,-Q1)*node_(2,1,-Q2)*node_(3,g,Q1,-p1,-p2)*
+    node_(4,g,Q2,p1,-p3)*node_(5,g,p2,-p4,-p5)*node_(6,g,p3,p4,p5)
+\end{verbatim}
+\item[edge\_] It is also possible to generate the diagrams in terms of 
+edges, either with the nodes:
+\begin{verbatim}
+     + 1/4*topo_(1)*node_(1,1,-Q1)*node_(2,1,-Q2)*node_(3,g,Q1,-p1,-p2)*
+    node_(4,g,Q2,p1,-p3)*node_(5,g,p2,-p4,-p5)*node_(6,g,p3,p4,p5)*edge_(1,
+    Q1,1,3)*edge_(2,Q2,2,4)*edge_(3,p1,3,4)*edge_(4,p2,3,5)*edge_(5,p3,4,6)*
+      edge_(6,p4,5,6)*edge_(7,p5,5,6)
+\end{verbatim}
+or without the nodes:
+\begin{verbatim}
+     - 2*topo_(1)*edge_(1,glu(Q1),1,3)*edge_(2,glu(Q2),2,4)*edge_(3,QUA(p1),
+    3,4)*edge_(4,qua(p2),3,5)*edge_(5,QUA(p3),4,6)*edge_(6,qua(p4),5,6)*
+    edge_(7,glu(p5),5,6)
+\end{verbatim}
+Edges are only given when the options ask for it.
+\item[block\_] A block is a subdiagram that is connected to the remaining 
+part of the diagram by a single vertex. These blocks are only given if the 
+options ask for it.
+\end{description}
+
+Options are provided by means of the sum of a number of predefined 
+preprocessor variables. They are
+\begin{description}
+\item[ONEPI\_] One-particle irreducible subgraphs only.
+\item[WITHOUTINSERTIONS\_] No internal higher order propagators.
+\item[NOTADPOLES\_] No tadpoles.
+\item[SYMMETRIZE\_] Symmetrize in terms of the external legs.
+\item[TOPOLOGIESONLY\_] Generate only topologies.
+\item[NONODES\_] Do not put the nodes in the output.
+\item[WITHEDGES\_] Put the edges in the output.
+\item[WITHBLOCKS\_] Put the blocks in the output.
+\item[NOSNAILS\_] No snails in the output.
+\item[NOEXTSELF\_] No external self-energy subgraphs.
+\item[WITHONEPISETS\_] Print the function onepi\_ containing the 
+one-particle irreducible subsets.
+\end{description}
+
+When using the WITHOUTINSERTIONS\_ option one can obtain these higher order 
+subgraphs by adapting the definition of the model. Here we show this for 
+QCD:
+\begin{verbatim}
+   #do i = 0,`LOOPS'
+   Model QCD`i';
+       Particle qua,QUA,-2;
+       Particle gho,GHO,-1;
+       Particle glu,+3;
+       Vertex qua,QUA,glu:g;
+       Vertex gho,GHO,glu:g;
+       Vertex glu,glu,glu:g;
+       Vertex glu,glu,glu,glu:g^2;
+       #do j = 1,`i'-1
+           Vertex qua,QUA:g^{2*`j'};
+           Vertex gho,GHO:g^{2*`j'};
+           Vertex glu,glu:g^{2*`j'};
+       #enddo
+   EndModel;
+   #enddo
+\end{verbatim}
+We see here a number of two-point verticles with a higher power of the 
+coupling constants. This gives, omitting the quarks and the ghosts:
+\begin{verbatim}
+    #define LOOPS "3"
+    #do i = 0,`LOOPS'
+    Model QCD`i';
+        Particle qua,QUA,-2;
+        Particle gho,GHO,-1;
+        Particle glu,+3;
+        Vertex qua,QUA,glu:g;
+        Vertex gho,GHO,glu:g;
+        Vertex glu,glu,glu:g;
+        Vertex glu,glu,glu,glu:g^2;
+        #do j = 1,`i'-1
+    EndModel;
+    #enddo
+    Vector Q,Q1,...,Q7,p,p0,...,p21;
+    Symbols x1,x2,n1,...,n14;
+    Indices j1,j2,i1,...,i21;
+    Set QQ:Q1,...,Q7;
+    Set pp:p1,...,p21;
+    Set empty:;
+    .global
+    L  Fprop`LOOPS' = diagrams_(QCD`LOOPS',{glu,glu},empty,QQ,pp,`LOOPS',
+                   `OnePI_'+`NoTadpoles_'+`Symmetrize_'+`TopologiesOnly_');
+    Print +f +s;
+    .end
+
+Time =       0.00 sec    Generated terms =         46
+          Fprop3         Terms in output =         46
+                         Bytes used      =      17788
+
+   Fprop3 =
+       + 1/4*topo_(1)*node_(1,1,-Q1)*node_(2,1,-Q2)*node_(3,g,Q1,-p1,-p2)*
+      node_(4,g,Q2,p1,-p3)*node_(5,g,p2,-p4,-p5)*node_(6,g,p3,p4,-p6)*node_(7,
+      g,p5,-p7,-p8)*node_(8,g,p6,p7,p8)
+       + ...
+       + 1/2*topo_(10)*node_(1,1,-Q1)*node_(2,1,-Q2)*node_(3,g,-p1,-p2,-p3)*
+      node_(4,g,p1,-p4,-p5)*node_(5,g,Q1,p2,-p6)*node_(6,g,Q2,p4,p6)*node_(7,
+      g^2,p3,p5)
+       + ...
+       + 1/4*topo_(28)*node_(1,1,-Q1)*node_(2,1,-Q2)*node_(3,g,Q1,-p1,-p2)*
+      node_(4,g,Q2,-p3,-p4)*node_(5,g^2,p1,p3)*node_(6,g^2,p2,p4)
+       + ...
+       + 1/2*topo_(44)*node_(1,1,-Q1)*node_(2,1,-Q2)*node_(3,g,Q1,-p1,-p2)*
+      node_(4,g,Q2,p1,-p3)*node_(5,g^4,p2,p3)
+       + 1/4*topo_(45)*node_(1,1,-Q1)*node_(2,1,-Q2)*node_(3,g^2,-p1,-p2)*
+      node_(4,g^2,Q1,p1,-p3,-p4)*node_(5,g^2,Q2,p2,p3,p4)
+       + ...
+      ;
+\end{verbatim}
+With the quarks and the ghosts there are 202 diagrams. One can see in 
+topo\_(44) that we have a two-loop propagator, indicated by node\_(5,...). 
+In topo\_(10) and topo\_(45) we see a single one-loop propagator. In 
+topo\_(28) we see the diagram with two one-loop propagators. In we omit the 
+TopologiesOnly\_ option, we will obtain the full diagrams with the same 
+topo\_ indicators. A few of those diagrams are:
+\begin{verbatim}
+       - topo_(28)*node_(1,1,glu(-Q1))*node_(2,1,glu(-Q2))*node_(3,g,qua(-p1),
+      QUA(-p2),glu(Q1))*node_(4,g,qua(-p4),QUA(-p3),glu(Q2))*node_(5,g^2,qua(
+      p3),QUA(p1))*node_(6,g^2,qua(p2),QUA(p4))
+       - topo_(28)*node_(1,1,glu(-Q1))*node_(2,1,glu(-Q2))*node_(3,g,gho(-p1),
+      GHO(-p2),glu(Q1))*node_(4,g,gho(-p4),GHO(-p3),glu(Q2))*node_(5,g^2,gho(
+      p3),GHO(p1))*node_(6,g^2,gho(p2),GHO(p4))
+       + 1/2*topo_(28)*node_(1,1,glu(-Q1))*node_(2,1,glu(-Q2))*node_(3,g,glu(
+      Q1),glu(-p1),glu(-p2))*node_(4,g,glu(Q2),glu(-p3),glu(-p4))*node_(5,g^2,
+      glu(p1),glu(p3))*node_(6,g^2,glu(p2),glu(p4))
+\end{verbatim}
+ 
+In version 4.3 there existed also the topologies\_ and the phi\_ 
+functions to just generate topologies. This was before a complete 
+implementation was made. For backward compatibility we have kept these 
+functions, but in the future they may become obsolete.
+
+For people who have programs that rely on the topologies\_ function we give 
+here nevertheless the syntax and a few examples
 % THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
 % WELL! (Diagrams_1)
 \begin{verbatim}
@@ -138,25 +403,49 @@ topologies of a 6-loop propagator with only 3-point vertices:
     Local F = topologies_(`LOOPS',-2,{3,},QQ,PP);
     .end
 
-Time =       1.75 sec    Generated terms =       2793
+Time =       0.85 sec    Generated terms =       2793
                F         Terms in output =       2793
-                         Bytes used      =     347156
-\end{verbatim}
-or without the symmetry
-% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
-% WELL! (Diagrams_5)
-\begin{verbatim}
-    Vectors Q1,Q2,p1,...,p17;
-    Set QQ:Q1,Q2;
-    Set PP:p1,...,p17;
-    #define LOOPS "6"
-    Local F = topologies_(`LOOPS',2,{3,},QQ,PP);
-    .end
-
-Time =       0.63 sec    Generated terms =       4999
-               F         Terms in output =       4999
-                         Bytes used      =     616180
+                         Bytes used      =    2010976
 \end{verbatim}
 This is very much faster than the program that is used most widely.
 
-To be continued.....
+The program to do this with the diagrams\_ function is:
+\begin{verbatim}
+    #define LOOPS "6"
+    Model PHI3;
+        Particle phi,+1;
+        Vertex phi,phi,phi:g;
+    EndModel;
+    Vector Q1,Q2,p1,...,p{3*`LOOPS'};
+    Set QQ:Q1,Q2;
+    Set pp:p1,...,p{3*`LOOPS'};
+    Set empty:;
+    Local F = diagrams_(PHI3,{phi,phi},empty,QQ,pp,`LOOPS',
+            'OnePI_'+`NoTadpoles\_'+`Symmetrize_'+`TopologiesOnly_');
+    .end
+
+Time =       0.85 sec    Generated terms =       2793
+               F         Terms in output =       2793
+                         Bytes used      =    2010976
+\end{verbatim}
+and without the symmetry:
+% THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
+% WELL! (Diagrams_6)
+\begin{verbatim}
+    #define LOOPS "6"
+    Model PHI3;
+        Particle phi,+1;
+        Vertex phi,phi,phi:g;
+    EndModel;
+    Vector Q1,Q2,p1,...,p{3*`LOOPS'};
+    Set QQ:Q1,Q2;
+    Set pp:p1,...,p{3*`LOOPS'};
+    Set empty:;
+    Local F = diagrams_(PHI3,{phi,phi},empty,QQ,pp,`LOOPS',
+            'OnePI_'+`NoTadpoles\_'+`TopologiesOnly\_');
+    .end
+
+Time =       0.15 sec    Generated terms =       4999
+               F         Terms in output =       4999
+                         Bytes used      =    3599296
+\end{verbatim}

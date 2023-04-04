@@ -2,12 +2,12 @@
  * 
  *  This file contains the main program.
  *  It also deals with the very early stages of the startup of FORM
- *	and the final stages when the program attempts some cleanup.
+ *	and the final stages when the program attemps some cleanup.
  *	Here is the routine that analyses the command tail.
  */
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2022 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -134,11 +134,12 @@ static void PrintHeader(int with_full_info)
 			s[100] = '\0';
 			s += 100;
 		}
+/*
+		By now we omit the message about 32/64 bits. It should all be 64.
 
-		s += sprintf(s," %d-bits",(WORD)(sizeof(WORD)*16));
-/*		while ( *s ) s++; */
+		s += snprintf(s,250-(s-buffer1)," %d-bits",(WORD)(sizeof(WORD)*16));
 		*s = 0;
-
+*/
 		if ( with_full_info ) {
 #if defined(WITHPTHREADS) || defined(WITHMPI)
 #if defined(WITHPTHREADS)
@@ -146,7 +147,7 @@ static void PrintHeader(int with_full_info)
 #elif defined(WITHMPI)
 			int nworkers = PF.numtasks-1;
 #endif
-			s += sprintf(s," %d worker",nworkers);
+			s += snprintf(s,250-(s-buffer1)," %d worker",nworkers);
 			*s = 0;
 /*			while ( *s ) s++; */
 			if ( nworkers != 1 ) {
@@ -155,7 +156,7 @@ static void PrintHeader(int with_full_info)
 			}
 #endif
 
-			sprintf(t,"Run: %s",MakeDate());
+			snprintf(t,80-(t-buffer2),"Run: %s",MakeDate());
 			while ( *t ) t++;
 
 			/*
@@ -507,7 +508,7 @@ NoFile:
 		.clear instructions if so desired without using interpretation
 */
 
-int OpenInput()
+int OpenInput(VOID)
 {
 	int oldNoShowInput = AC.NoShowInput;
 	UBYTE c;
@@ -661,8 +662,8 @@ VOID ReserveTempFiles(int par)
 */
 	s = AM.TempDir; i = 200;   /* Some extra for VMS */
 	while ( *s && *s != ':' ) { if ( *s == '\\' ) s++; s++; i++; }
-
-	FG.fname = (char *)Malloc1(sizeof(UBYTE)*(i+14),"name for temporary files");
+	FG.fnamesize = sizeof(UBYTE)*(i+14);
+	FG.fname = (char *)Malloc1(FG.fnamesize,"name for temporary files");
 	s = AM.TempDir; t = (UBYTE *)FG.fname;
 	while ( *s && *s != ':' ) { if ( *s == '\\' ) s++; *t++ = *s++; }
 	if ( (char *)t > FG.fname && t[-1] != SEPARATOR && t[-1] != ALTSEPARATOR )
@@ -674,7 +675,8 @@ VOID ReserveTempFiles(int par)
 	s = AM.TempSortDir; i = 200;   /* Some extra for VMS */
 	while ( *s && *s != ':' ) { if ( *s == '\\' ) s++; s++; i++; }
 
-	FG.fname2 = (char *)Malloc1(sizeof(UBYTE)*(i+14),"name for sort files");
+	FG.fname2size = sizeof(UBYTE)*(i+14);
+	FG.fname2 = (char *)Malloc1(FG.fname2size,"name for sort files");
 	s = AM.TempSortDir; t = (UBYTE *)FG.fname2;
 	while ( *s && *s != ':' ) { if ( *s == '\\' ) s++; *t++ = *s++; }
 	if ( (char *)t > FG.fname2 && t[-1] != SEPARATOR && t[-1] != ALTSEPARATOR )
@@ -712,7 +714,7 @@ VOID ReserveTempFiles(int par)
 		FG.fnamebase = t-FG.fname;
 	  }
 #else
-	  iii = sprintf((char*)t,"%d",PF.me);
+	  iii = snprintf((char*)t,FG.fnamesize-(t-FG.fname),"%d",PF.me);
 	  t+= iii;
 	  s+= iii; /* in case defaulttmpfilename is too short */
 #endif
@@ -726,7 +728,7 @@ VOID ReserveTempFiles(int par)
 		they can make the same .str file. We prevent this with first trying
 		a file that contains the digits of the pid. If this file
 		has already been taken we fall back on the old scheme.
-		The whole is controlled with the -M (MultiRun) parameter in the
+		The whole is controled with the -M (MultiRun) parameter in the
 		command tail.
 */
 	if ( AM.MultiRun ) {
@@ -829,16 +831,19 @@ classic:;
 	}
 #ifdef WITHPTHREADS
 	else if ( par == 2 ) {
+		size_t tname;
 		s = (UBYTE *)((void *)(FG.fname2)); i = 0;
 		while ( *s ) { s++; i++; }
-		s = (UBYTE *)Malloc1(sizeof(char)*(i+12),"name for stage4 file a");
-		sprintf((char *)s,"%s.%d",FG.fname2,AT.identity);
+		tname = sizeof(char)*(i+12);
+		s = (UBYTE *)Malloc1(tname,"name for stage4 file a");
+		snprintf((char *)s,tname,"%s.%d",FG.fname2,AT.identity);
 		s[i-2] = '4'; s[i-1] = 'a';
 		AR.FoStage4[1].name = (char *)s;
 		s = (UBYTE *)((void *)(FG.fname)); i = 0;
 		while ( *s ) { s++; i++; }
-		s = (UBYTE *)Malloc1(sizeof(char)*(i+12),"name for stage4 file b");
-		sprintf((char *)s,"%s.%d",FG.fname,AT.identity);
+		tname = sizeof(char)*(i+12);
+		s = (UBYTE *)Malloc1(tname,"name for stage4 file b");
+		snprintf((char *)s,tname,"%s.%d",FG.fname,AT.identity);
 		s[i-2] = '4'; s[i-1] = 'b';
 		AR.FoStage4[0].name = (char *)s;
 		if ( AT.identity == 0 ) {
@@ -863,7 +868,7 @@ classic:;
 ALLPRIVATES *DummyPointer = 0;
 #endif
 
-VOID StartVariables()
+VOID StartVariables(VOID)
 {
 	int i, ii;
 	PUTZERO(AM.zeropos);
@@ -912,6 +917,10 @@ VOID StartVariables()
 	AP.pSize = 128;
 	AP.MaxPreIfLevel = 10;
 	AP.cComChar = AP.ComChar = '*';
+	AP.firstnamespace = 0;
+	AP.lastnamespace = 0;
+	AP.fullnamesize = 127;
+	AP.fullname = (UBYTE *)Malloc1((AP.fullnamesize+1)*sizeof(UBYTE),"AP.fullname");
 	AM.OffsetVector = -2*WILDOFFSET+MINSPEC;
 	AC.cbufList.num = 0;
 	AM.hparallelflag = AM.gparallelflag =
@@ -920,6 +929,10 @@ VOID StartVariables()
 	if ( PF.numtasks < 2 ) AM.hparallelflag |= NOPARALLEL_NPROC;
 #endif
 	AC.tablefilling = 0;
+	AC.models = 0;
+	AC.nummodels = 0;
+	AC.ModelLevel = 0;
+	AC.modelspace = 0;
 	AM.resetTimeOnClear = 1;
 	AM.gnumextrasym = AM.ggnumextrasym = 0;
 	AM.havesortdir = 0;
@@ -1055,7 +1068,11 @@ VOID StartVariables()
 	cbuf[AM.dbufnum].mnumrhs = cbuf[AM.dbufnum].numrhs;
 
 	AddSymbol((UBYTE *)"i_",-MAXPOWER,MAXPOWER,VARTYPEIMAGINARY,0);
-	AddSymbol((UBYTE *)"pi_",-MAXPOWER,MAXPOWER,VARTYPENONE,0);
+	AM.numpi = AddSymbol((UBYTE *)"pi_",-MAXPOWER,MAXPOWER,VARTYPENONE,0);
+/*
+	coeff_ should have the number COEFFSYMBOL and den_ the number DENOMINATOR
+    and the three should be in this order!
+*/
 	AddSymbol((UBYTE *)"coeff_",-MAXPOWER,MAXPOWER,VARTYPENONE,0);
 	AddSymbol((UBYTE *)"num_",-MAXPOWER,MAXPOWER,VARTYPENONE,0);
 	AddSymbol((UBYTE *)"den_",-MAXPOWER,MAXPOWER,VARTYPENONE,0);
@@ -1072,7 +1089,7 @@ VOID StartVariables()
 	{
 		char dumstr[20];
 		for ( ; i < FIRSTUSERSYMBOL; i++ ) {
-			sprintf(dumstr,":%d:",i);
+			snprintf(dumstr,20,":%d:",i);
 			AddSymbol((UBYTE *)dumstr,-MAXPOWER,MAXPOWER,VARTYPENONE,0);
 		}
 	}
@@ -1099,7 +1116,7 @@ VOID StartVariables()
 	{
 		char dumstr[20];
 		for ( ; i < FIRSTUSERFUNCTION-FUNCTION; i++ ) {
-			sprintf(dumstr,"::%d::",i);
+			snprintf(dumstr,20,"::%d::",i);
 			AddFunction((UBYTE *)dumstr,0,0,0,0,0,-1,-1);
 		}
 	}
@@ -1123,7 +1140,7 @@ VOID StartVariables()
 	AT.WildArgTaken = (WORD *)Malloc1((LONG)AC.WildcardBufferSize*sizeof(WORD)/2
 				,"argument list names");
 	AT.WildcardBufferSize = AC.WildcardBufferSize;
-	AR.CompareRoutine = &Compare1;
+	AR.CompareRoutine = (COMPAREDUMMY)(&Compare1);
 	AT.nfac = AT.nBer = 0;
 	AT.factorials = 0;
 	AT.bernoullis = 0;
@@ -1146,7 +1163,27 @@ VOID StartVariables()
 	PutPreVar((UBYTE *)"optimscheme_",(UBYTE *)("0"),0,0);
 	PutPreVar((UBYTE *)"tolower_",(UBYTE *)("0"),(UBYTE *)("?a"),0);
 	PutPreVar((UBYTE *)"toupper_",(UBYTE *)("0"),(UBYTE *)("?a"),0);
+	PutPreVar((UBYTE *)"takeleft_",(UBYTE *)("0"),(UBYTE *)("?a"),0);
+	PutPreVar((UBYTE *)"takeright_",(UBYTE *)("0"),(UBYTE *)("?a"),0);
+	PutPreVar((UBYTE *)"keepleft_",(UBYTE *)("0"),(UBYTE *)("?a"),0);
+	PutPreVar((UBYTE *)"keepright_",(UBYTE *)("0"),(UBYTE *)("?a"),0);
 	PutPreVar((UBYTE *)"SYSTEMERROR_",(UBYTE *)("0"),0,0);
+/*
+	Next are a few 'constants' for diagram generation
+*/
+	PutPreVar((UBYTE *)"ONEPI_",(UBYTE *)("1"),0,0);
+	PutPreVar((UBYTE *)"WITHOUTINSERTIONS_",(UBYTE *)("2"),0,0);
+	PutPreVar((UBYTE *)"NOTADPOLES_",(UBYTE *)("4"),0,0);
+	PutPreVar((UBYTE *)"SYMMETRIZE_",(UBYTE *)("8"),0,0);
+	PutPreVar((UBYTE *)"TOPOLOGIESONLY_",(UBYTE *)("16"),0,0);
+	PutPreVar((UBYTE *)"NONODES_",(UBYTE *)("32"),0,0);
+	PutPreVar((UBYTE *)"WITHEDGES_",(UBYTE *)("64"),0,0);
+/*		Note that CHECKEXTERN is 128 */
+	PutPreVar((UBYTE *)"WITHBLOCKS_",(UBYTE *)("256"),0,0);
+		PutPreVar((UBYTE *)"WITHONEPISETS_",(UBYTE *)("512"),0,0);
+	PutPreVar((UBYTE *)"NOSNAILS_",(UBYTE *)("1024"),0,0);
+	PutPreVar((UBYTE *)"NOEXTSELF_",(UBYTE *)("2048"),0,0);
+
 	{
 		char buf[41];  /* up to 128-bit */
 		LONG pid;
@@ -1201,6 +1238,10 @@ VOID StartVariables()
 	AC.WTimeStatsFlag = AM.gWTimeStatsFlag = AM.ggWTimeStatsFlag = 0;
 	AM.gcNumDollars = AP.DollarList.num;
 	AC.SizeCommuteInSet = AM.gSizeCommuteInSet = 0;
+#ifdef WITHFLOAT
+	AC.MaxWeight = AM.gMaxWeight = AM.ggMaxWeight = MAXWEIGHT;
+	AC.DefaultPrecision = AM.gDefaultPrecision = AM.ggDefaultPrecision = DEFAULTPRECISION;
+#endif
 	AC.CommuteInSet = 0;
 
 	AM.PrintTotalSize = 0;
@@ -1236,7 +1277,7 @@ VOID StartVariables()
  		#[ StartMore :
 */
 
-VOID StartMore()
+VOID StartMore(VOID)
 {
 #ifdef WITHEXTERNALCHANNEL
 	/*If env.variable "FORM_PIPES" is defined, we have to initialize 
@@ -1254,9 +1295,9 @@ VOID StartMore()
 */
 	{
 		UBYTE buf[32];
-		sprintf((char*)buf,"%d",PF.me);
+		snprintf((char*)buf,32,"%d",PF.me);
 		PutPreVar((UBYTE *)"PARALLELTASK_",buf,0,0);
-		sprintf((char*)buf,"%d",PF.numtasks);
+		snprintf((char*)buf,32,"%d",PF.numtasks);
 		PutPreVar((UBYTE *)"NPARALLELTASKS_",buf,0,0);
 	}
 #else
@@ -1274,7 +1315,7 @@ VOID StartMore()
 		This routine initializes the parameters that may change during the run.
 */
 
-WORD IniVars()
+WORD IniVars(VOID)
 {
 #ifdef WITHPTHREADS
 	GETIDENTITY
@@ -1286,7 +1327,7 @@ WORD IniVars()
 
 #ifdef WITHPTHREADS
 	UBYTE buf[32];
-	sprintf((char*)buf,"%d",AM.totalnumberofthreads);
+	snprintf((char*)buf,32,"%d",AM.totalnumberofthreads);
 	PutPreVar((UBYTE *)"NTHREADS_",buf,0,1);
 #else
 	PutPreVar((UBYTE *)"NTHREADS_",(UBYTE *)"1",0,1);
@@ -1530,7 +1571,7 @@ static VOID setNewSig(int i, void (*handler)(int))
 		signal(i,handler);
 }
 
-VOID setSignalHandlers()
+VOID setSignalHandlers(VOID)
 {
 	/* Reset various unrecoverable error signals:*/
 	setNewSig(SIGSEGV,onErrSig);
@@ -1818,7 +1859,7 @@ VOID Terminate(int errorcode)
  		#[ PrintRunningTime :
 */
 
-VOID PrintRunningTime()
+VOID PrintRunningTime(VOID)
 {
 #if (defined(WITHPTHREADS) && (defined(WITHPOSIXCLOCK) || defined(WINDOWS))) || defined(WITHMPI)
 	LONG mastertime;
@@ -1859,7 +1900,7 @@ VOID PrintRunningTime()
  		#[ GetRunningTime :
 */
 
-LONG GetRunningTime()
+LONG GetRunningTime(VOID)
 {
 #if defined(WITHPTHREADS) && (defined(WITHPOSIXCLOCK) || defined(WINDOWS))
 	LONG mastertime;

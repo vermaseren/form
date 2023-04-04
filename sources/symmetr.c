@@ -5,7 +5,7 @@
  */
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2022 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -297,7 +297,7 @@ NextWV:
 				while ( n > 0 && ( *wv == FROMSET || *wv == SETTONUM
 				|| *wv == LOADDOLLAR ) ) { wv += wv[1]; wm++; n--; }
 /*              
-                Freak problem: doesn't test for n and ran into a remaining
+                Freak problem: doesn't test for n and ran into a reamining
                 code equal to SETTONUM followed by a big number and then
                 ran out of the memory.
 
@@ -317,7 +317,7 @@ NextWV:
 	(somewhat slow) permutation routine that has as its worst
 	cases some rather unlikely configurations, rather than some
 	common ones (as would have been the case with the conventional
-	permutation routine).
+	permuation routine).
 		assume:
 		vvvvvvvvvvvviiiiiii		(tvfix in tfixvec and tifix in tfixind)
 		VVVVVVVVVIIIIIIIIII		(vwc in wcvec and iwc in wcind)

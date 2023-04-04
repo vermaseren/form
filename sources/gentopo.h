@@ -12,16 +12,16 @@
 // Output to FROM
 
 //==============================================================
-// class of nodes for EGraph
+// class of nodes for T_EGraph
 
-class ENode {
+class T_ENode {
   public:
     int  deg;
     int  ext;
     int *edges;
 };
 
-class EEdge {
+class T_EEdge {
   public:
     int  nodes[2];
     int  ext;
@@ -31,7 +31,7 @@ class EEdge {
 	char padding[6];
 };
 
-class EGraph {
+class T_EGraph {
   public:
     long gId;
     int  pId;
@@ -43,11 +43,11 @@ class EGraph {
     int opi;
     BigInt nsym, esym;
 
-    ENode *nodes;
-    EEdge *edges;
+    T_ENode *nodes;
+    T_EEdge *edges;
 
-    EGraph(int nnodes, int nedges, int mxdeg);
-    ~EGraph();
+    T_EGraph(int nnodes, int nedges, int mxdeg);
+    ~T_EGraph();
     void print(void);
     void init(int pid, long gid, int **adjmat, int sopi, BigInt nsym, BigInt esym);
 
@@ -56,9 +56,9 @@ class EGraph {
 };
 
 //==============================================================
-// class of nodes for MGraph
+// class of nodes for T_MGraph
 
-class MNode {
+class T_MNode {
   public:
     int id;               // node id
     int deg;              // degree(node) = the number of legs
@@ -68,20 +68,20 @@ class MNode {
     int freelg;           // the number of free legs
     int visited;
 
-    MNode(int id, int deg, int ext, int clss);
+    T_MNode(int id, int deg, int ext, int clss);
 };
 
 //===============================================================
-//  class of node-classes for MGraph
-class MNodeClass;
+//  class of node-classes for T_MGraph
+class T_MNodeClass;
 
 //===============================================================
 //  class of scalar graph expressed by matrix form
 // 
 //  Input  : the classified set of nodes.
-//  Output : control passed to 'EGraph(self)'
+//  Output : control passed to 'T_EGraph(self)'
 
-class MGraph {
+class T_MGraph {
 
   public:
 
@@ -90,7 +90,7 @@ class MGraph {
     int nNodes;            // the number of nodes
     int nEdges;            // the number of edges
     int nLoops;            // the number of loops
-    MNode **nodes;          // table of MNode object
+    T_MNode **nodes;          // table of T_MNode object
     int *clist;             // list of initial classes
     int nClasses;          // the number of initial classes
     // int ndcl;              // node --> initial class number
@@ -111,8 +111,8 @@ class MGraph {
     BigInt esym;               // symmetry factor from edges
     Fraction wsum;         // weighted sum of graphs
     Fraction wsopi;        // weighted sum of 1PI graphs
-    MNodeClass *curcl;      // the current 'MNodeClass' object
-    EGraph *egraph;
+    T_MNodeClass *curcl;      // the current 'T_MNodeClass' object
+    T_EGraph *egraph;
   
     // measures of efficiency
     long ngen;              // generated graph before check
@@ -125,8 +125,8 @@ class MGraph {
     long discardIso;        
 
     // functions */
-    MGraph(int pid, int ncl, int *cldeg, int *clnum, int *clext, int sopi);
-    ~MGraph();
+    T_MGraph(int pid, int ncl, int *cldeg, int *clnum, int *clext, int sopi);
+    ~T_MGraph();
     long   generate(void);
 
   private:
@@ -142,21 +142,21 @@ class MGraph {
     int  bicount;
 	int  padding;
 
-    void   printAdjMat(MNodeClass *cl);
+    void   printAdjMat(T_MNodeClass *cl);
     int    isConnected(void);
     int    visit(int nd);
-    int    isIsomorphic(MNodeClass *cl);
+    int    isIsomorphic(T_MNodeClass *cl);
     void   permMat(int size, int *perm, int **mat0, int **mat1);
     int    compMat(int size, int **mat0, int **mat1);
-    MNodeClass *refineClass(MNodeClass *cl, int cn);
+    T_MNodeClass *refineClass(T_MNodeClass *cl, int cn);
     void   bisearchM(int nd, int pd, int ne);
     int    count1PI(void);
 
-    int    findNextCl(MNodeClass *cl, int *dscl);
-    int    findNextTCl(MNodeClass *cl, int *dcl);
-    void   connectClass(MNodeClass *cl, int *dscl);
-    void   connectNode(int sc, int ss, MNodeClass *cl, int *dscl);
-    void   connectLeg(int sc, int sn, int tc, int ts, MNodeClass *cl, int *dscl, int* dtcl);
-    void   newGraph(MNodeClass *cl);
+    int    findNextCl(T_MNodeClass *cl, int *dscl);
+    int    findNextTCl(T_MNodeClass *cl, int *dcl);
+    void   connectClass(T_MNodeClass *cl, int *dscl);
+    void   connectNode(int sc, int ss, T_MNodeClass *cl, int *dscl);
+    void   connectLeg(int sc, int sn, int tc, int ts, T_MNodeClass *cl, int *dscl, int* dtcl);
+    void   newGraph(T_MNodeClass *cl);
 
 };

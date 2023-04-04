@@ -7,7 +7,7 @@
 
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2022 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -44,16 +44,17 @@
 
 #else  /* HAVE_CONFIG_H */
 
-#define MAJORVERSION 4
-#define MINORVERSION 3
+#define MAJORVERSION 5
+#define MINORVERSION 0
 
 #ifdef __DATE__
 #define PRODUCTIONDATE __DATE__
 #else
-#define PRODUCTIONDATE "08-nov-2022"
+#define PRODUCTIONDATE "8-nov-2022"
 #endif
 
-#undef BETAVERSION
+/*#undef BETAVERSION */
+#define BETAVERSION
 
 #ifdef LINUX32
 #define UNIX
@@ -73,6 +74,7 @@
 #define WITHZLIB
 #define WITHGMP
 #define WITHPOSIXCLOCK
+#define WITHFLOAT
 #endif
 
 #ifdef APPLE32
@@ -89,6 +91,7 @@
 #define WITHZLIB
 #define WITHGMP
 #define WITHPOSIXCLOCK
+#define WITHFLOAT
 #define HAVE_UNORDERED_MAP
 #define HAVE_UNORDERED_SET
 #endif
@@ -172,6 +175,9 @@
  * STATIC_ASSERT(condition) will fail to be compiled if the given
  * condition is false.
  */
+/*
+#define STATIC_ASSERT(condition)
+*/
 #define STATIC_ASSERT(condition) STATIC_ASSERT__1(condition,__LINE__)
 #define STATIC_ASSERT__1(X,L) STATIC_ASSERT__2(X,L)
 #define STATIC_ASSERT__2(X,L) STATIC_ASSERT__3(X,L)

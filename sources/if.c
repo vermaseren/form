@@ -4,7 +4,7 @@
  */
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2022 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -365,6 +365,10 @@ WORD DoIfStatement(PHEAD WORD *ifcode, WORD *term)
 					}
 				}
 				return(0);
+			case IFUSERFLAG:
+				if ( ( Expressions[AR.CurExpr].uflags & (1 << ifp[2]) ) != 0 )
+					return(1);
+				return(0);
 			default:
 /*
 				Now we have a subexpression. Test first for one with a single item.
@@ -402,6 +406,15 @@ WORD DoIfStatement(PHEAD WORD *ifcode, WORD *term)
 				cc = (UWORD *)(ifp + 3);
 				for ( i = 0; i < j; i++ ) coef2[i] = cc[i];
 				break;
+#ifdef WITHFLOAT
+			case IFFLOATNUMBER:
+/*
+				The sloppy solution is: Convert to rational.
+				This way we can write it over coef2,ncoef2
+*/
+				ncoef2 = FloatFunToRat(BHEAD coef2,ifp);
+				break;
+#endif
 			case MATCH:
 			case TYPEIF:
 				coef2[0] = HowMany(BHEAD ifp,term);
@@ -709,6 +722,15 @@ generic:;
 					coef2[1] = 1;
 				}
 				break;
+			case IFUSERFLAG:
+				{
+					ncoef2 = 0;
+					if ( ( Expressions[AR.CurExpr].uflags & (1 << ifp[2]) ) != 0 )
+						ncoef2 = 1;
+					coef2[0] = ncoef2;
+					coef2[1] = 1;
+				}
+				break;
 			default:
 				break;
 		}
@@ -1008,7 +1030,7 @@ WORD HowMany(PHEAD WORD *ifcode, WORD *term)
  		#[ DoubleIfBuffers :
 */
 
-VOID DoubleIfBuffers()
+VOID DoubleIfBuffers(VOID)
 {
 	int newmax, i;
 	WORD *newsumcheck;
@@ -1110,7 +1132,7 @@ SWITCHTABLE *FindCase(WORD nswitch, WORD ncase)
  		#[ DoubleSwitchBuffers :
 */
 
-int DoubleSwitchBuffers()
+int DoubleSwitchBuffers(VOID)
 {
 	int newmax, i;
 	SWITCH *newarray;

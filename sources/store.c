@@ -5,7 +5,7 @@
  */
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2022 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -45,7 +45,7 @@
 
 */
 
-WORD OpenTemp()
+WORD OpenTemp(VOID)
 {
 	GETIDENTITY
 	if ( AR.outfile->handle >= 0 ) {
@@ -187,7 +187,7 @@ endpos:
 
 */
 
-WORD RevertScratch()
+WORD RevertScratch(VOID)
 {
 	GETIDENTITY
 	FILEHANDLE *f;
@@ -232,7 +232,7 @@ WORD RevertScratch()
 
 */
 
-WORD ResetScratch()
+WORD ResetScratch(VOID)
 {
 	GETIDENTITY
 	FILEHANDLE *f;
@@ -799,6 +799,7 @@ WORD DeleteStore(WORD par)
 						e_out->node = e_in->node;
 						e_out->replace = e_in->replace;
 						e_out->vflags = e_in->vflags;
+						e_out->uflags = e_in->uflags;
 #ifdef PARALLELCODE
 						e_out->partodo = e_in->partodo;
 #endif
@@ -1599,7 +1600,7 @@ FullTerm:
 		it at 'to'.
 		The value to be returned is the number of words read.
 		Renumbering is done also.
-		This is controlled by the renumber table, given in 'renumber'
+		This is controled by the renumber table, given in 'renumber'
 
 		This routine should work with a number of cache buffers. The
 		exact number should be definable in form.set.
@@ -2167,6 +2168,11 @@ WORD ToStorage(EXPRESSIONS e, POSITION *length)
 			MesPrint("Error while writing storage file");
 			goto ErrReturn;
 	}
+	if ( WriteFile(AR.StoreData.Handle,(UBYTE *)(&(e->uflags)),(LONG)sizeof(WORD)) != 
+		sizeof(WORD) ) {
+			MesPrint("Error while writing storage file");
+			goto ErrReturn;
+	}
 	TELLFILE(AR.StoreData.Handle,&(indexent->position));
 	if ( f->handle >= 0 ) {
 		POSITION llength;
@@ -2297,7 +2303,7 @@ ErrNextS:
  *  @return  = 0 everything okay, != 0 an error occurred
  */
 
-WORD SetFileIndex()
+WORD SetFileIndex(VOID)
 {
 	GETIDENTITY
 	int i, j = sizeof(FILEINDEX)/(sizeof(LONG));
@@ -2837,7 +2843,7 @@ RENUMBER GetTable(WORD expr, POSITION *position, WORD mode)
 
 	oldw = AT.WorkPointer + 1 + SUBEXPSIZE;
 /*
-	The prototype is loaded in the WorkSpace by the Index routine.
+	The protoype is loaded in the WorkSpace by the Index routine.
 	After all it has to find an occurrence with the proper arguments.
 	This sets the WorkPointer. Hence be careful now.
 */
@@ -3129,6 +3135,7 @@ GetTb3:
 			numdummies
 			numfactors
 			vflags
+			uflags
 */
 		POSITION pos;
 		int nummystery;
@@ -3181,6 +3188,13 @@ GetTb3:
 				}
 				AS.Oldvflags = buffer;
 
+				buffer = (WORD *)Malloc1(capacity * sizeof(WORD), "uflags pointers");
+				if (AS.Olduflags) {
+					WCOPY(buffer, AS.Olduflags, AS.NumOldNumFactors);
+					M_free(AS.Olduflags, "uflags pointers");
+				}
+				AS.Oldvflags = buffer;
+
 				AS.NumOldNumFactors = capacity;
 			}
 
@@ -3210,6 +3224,23 @@ GetTb3:
 		}
 		else {
 			Expressions[expr].vflags = 0;
+		}
+		if ( nummystery > 0 ) {
+			if ( ReadFile(AR.StoreData.Handle,(UBYTE *)AT.WorkPointer,(LONG)sizeof(WORD)) != 
+			sizeof(WORD) ) {
+				UNLOCK(AM.storefilelock);
+				AT.WorkPointer = oldwork;
+				return(0);
+			}
+			AS.Olduflags[expr] =
+			Expressions[expr].uflags = *AT.WorkPointer;
+/*
+			MesPrint("--> uflags = %d",Expressions[expr].uflags);
+*/
+			nummystery -= sizeof(WORD);
+		}
+		else {
+			Expressions[expr].uflags = 0;
 		}
 	}
 
@@ -4016,7 +4047,7 @@ static unsigned int CompactifySizeof(unsigned int size)
  *  @return   = 0 everything okay, != 0 an error occurred
  */
 
-WORD ReadSaveHeader()
+WORD ReadSaveHeader(VOID)
 {
 	/* Read-only tables of function pointers for conversions. */
 	static VOID (*flipJumpTable[4])(UBYTE *) =
@@ -4130,7 +4161,7 @@ WORD ReadSaveHeader()
  *
  *  Called by CoLoad() and FindInIndex().
  *
- *  @param  fileind  contains the read FILEINDEX after successful return. must
+ *  @param  fileind  contains the read FILEINDEX after succesful return. must
  *                   point to allocated, big enough memory.
  *  @return          = 0 everything okay, != 0 an error occurred
  */
@@ -4139,7 +4170,7 @@ WORD ReadSaveIndex(FILEINDEX *fileind)
 	/* do we need some translation for the FILEINDEX? */
 	if ( AO.transFlag ) {
 		/* if a translated FILEINDEX can hold less entries than the original
-		   FILEINDEX, then we need to buffer the extra entries in this static
+		   FILEINDEX, then we need to buffer the extra entires in this static
 		   variable (can happen going from 32bit to 64bit */
 		static FILEINDEX sbuffer;
 
@@ -4631,12 +4662,19 @@ WORD ReadSaveVariables(UBYTE *buffer, UBYTE *top, LONG *size, LONG *outsize,\
 				*size += lenW;
 				*outsize += sizeof(WORD);
 			}
+			/* handle uflags */
+			if ( end - in >= lenW ) {
+				if ( flip ) AO.FlipWORD(in);
+				AO.ResizeWORD(in, out);
+				*size += lenW;
+				*outsize += sizeof(WORD);
+			}
 			return ( 0 );
 		}
 
 RSVEnd:
 		/* we are here because the remaining buffer cannot hold the next
-		   struct. we position the file behind the last successfully translated
+		   struct. we position the file behind the last sucessfully translated
 		   struct and return. */
 		ADDPOS(pos, *size);
 		SeekFile(AO.SaveData.Handle, &pos, SEEK_SET);
@@ -4928,6 +4966,7 @@ ReadSaveTerm32(UBYTE *bin, UBYTE *binend, UBYTE **bout, UBYTE *boutend, UBYTE *t
 							++out; ++r;
 							break;
 						case SNUMBER:
+							argEnd = out+2;
 							++out; ++r;
 							if ( sizeof(WORD) == 2 ) {
 								/* resize if needed */

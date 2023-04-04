@@ -7,7 +7,7 @@
  */
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2022 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -173,6 +173,11 @@ donumber:		i = 0;
 				*in = c;
 				break;
 			case 1:		/* 0-9 */
+			  {
+#ifdef WITHFLOAT
+				int spec;
+				UBYTE *in2;
+#endif
 				CHECKPOLY
 				s = in;
 				while ( *s == '0' && FG.cTable[s[1]] == 1 ) s++;
@@ -190,6 +195,34 @@ donumber:		i = 0;
 					object = 1;
 					break;
 				}
+#ifdef WITHFLOAT
+				in2 = CheckFloat(in,&spec);
+				if ( in2 > in ) {
+					if ( spec == 1 ) {
+						*out++ = TNUMBER; *out++ = 0; s = in2;
+					}
+					else if ( spec == -1 ) {
+						MesPrint("&The floating point system has not been started: %s",in);
+	                    if ( !error ) error = 1;
+					}
+					else {
+					  in = in2;
+dofloat:
+					  while ( out + (in-s) >= AC.toptokens ) {
+						LONG oldsize = (LONG)(out - AC.tokens);
+						SBYTE **ppp = &(AC.tokens); /* to avoid a compiler warning */
+						SBYTE **pppp = &(AC.toptokens);
+						DoubleBuffer((void **)ppp,(void **)pppp,sizeof(SBYTE),"more tokens");
+						out = AC.tokens + oldsize;
+						outtop = AC.toptokens - MAXNUMSIZE;
+					  }
+					  *out++ = TFLOAT;
+					  while ( s < in ) *out++ = *s++;
+					}
+				}
+				else
+#endif
+				{
 				*out++ = TNUMBER;
 				if ( ( i & 1 ) != 0 ) *out++ = (SBYTE)(*s++ - '0');
 				while ( out + (in-s)/2 >= AC.toptokens ) {
@@ -204,8 +237,10 @@ donumber:		i = 0;
 					*out++ = (SBYTE)(( *s - '0' ) * 10 + ( s[1] - '0' ));
 					s += 2;
 				}
+				}
 				object = 2;
-				break;
+			  }
+			  break;
 			case 2:		/* . $ _ ? # ' */
 				CHECKPOLY
 				if ( *in == '?' ) {
@@ -268,6 +303,30 @@ donumber:		i = 0;
 						object = 0;
 						in++;
 					}
+#ifdef WITHFLOAT
+					else if ( object == 0 || object == -1 ) {
+/*
+						Test for floating point number
+*/
+						int spec;
+						s = CheckFloat(in,&spec);
+						if ( s > in ) {
+							if ( spec == 1 ) {
+								*out++ = TNUMBER; *out++ = 0;
+								object = 2; in = s;
+							}
+							else if ( spec == -1 ) {
+								MesPrint("&The floating point system has not been started: %s",in);
+	            		        if ( !error ) error = 1;
+							}
+							else {
+								UBYTE *a = s; s = in; in = a;
+								goto dofloat;
+							}
+						}
+						else goto IllPos;
+					}
+#endif
 					else goto IllPos;
 				}
 				else if ( *in == '$' ) {	/* $ variable */
@@ -1233,6 +1292,12 @@ dofunction:
 				}
 				if ( denom < 0 || *t == TPOWER || *t == TPOWER1 ) numexp++;
 				break;
+#ifdef WITHFLOAT
+			case TFLOAT:
+				s++; while ( *s >= 0 ) s++;
+				if ( denom < 0 || *s == TPOWER || *s == TPOWER1 ) numexp++;
+				break;
+#endif
 			case TEXPRESSION:
 				s++; while ( *s >= 0 ) s++;
 				t = s;
@@ -1293,6 +1358,18 @@ dofunction:
 					case CVECTOR: goto dovector;
 					case CFUNCTION: goto dofunction;
 					case CNUMBER: goto dosymbol;
+					case CMODEL: 
+						if ( denom < 0 || *s == TPOWER ) {
+							MesPrint("&A model to a power or in denominator is illegal");
+							error = 1;
+						}
+						break;
+					case ANYTYPE: 
+						if ( denom < 0 || *s == TPOWER ) {
+							MesPrint("&A set without type to a power or in denominator is illegal");
+							error = 1;
+						}
+						break;
 					default: error = 1; break;
 				}
 				break;
@@ -1463,6 +1540,13 @@ dovector:
 				else if ( *s == TDOT ) goto dodot;
 				t = s;
 				goto dofunpower;
+#ifdef WITHFLOAT
+			case TFLOAT:
+				*fill++ = *s++; while ( *s >= 0 ) *fill++ = *s++;
+				t = s;
+				sube = 0;
+				goto dofunpower;
+#endif
 			case TFUNCTION:
 				*fill++ = *s++; while ( *s >= 0 ) *fill++ = *s++;
 				if ( *s == TWILDCARD ) *fill++ = *s++;
@@ -1665,6 +1749,8 @@ dofunpower:
 					case CVECTOR: goto dovector;
 					case CFUNCTION: goto dofunction;
 					case CNUMBER: goto dosymbol;
+					case CMODEL: break;
+					case ANYTYPE: break;
 					default: error = 1; break;
 				}
 				break;

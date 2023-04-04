@@ -5,7 +5,7 @@
  */
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2022 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -165,6 +165,7 @@ WORD CleanExpr(WORD par)
 					e_out->numdummies = e_in->numdummies;
 					e_out->numfactors = e_in->numfactors;
 					e_out->vflags = e_in->vflags;
+					e_out->uflags = e_in->uflags;
 					e_out->sizeprototype = e_in->sizeprototype;
 				}
 #ifdef PARALLELCODE
@@ -207,7 +208,7 @@ WORD CleanExpr(WORD par)
 
 */
 
-WORD PopVariables()
+WORD PopVariables(VOID)
 {
 	GETIDENTITY
 	WORD i, j, retval;
@@ -221,6 +222,10 @@ WORD PopVariables()
 	AC.CodesFlag = AM.gCodesFlag;
 	AC.NamesFlag = AM.gNamesFlag;
 	AC.StatsFlag = AM.gStatsFlag;
+#ifdef WITHFLOAT
+	AC.MaxWeight = AM.gMaxWeight;
+	AC.DefaultPrecision = AM.gDefaultPrecision;
+#endif
 	AC.OldFactArgFlag = AM.gOldFactArgFlag;
 	AC.TokensWriteFlag = AM.gTokensWriteFlag;
 	AC.extrasymbols = AM.gextrasymbols;
@@ -374,7 +379,7 @@ WORD PopVariables()
  		#[ MakeGlobal :
 */
 
-VOID MakeGlobal()
+VOID MakeGlobal(VOID)
 {
 	WORD i, j, *pp, *mm;
 	UWORD *p, *m;
@@ -384,6 +389,10 @@ VOID MakeGlobal()
 	AM.gCodesFlag = AC.CodesFlag;
 	AM.gNamesFlag = AC.NamesFlag;
 	AM.gStatsFlag = AC.StatsFlag;
+#ifdef WITHFLOAT
+	AM.gMaxWeight = AC.MaxWeight;
+	AM.gDefaultPrecision = AC.DefaultPrecision;
+#endif
     AM.gOldFactArgFlag = AC.OldFactArgFlag;
 	AM.gextrasymbols = AC.extrasymbols;
 	if ( AM.gextrasym ) { M_free(AM.gextrasym,"extrasym"); AM.gextrasym = 0; }
@@ -471,7 +480,7 @@ VOID MakeGlobal()
  		#[ TestDrop :
 */
 
-VOID TestDrop()
+VOID TestDrop(VOID)
 {
 	EXPRESSIONS e;
 	WORD j;
@@ -571,6 +580,7 @@ restart:;
 		AS.NumOldNumFactors = 20;
 		AS.OldNumFactors = (WORD *)Malloc1(AS.NumOldNumFactors*sizeof(WORD),"numfactors pointers");
 		AS.Oldvflags = (WORD *)Malloc1(AS.NumOldNumFactors*sizeof(WORD),"vflags pointers");
+		AS.Olduflags = (WORD *)Malloc1(AS.NumOldNumFactors*sizeof(WORD),"uflags pointers");
 	}
 	else if ( nexpr >= AS.NumOldNumFactors ) {
 		oldw = AS.OldNumFactors;
@@ -580,8 +590,12 @@ restart:;
 		oldw = AS.Oldvflags;
 		AS.Oldvflags = (WORD *)Malloc1(2*AS.NumOldNumFactors*sizeof(WORD),"vflags pointers");
 		for ( i = 0; i < AS.NumOldNumFactors; i++ ) AS.Oldvflags[i] = oldw[i];
-		AS.NumOldNumFactors = 2*AS.NumOldNumFactors;
 		M_free(oldw,"vflags pointers");
+		oldw = AS.Olduflags;
+		AS.Olduflags = (WORD *)Malloc1(2*AS.NumOldNumFactors*sizeof(WORD),"uflags pointers");
+		for ( i = 0; i < AS.NumOldNumFactors; i++ ) AS.Olduflags[i] = oldw[i];
+		M_free(oldw,"uflags pointers");
+		AS.NumOldNumFactors = 2*AS.NumOldNumFactors;
 	}
 /*
 	The next is needed when we Load a .sav file with lots of expressions.
@@ -590,6 +604,7 @@ restart:;
 	AS.OldOnFile[nexpr] = e->onfile;
 	AS.OldNumFactors[nexpr] = e->numfactors;
 	AS.Oldvflags[nexpr] = e->vflags;
+	AS.Olduflags[nexpr] = e->uflags;
 }
 
 /*
@@ -1086,6 +1101,9 @@ WORD PutBracket(PHEAD WORD *termin)
 
 	t = termin; tStopa = t + *t; i = *(t + *t -1); i = ABS(i);
 	if ( AR.PolyFun && AT.PolyAct ) tStop = termin + AT.PolyAct;
+#ifdef WITHFLOAT
+	else if ( AT.FloatPos ) tStop = termin + AT.FloatPos;
+#endif
 	else tStop = tStopa - i;
 	t++;
 	if ( AR.BracketOn < 0 ) {
@@ -1583,7 +1601,7 @@ VOID SpecialCleanup(PHEAD0)
 
 #ifndef WITHPTHREADS
 
-void SetMods()
+void SetMods(VOID)
 {
 	int i, n;
 	if ( AN.cmod != 0 ) M_free(AN.cmod,"AN.cmod");
@@ -1601,7 +1619,7 @@ void SetMods()
 
 #ifndef WITHPTHREADS
 
-void UnSetMods()
+void UnSetMods(VOID)
 {
 	if ( AN.cmod != 0 ) M_free(AN.cmod,"AN.cmod");
 	AN.cmod = 0;
@@ -2324,7 +2342,7 @@ LONG SizeOfExpression(WORD num)
  		#[ UpdatePositions :
 */
 
-void UpdatePositions()
+void UpdatePositions(VOID)
 {
 	EXPRESSIONS e = Expressions;
 	POSITION *old;
@@ -2356,10 +2374,16 @@ void UpdatePositions()
 			for ( i = 0; i < AS.NumOldNumFactors; i++ ) AS.Oldvflags[i] = oldw[i];
 			AS.NumOldNumFactors = NumExpressions;
 			M_free(oldw,"vflags pointers");
+			oldw = AS.Olduflags;
+			AS.Olduflags = (WORD *)Malloc1(NumExpressions*sizeof(WORD),"uflags pointers");
+			for ( i = 0; i < AS.NumOldNumFactors; i++ ) AS.Olduflags[i] = oldw[i];
+			AS.NumOldNumFactors = NumExpressions;
+			M_free(oldw,"uflags pointers");
 		}
 		else {
 			AS.OldNumFactors = (WORD *)Malloc1(NumExpressions*sizeof(WORD),"numfactors pointers");
 			AS.Oldvflags = (WORD *)Malloc1(NumExpressions*sizeof(WORD),"vflags pointers");
+			AS.Olduflags = (WORD *)Malloc1(NumExpressions*sizeof(WORD),"uflags pointers");
 			AS.NumOldNumFactors = NumExpressions;
 		}
 	}
@@ -2367,6 +2391,7 @@ void UpdatePositions()
 		AS.OldOnFile[i] = e[i].onfile;
 		AS.OldNumFactors[i] = e[i].numfactors;
 		AS.Oldvflags[i] = e[i].vflags;
+		AS.Olduflags[i] = e[i].uflags;
 	}
 }
 

@@ -14,7 +14,7 @@
  */
 /* #[ License : */
 /*
- *   Copyright (C) 1984-2022 J.A.M. Vermaseren
+ *   Copyright (C) 1984-2017 J.A.M. Vermaseren
  *   When using this file you are requested to refer to the publication
  *   J.A.M.Vermaseren "New features of FORM" math-ph/0010025
  *   This is considered a matter of courtesy as the development was paid
@@ -118,10 +118,12 @@ static KEYWORD com2commands[] = {
 	,{"chainout",       (TFUN)CoChainout,         STATEMENT,    PARTEST}
 	,{"chisholm",       (TFUN)CoChisholm,         STATEMENT,    PARTEST}
 	,{"cleartable",     (TFUN)CoClearTable,       DECLARATION,  PARTEST}
+	,{"clearflag",      (TFUN)CoClearUserFlag,    STATEMENT,    PARTEST}
 	,{"collect",        (TFUN)CoCollect,          SPECIFICATION,PARTEST}
 	,{"commuteinset",   (TFUN)CoCommuteInSet,     DECLARATION,  PARTEST}
 	,{"contract",       (TFUN)CoContract,         STATEMENT,    PARTEST}
-	,{"copyspectator"  ,(TFUN)CoCopySpectator,    DEFINITION,   PARTEST}
+	,{"copyspectator",  (TFUN)CoCopySpectator,    DEFINITION,   PARTEST}
+	,{"createall",      (TFUN)CoCreateAll,        STATEMENT,    PARTEST}
 	,{"createspectator",(TFUN)CoCreateSpectator,  DECLARATION,  PARTEST}
 	,{"ctable",         (TFUN)CoCTable,           DECLARATION,  PARTEST}
 	,{"deallocatetable",(TFUN)CoDeallocateTable,  DECLARATION,  PARTEST}
@@ -141,10 +143,14 @@ static KEYWORD com2commands[] = {
 	,{"endif",          (TFUN)CoEndIf,            STATEMENT,    PARTEST}
 	,{"endinexpression",(TFUN)CoEndInExpression,  STATEMENT,    PARTEST}
 	,{"endinside",      (TFUN)CoEndInside,        STATEMENT,    PARTEST}
+	,{"endmodel",       (TFUN)CoEndModel,         DECLARATION,  PARTEST}
 	,{"endrepeat",      (TFUN)CoEndRepeat,        STATEMENT,    PARTEST}
 	,{"endswitch",      (TFUN)CoEndSwitch,        STATEMENT,    PARTEST}
 	,{"endterm",        (TFUN)CoEndTerm,          STATEMENT,    PARTEST}
 	,{"endwhile",       (TFUN)CoEndWhile,         STATEMENT,    PARTEST}
+#ifdef WITHFLOAT
+	,{"evaluate",       (TFUN)CoEvaluate,         STATEMENT,    PARTEST}
+#endif
 	,{"exit",           (TFUN)CoExit,             STATEMENT,    PARTEST}
 	,{"extrasymbols",   (TFUN)CoExtraSymbols,     DECLARATION,  PARTEST}
 	,{"factarg",        (TFUN)CoFactArg,          STATEMENT,    PARTEST}
@@ -169,6 +175,7 @@ static KEYWORD com2commands[] = {
 	,{"many",           (TFUN)CoMany,             STATEMENT,    PARTEST}
 	,{"merge",          (TFUN)CoMerge,            STATEMENT,    PARTEST}
 	,{"metric",         (TFUN)CoMetric,           DECLARATION,  PARTEST}
+	,{"model",          (TFUN)CoModel,            DECLARATION,  PARTEST}
 	,{"moduleoption",   (TFUN)CoModuleOption,     ATENDOFMODULE,PARTEST}
 	,{"multi",          (TFUN)CoMulti,            STATEMENT,    PARTEST}
 	,{"multibracket",   (TFUN)CoMultiBracket,     STATEMENT,    PARTEST}
@@ -185,6 +192,7 @@ static KEYWORD com2commands[] = {
 	,{"on",             (TFUN)CoOn,               DECLARATION,  PARTEST}
 	,{"once",           (TFUN)CoOnce,             STATEMENT,    PARTEST}
 	,{"only",           (TFUN)CoOnly,             STATEMENT,    PARTEST}
+	,{"particle",       (TFUN)CoParticle,         DECLARATION,  PARTEST}
 	,{"polyfun",        (TFUN)CoPolyFun,          DECLARATION,  PARTEST}
 	,{"polyratfun",     (TFUN)CoPolyRatFun,       DECLARATION,  PARTEST}
 	,{"pophide",        (TFUN)CoPopHide,          SPECIFICATION,PARTEST}
@@ -202,6 +210,7 @@ static KEYWORD com2commands[] = {
 	,{"select",         (TFUN)CoSelect,           STATEMENT,    PARTEST}
 	,{"set",            (TFUN)CoSet,              DECLARATION,  PARTEST}
 	,{"setexitflag",    (TFUN)CoSetExitFlag,      STATEMENT,    PARTEST}
+	,{"setflag",        (TFUN)CoSetUserFlag,      STATEMENT,    PARTEST}
 	,{"shuffle",        (TFUN)CoMerge,            STATEMENT,    PARTEST}
 	,{"skip",           (TFUN)CoSkip,             SPECIFICATION,PARTEST}
 	,{"sort",           (TFUN)CoSort,             STATEMENT,    PARTEST}
@@ -217,7 +226,14 @@ static KEYWORD com2commands[] = {
 	,{"term",           (TFUN)CoTerm,             STATEMENT,    PARTEST}
 	,{"testuse",        (TFUN)CoTestUse,          STATEMENT,    PARTEST}
 	,{"threadbucketsize",(TFUN)CoThreadBucket,    DECLARATION,  PARTEST}
+#ifdef WITHFLOAT
+	,{"tofloat",        (TFUN)CoToFloat,          STATEMENT,    PARTEST}
+#endif
 	,{"topolynomial",   (TFUN)CoToPolynomial,     STATEMENT,    PARTEST}
+#ifdef WITHFLOAT
+	,{"torat",          (TFUN)CoToRat,            STATEMENT,    PARTEST}
+	,{"torational",     (TFUN)CoToRat,            STATEMENT,    PARTEST}
+#endif
 	,{"tospectator",    (TFUN)CoToSpectator,      STATEMENT,    PARTEST}
 	,{"totensor",       (TFUN)CoToTensor,         STATEMENT,    PARTEST}
 	,{"tovector",       (TFUN)CoToVector,         STATEMENT,    PARTEST}
@@ -227,6 +243,7 @@ static KEYWORD com2commands[] = {
 	,{"tryreplace",     (TFUN)CoTryReplace,       STATEMENT,    PARTEST}
 	,{"unfactorize",    (TFUN)CoUnFactorize,      TOOUTPUT,     PARTEST}
 	,{"unhide",         (TFUN)CoUnHide,           SPECIFICATION,PARTEST}
+	,{"vertex",         (TFUN)CoVertex,           DECLARATION,  PARTEST}
 	,{"while",          (TFUN)CoWhile,            STATEMENT,    PARTEST}
 };
 
@@ -289,7 +306,7 @@ LONG insubexpbuffers = 0;
 		Search in table 2 can be binary.
 */
 
-VOID inictable()
+VOID inictable(VOID)
 {
 	KEYWORD *k = com1commands;
 	int i, j, ksize;
@@ -545,7 +562,7 @@ int CompileStatement(UBYTE *in)
 	}
 	else {
 		if ( ( k = findcommand(s) ) == 0 && IsIdStatement(s) == 0 ) {
-			MesPrint("&Unrecognized statement");
+			MesPrint("&Unrecognized statement %s",s);
 			return(1);
 		}
 		if ( k == 0 ) {	/* Id statement without id. Note: id must be in table */
@@ -593,6 +610,7 @@ int CompileStatement(UBYTE *in)
 			AC.compiletype = STATEMENT;
 		}
 	  }
+	  else if ( k->type == MIXED2 ) {}
 	  else if ( k->type > AC.compiletype ) {
 		if ( StrCmp((UBYTE *)(k->name),(UBYTE *)"format") != 0 )
 			AC.compiletype = k->type;
@@ -647,7 +665,7 @@ int CompileStatement(UBYTE *in)
  		#[ TestTables :
 */
 
-int TestTables()
+int TestTables(VOID)
 {
 	FUNCTIONS f = functions;
 	TABLES t;
@@ -1719,6 +1737,19 @@ docoef:
 				}
 				*relo = 2; *t++ = SNUMBER; *t++ = 4; *t++ = y;
 				goto TryPower;
+#ifdef WITHFLOAT
+			case TFLOAT:
+				{ WORD *w;
+				s = ReadFloat(s);
+				i = AT.WorkPointer[1];
+				w = AT.WorkPointer;
+				NCOPY(t,w,i);
+/*
+Power?
+*/
+				}
+				break;
+#endif
 			case TDOLLAR:
 			{
 				WORD *powplace;
