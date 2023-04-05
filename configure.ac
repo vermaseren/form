@@ -768,8 +768,12 @@ AC_DEFUN([AX_HANDLE_EXTRA_WARNING],
 		[$1="$$1 -Wno-misleading-indentation"])
 	# Too many false positives.
 	# See: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=88443
-	AX_CHECK_COMPILE_FLAG([-Wno-stringop-overflow],
-		[$1="$$1 -Wno-stringop-overflow"])
+	#
+	# Somehow the compiler on my Mac does not recognize this
+	# option even though this check says it does. (JV 5-apr-2023)
+	#
+	# AX_CHECK_COMPILE_FLAG([-Wno-stringop-overflow],
+	#	[$1="$$1 -Wno-stringop-overflow"])
 fi[]dnl
 ])
 
@@ -777,7 +781,7 @@ my_test_COMPILEFLAGS=${COMPILEFLAGS+set}
 if test "$my_test_COMPILEFLAGS" != set; then
 	if test "x$vendor" = xgnu; then
 		# We don't use -pedantic option because of horrible warnings.
-		COMPILEFLAGS="-Wall -Wextra -Wpadded"
+		COMPILEFLAGS="-Wall -Wextra"
 		AX_HANDLE_EXTRA_WARNING([COMPILEFLAGS])
 		# Enable optimizations.
 		COMPILEFLAGS="$COMPILEFLAGS -O3"
@@ -798,6 +802,11 @@ if test "$my_test_COMPILEFLAGS" != set; then
 						COMPILEFLAGS="$COMPILEFLAGS -march=opteron"
 					fi
 				fi])
+#
+#			Added this one (JV 5-apr-2023)
+#
+			AX_CHECK_COMPILE_FLAG([-m64],
+				[COMPILEFLAGS="$COMPILEFLAGS -m64"])
 		fi
 		# Profiling option.
 		if test "x$enable_profile" = xgprof; then
@@ -842,7 +851,12 @@ if test "$my_test_DEBUGCOMPILEFLAGS" != set && test "x$enable_debug" = xyes; the
 		DEBUGCOMPILEFLAGS='-Wall -Wextra'
 		if test "x$enable_sanitize" = xno; then
 			# UBSan puts many paddings (at least in gcc 5.3).
-			DEBUGCOMPILEFLAGS="$DEBUGCOMPILEFLAGS -Wpadded"
+			#
+			# Unfortunately gmp.h and mpfr.h give padding warnings.
+			# We leave those out. (JV 5-apr-2023)
+			#
+			# DEBUGCOMPILEFLAGS="$DEBUGCOMPILEFLAGS -Wpadded"
+			DEBUGCOMPILEFLAGS="$DEBUGCOMPILEFLAGS"
 		fi
 		AX_HANDLE_EXTRA_WARNING([DEBUGCOMPILEFLAGS])
 		# Check for -Og. If it doesn't work then use -O0.

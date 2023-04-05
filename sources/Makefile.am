@@ -9,18 +9,21 @@ SRCBASE = \
 	comtool.h \
 	declare.h \
 	diagrams.c \
+	diawrap.cc \
 	dict.c \
 	dollar.c \
+	evaluate.c \
 	execute.c \
 	extcmd.c \
 	factor.c \
 	findpat.c \
+	float.c \
 	form3.h \
 	fsizes.h \
 	ftypes.h \
 	function.c \
-	gentopo.cc \
-	gentopo.h \
+	grcc.cc \
+	grcc.h \
 	if.c \
 	index.c \
 	inivar.h \
@@ -29,7 +32,10 @@ SRCBASE = \
 	message.c \
 	minos.c \
 	minos.h \
+	model.c \
 	module.c \
+	mytime.h \
+	mytime.cc \
 	names.c \
 	normal.c \
 	notation.c \
@@ -61,13 +67,10 @@ SRCBASE = \
 	tables.c \
 	token.c \
 	tools.c \
-	topowrap.cc \
 	transform.c \
 	variable.h \
-	wildcard.c \
-	mytime.h \
-	mytime.cc \
-	vector.h
+	vector.h \
+	wildcard.c
 
 if ONUNIX
 SRCBASE += \
@@ -135,11 +138,11 @@ bin_PROGRAMS =
 if BUILD_FORM
 bin_PROGRAMS += form
 form_SOURCES = $(SRCBASE)
-form_CPPFLAGS =
+form_CPPFLAGS = -DWITHFLOAT
 form_CFLAGS = $(COMPILEFLAGS)
 form_CXXFLAGS = $(COMPILEFLAGS)
 form_LDFLAGS = $(LINKFLAGS) $(STATIC_LDFLAGS)
-form_LDADD = $(TOOL_LIBS)
+form_LDADD = $(TOOL_LIBS) -lz -lmpfr -lgmp
 if AUTOMAKE_GE_110
 form_LINK = $(CXXLD) $(form_CXXFLAGS) $(CXXFLAGS) $(form_LDFLAGS) $(LDFLAGS) -o $@
 else
@@ -150,11 +153,11 @@ endif
 if BUILD_VORM
 bin_PROGRAMS += vorm
 vorm_SOURCES = $(SRCBASE)
-vorm_CPPFLAGS = -DDEBUGGING
+vorm_CPPFLAGS = -DDEBUGGING -DWITHFLOAT
 vorm_CFLAGS = $(DEBUGCOMPILEFLAGS)
 vorm_CXXFLAGS = $(DEBUGCOMPILEFLAGS)
 vorm_LDFLAGS = $(DEBUGLINKFLAGS)
-vorm_LDADD = $(DEBUGTOOL_LIBS)
+vorm_LDADD = $(DEBUGTOOL_LIBS) -lz -lmpfr -lgmp
 if AUTOMAKE_GE_110
 vorm_LINK = $(CXXLD) $(vorm_CXXFLAGS) $(CXXFLAGS) $(vorm_LDFLAGS) $(LDFLAGS) -o $@
 else
@@ -165,11 +168,11 @@ endif
 if BUILD_TFORM
 bin_PROGRAMS += tform
 tform_SOURCES = $(SRCBASE) $(SRCPTHREAD)
-tform_CPPFLAGS = -DWITHPTHREADS $(PTHREAD_CPPFLAGS)
+tform_CPPFLAGS = -DWITHPTHREADS $(PTHREAD_CPPFLAGS) -DWITHFLOAT
 tform_CFLAGS = $(COMPILEFLAGS) $(PTHREAD_CFLAGS)
 tform_CXXFLAGS = $(COMPILEFLAGS) $(PTHREAD_CFLAGS)
 tform_LDFLAGS = $(LINKFLAGS) $(STATIC_LDFLAGS)
-tform_LDADD = $(PTHREAD_LIBS) $(TOOL_LIBS)
+tform_LDADD = $(PTHREAD_LIBS) $(TOOL_LIBS) -lz -lmpfr -lgmp
 if AUTOMAKE_GE_110
 tform_LINK = $(CXXLD) $(tform_CXXFLAGS) $(CXXFLAGS) $(tform_LDFLAGS) $(LDFLAGS) -o $@
 else
@@ -180,11 +183,11 @@ endif
 if BUILD_TVORM
 bin_PROGRAMS += tvorm
 tvorm_SOURCES = $(SRCBASE) $(SRCPTHREAD)
-tvorm_CPPFLAGS = -DWITHPTHREADS -DDEBUGGING $(PTHREAD_CPPFLAGS)
+tvorm_CPPFLAGS = -DWITHPTHREADS -DDEBUGGING $(PTHREAD_CPPFLAGS) -DWITHFLOAT
 tvorm_CFLAGS = $(DEBUGCOMPILEFLAGS) $(PTHREAD_CFLAGS)
 tvorm_CXXFLAGS = $(DEBUGCOMPILEFLAGS) $(PTHREAD_CFLAGS)
 tvorm_LDFLAGS = $(DEBUGLINKFLAGS)
-tvorm_LDADD = $(PTHREAD_LIBS) $(DEBUGTOOL_LIBS)
+tvorm_LDADD = $(PTHREAD_LIBS) $(DEBUGTOOL_LIBS) -lz -lmpfr -lgmp
 if AUTOMAKE_GE_110
 tvorm_LINK = $(CXXLD) $(tvorm_CXXFLAGS) $(CXXFLAGS) $(tvorm_LDFLAGS) $(LDFLAGS) -o $@
 else
@@ -195,11 +198,11 @@ endif
 if BUILD_PARFORM
 bin_PROGRAMS += parform
 parform_SOURCES = $(SRCBASE) $(SRCPARALLEL)
-parform_CPPFLAGS = -DWITHMPI -DPF_WITHGETENV -DPF_WITHLOG $(MPI_CPPFLAGS)
+parform_CPPFLAGS = -DWITHMPI -DPF_WITHGETENV -DPF_WITHLOG $(MPI_CPPFLAGS) -DWITHFLOAT
 parform_CFLAGS = $(COMPILEFLAGS) $(MPI_CFLAGS)
 parform_CXXFLAGS = $(COMPILEFLAGS) $(MPI_CXXFLAGS)
 parform_LDFLAGS = $(LINKFLAGS) $(MPI_STATIC_LDFLAGS)
-parform_LDADD = $(TOOL_LIBS)
+parform_LDADD = $(TOOL_LIBS) -lz -lmpfr -lgmp
 if AUTOMAKE_GE_110
 parform_LINK = $(MPICXX) $(parform_CXXFLAGS) $(CXXFLAGS) $(parform_LDFLAGS) $(LDFLAGS) -o $@
 else
@@ -210,11 +213,11 @@ endif
 if BUILD_PARVORM
 bin_PROGRAMS += parvorm
 parvorm_SOURCES = $(SRCBASE) $(SRCPARALLEL)
-parvorm_CPPFLAGS = -DWITHMPI -DPF_WITHGETENV -DPF_WITHLOG -DDEBUGGING $(MPI_CPPFLAGS)
+parvorm_CPPFLAGS = -DWITHMPI -DPF_WITHGETENV -DPF_WITHLOG -DDEBUGGING $(MPI_CPPFLAGS) -DWITHFLOAT
 parvorm_CFLAGS = $(DEBUGCOMPILEFLAGS) $(MPI_CFLAGS)
 parvorm_CXXFLAGS = $(DEBUGCOMPILEFLAGS) $(MPI_CXXFLAGS)
 parvorm_LDFLAGS = $(DEBUGLINKFLAGS)
-parvorm_LDADD = $(DEBUGTOOL_LIBS)
+parvorm_LDADD = $(DEBUGTOOL_LIBS) -lz -lmpfr -lgmp
 if AUTOMAKE_GE_110
 parvorm_LINK = $(MPICXX) $(parvorm_CXXFLAGS) $(CXXFLAGS) $(parvorm_LDFLAGS) $(LDFLAGS) -o $@
 else

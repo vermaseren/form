@@ -57,8 +57,12 @@
 #include <iostream>
 
 #ifdef APPLE64
+#ifndef HAVE_UNORDERED_MAP
 #define HAVE_UNORDERED_MAP
+#endif
+#ifndef HAVE_UNORDERED_SET
 #define HAVE_UNORDERED_SET
+#endif
 #endif
 
 #ifdef HAVE_UNORDERED_MAP

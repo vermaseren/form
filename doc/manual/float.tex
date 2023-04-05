@@ -1,0 +1,132 @@
+
+\chapter{Floating point}
+\label{floatingpoint}
+
+Starting with version 5.0 \FORM\ is equiped with arbitrary floating point 
+capacity. The low level routines are part of the GMP and mpfr libraries 
+which should be available on most systems. If not they can be picked up 
+easily from the internet. The main commands involving the floating point 
+system are
+\begin{description}
+\item[\#startfloat] This instruction is needed to startup the floating 
+point system. Invoking it will allocate a number of arrays. The instruction 
+has either one or two arguments:
+\begin{verbatim}
+    #startfloat numberofbits <,maximumweight>
+\end{verbatim}
+The first argument is mandatory. It tells how many bits of accuracy are 
+required. \FORM will round to at least this precision. Because the internal 
+routines work with WORDs the precision will be rounded up to the nearest 
+integer number of WORDs. The second argument is optional for when one wants 
+to work with multiple zeta values (MZVs) or Euler sums. It specifies the 
+maximum weight that will be used. The evaluation of the sums requires a 
+number of auxiliary arrays. The default value is zero. If one would like to 
+change the precision during a run, this is possible. The effect would be 
+that the existing arrays are released and new arrays will be allocated.
+\item[\#endfloat] This instruction releases all arrays allocated for the 
+floating point system.
+\end{description}
+\begin{description}
+\item[tofloat] Converts the rational coefficients at the ground level to 
+floating point numbers in the precision specified in the \#startfloat 
+instruction. From this point on the coefficient at this level will be 
+floating point. If one needs to convert numbers inside a function argument 
+one should use the argument environment. This can be nested.
+\item[torational] Tries to convert the floating point coefficients to 
+rational numbers. To this end it uses repeated fractions as in
+\begin{eqnarray}
+	x & \rightarrow & n_0 + 1/(n_1+1/(n_2+1/(n_3+\cdots))) \nonumber
+\end{eqnarray}
+with $x$ a floating point number. The algorithm keeps track of the 
+remaining precision and if $1/n_i$ is close to this precision it truncates 
+the sequence at $n_{i-1}$. After that it works out the fraction. It could 
+be that $x$ cannot be expressed as a fraction within the given precision. 
+This can usually be seen by that the fractions are `rather wild', or that 
+the result changes when the precision is increased. This statement can also 
+be abbreviated to `torat'.
+\item[evaluate] If this command has no arguments all floating point 
+functions that \FORM knows about will be evaluated. The currently allowed 
+arguments are the functions mzv\_, euler\_, sqrt\_ and mzvhalf\_. If any 
+(or more than one) of these are specified only those functions will be 
+evaluated.
+\end{description}
+In addition to the above commands there are the following functions that 
+can be evaluated sqrt\_, ln\_, li2\_, gamma\_, agm\_, sin\_, cos\_, tan\_,
+asin\_, acos\_, atan\_, sinh\_, cosh\_, tanh\_, asinh\_, acosh\_, atanh\_.
+For the functions atan2\_ and lin\_ there is currently no code.
+The agm\_ function is the arithmetic geometric mean of its two input 
+values.
+
+In addition to the above functions there is also the constant pi\_. In the 
+near future the constant ee\_, the basis of the natural logarithm and the 
+constant em\_, the Euler-Mascheroni constant will be added. These constants 
+will also be expanded with the evaluate command.
+
+The following example shows some work with Multiple Zeta Values (MZV's):
+\begin{verbatim}
+    #StartFloat 500,15
+    L F1 =
+    	-mzv_(8,1,1,5)
+    	+29056868/39414375*mzv_(2)^6*mzv_(3)
+    	-47576/40425*mzv_(2)^5*mzv_(5)
+    	-163291/18375*mzv_(2)^4*mzv_(7)
+    	-4/105*mzv_(2)^3*mzv_(3)^3
+    	-450797/11025*mzv_(2)^3*mzv_(9)
+    	+7/5*mzv_(2)^2*mzv_(3)^2*mzv_(5)
+    	+16/25*mzv_(2)^2*mzv_(3)*mzv_(5,3)
+    	+454049/1400*mzv_(2)^2*mzv_(11)
+    	-16/25*mzv_(2)^2*mzv_(5,3,3)
+    	+3*mzv_(2)*mzv_(3)^2*mzv_(7)
+    	+61/14*mzv_(2)*mzv_(3)*mzv_(5)^2
+    	+2/7*mzv_(2)*mzv_(3)*mzv_(7,3)
+    	+2172853/420*mzv_(2)*mzv_(13)
+    	-2/7*mzv_(2)*mzv_(7,3,3)
+    	+1/7*mzv_(2)*mzv_(5,5,3)
+    	-33/4*mzv_(3)^2*mzv_(9)
+    	-133/6*mzv_(3)*mzv_(5)*mzv_(7)
+    	-25/9*mzv_(3)*mzv_(9,3)
+    	-244/105*mzv_(5)^3
+    	-359/105*mzv_(5)*mzv_(7,3)
+    	+3/10*mzv_(7)*mzv_(5,3)
+    	+89/18*mzv_(9,3,3)
+    	+569/105*mzv_(7,3,5);
+    L F2 = mzv_(15);
+    Evaluate mzv_;
+    Print +f;
+    .sort
+
+   F1 =
+      9.1234206877960755900164875575406726239325002222490534540605137258846994\
+      916348297032751308227224952419629422497720599224543719959652966613231560\
+      6913925597e+0;
+
+   F2 =
+      1.0000305882363070204935517285106450625876279487068581775065699328933322\
+      671563422795730723343470175484943669684442492832530297757588781904321794\
+      4047700034253;
+
+    Skip F1,F2;
+    L	X = F1/F2;
+    Torational;
+    Print +f;
+    .end
+
+   X =
+      229903169/25200;
+
+  0.08 sec out of 0.09 sec
+\end{verbatim}
+The \#startfloat initializes the floating point system and allocates arrays 
+for 500 bits of precision. If there is a second number it indicates the 
+maximum weight for MZVs and Euler sums. The functions are only evaluated 
+when the proper command is given. In the second module we divide the 
+numbers and convert the result to a rational. It is a good idea to try this 
+with various precisions to see whether this is stable. With 100 bits the 
+final answer would be
+\begin{verbatim}
+    24136499874427167202968388241342/2645634679509635700210944273;
+\end{verbatim}
+while at 150 bits we have already the same answer as with 500 bits. The 
+fraction that is obtained by this program can be proven to be correct.
+\vspace{3mm}
+
