@@ -307,6 +307,27 @@ AS_IF([test "x$with_gmp" != xno],
 		AC_MSG_NOTICE([GMP is not available])
 		with_gmp=no])])
 
+# Check for mpfr
+AC_ARG_WITH([mpfr],
+	[AS_HELP_STRING([--with-mpfr@<:@=DIR@:>@],
+		[use MPFR for long float arithmetic (installed in prefix DIR) @<:@default=check@:>@])],
+	[AS_IF([test "x$withval" != xyes && test "x$withval" != xno && test "x$withval" != xcheck],
+		[with_mpfr=yes
+		CPPFLAGS="$CPPFLAGS -I$withval/include"
+		LDFLAGS="$LDFLAGS -L$withval/lib"])],
+	[with_mpfr=check])
+AS_IF([test "x$with_mpfr" != xno],
+	[flag=:
+	AS_IF([$flag], [AC_CHECK_HEADER([mpfr.h], [], [flag=false])])
+	AS_IF([$flag], [AC_CHECK_LIB([mpfr], [mpfr_init2], [LIBS="-lmpfr $LIBS"], [flag=false])])
+	AS_IF([$flag],
+		[AC_DEFINE(WITHMPFR, [], [Define to use MPFR for long float arithmetic.])
+		with_mpfr=yes],
+		[AS_IF([test "x$with_mpfr" = xyes],
+			[AC_MSG_FAILURE([test for MPFR failed. Give --without-mpfr if you want to compile without MPFR])])
+		AC_MSG_NOTICE([MPFR is not available])
+		with_mpfr=no])])
+
 # Check for zlib
 AC_ARG_WITH([zlib],
 	[AS_HELP_STRING([--with-zlib@<:@=DIR@:>@],
@@ -328,7 +349,7 @@ AS_IF([test "x$with_zlib" != xno],
 		AC_MSG_NOTICE([zlib is not available])
 		with_zlib=no])])
 
-# enable-scalar/threaded/parform/debug
+# enable-scalar/threaded/parform/debug/float
 AC_ARG_ENABLE([scalar],
 	[AS_HELP_STRING([--enable-scalar],
 		[build scalar version (form) @<:@default=yes@:>@])],
@@ -349,6 +370,11 @@ AC_ARG_ENABLE([debug],
 		[build debugging versions (vorm/tvorm/parvorm) @<:@default=no@:>@])],
 	[AS_IF([test "x$enableval" != xno], [enable_debug=yes])],
 	[enable_debug=no])
+AC_ARG_ENABLE([float],
+	[AS_HELP_STRING([--enable-float],
+		[build with the float feature @<:@default=check@:>@])],
+	[AS_IF([test "x$enableval" != xno && test "x$enableval" != xcheck], [enable_float=yes])],
+	[enable_float=check])
 
 # Check for scalar version
 build_form=$enable_scalar
@@ -624,6 +650,19 @@ AS_IF([test "x$enable_parform" = xyes && test "x$enable_debug" = xyes], [build_p
 AM_CONDITIONAL([BUILD_PARFORM], [test "x$build_parform" = xyes])
 AM_CONDITIONAL([BUILD_PARVORM], [test "x$build_parvorm" = xyes])
 
+# Check for float
+AS_IF([test "x$enable_float" != xno],
+	[AS_IF([test "x$with_gmp" = xyes && test "x$with_mpfr" = xyes],
+		[enable_float=yes],
+		[AS_IF([test "x$enable_float" = xyes],
+			[AC_MSG_FAILURE([test for the float feature failed. It requires both GMP and MPFR. Give --disable-float if you want to build without the float feature.])])
+		enable_float=no
+		])])
+AS_IF([test "x$enable_float" = xyes],
+	[AC_DEFINE(WITHFLOAT, [], [Define to enable the float feature.])],
+	[AS_IF([test "x$with_mpfr" = xyes],
+		[AC_MSG_WARN([mpfr is not required without the float feature. Build without mpfr.])
+		with_mpfr=no])])
 
 # Check for wall-clock time
 ok=no
@@ -1013,6 +1052,10 @@ echo "Optionally linked libraries:"
 atleastone=no
 if test "x$with_gmp" = xyes; then
 	echo "    gmp"
+	atleastone=yes
+fi
+if test "x$with_mpfr" = xyes; then
+	echo "    mpfr"
 	atleastone=yes
 fi
 if test "x$with_zlib" = xyes; then
