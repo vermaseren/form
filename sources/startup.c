@@ -714,7 +714,7 @@ VOID ReserveTempFiles(int par)
 		FG.fnamebase = t-FG.fname;
 	  }
 #else
-	  iii = snprintf((char*)t,FG.fnamesize-(t-FG.fname),"%d",PF.me);
+	  iii = snprintf((char*)t,FG.fnamesize-((char*)t-FG.fname),"%d",PF.me);
 	  t+= iii;
 	  s+= iii; /* in case defaulttmpfilename is too short */
 #endif
