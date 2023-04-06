@@ -28,6 +28,12 @@ jobs:
         with:
           fetch-depth: 0  # ensures a reachable tag
 
+      - name: Install MPFR
+        uses: awalsh128/cache-apt-pkgs-action@v1
+        with:
+          packages: libmpfr-dev
+          version: 1.0
+
       - name: Install MPI if necessary
         if: matrix.bin == 'parform' || matrix.bin == 'parvorm'
         run: |
@@ -130,6 +136,12 @@ jobs:
           packages: valgrind
           version: 1.0
 
+      - name: Install MPFR
+        uses: awalsh128/cache-apt-pkgs-action@v1
+        with:
+          packages: libmpfr-dev
+          version: 1.0
+
       - name: Install MPI if necessary
         if: matrix.bin == 'parform' || matrix.bin == 'parvorm'
         run: |
@@ -176,6 +188,12 @@ jobs:
         uses: awalsh128/cache-apt-pkgs-action@v1
         with:
           packages: lcov
+          version: 1.0
+
+      - name: Install MPFR
+        uses: awalsh128/cache-apt-pkgs-action@v1
+        with:
+          packages: libmpfr-dev
           version: 1.0
 
       - name: Install MPI if necessary
@@ -245,7 +263,7 @@ jobs:
       - name: Install dependencies
         run: |
           apt-get update
-          apt-get -y install automake build-essential git libgmp-dev ruby zlib1g-dev
+          apt-get -y install automake build-essential git libgmp-dev libmpfr-dev ruby zlib1g-dev
 
       - name: Configure
         run: |

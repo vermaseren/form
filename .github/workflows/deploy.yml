@@ -73,6 +73,13 @@ jobs:
           - {os: windows-2019, shell: msys2, bin: form}
           - {os: windows-2019, shell: msys2, bin: tform}
     steps:
+      - name: Install dependencies (Ubuntu)
+        if: runner.os == 'Linux'
+        uses: awalsh128/cache-apt-pkgs-action@v1
+        with:
+          packages: libmpfr-dev
+          version: 1.0
+
       - name: Install dependencies (Windows)
         if: runner.os == 'Windows'
         uses: msys2/setup-msys2@v2
@@ -82,6 +89,7 @@ jobs:
             make
             mingw-w64-x86_64-gcc
             mingw-w64-x86_64-gmp
+            mingw-w64-x86_64-mpfr
             mingw-w64-x86_64-zlib
             ruby
 
@@ -110,6 +118,7 @@ jobs:
           if [ "$RUNNER_OS" == "macOS" ]; then
             mkdir static-lib
             ln -s /usr/local/opt/gmp/lib/libgmp.a static-lib/libgmp.a
+            ln -s /usr/local/opt/gmp/lib/libmpfr.a static-lib/libmpfr.a
             export LIBRARY_PATH="$(pwd)/static-lib:${LIBRARY_PATH:-}"
             opts="$opts --disable-static-link"
           fi
