@@ -56,15 +56,10 @@ jobs:
         include:
           # To maximize compatibility, we build executables on the oldest
           # platforms available.
-          # NOTE: Ubuntu 18.04 and macOS 10.15 images are deprecated;
-          # the former will be unsupported by 1 April 2023, and
-          # the latter will be unsupported by 1 December 2022.
-          # - https://github.com/actions/runner-images/issues/6002
-          # - https://github.com/actions/runner-images/issues/5583
-          - {os: ubuntu-18.04, shell: bash, bin: form}
-          - {os: ubuntu-18.04, shell: bash, bin: tform}
-          - {os: macos-10.15, shell: bash, bin: form}
-          - {os: macos-10.15, shell: bash, bin: tform}
+          - {os: ubuntu-20.04, shell: bash, bin: form}
+          - {os: ubuntu-20.04, shell: bash, bin: tform}
+          - {os: macos-11, shell: bash, bin: form}
+          - {os: macos-11, shell: bash, bin: tform}
           # NOTE: Windows native executables have too many problems.
           # We include them in artifacts but not in releases.
           # Unfortunately, "allow-failure" is not available on GitHub Actions
