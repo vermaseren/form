@@ -1140,8 +1140,8 @@ class FormConfig
       else
         system("#{form_bin} #{frmname}")
         warn("failed to get the wordsize of '#{@form}'")
-        warn("assuming wordsize=32")
-        @wordsize = 32
+        warn("assuming wordsize = 4")
+        @wordsize = 4
       end
       # Prepare for mpirun
       if @is_mpi
