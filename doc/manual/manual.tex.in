@@ -120,6 +120,7 @@
 \input{@srcdir@/external}
 \input{@srcdir@/spectators}
 \input{@srcdir@/diagrams}
+\input{@srcdir@/float.tex}
 
 \printindex
 

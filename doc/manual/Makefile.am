@@ -5,6 +5,7 @@ TEXSRC = \
 	dict.tex \
 	dollar.tex \
 	external.tex \
+	float.tex \
 	functions.tex \
 	gamma.tex \
 	metric.tex \
