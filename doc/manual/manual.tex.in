@@ -1,8 +1,10 @@
 \input{version.tex}
 \def\formmajorversion{\repomajorversion}
 \def\formminorversion{\repominorversion}
+\def\formversiondesc{\repoversiondesc}
 \def\formdate{\repodate}
 %begin{latexonly}  % To avoid latex2html/latex2html#37
+\providecommand{\formversiondesc}{@VERSION@}
 \providecommand{\repodate}{\today}
 %end{latexonly}
 
@@ -71,7 +73,7 @@
 
 \begin{document}
 \begin{titlepage}
-\title{\Huge FORM \\ \Large version @VERSION@ \\ \huge Reference manual}
+\title{\Huge FORM \\ \Large version \formversiondesc \\ \huge Reference manual}
 \date{\formdate}
 \author{J.A.M.~Vermaseren, T.~Kaneko, J.~Kuipers, B.~Ruijl, M.~Tentyukov, T.~Ueda and J.~Vollinga}
 \end{titlepage}

@@ -1,11 +1,45 @@
 ######################################## CONFIG_DOXYGEN
 if CONFIG_DOXYGEN
 
+EXTRA_DIST = version.sh
+
+.PHONY: update_version
+
+# Automatic versioning.
+
+version.sh: update_version
+	$(UPDATE_VERSION)
+
+dist-hook:
+	$(DISTHOOK_VERSION)
+
+if FIXED_VERSION
+
+UPDATE_VERSION = \
+	[ -f version.sh ] || $(LN_S) "$(srcdir)/version.sh.in" version.sh
+
+DISTHOOK_VERSION = \
+	cp "$(srcdir)/version.sh.in" "$(distdir)/version.sh.in"
+
+else
+
+UPDATE_VERSION = \
+	$(SHELL) "$(top_srcdir)/scripts/git-version-gen.sh" -C "$(srcdir)" -s -o version.sh --date-format '%e %B %Y'
+
+DISTHOOK_VERSION = \
+	$(SHELL) "$(top_srcdir)/scripts/git-version-gen.sh" -C "$(srcdir)" -s -o "$(distdir)/version.sh.in" --date-format '%e %B %Y'
+
+endif
+
+RUN_DOXYGEN = source ./version.sh && PROJECT_NUMBER=$$repo_version_desc ${DOXYGEN}
+
+# HTML
+
 html: html/index.html
 
-html/index.html:
+html/index.html: version.sh
 	@echo "Running ${DOXYGEN} DoxyfileHTML ..."; \
-	${DOXYGEN} DoxyfileHTML
+	${RUN_DOXYGEN} DoxyfileHTML
 
 #################### CONFIG_TEX
 if CONFIG_TEX
@@ -23,9 +57,9 @@ latex/doxygen.dvi: latex/doxygen.tex
 	${MAKEINDEX} doxygen.idx; \
 	${LATEX} doxygen.tex
 
-latex/doxygen.tex:
+latex/doxygen.tex: version.sh
 	@echo "Running ${DOXYGEN} DoxyfileLATEX ..."; \
-	${DOXYGEN} DoxyfileLATEX; \
+	${RUN_DOXYGEN} DoxyfileLATEX; \
 	mv latex/refman.tex latex/doxygen.tex
 
 ########## CONFIG_PS
@@ -59,9 +93,9 @@ pdflatex/doxygen.pdf: pdflatex/doxygen.tex
 	${MAKEINDEX} doxygen.idx; \
 	${PDFLATEX} doxygen.tex
 
-pdflatex/doxygen.tex:
+pdflatex/doxygen.tex: version.sh
 	@echo "Running ${DOXYGEN} DoxyfilePDFLATEX ..."; \
-	${DOXYGEN} DoxyfilePDFLATEX; \
+	${RUN_DOXYGEN} DoxyfilePDFLATEX; \
 	mv pdflatex/refman.tex pdflatex/doxygen.tex
 
 endif

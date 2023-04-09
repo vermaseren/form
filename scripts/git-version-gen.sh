@@ -1,7 +1,15 @@
 #!/bin/sh
 set -eu
-rootdir=`dirname "$0"`/..
-prog=`basename "$0"`
+rootdir=$(dirname "$0")/..
+prog=$(basename "$0")
+
+# Remarks:
+# - This script assumes the version tag matches with "^v[0-9].*$".
+#   The version string after the prefix "v" must be in the format in
+#   semantic versioning.
+# - The option -C <path> affects only the dirty flag of $revision
+#   (and the related variable: $version_desc) and $date,
+#   if the referred Git repository is the same.
 
 print_usage() {
   cat <<END
@@ -14,6 +22,7 @@ Options:
   -r, --raw                   raw output (default)
   -c, --c                     C output
   -t, --tex                   TeX output
+  -s, --shell                 shell script output
   -v, --only-version          only-version output
   -o <file>, --output <file>  output to <file>
   --date-format <format>      date format (default: '%b %e %Y')
@@ -72,6 +81,9 @@ for a in "$@"; do
     -t|--tex)
       mode=tex
       ;;
+    -s|--shell)
+      mode=shell
+      ;;
     -v|--only-version)
       mode=only-version
       ;;
@@ -92,26 +104,29 @@ if [ -n "$next" ]; then
   exit 1
 fi
 
+# Same as git -C "$refdir" ... but works with git < 1.8.5.
 git_C() {
   (cd "$refdir" && git "$@")
 }
 
 # Extract the version number from the latest tag, e.g.,
 #   v1.0.0-xxx-yyy-zzz -> 1.0.0
-version_tag=`git_C describe --match 'v[0-9]*' --tags HEAD`
-version_tmp=`echo "$version_tag" | sed 's/^v//'`
-version_num=`echo "$version_tmp" | sed 's/-.*//'`
+version_tag=$(git_C describe --match 'v[0-9]*' --tags HEAD)
+version_tmp=$(echo "$version_tag" | sed 's/^v//')
+version_num=$(echo "$version_tmp" | sed 's/-.*//')
 
 version=$version_num
+version_suffix=
 
 # Support typical pre-release versions (e.g., v1.0.0-alpha-xxx-yyy-zzz) for
 #   -alpha, -alpha.1, -beta, -beta.1, -rc, -rc.1
 case $version_tmp in
   *-alpha*|*-beta*|*-rc*)
-    version_tmp=`echo "$version_tmp" | sed 's/^[^-]*-//' | sed 's/-.*//'`
+    version_tmp=$(echo "$version_tmp" | sed 's/^[^-]*-//' | sed 's/-.*//')
     case $version_tmp in
       alpha*|beta*|rc*)
         version="$version-$version_tmp"
+        version_suffix="-$version_tmp"
         ;;
     esac
     ;;
@@ -119,25 +134,32 @@ esac
 
 if [ "$mode" != "only-version" ]; then
   # Get the revision identifier by git-describe.
-  revision=`git_C describe --tags --always --abbrev=7 HEAD`
+  revision=$(git_C describe --tags --always --abbrev=7 HEAD)
   # Check if the working tree is dirty.
   git_C update-index -q --refresh
   if git_C diff-index --quiet HEAD .; then
     # If the working tree is not dirty, use the latest commit date.
-    isodate=`git_C log -1 --pretty=%ci .`
-    date=`LANG=C TZ=UTC fmt_isodate "$isodate" "$date_format"`
+    isodate=$(git_C log -1 --pretty=%ci .)
+    date=$(LANG=C TZ=UTC fmt_isodate "$isodate" "$date_format")
   else
     # If the working tree is dirty, suffix "-dirty" to the revision identifier
     # and use the current date time.
     revision="$revision-dirty"
-    date=`LANG=C TZ=UTC date +"$date_format"`
+    date=$(LANG=C TZ=UTC date +"$date_format")
+  fi
+  # Version description.
+  # Examples: "4.3.0", "v4.3.0-1-g7c9706c"
+  if [ "v$version" = "$revision" ]; then
+    version_desc=$version
+  else
+    version_desc=$revision
   fi
   # Extract MAJOR.MINOR.PATCH from the version number.
-  major_version=`expr "$version_num" : '\([0-9]\+\)' || :`
-  version_num=`expr "$version_num" : '[0-9]\+\.\?\(.*\)' || :`
-  minor_version=`expr "$version_num" : '\([0-9]\+\)' || :`
-  version_num=`expr "$version_num" : '[0-9]\+\.\?\(.*\)' || :`
-  patch_version=`expr "$version_num" : '\([0-9]\+\)' || :`
+  major_version=$(expr "$version_num" : '\([0-9]\+\)' || :)
+  version_num=$(expr "$version_num" : '[0-9]\+\.\?\(.*\)' || :)
+  minor_version=$(expr "$version_num" : '\([0-9]\+\)' || :)
+  version_num=$(expr "$version_num" : '[0-9]\+\.\?\(.*\)' || :)
+  patch_version=$(expr "$version_num" : '\([0-9]\+\)' || :)
   [ -z "$major_version" ] && major_version=0
   [ -z "$minor_version" ] && minor_version=0
   [ -z "$patch_version" ] && patch_version=0
@@ -148,31 +170,49 @@ print_versions() {
     raw)
       cat <<END
 $version
+$version_desc
 $revision
 $date
 $major_version
 $minor_version
 $patch_version
+$version_suffix
 END
       ;;
     c)
       cat <<END
-#define REPO_VERSION       "$version"
-#define REPO_REVISION      "$revision"
-#define REPO_DATE          "$date"
-#define REPO_MAJOR_VERSION $major_version
-#define REPO_MINOR_VERSION $minor_version
-#define REPO_PATCH_VERSION $patch_version
+#define REPO_VERSION        "$version"
+#define REPO_VERSION_DESC   "$version_desc"
+#define REPO_REVISION       "$revision"
+#define REPO_DATE           "$date"
+#define REPO_MAJOR_VERSION  $major_version
+#define REPO_MINOR_VERSION  $minor_version
+#define REPO_PATCH_VERSION  $patch_version
+#define REPO_VERSION_SUFFIX "$version_suffix"
 END
       ;;
     tex)
       cat <<END
 \def\repoversion{$version}
+\def\repoversiondesc{$version_desc}
 \def\reporevision{$revision}
 \def\repodate{$date}
 \def\repomajorversion{$major_version}
 \def\repominorversion{$minor_version}
 \def\repopatchversion{$patch_version}
+\def\repoversionsuffix{$version_suffix}
+END
+      ;;
+    shell)
+      cat <<END
+repo_version='$version'
+repo_version_desc='$version_desc'
+repo_revision='$revision'
+repo_date='$date'
+repo_major_version='$major_version'
+repo_minor_version='$minor_version'
+repo_patch_version='$patch_version'
+repo_version_suffix='$version_suffix'
 END
       ;;
     only-version)
@@ -197,7 +237,7 @@ if [ -z "$output_file" ]; then
 else
   # To the output file. Write only if any changes required.
   if [ -f "$output_file" ]; then
-    out=`print_versions`
+    out=$(print_versions)
     # NOTE: using echo instead of say at the next line may have problems
     #       for --tex. POSIX says echo should process '\\', but some shells
     #       don't without -e option. Here we shouldn't process them.
