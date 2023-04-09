@@ -1,6 +1,8 @@
 \input{version.tex}
+\def\formversiondesc{\repoversiondesc}
 \def\formdate{\repodate}
 %begin{latexonly}  % To avoid latex2html/latex2html#37
+\providecommand{\formversiondesc}{@VERSION@}
 \providecommand{\repodate}{\today}
 %end{latexonly}
 
@@ -44,7 +46,7 @@
 \begin{document}
 
 \thispagestyle{empty}
-\title{\Huge FORM \\ \Large version @VERSION@ \\ \huge Developer's reference manual}
+\title{\Huge FORM \\ \Large version \formversiondesc \\ \huge Developer's reference manual}
 \date{\formdate}
 \author{J.A.M.Vermaseren et al.}
 \maketitle
