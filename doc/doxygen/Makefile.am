@@ -31,7 +31,7 @@ DISTHOOK_VERSION = \
 
 endif
 
-RUN_DOXYGEN = source version.sh && PROJECT_NUMBER=$$repo_version_desc ${DOXYGEN}
+RUN_DOXYGEN = source ./version.sh && PROJECT_NUMBER=$$repo_version_desc ${DOXYGEN}
 
 # HTML
 
