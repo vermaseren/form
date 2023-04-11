@@ -807,12 +807,8 @@ AC_DEFUN([AX_HANDLE_EXTRA_WARNING],
 		[$1="$$1 -Wno-misleading-indentation"])
 	# Too many false positives.
 	# See: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=88443
-	#
-	# Somehow the compiler on my Mac does not recognize this
-	# option even though this check says it does. (JV 5-apr-2023)
-	#
-	# AX_CHECK_COMPILE_FLAG([-Wno-stringop-overflow],
-	#	[$1="$$1 -Wno-stringop-overflow"])
+	AX_CHECK_COMPILE_FLAG([-Wno-stringop-overflow],
+		[$1="$$1 -Wno-stringop-overflow"])
 fi[]dnl
 ])
 
@@ -841,11 +837,6 @@ if test "$my_test_COMPILEFLAGS" != set; then
 						COMPILEFLAGS="$COMPILEFLAGS -march=opteron"
 					fi
 				fi])
-#
-#			Added this one (JV 5-apr-2023)
-#
-			AX_CHECK_COMPILE_FLAG([-m64],
-				[COMPILEFLAGS="$COMPILEFLAGS -m64"])
 		fi
 		# Profiling option.
 		if test "x$enable_profile" = xgprof; then
