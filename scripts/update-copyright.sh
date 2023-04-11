@@ -8,8 +8,21 @@
 #
 # in all files in the current directory and its subdirectories.
 #
-# NOTE: GNU grep/xargs/sed required.
+# NOTE: GNU grep/sed required.
+#
+# Usage:
+#   update-copyright.sh
 #
 set -eu
-grep -l -r 'Copyright *(C).*Vermaseren' . \
-  | xargs sed -i 's/Copyright *(C).*Vermaseren/Copyright (C) 1984-2022 J.A.M. Vermaseren/g'
+
+year=$(date +%Y)
+
+grep -l -r 'Copyright *(C).*Vermaseren' . | while IFS= read -r f; do
+  case $f in
+    *update-copyright.sh)
+      ;;
+    *)
+      sed -i "s/Copyright *(C).*Vermaseren/Copyright (C) 1984-$year J.A.M. Vermaseren/g" "$f"
+      ;;
+  esac
+done
