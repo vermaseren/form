@@ -59,7 +59,7 @@ For more advanced build options, see the file "[INSTALL](INSTALL)".
 Additional information
 ----------------------
 
-The latest reference manual can be found [here](https://github.com/vermaseren/form/releases/download/v4.3.0/form-4.3.0-manual.pdf) and the Form Cookbook can be found [here](https://github.com/vermaseren/form/wiki/FORM-Cookbook).
+The latest reference manual can be found [here](https://github.com/vermaseren/form/releases/download/v4.3.1/form-4.3.1-manual.pdf) and the Form Cookbook can be found [here](https://github.com/vermaseren/form/wiki/FORM-Cookbook).
 
 More background information, a collection of FORM programs, and a number of courses can be found on the official [FORM website](http://www.nikhef.nl/~form) and on the [Wiki](https://github.com/vermaseren/form/wiki).
 
