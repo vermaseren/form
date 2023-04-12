@@ -1031,6 +1031,28 @@ assert result("F") =~ expr("
        + f(10,x3,x1,x4)
 ")
 *--#] Issue187 : 
+*--#[ Issue243_1 :
+* #continuedo?
+NF f;
+L F = 1;
+#do i=1,5
+  #if `i' == 3
+    #continuedo
+  #endif
+  multiply right, f(`i');
+#enddo
+chainin f;
+P;
+.end
+assert succeeded?
+assert result("F") =~ expr("f(1,2,4,5)")
+*--#] Issue243_1 : 
+*--#[ Issue243_2 :
+#continuedo
+.end
+assert compile_error?
+assert stdout =~ exact_pattern("#continuedo without #do")
+*--#] Issue243_2 : 
 *--#[ Issue392_ContinuationLines_1 :
 #: ContinuationLines 1
 * Setting ContinuationLines to 0 should remove continuation line limit.
