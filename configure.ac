@@ -748,7 +748,7 @@ AC_ARG_ENABLE([sanitize],
 AC_ARG_ENABLE([extra-warning],
 	[AS_HELP_STRING([--enable-extra-warning],
 		[enable extra compiler warnings @<:@default=no@:>@])],
-	[enable_extra_warning=yes],
+	[],
 	[enable_extra_warning=no])
 
 # Optimization/debugging flags
@@ -762,14 +762,18 @@ DEBUGTOOL_LIBS=
 # AX_HANDLE_EXTRA_WARNING(COMPILEFLAGS)
 # -------------------------------------
 AC_DEFUN([AX_HANDLE_EXTRA_WARNING],
-[if test "x$enable_extra_warning" = xno; then
+[if test "x$enable_extra_warning" != xyes; then
 	# Too many misleading indentation in the FORM source code.
 	AX_CHECK_COMPILE_FLAG([-Wno-misleading-indentation],
-		[$1="$$1 -Wno-misleading-indentation"])
+		[$1="$$1 -Wno-misleading-indentation"],
+		[],
+		[-Werror])
 	# Too many false positives.
 	# See: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=88443
 	AX_CHECK_COMPILE_FLAG([-Wno-stringop-overflow],
-		[$1="$$1 -Wno-stringop-overflow"])
+		[$1="$$1 -Wno-stringop-overflow"],
+		[],
+		[-Werror])
 fi[]dnl
 ])
 
@@ -797,7 +801,8 @@ if test "$my_test_COMPILEFLAGS" != set; then
 					elif test "x$print_cpu" = xOpteron; then
 						COMPILEFLAGS="$COMPILEFLAGS -march=opteron"
 					fi
-				fi])
+				fi],
+				[-Werror])
 		fi
 		# Profiling option.
 		if test "x$enable_profile" = xgprof; then
@@ -848,7 +853,8 @@ if test "$my_test_DEBUGCOMPILEFLAGS" != set && test "x$enable_debug" = xyes; the
 		# Check for -Og. If it doesn't work then use -O0.
 		AX_CHECK_COMPILE_FLAG([-Og],
 			[DEBUGCOMPILEFLAGS="$DEBUGCOMPILEFLAGS -Og"],
-			[DEBUGCOMPILEFLAGS="$DEBUGCOMPILEFLAGS -O0"])
+			[DEBUGCOMPILEFLAGS="$DEBUGCOMPILEFLAGS -O0"],
+			[-Werror])
 		# Debugging information.
 		DEBUGCOMPILEFLAGS="$DEBUGCOMPILEFLAGS -g3"
 		# Coverage option.
@@ -864,13 +870,13 @@ if test "$my_test_DEBUGCOMPILEFLAGS" != set && test "x$enable_debug" = xyes; the
 				else
 					tmp_sanitize=$enable_sanitize,$san
 				fi
-				AX_CHECK_COMPILE_FLAG([-fsanitize=$tmp_sanitize], [enable_sanitize=$tmp_sanitize])
+				AX_CHECK_COMPILE_FLAG([-fsanitize=$tmp_sanitize], [enable_sanitize=$tmp_sanitize], [], [-Werror])
 			done
 			if test "x$enable_sanitize" = x; then
 				enable_sanitize=failed
 			fi
 		elif test "x$enable_sanitize" != xno; then
-			AX_CHECK_COMPILE_FLAG([-fsanitize=$enable_sanitize], [], [enable_sanitize=failed])
+			AX_CHECK_COMPILE_FLAG([-fsanitize=$enable_sanitize], [], [enable_sanitize=failed], [-Werror])
 		fi
 		if test "x$enable_sanitize" = xfailed; then
 			AC_MSG_FAILURE([test for sanitizer failed. Give --disable-sanitize if you want to compile without sanitizer])
