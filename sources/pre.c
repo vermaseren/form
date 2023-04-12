@@ -55,6 +55,7 @@ static KEYWORD precommands[] = {
 	,{"close"        , DoPreClose     , 0, 0}
 	,{"closedictionary", DoPreCloseDictionary,0,0}
 	,{"commentchar"  , DoCommentChar  , 0, 0}
+	,{"continuedo"  ,  DoContinueDo   , 0, 0}
 	,{"create"       , DoPreCreate    , 0, 0}
 	,{"debug"        , DoDebug        , 0, 0}
 	,{"default"      , DoPreDefault   , 0, 0}
@@ -2769,6 +2770,31 @@ nonumber:
 
 /*
  		#] DoTerminate : 
+ 		#[ DoContinueDo :
+*/
+
+int DoContinueDo(UBYTE *s)
+{
+	DOLOOP *loop;
+
+	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
+	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
+
+	if ( NumDoLoops <= 0 ) {
+		MesPrint("@%#continuedo without %#do");
+		return(1);
+	}
+
+	loop = &(DoLoops[NumDoLoops-1]);
+	AP.NumPreTypes = loop->NumPreTypes+1;
+	AP.PreIfLevel = loop->PreIfLevel;
+	AP.PreSwitchLevel = loop->PreSwitchLevel;
+
+	return(DoEnddo(s));
+}
+
+/*
+ 		#] DoContinueDo :
  		#[ DoDo :
 
 		The do loop has three varieties:
