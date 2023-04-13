@@ -3,6 +3,7 @@ $ADDRESS = '<small>'
     . "<a href=\"$TEX2HTMLADDRESS\">LaTeX2HTML</a>"
     . " translator Version $TEX2HTMLVERSION."
     . '</small>';
+$DO_INCLUDE = 'float'; # https://github.com/vermaseren/form/issues/442
 $DVIPSOPT = ' -E';
 $INFO = 0;
 $MAX_SPLIT_DEPTH = 0;
