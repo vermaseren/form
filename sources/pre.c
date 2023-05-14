@@ -2992,7 +2992,7 @@ illdo:;
  		#] DoDo : 
  		#[ DoBreakDo :
 
-		#dobreak [num]
+		#breakdo [num]
 		jumps out of num #do-loops (if there are that many) (default is 1)
 */
 
@@ -3005,7 +3005,7 @@ int DoBreakDo(UBYTE *s)
 	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
 
 	if ( NumDoLoops <= 0 ) {
-		MesPrint("@%#dobreak without %#do");
+		MesPrint("@%#breakdo without %#do");
 		return(1);
 	}
 /*
@@ -3022,7 +3022,7 @@ int DoBreakDo(UBYTE *s)
 	}
 	else {
 improper:
-		MesPrint("@Improper syntax of %#dobreak instruction");
+		MesPrint("@Improper syntax of %#breakdo instruction");
 		return(1);
 	}
 	if ( levels > NumDoLoops ) {
