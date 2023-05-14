@@ -21,7 +21,7 @@ using namespace std;
 
 //	The next limitation is imposed by the fact that the latest compilers
 //	can give warnings on declarations like "int dtcl1[nNodes]"
-//	With a bit of overkil there should be no real problems.
+//	With a bit of overkill there should be no real problems.
 #define MAXNODES 100
 #define MAXNCLASSES 100
 

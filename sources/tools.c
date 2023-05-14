@@ -2773,7 +2773,7 @@ VOID CacheNumberFree2(PHEAD UWORD *NumberMem, char *text)
 
 	Returns the next object in a list.
 	If the list has been exhausted we double it (like a realloc)
-	If the list has not been initialized yet we start with 10 elements.
+	If the list has not been initialized yet we start with 12 elements.
 */
 
 VOID *FromList(LIST *L)
@@ -2827,7 +2827,7 @@ VOID *From0List(LIST *L)
 
 	Returns the next object in a list of variables.
 	If the list has been exhausted we double it (like a realloc)
-	If the list has not been initialized yet we start with 10 elements.
+	If the list has not been initialized yet we start with 12 elements.
 	We allow at most MAXVARIABLES elements!
 */
 
