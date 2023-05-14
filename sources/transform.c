@@ -3198,7 +3198,7 @@ WORD RunZtoHArg(PHEAD WORD *fun, WORD *args)
 	}
 	TermFree(tt,"RunZtoHArg");
 /*
-	Now the overal sign.
+	Now the overall sign.
 */
 	while ( f1 < f ) { if ( f1[1] < 0 ) sign = 1-sign; f1 += 2; }
 	return(sign);
@@ -3238,7 +3238,7 @@ WORD RunHtoZArg(PHEAD WORD *fun, WORD *args)
 		if ( *f != -SNUMBER || f[1] == 0 ) return(-1);
 	}
 /*
-	First the overal sign.
+	First the overall sign.
 */
 	while ( f2 < f ) { if ( f2[1] < 0 ) sign = 1-sign; f2 += 2; }
 /*

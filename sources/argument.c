@@ -445,7 +445,7 @@ HaveTodo:
 						NumberFree(LCMb,"execarg"); NumberFree(LCMc,"execarg");
 						j = 2*k+1;
 /*
-						Now we have to correct the overal factor
+						Now we have to correct the overall factor
 
 						We have a little problem here.
 						r3 is in GCDbuffer and we returned that.
@@ -505,7 +505,7 @@ HaveTodo:
 						if ( j < 0 ) j = -j;
 						if ( type == TYPENORM && scale && ( factor == 0 || *factor ) ) {
 /*
-							Now we correct the overal factor
+							Now we correct the overall factor
 */
 ScaledVariety:;
 							size = term[*term-1];
