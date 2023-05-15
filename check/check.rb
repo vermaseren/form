@@ -617,29 +617,36 @@ module FormTest
 
   # true if the FORM job put warning messages.
   def warning?
-    @stdout =~ /Warning/
+    @stdout =~ /(^|\R)\S+ Line \d+ --> Warning/
   end
 
-  # true if the FORM job put compile time errors.
+  # true if the FORM job put preprocessor errors.
+  def preprocess_error?
+    @stdout =~ /(^|\R)\S+ Line \d+ ==>/
+  end
+
+  # true if the FORM job put compile-time errors.
   def compile_error?
-    @stdout =~ /#{@filename} Line \d+ -->/
+    @stdout =~ /(^|\R)\S+ Line \d+ -->/
   end
 
-  # true if the FORM job put run time errors.
+  # true if the FORM job put run-time errors.
+  # NOTE: indeed this implementation detects abnormal terminations
+  # via "Terminate()", which also happens for preprocessor/compiler errors.
   def runtime_error?
     if serial?
-      @stdout =~ /Program terminating at #{@filename} Line \d+ -->/
+      @stdout =~ /Program terminating at \S+ Line \d+ -->/
     elsif threaded?
-      @stdout =~ /Program terminating in thread \d+ at #{@filename} Line \d+ -->/
+      @stdout =~ /Program terminating in thread \d+ at \S+ Line \d+ -->/
     elsif mpi?
-      @stdout =~ /Program terminating in process \d+ at #{@filename} Line \d+ -->/
+      @stdout =~ /Program terminating in process \d+ at \S+ Line \d+ -->/
     end
   end
 
   # true if the FORM job completed without any warnings/errors and
   # the exit code was 0.
   def succeeded?
-    if finished? && !warning? && !compile_error? && !runtime_error? && return_value == 0
+    if finished? && !warning? && !preprocess_error? && !compile_error? && !runtime_error? && return_value == 0
       if FormTest.cfg.valgrind.nil?
         if @stderr.empty?
           return true
@@ -1033,7 +1040,7 @@ end
 
 # FORM configuration.
 class FormConfig
-  def initialize(form, mpirun, mpirun_opts, valgrind, valgrind_opts, ncpu, timeout, retries, stat, full, verbose)
+  def initialize(form, mpirun, mpirun_opts, valgrind, valgrind_opts, wordsize, ncpu, timeout, retries, stat, full, verbose)
     @form     = form
     @mpirun   = mpirun
     @mpirun_opts = mpirun_opts
@@ -1055,7 +1062,7 @@ class FormConfig
     @is_serial   = nil
     @is_threaded = nil
     @is_mpi      = nil
-    @wordsize    = nil
+    @wordsize    = wordsize
     @form_cmd    = nil
   end
 
@@ -1135,13 +1142,14 @@ class FormConfig
         system("#{form_bin} #{frmname}")
         fatal("failed to get the version of '#{@form}'")
       end
-      if @head =~ /FORM[^(]*\([^)]*\)\s*(\d+)-bits/
-        @wordsize = $1.to_i / 16
-      else
-        system("#{form_bin} #{frmname}")
-        warn("failed to get the wordsize of '#{@form}'")
-        warn("assuming wordsize = 4")
-        @wordsize = 4
+      if @wordsize.nil?
+        if @head =~ /FORM[^(]*\([^)]*\)\s*(\d+)-bits/
+          @wordsize = $1.to_i / 16
+        else
+          warn("failed to get the wordsize of '#{@form}'")
+          warn("assuming wordsize = 4")
+          @wordsize = 4
+        end
       end
       # Prepare for mpirun
       if @is_mpi
@@ -1280,6 +1288,7 @@ def main
   opts.enable_valgrind = false
   opts.valgrind = "valgrind"
   opts.valgrind_opts = nil
+  opts.wordsize = nil
   opts.dir = nil
   opts.name_patterns = []
   opts.exclude_patterns = []
@@ -1318,6 +1327,8 @@ def main
             "Use BIN as Valgrind executable")     { |bin| opts.enable_valgrind = true; opts.valgrind = bin }
   parser.on("--valgrind-opts OPTS",
             "Pass command line options OPTS to valgrind") { |s| opts.valgrind_opts = s }
+  parser.on("--wordsize N",
+            "Set the word size")                  { |n| opts.wordsize = n.to_i }
   parser.on("-C", "--directory DIR",
             "Directory for test cases")           { |dir| opts.dir = search_dir(dir, opts) }
   parser.on("-n", "--name NAME",
@@ -1452,6 +1463,7 @@ def main
                                 opts.mpirun_opts,
                                 opts.enable_valgrind ? opts.valgrind : nil,
                                 opts.valgrind_opts,
+                                opts.wordsize,
                                 opts.ncpu,
                                 opts.timeout > 1 ? opts.timeout : 1,
                                 opts.retries > 1 ? opts.retries : 1,
