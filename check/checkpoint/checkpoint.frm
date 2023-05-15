@@ -115,5 +115,6 @@ id x15 = {`$n1'*`$n2'-`a1'-`a2'+`$e3'};
 .end
 #require unix?
 #pend_if mpi? || valgrind?
-assert succeeded?
+assert stdout =~ exact_pattern("Assertion OK: F")
+assert stdout =~ exact_pattern("Assertion OK: G")
 *--#] checkpoint_1 : 
