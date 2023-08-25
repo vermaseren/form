@@ -589,8 +589,8 @@ WORD DoTableExpansion(WORD *term, WORD level)
 	id tbl_(f?,?a) = f(?a);
 	When a tbl_ is used, automatically the corresponding element is compiled
 	at the start of the next module.
-	if TB,On,substitue [tablename], use of table RHS (if loaded)
-	if TB,Off,substitue [tablename], use of tbl_(table,...);
+	if TB,On,substitute [tablename], use of table RHS (if loaded)
+	if TB,Off,substitute [tablename], use of tbl_(table,...);
 
 
 	Still needed: Something like OverLoad to allow loading parts of a table
@@ -2136,7 +2136,7 @@ int ApplyExec(WORD *term, int maxtogo, WORD level)
 		}
 /*
 		If there are more arguments we have to do some
-		pattern matching. This should be easy. We addapted the
+		pattern matching. This should be easy. We adapted the
 		pattern, so that the array indices match already.
 */
 #ifdef WITHPTHREADS

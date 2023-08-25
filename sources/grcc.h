@@ -1167,17 +1167,17 @@ class Assign {
     // entry point of assignment
     Bool    assignAllVertices(void);
 
-    // select a source node for assignmnet
+    // select a source node for assignment
     Bool    selectVertex(void);
     Bool    selectVertexSimp(int lastv);
 
-    // select a source leg of the node for assignmnet
+    // select a source leg of the node for assignment
     Bool    selectLeg(int v, int lastlg);
 
     // assign a vertex a interaction
     Bool    assignVertex(int v);
 
-    // assignment procedure is finishited.  Needs check.
+    // assignment procedure is finished.  Needs check.
     Bool    allAssigned(void);
 
     //===========================================
@@ -1192,7 +1192,7 @@ class Assign {
     // connect nodes and edges.
     void    connect(int n0, int l0, int eg, int el, int n1, int l1);
 
-    // Ouput to egraph
+    // Output to egraph
     Bool    fillEGraph(int aid, BigInt nsym, BigInt esym, BigInt nsym1);
 
     // reorder legs in accordance with the interaction definition

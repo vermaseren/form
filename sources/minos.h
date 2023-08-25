@@ -51,7 +51,8 @@
 	The following typedef has been moved to form3.h where all the sizes
 	are defined for the various memory models.
 	We want MLONG to have a more or less fixed size.
-	In form3.h we try to fix it at 8 bytes. This should make files exchangable
+	In form3.h we try to fix it at 8 bytes.
+	This should make files exchangeable
 	between various 32-bits and 64-bits systems. At 4 bytes it might have
 	problems with files of more than 2 Gbytes.
 

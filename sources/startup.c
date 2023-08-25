@@ -792,7 +792,7 @@ classic:;
 	*t = 0;
 
 /*
-	Now we should asign a name to the main sort file and the two stage 4 files.
+	Now we should assign a name to the main sort file and the two stage 4 files.
 */
 	AM.S0->file.name = (char *)Malloc1(sizeof(char)*(i+14),"name for temporary files");
 	s = (UBYTE *)AM.S0->file.name;
