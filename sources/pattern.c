@@ -53,7 +53,7 @@
 			to many.
 		2:	Each symbol can have only one (wildcard) power, so
 			x^2*x^n? is illegal.
-		3:	when a single vector is used it replaces all occurences
+		3:	when a single vector is used it replaces all occurrences
 			of the vector. Therefore q*q(mu) or q*q(mu) cannot occur.
 			Also q*q cannot be done.
 		4:	Loose vector elements are replaced with p(mu), dotproducts

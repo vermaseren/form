@@ -1290,7 +1290,7 @@ void poly::divmod_one_term (const poly &a, const poly &b, poly &q, poly &r, bool
 		WORD nq,nr;
 	 
 		if (div) {
-			// if variables are divisable, divide coefficient
+			// if variables are divisible, divide coefficient
 			if (q.modp==0) {				
 				DivLong((UWORD *)&a[ai+1+AN.poly_num_vars], a[ai+a[ai]-1],
 								(UWORD *)&b[2+AN.poly_num_vars], b[b[1]],
@@ -1759,7 +1759,7 @@ void poly::divmod_heap (const poly &a, const poly &b, poly &q, poly &r, bool onl
 			ri += t[3];
 		}
 		else {
-			// divisable, so divide coefficient as well
+			// divisible, so divide coefficient as well
 			WORD nq, nr;
 	
 			if (q.modp==0) {
