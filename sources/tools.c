@@ -848,7 +848,7 @@ VOID PositionStream(STREAM *stream, LONG position)
  		#[ ReverseStatements :
 
 		Reverses the order of the statements in the buffer.
-		We allocate an extra buffer and copy a bit to and fro.
+		We allocate an extra buffer and copy a bit to and from.
 		Note that there are some nasties that cannot be resolved.
 */
 

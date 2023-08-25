@@ -52,7 +52,7 @@
 /*
   	#[ Variables :
 
-	The sortbot additions are from 17-may-2007 and after. They consitute
+	The sortbot additions are from 17-may-2007 and after. They constitute
 	an attempt to make the final merge sorting faster for the master.
 	This way the master has only one compare per term.
 	It does add some complexity, but the final merge routine (MasterMerge)
@@ -2530,7 +2530,7 @@ int InParallelProcessor(VOID)
  *	statement. These are usually the large expressions. It will divide
  *	the terms of these expressions over the workers, using a bucket system
  *	to reduce overhead (buckets are collections of a number of terms that
- *	are transfered together).
+ *	are transferred together).
  *	At the end of the expression when all terms have been assigned and 
  *	workers become available again, there is a load balancing system to
  *	take terms from the buckets of workers that still have to do many terms
