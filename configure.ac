@@ -25,6 +25,7 @@ m4_define([FORM_VERSION], m4_esyscmd_s([
 				echo '\\def\\repomajorversion'"{$major_version}"  >doc/manual/version.tex.in
 				echo '\\def\\repominorversion'"{$minor_version}" >>doc/manual/version.tex.in
 				cp doc/manual/version.tex.in doc/devref/version.tex.in
+				touch doc/doxygen/version.sh.in
 			fi
 			cat <<END >&2
 ========================================================================

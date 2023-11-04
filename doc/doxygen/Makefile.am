@@ -1,8 +1,3 @@
-######################################## CONFIG_DOXYGEN
-if CONFIG_DOXYGEN
-
-EXTRA_DIST = version.sh
-
 .PHONY: update_version
 
 # Automatic versioning.
@@ -30,6 +25,9 @@ DISTHOOK_VERSION = \
 	$(SHELL) "$(top_srcdir)/scripts/git-version-gen.sh" -C "$(srcdir)" -s -o "$(distdir)/version.sh.in" --date-format '%e %B %Y'
 
 endif
+
+######################################## CONFIG_DOXYGEN
+if CONFIG_DOXYGEN
 
 RUN_DOXYGEN = source ./version.sh && PROJECT_NUMBER=$$repo_version_desc ${DOXYGEN}
 
