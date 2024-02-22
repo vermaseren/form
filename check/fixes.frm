@@ -2297,3 +2297,47 @@ assert result("F3") =~ expr("+D")
 .end
 assert succeeded?
 *--#] Issue434 :
+*--#[ Issue460_1 :
+* Improve format mathematica, for powers of dot products
+Vector p,q;
+Local test = p.q + p.q^2 + 1/p.q + 1/p.q^2;
+Format Mathematica;
+Print;
+.end
+assert succeeded?
+assert result("test") =~ expr("(p.q)^(-2) + (p.q)^(-1) + (p.q) + (p.q)^2")
+*--#] Issue460_1 :
+*--#[ Issue460_2 :
+* Improve format mathematica, for powers of dot products
+* Check regular mode is unchanged:
+Vector p,q;
+Local test = p.q + p.q^2 + 1/p.q + 1/p.q^2;
+Print;
+.end
+assert succeeded?
+assert result("test") =~ expr("p.q^-2 + p.q^-1 + p.q + p.q^2")
+*--#] Issue460_2 :
+*--#[ Issue460_3 :
+* Improve format mathematica, for powers of dot products
+* Also check C mode:
+Vector p,q;
+Local test = p.q + p.q^2 + 1/p.q + 1/p.q^2;
+Format C;
+Print;
+.end
+assert succeeded?
+assert result("test") =~ expr("pow(p_q,-2) + pow(p_q,-1) + p_q + pow(p_q,2)")
+*--#] Issue460_3 :
+*--#[ Issue460_4 :
+* Improve format mathematica, for powers of dot products
+* Also check Fortran mode:
+Vector p,q;
+Local test = p.q + p.q^2 + 1/p.q + 1/p.q^2;
+Format Fortran;
+Print;
+.end
+assert succeeded?
+assert stdout =~ exact_pattern(<<'EOF')
+& p_q**(-2) + p_q**(-1) + p_q + p_q**2
+EOF
+*--#] Issue460_4 :

@@ -1767,6 +1767,8 @@ WORD WriteSubTerm(WORD *sterm, WORD first)
 				if ( !first ) MultiplyToLine();
 				if ( AC.OutputMode == CMODE && t[2] != 1 )
 					TokenToLine((UBYTE *)"pow(");
+				if ( AC.OutputMode == MATHEMATICAMODE )
+					TokenToLine((UBYTE *)"(");
 				Out = StrCopy(FindVector(*t),buffer);
 /*				Out = StrCopy(VARNAME(vectors,*t - AM.OffsetVector),buffer); */
 				t++;
@@ -1776,6 +1778,10 @@ WORD WriteSubTerm(WORD *sterm, WORD first)
 				else *Out++ = '.';
 				Out = StrCopy(FindVector(*t),Out);
 /*				Out = StrCopy(VARNAME(vectors,*t - AM.OffsetVector),Out); */
+				if ( AC.OutputMode == MATHEMATICAMODE ) {
+					*Out++ = ')';
+					*Out = 0;
+				}
 				t++;
 				if ( *t != 1 ) WrtPower(Out,*t);
 				t++;
