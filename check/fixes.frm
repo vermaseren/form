@@ -2112,6 +2112,48 @@ assert succeeded?
 assert result("test1") =~ expr("cfun1(cfun2(-p, - j1)*cfun2(p,j1))*cfun2(p,j1)")
 assert result("test2") =~ expr("cfun1(j1,0,0,cfun2(-p, - j1)*cfun2(p,j1))")
 *--#] Issue307 : 
+*--#[ Issue313 :
+CFunction prf,pf;
+Symbol x,y,z;
+
+Local test = prf(x+y,z) + prf(x,z) + prf(y-z,z) + pf(x+y) + pf(x) + pf(y-z);
+.sort
+
+Multiply 2;
+ModuleOption polyratfun,prf;
+.sort
+Multiply 2;
+ModuleOption polyfun,pf;
+.sort
+Multiply 2;
+ModuleOption polyratfun = prf;
+.sort
+Multiply 2;
+ModuleOption polyfun = pf;
+.sort
+Multiply 2;
+.sort(polyratfun=prf)
+Multiply 2;
+.sort(polyfun=pf)
+
+* Combination with other ModuleOptions:
+ModuleOption polyratfun,prf,parallel;
+.sort
+
+Identify pf(x?$tmp) = pf(x);
+* This works, but not if you specify the "local" option first:
+ModuleOption polyfun, pf, local, $tmp;
+.sort
+
+Identify pf(x?$tmp) = pf(x);
+* This works, but not if you specify the "local" option first:
+ModuleOption polyfun=pf, local, $tmp;
+
+Print;
+.end
+assert succeeded?
+assert result("test") =~ expr("prf(16*x + 16*y - 8*z,z)*pf(8) + prf(8,1)*pf( - 8*z + 16*y + 16*x)")
+*--#] Issue313 :
 *--#[ Issue324 :
 * Wrong implicit symbol declaration in "autodeclare index"
 autodeclare index randomIndex=n;
