@@ -1050,7 +1050,7 @@ assert result("F") =~ expr("f(1,2,4,5)")
 *--#[ Issue243_2 :
 #continuedo
 .end
-assert compile_error?
+assert preprocess_error?
 assert stdout =~ exact_pattern("#continuedo without #do")
 *--#] Issue243_2 : 
 *--#[ Issue392_ContinuationLines_1 :
