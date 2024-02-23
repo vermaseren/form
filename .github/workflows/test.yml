@@ -280,4 +280,4 @@ jobs:
         run: make -C sources -j 4 ${{ matrix.bin }}
 
       - name: Test
-        run: ./check/check.rb ./sources/${{ matrix.bin }} --stat
+        run: ./check/check.rb ./sources/${{ matrix.bin }} --stat --wordsize 2
