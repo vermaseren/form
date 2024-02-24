@@ -4348,16 +4348,12 @@ VOID generate_output (const vector<WORD> &instr, int exprnr, int extraoffset, co
 			WORD *now = start;
 			int b=0;
 			for (const WORD *t=AT.WorkPointer; *t!=0; t+=*t) {
- 				if (brackets[b].size() != 0) {
- 					memcpy(now, &brackets[b][0], brackets[b].size()*sizeof(WORD));
- 					now += brackets[b].size();
- 				}
-/*
 				if ( ( brackets[b].size() != 0 ) && ( brackets[b][0] == 0 ) ) break;
 				*now++ = *t + brackets[b].size();
-*/
-				memcpy(now, &brackets[b][0], brackets[b].size()*sizeof(WORD));
-				now += brackets[b].size();
+				if (brackets[b].size() != 0) {
+					memcpy(now, &brackets[b][0], brackets[b].size()*sizeof(WORD));
+					now += brackets[b].size();
+				}
 				memcpy(now, t+1, (*t-1)*sizeof(WORD));
 				now += *t-1;
 				b++;
