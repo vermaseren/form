@@ -9,7 +9,7 @@ Prerequisites
 -------------
 
 The test runner script is written in [Ruby](https://www.ruby-lang.org/)
-and requires Ruby 1.8 or later. The script uses the so-called `test/unit`
+and requires Ruby 1.9 or later. The script uses the so-called `test/unit`
 library. In some Linux distributions the library is installed together with
 Ruby, while some distributions may have the library as an optional package,
 or one may need to manually install
