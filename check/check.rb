@@ -8,16 +8,17 @@ exec ruby "-S" "-x" "$0" "$@"
 # rubocop:enable all
 
 # Check the Ruby version.
-if RUBY_VERSION < "1.8.0"
-  warn("ruby 1.8 required for the test suite")
+if RUBY_VERSION < "1.9.0"
+  warn("ruby 1.9 required for the test suite")
   exit(1)
 end
 
 require "fileutils"
 require "open3"
-require "ostruct"
 require "optparse"
+require "ostruct"
 require "set"
+require "thread"
 require "tmpdir"
 
 # Show an error message and exit.
@@ -375,7 +376,19 @@ module FormTest
     @exit_status = nil
     t0 = Time.now
     begin
-      execute_popen3(cmdline, timeout)
+      result = execute_impl(cmdline, timeout, @tmpdir)
+      @finished = result[:finished_in_time]
+      @exit_status = result[:exit_status]
+      # We print both stdout and stderr when a test fails. An easy way to
+      # implement this is to copy messages in stderr to those in stdout,
+      # namely, use the combined output. Unfortunately their orders
+      # (how stdout and stderr are merged) may not be preserved.
+      # Note that we exclude the Valgrind warnings "Warning: set address range perms: ..."
+      # which can happen when the program allocates big memory chunks.
+      out = result[:combined_lines]
+      out = out.reject { |l| l =~ /Warning: set address range perms/ }
+      @stdout += out.join
+      @stderr += result[:stderr_lines].join
     ensure
       t1 = Time.now
       dt = t1 - t0
@@ -386,98 +399,54 @@ module FormTest
     end
   end
 
-  # An implementation by popen3. Should work with Ruby 1.8 on Unix.
-  #
-  # tested on:
-  #   ruby 1.8.5 (2006-08-25) [x86_64-linux]
-  #   ruby 1.8.7 (2013-12-22 patchlevel 375) [x86_64-linux]
-  #   ruby 1.9.3p484 (2013-11-22 revision 43786) [x86_64-linux]
-  #   ruby 1.9.3p545 (2014-02-24) [i386-cygwin]
-  #   ruby 1.9.3p545 (2014-02-24) [x86_64-cygwin]
-  #   ruby 2.0.0p247 (2013-06-27) [x86_64-linux]
-  #   ruby 2.0.0p481 (2014-05-08 revision 45883) [x86_64-linux]
-  #   ruby 2.1.4p265 (2014-10-27 revision 48166) [x86_64-linux]
-  #
-  # segfault at IO#gets
-  #   ruby 1.8.6 (2010-09-02 patchlevel 420) [x86_64-linux]
-  #   ruby 1.8.7 (2012-02-08 patchlevel 358) [x86_64-linux]
-  #
-  def execute_popen3(cmdline, timeout)
-    cmdline = "echo pid=$$;cd #{@tmpdir};#{cmdline};echo exit_status=$?"
+  def execute_impl(cmd, timeout, chdir)
+    stdout_lines = []
+    stderr_lines = []
+    combined_lines = []
+    exit_status = nil
+    finished_in_time = false
 
-    stdout = []
-    stderr = []
+    mutex = Mutex.new
 
-    Open3.popen3(cmdline) do |stdinstream, stdoutstream, stderrstream|
-      stdinstream.close
-      out = Thread.new do
-        while (line = stdoutstream.gets)
-          stdout << line
+    Open3.popen3(cmd, chdir: chdir) do |stdin, stdout, stderr, wait_thr|
+      stdin.close
+
+      stdout_thread = Thread.new do
+        while (line = stdout.gets)
+          stdout_lines << line
+          mutex.synchronize { combined_lines << line }
         end
       end
-      err = Thread.new do
-        while (line = stderrstream.gets)
-          stderr << line
-          # We print both stdout and stderr when a test fails. An easy way to
-          # implement this is to copy messages in stderr to those in stdout.
-          # Unfortunately their orders are not preserved.
-          stdout << line
+
+      stderr_thread = Thread.new do
+        while (line = stderr.gets)
+          stderr_lines << line
+          mutex.synchronize { combined_lines << line }
         end
       end
-      begin
-        runner = Thread.current
-        killer = Thread.new(timeout) do |timeout1|
-          sleep(timeout1)
-          runner.raise
-        end
-        out.join
-        err.join
-        killer.kill
-      rescue StandardError
-        while out.alive? && stdout.empty?
-          sleep(0.01)
-        end
-        if !stdout.empty? && stdout[0] =~ /pid=([0-9]+)/
-          pid = $1.to_i
-          Process.kill("KILL", pid)
-        else
-          warn("failed to kill FORM job at timeout (unknown pid)")
-        end
+
+      if wait_thr.join(timeout)
+        finished_in_time = true
+        exit_status = wait_thr.value.exitstatus
+        stdout_thread.join
+        stderr_thread.join
       else
-        @finished = true
-      ensure
-        out.kill # avoid SEGFAULT at IO#close in some old versions
-        err.kill
+        Process.kill("KILL", wait_thr.pid)
+        wait_thr.join
+        mutex.synchronize do
+          stdout_thread.kill
+          stderr_thread.kill
+        end
       end
     end
 
-    if !stdout.empty? && stdout[0] =~ /pid=([0-9]+)/
-      stdout.shift
-    end
-
-    if !FormTest.cfg.valgrind.nil? && (@finished && !stdout.empty? && !stdout[-1].start_with?("exit_status="))
-      # The exit status may be in the middle of the output (sometimes annoyingly
-      # happened on Travis CI).
-      i = stdout.map { |x| x.start_with?("exit_status") }.rindex(true)
-      if !i.nil?
-        s = stdout[i]
-        stdout.delete_at(i)
-        stdout << s
-      end
-    end
-
-    if @finished && !stdout.empty? && stdout[-1] =~ /exit_status=([0-9]+)/
-      @exit_status = $1.to_i
-      stdout.pop
-    end
-
-    # We exclude the Valgrind warnings "Warning: set address range perms: ..."
-    # from the standard output, which can happen when the program allocates
-    # big memory chunks.
-    stdout = stdout.reject { |l| l =~ /Warning: set address range perms/ }
-
-    @stdout += stdout.join
-    @stderr += stderr.join
+    {
+      stdout_lines: stdout_lines,
+      stderr_lines: stderr_lines,
+      combined_lines: combined_lines,
+      exit_status: exit_status,
+      finished_in_time: finished_in_time,
+    }
   end
 
   # Default assertions.
