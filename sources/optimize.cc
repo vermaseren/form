@@ -874,7 +874,7 @@ vector<WORD> Horner_tree (const WORD *expr, const vector<WORD> &order) {
 	LONG sumsize = 0;
 
 	for (const WORD *t=expr; *t!=0; t+=*t) {
-		sumsize += *t; t += *t;
+		sumsize += *t;
 	}
 	if ( sorted + sumsize > AT.WorkTop ) {
 		MLOCK(ErrorMessageLock);
