@@ -2560,12 +2560,24 @@ const poly poly::argument_to_poly (PHEAD WORD *e, bool with_arghead, bool sort_u
 	}
 
 	res[0] = ri;
-	
-	// normalize, since the Form order is probably not the polynomial order
-	// for multiple variables
 
-	if (sort_univar || AN.poly_num_vars>1)
+	// JD: For univariate cases, check whether the ordering is correct or not.
+	// There are various ways to arrive here, but with an incorrect ordering, such
+	// as interactions with collect, moving a polyratfun out of another function
+	// argument, etc.
+	// If the ordering is not correct, make sure we normalize. In multivariate cases,
+	// always normalize as before.
+	if (sort_univar == false && AN.poly_num_vars == 1) {
+		if (res.number_of_terms() >= 2) {
+			if(res[2] < res.last_monomial()[2]) {
+				sort_univar = true;
+			}
+		}
+	}
+
+	if (sort_univar || AN.poly_num_vars>1) {
 		res.normalize();
+	}
 
 	NumberFree(den,"poly::argument_to_poly");
 	NumberFree(pro,"poly::argument_to_poly");
