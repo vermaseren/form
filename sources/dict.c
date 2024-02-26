@@ -593,7 +593,7 @@ IllLeft:MesPrint("&Illegal LHS in dictionary");
 		AN.RepPoint = AT.RepCount + 1;
         ow = (WORD *)(((UBYTE *)(AT.WorkPointer)) + AM.MaxTer);
 		mm = s; ww = ow; i = *mm;
-		while ( --i >= 0 ) *ww++ = *mm++; AT.WorkPointer = ww;
+		while ( --i >= 0 ) {*ww++ = *mm++;} AT.WorkPointer = ww;
 		AC.lhdollarflag = 0; oldEside = AR.Eside; AR.Eside = LHSIDE;
 		AR.Cnumlhs = C->numlhs;
 		if ( Generator(BHEAD ow,C->numlhs) ) {
