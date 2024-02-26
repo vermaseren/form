@@ -481,7 +481,7 @@ void poly_ratfun_read (WORD *a, poly &num, poly &den) {
 	WORD *astop = a+a[1];
 
 	bool clean = (a[2] & MUSTCLEANPRF) == 0;
-		
+
 	a += FUNHEAD;
 	if (a >= astop) {
 		MLOCK(ErrorMessageLock);
@@ -504,7 +504,7 @@ void poly_ratfun_read (WORD *a, poly &num, poly &den) {
 	else {
 		den = poly(BHEAD 1, modp, 1);
 	}
-	
+
 	if (a < astop) {
 		MLOCK(ErrorMessageLock);
 		MesPrint ((char*)"ERROR: PolyRatFun cannot have more than two arguments");
@@ -512,16 +512,24 @@ void poly_ratfun_read (WORD *a, poly &num, poly &den) {
 		Terminate(-1);
 	}
 
+	// JD: At this point, num and den are certainly sorted into the correct order by
+	// poly::argument_to_poly, but we can't rely on the clean flag to know if there
+	// are any negative powers. Check for them, and set clean = false if there are any.
+	vector<WORD> minpower(AN.poly_num_vars, MAXPOSITIVE);
+
+	for (int i=1; i<num[0]; i+=num[i]) {
+		for (int j=0; j<AN.poly_num_vars; j++) {
+			minpower[j] = MiN(minpower[j], num[i+1+j]);
+		}
+	}
+	for (int i=1; i<den[0]; i+=den[i]) {
+		for (int j=0; j<AN.poly_num_vars; j++) {
+			minpower[j] = MiN(minpower[j], den[i+1+j]);
+			if ( minpower[j] < 0 ) clean = false;
+		}
+	}
+
 	if (!clean) {
-		vector<WORD> minpower(AN.poly_num_vars, MAXPOSITIVE);
-		
-		for (int i=1; i<num[0]; i+=num[i])
-			for (int j=0; j<AN.poly_num_vars; j++)
-				minpower[j] = MiN(minpower[j], num[i+1+j]);
-		for (int i=1; i<den[0]; i+=den[i])
-			for (int j=0; j<AN.poly_num_vars; j++)
-				minpower[j] = MiN(minpower[j], den[i+1+j]);
-		
 		for (int i=1; i<num[0]; i+=num[i])
 			for (int j=0; j<AN.poly_num_vars; j++)
 				num[i+1+j] -= minpower[j];
@@ -781,6 +789,7 @@ int poly_ratfun_normalize (PHEAD WORD *term) {
 			poly num2(BHEAD 0,modp,1);
 			poly den2(BHEAD 0,modp,1);
 			poly_ratfun_read(t,num2,den2);
+
 			if ((t[2] & MUSTCLEANPRF) != 0) { // first normalize
 				poly gcd1(polygcd::gcd(num2,den2));
 				num2 = num2/gcd1;

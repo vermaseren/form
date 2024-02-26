@@ -2260,6 +2260,125 @@ print +s;
 assert succeeded?
 assert result("A") =~ expr("+N1")
 *--#] Issue325 :
+*--#[ Issue336_1 :
+#-
+CFunction rat,f,tag;
+Symbol a,b,y,x;
+
+* Build lots of combinations
+Local test = (
+	+ f(1)
+	+ f(1+x)
+	+ f(1+x+x^2)
+	+ f(x+x^2)
+	+ f(1+x^-1)
+	+ f(1+x^-2)
+	+ f(1+x+x^-1)
+	+ f(x+x^-1)
+	+ f(x^-1)
+	+ f(x^-2)
+	+ f(x^-1+x^-2)
+	+ f(1+x+y)
+	+ f(1+x+x^2+y+y^2)
+	+ f(x+x^2+y+y^2)
+	+ f(1+x^-1+y^-1)
+	+ f(1+x^-2+y^-2)
+	+ f(1+x+x^-1+y+y^-1)
+	+ f(x+x^-1+y+y^-1)
+	+ f(x^-1+y^-1)
+	+ f(x^-2+y^-2)
+	+ f(x^-1+x^-2+y^-1+y^-2)
+	+ f(x^-1*x^-1)
+	+ f(x^-2+x^-1*y^-1+y^-2)
+	+ f(x^2+x^1*y^-1+y^-2)
+	)^2;
+DropCoefficient;
+* Create rational polys, with both orderings of the num and den
+Identify f(a?)*f(b?) = rat(a,b) + rat(a,b);
+.sort
+DropCoefficient;
+#$i = 0;
+Multiply tag($i);
+$i = $i+1;
+Print +s;
+.sort
+
+* Everything should cancel in the end, and we should get zero.
+Identify rat(?a) = rat(?a) - x*rat(?a);
+Bracket x;
+.sort
+
+PolyRatFun rat;
+Collect f;
+.sort
+Identify x = 1;
+Identify f(x?) = x;
+
+Print;
+.end
+# On 32-bit systems, "Collect f" does not fit in the default
+# MaxTermSize and gives "Bracket contents too long in Collect
+# statement" warning.
+assert wordsize >= 4 ? succeeded? : warning?
+assert result("test") =~ expr("0")
+*--#] Issue336_1 :
+*--#[ Issue336_2 :
+#-
+CFunction rat,f,tag;
+Symbol a,b,y,x;
+
+* Build lots of combinations
+Local test = (
+	+ f(1)
+	+ f(1+x)
+	+ f(1+x+x^2)
+	+ f(x+x^2)
+	+ f(1+x^-1)
+	+ f(1+x^-2)
+	+ f(1+x+x^-1)
+	+ f(x+x^-1)
+	+ f(x^-1)
+	+ f(x^-2)
+	+ f(x^-1+x^-2)
+	+ f(1+x+y)
+	+ f(1+x+x^2+y+y^2)
+	+ f(x+x^2+y+y^2)
+	+ f(1+x^-1+y^-1)
+	+ f(1+x^-2+y^-2)
+	+ f(1+x+x^-1+y+y^-1)
+	+ f(x+x^-1+y+y^-1)
+	+ f(x^-1+y^-1)
+	+ f(x^-2+y^-2)
+	+ f(x^-1+x^-2+y^-1+y^-2)
+	+ f(x^-1*x^-1)
+	+ f(x^-2+x^-1*y^-1+y^-2)
+	+ f(x^2+x^1*y^-1+y^-2)
+	)^2;
+DropCoefficient;
+* Create rational polys, with both orderings of the num and den
+Identify f(a?)*f(b?) = rat(a,b) + rat(a,b);
+.sort
+DropCoefficient;
+#$i = 0;
+Multiply tag($i);
+$i = $i+1;
+Print +s;
+.sort
+
+* Everything should cancel in the end, and we should get zero.
+Identify rat(?a) = rat(?a) - f(rat(?a));
+.sort
+
+PolyRatFun rat;
+.sort
+
+Identify f(x?) = x;
+
+Print;
+.end
+assert succeeded?
+assert result("test") =~ expr("0")
+*--#] Issue336_2 :
 *--#[ Issue340 :
 * Calling "argtoextrasymbol" of a function containing "g5_" crashes
 CF f, g;
