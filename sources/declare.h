@@ -75,31 +75,31 @@
 #define NCOPYI32(s,t,n) while ( --n >= 0 ) *s++ = *t++;
 #define WCOPY(s,t,n) { int nn=n; WORD *ss=(WORD *)s, *tt=(WORD *)t; while ( --nn >= 0 ) *ss++=*tt++; }
 #define NeedNumber(x,s,err) { int sgn = 1;                               \
-		while ( *s == ' ' || *s == '\t' || *s == '-' || *s == '+' ) {    \
-			if ( *s == '-' ) sgn = -sgn; s++; }                          \
-		if ( chartype[*s] != 1 ) goto err;                               \
-		ParseNumber(x,s)                                                 \
-		if ( sgn < 0 ) (x) = -(x); while ( *s == ' ' || *s == '\t' ) s++;\
+		while ( *s == ' ' || *s == '\t' || *s == '-' || *s == '+' ) {      \
+			if ( *s == '-' ) {sgn = -sgn;} s++; }                           \
+		if ( chartype[*s] != 1 ) goto err;                                 \
+		ParseNumber(x,s)                                                   \
+		if ( sgn < 0 ) {(x) = -(x);} while ( *s == ' ' || *s == '\t' ) s++;\
 	}
 #define SKIPBLANKS(s) { while ( *(s) == ' ' || *(s) == '\t' ) (s)++; }
 #define FLUSHCONSOLE if ( AP.InOutBuf > 0 ) CharOut(LINEFEED)
 
-#define SKIPBRA1(s) { int lev1=0; s++; while(*s) { if(*s=='[')lev1++; \
-					else if(*s==']'&&--lev1<0)break; s++;} }
-#define SKIPBRA2(s) { int lev2=0; s++; while(*s) { if(*s=='{')lev2++; \
-					else if(*s=='}'&&--lev2<0)break; \
-					else if(*s=='[')SKIPBRA1(s) s++;} }
-#define SKIPBRA3(s) { int lev3=0; s++; while(*s) { if(*s=='(')lev3++; \
-					else if(*s==')'&&--lev3<0)break; \
-					else if(*s=='{')SKIPBRA2(s) \
-					else if(*s=='[')SKIPBRA1(s) s++;} }
-#define SKIPBRA4(s) { int lev4=0; s++; while(*s) { if(*s=='(')lev4++; \
-					else if(*s==')'&&--lev4<0)break; \
-					else if(*s=='[')SKIPBRA1(s) s++;} }
-#define SKIPBRA5(s) { int lev5=0; s++; while(*s) { if(*s=='{')lev5++; \
-					else if(*s=='}'&&--lev5<0)break; \
-					else if(*s=='(')SKIPBRA4(s) \
-					else if(*s=='[')SKIPBRA1(s) s++;} }
+#define SKIPBRA1(s) { int lev1=0; s++; while(*s) { if(*s=='['){lev1++;} \
+					else {if(*s==']'&&--lev1<0){break;}} s++;} }
+#define SKIPBRA2(s) { int lev2=0; s++; while(*s) { if(*s=='{'){lev2++;} \
+					else {if(*s=='}'&&--lev2<0){break;} \
+					else {if(*s=='['){SKIPBRA1(s)}}} s++;} }
+#define SKIPBRA3(s) { int lev3=0; s++; while(*s) { if(*s=='('){lev3++;} \
+					else {if(*s==')'&&--lev3<0){break;} \
+					else {if(*s=='{'){SKIPBRA2(s)} \
+					else {if(*s=='['){SKIPBRA1(s)}}}} s++;} }
+#define SKIPBRA4(s) { int lev4=0; s++; while(*s) { if(*s=='('){lev4++;} \
+					else {if(*s==')'&&--lev4<0){break;} \
+					else {if(*s=='['){SKIPBRA1(s)}}} s++;} }
+#define SKIPBRA5(s) { int lev5=0; s++; while(*s) { if(*s=='{'){lev5++;} \
+					else {if(*s=='}'&&--lev5<0){break;} \
+					else {if(*s=='('){SKIPBRA4(s)} \
+					else {if(*s=='['){SKIPBRA1(s)}}}} s++;} }
 
 /*
 #define CYCLE1(a,i) {WORD iX,jX; iX=*a; for(jX=1;jX<i;jX++)a[jX-1]=a[jX]; a[i-1]=iX;}
@@ -107,7 +107,7 @@
 #define CYCLE1(t,a,i) {t iX=*a; WORD jX; for(jX=1;jX<i;jX++)a[jX-1]=a[jX]; a[i-1]=iX;}
 
 #define AddToCB(c,wx) if(c->Pointer>=c->Top) \
-		DoubleCbuffer(c-cbuf,c->Pointer,21); \
+		{DoubleCbuffer(c-cbuf,c->Pointer,21);} \
 		*(c->Pointer)++ = wx;
 
 #define EXCHINOUT { FILEHANDLE *ffFi = AR.outfile; \
