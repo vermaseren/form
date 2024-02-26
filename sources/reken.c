@@ -2909,7 +2909,7 @@ int MakeLongRational(PHEAD UWORD *a, WORD na, UWORD *m, WORD nm, UWORD *b, WORD 
 	UWORD *x4 = NumberMalloc("MakeRational");
 	UWORD *y1 = NumberMalloc("MakeRational");
 	UWORD *y2 = NumberMalloc("MakeRational");
-	WORD nroot,nx1,nx2,nx3,nx4,ny1,ny2,retval = 0;
+	WORD nroot,nx1,nx2,nx3,nx4,ny1,ny2 = 0,retval = 0;
 	WORD sign = 1;
 /*
 	Step 1: Take the square root of m
