@@ -1390,7 +1390,7 @@ const map<vector<int>,int> polygcd::bracket_count(const poly &a, const vector<in
 
 struct BracketInfo {
 	std::vector<int> pattern;
-	int num_terms, dummy;
+	int num_terms, dummy = 0;
 	const poly* p;
 
 	BracketInfo(const std::vector<int>& pattern, int num_terms, const poly* p) : pattern(pattern), num_terms(num_terms), p(p) {}
