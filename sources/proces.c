@@ -3315,12 +3315,14 @@ SkipCount:	level++;
 			if ( level > AR.Cnumlhs ) {
 				if ( AR.DeferFlag && AR.sLevel <= 0 ) {
 #ifdef WITHMPI
-				  if ( PF.me != MASTER && AC.mparallelflag == PARALLELFLAG && PF.exprtodo < 0 ) {
-					if ( PF_Deferred(term,level) ) goto GenCall;
-				  }
-				  else
+					if ( PF.me != MASTER && AC.mparallelflag == PARALLELFLAG && PF.exprtodo < 0 ) {
+						if ( PF_Deferred(term,level) ) goto GenCall;
+					}
+					else
 #endif
-					if ( Deferred(BHEAD term,level) ) goto GenCall;
+					{
+						if ( Deferred(BHEAD term,level) ) goto GenCall;
+					}
 					goto Return0;
 				}
 				if ( AN.ncmod != 0 ) {
