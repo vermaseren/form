@@ -70,6 +70,19 @@ def read_env_positive_int(key, default_value)
   value
 end
 
+# Get the total size of the physical memory available on the host machine.
+def get_total_physical_memory
+  if RUBY_PLATFORM.downcase.include?("linux")
+    mem_info = `free -b | grep Mem`
+    mem_info.split[1].to_i
+  elsif RUBY_PLATFORM.downcase.include?("darwin")
+    mem_info = `sysctl -n hw.memsize`
+    mem_info.to_i
+  else
+    nil
+  end
+end
+
 # The default prefix for the root temporary directory. See TempDir.root.
 TMPDIR_PREFIX = "form_check_"
 
@@ -224,6 +237,8 @@ module FormTest
     FormTest.cfg.wordsize
   end
 
+  # Host environment.
+
   def cygwin?
     RUBY_PLATFORM =~ /cygwin/i
   end
@@ -247,6 +262,24 @@ module FormTest
   def github?
     ENV["GITHUB_ACTIONS"] == "true"
   end
+
+  # Total memory in bytes. -1 if undetermined.
+  def total_memory
+    @@total_memory_mutex.synchronize do
+      if @@cached_total_memory.nil?
+        result = get_total_physical_memory
+        if result.nil?
+          @@cached_total_memory = -1
+        else
+          @@cached_total_memory = result
+        end
+      end
+      @@cached_total_memory
+    end
+  end
+
+  @@cached_total_memory = nil
+  @@total_memory_mutex = Mutex.new
 
   # Override methods in Test::Unit::TestCase.
 
