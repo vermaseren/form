@@ -170,6 +170,10 @@ assert result("F") =~ expr("
 P;
 .end
 #time_dilation 4.0
+# memory usage is so intense
+#pend_if serial? && total_memory < 8_000_000_000
+#pend_if threaded? && total_memory < 20_000_000_000
+#pend_if mpi? && total_memory < 20_000_000_000
 # too heavy on GitHub (often fails)
 #pend_if github? && valgrind?
 assert succeeded?
