@@ -252,7 +252,11 @@ int CoRemoveSpectator(UBYTE *inp)
 		return(1);
 	}
 	for ( i = 0; i < AM.SizeForSpectatorFiles; i++ ) {
-		if ( StrCmp((UBYTE *)(AM.SpectatorFiles[i].name),(UBYTE *)(inp)) == 0 ) break;
+		if ( AM.SpectatorFiles[i].name != 0 ) {
+			if ( StrCmp((UBYTE *)(AM.SpectatorFiles[i].name),(UBYTE *)(inp)) == 0 ) {
+				break;
+			}
+		}
 	}
 	if ( i >= AM.SizeForSpectatorFiles ) {
 		MesPrint("&Spectator %s not found.",inp);
