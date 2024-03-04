@@ -1042,7 +1042,7 @@ VOID WriteLists(VOID)
 				element = Sets[i].first;
 				LastElement = Sets[i].last;
 				type = Sets[i].type;
-				do {
+				while ( element < LastElement ) {
 					TokenToLine((UBYTE *)" ");
 					number = SetElements[element++];
 					switch ( type ) {
@@ -1110,7 +1110,7 @@ VOID WriteLists(VOID)
 							TokenToLine(OutScr);
 							break;
 					}
-				} while ( element < LastElement );
+				}
 			}
 		}
 		*skip = 0;
