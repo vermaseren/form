@@ -2383,3 +2383,15 @@ assert stdout =~ exact_pattern(<<'EOF')
 & p_q**(-2) + p_q**(-1) + p_q + p_q**2
 EOF
 *--#] Issue460_4 :
+*--#[ Issue486 :
+On codes;
+Symbol x,y;
+Set empty;
+Set nonempty: x,y;
+.end
+assert succeeded?
+assert stdout =~ exact_pattern(<<'EOF')
+   empty(13):
+   nonempty(14): x y
+EOF
+*--#] Issue486 :
