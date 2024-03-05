@@ -867,6 +867,20 @@ vector<WORD> Horner_tree (const WORD *expr, const vector<WORD> &order) {
 
 	// sort variables in individual terms using bubble sort
 	WORD *sorted = AT.WorkPointer;
+	LONG sumsize = 0;
+
+	for (const WORD *t=expr; *t!=0; t+=*t) {
+		sumsize += *t;
+	}
+	if ( sorted + sumsize > AT.WorkTop ) {
+		MLOCK(ErrorMessageLock);
+		MesPrint("=== Workspace overflow. %l bytes is not enough.",AM.WorkSize);
+		MesPrint("=== Change parameter WorkSpace in %s",setupfilename);
+		sumsize = (AT.WorkPointer-AT.WorkSpace+sumsize)*sizeof(WORD);
+		MesPrint("=== At least %l bytes are needed.",sumsize);
+		MUNLOCK(ErrorMessageLock);
+		Terminate(-1);
+	}
 
 	for (const WORD *t=expr; *t!=0; t+=*t) {
 		memcpy(sorted, t, *t*sizeof(WORD));
