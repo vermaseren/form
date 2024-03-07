@@ -2639,6 +2639,9 @@ WORD WriteAll(VOID)
 				TokenToLine((UBYTE *)")");
 			}
 			TOKENTOLINE(" =","=");
+			if ( AC.OutputMode == MATHEMATICAMODE ) {
+				TOKENTOLINE(" (","(");
+			}
 			lbrac = 0;
 			AO.InFbrack = 0;
 			if ( AC.OutputMode == FORTRANMODE || AC.OutputMode == PFORTRANMODE )
@@ -2691,6 +2694,9 @@ WORD WriteAll(VOID)
 					TOKENTOLINE(" + 1 * ( ","+1*(")
 					PrtTerms();
 					TOKENTOLINE(" )",")")
+				}
+				if ( AC.OutputMode == MATHEMATICAMODE ) {
+					TokenToLine((UBYTE *)")");
 				}
 				if ( AC.OutputMode != FORTRANMODE && AC.OutputMode != PFORTRANMODE )
 					TokenToLine((UBYTE *)";");
