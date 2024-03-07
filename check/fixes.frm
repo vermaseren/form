@@ -186,6 +186,57 @@ P;
 assert succeeded?
 assert result("F") =~ expr("1")
 *--#] Issue21 : 
+*--#[ Issue23 :
+#-
+CFunction f,g;
+Symbol x;
+
+Local F = (x+1)^2*(f(x)+g(x))^2;
+Local G = (x+1)^2*(f(x)+g(x))^2;
+
+Format Mathematica;
+
+Bracket x;
+Print +s F;
+.sort
+
+Print +s G;
+.end
+assert succeeded?
+assert stdout =~ exact_pattern(<<'EOF')
+   F = (
+
+       + x * (
+          + 2*f[x]^2
+          + 4*f[x]*g[x]
+          + 2*g[x]^2
+          )
+
+       + x^2 * (
+          + f[x]^2
+          + 2*f[x]*g[x]
+          + g[x]^2
+          )
+
+       + f[x]^2
+          + 2*f[x]*g[x]
+          + g[x]^2
+         );
+EOF
+assert stdout =~ exact_pattern(<<'EOF')
+   G = (
+       + f[x]^2
+       + 2*f[x]^2*x
+       + f[x]^2*x^2
+       + 2*f[x]*g[x]
+       + 4*f[x]*g[x]*x
+       + 2*f[x]*g[x]*x^2
+       + g[x]^2
+       + 2*g[x]^2*x
+       + g[x]^2*x^2
+      );
+EOF
+*--#] Issue23 :
 *--#[ Issue25 :
 * [tform] ZERO_ is always 1 when InParallel mode
 L F1 = 1;
@@ -2347,7 +2398,7 @@ Format Mathematica;
 Print;
 .end
 assert succeeded?
-assert result("test") =~ expr("(p.q)^(-2) + (p.q)^(-1) + (p.q) + (p.q)^2")
+assert result("test") =~ expr("((p.q)^(-2) + (p.q)^(-1) + (p.q) + (p.q)^2)")
 *--#] Issue460_1 :
 *--#[ Issue460_2 :
 * Improve format mathematica, for powers of dot products
