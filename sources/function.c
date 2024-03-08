@@ -1048,8 +1048,7 @@ toploop:
 			AN.argaddress = t;
 			if ( *m == FUNNYWILD ) {
 				tobeeaten = AT.WildArgTaken[numofwildarg++];
-				i = tobeeaten | EATTENSOR;
-				if ( CheckWild(BHEAD m[1],ARGTOARG,i,t) ) goto endloop;
+				if ( CheckWild(BHEAD m[1],ARGTOARG|EATTENSOR,tobeeaten,t) ) goto endloop;
 				AddWild(BHEAD m[1],ARGTOARG,i);
 				m += 2;
 				t += tobeeaten;

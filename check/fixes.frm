@@ -2170,6 +2170,33 @@ P;
 #pend_if mpi?
 assert runtime_error?
 *--#] Issue261_7 : 
+*--#[ Issue268_1 :
+* Invalid read in Normalize
+#define N "9999"
+CF f;
+S x1,x2;
+L F = f(1,...,`N');
+id f(x1?,?a,x2?) = f(?a);
+id f(?a,x2?) = x2+1;
+P;
+.end
+# On 32-bit systems, "Term too complex during substitution" error occurs.
+#require wordsize >= 4
+assert succeeded?
+assert result("F") =~ expr("9999")
+*--#] Issue268_1 :
+*--#[ Issue268_2 :
+#define N "9999"
+CF f;
+L F = f(1,...,`N');
+id f(?a) = nargs_(?a);
+P;
+.end
+# On 32-bit systems, "Term too complex during substitution" error occurs.
+#require wordsize >= 4
+assert succeeded?
+assert result("F") =~ expr("9999")
+*--#] Issue268_2 :
 *--#[ Issue277 :
 * A question about addargs
 CFunction f,g,h;

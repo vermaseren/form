@@ -610,6 +610,10 @@ typedef int (*TFUN1)();
 #define NUMTOSYM 21
 #define NUMTOIND 22
 #define NUMTOSUB 23
+/*
+	Flag or-ed with ARGTOARG to give the number of arguments.
+*/
+#define EATTENSOR 0x2000
 
 /*
 	Dirty flags (introduced when functions got a field with a dirty flag)
@@ -748,7 +752,6 @@ typedef int (*TFUN1)();
 #define RATIONALMODE 0
 
 #define NUMSPECSETS 10
-#define EATTENSOR 0x2000
 
 #define ISZERO 1
 #define ISUNMODIFIED 2

@@ -1518,6 +1518,8 @@ WORD AddWild(PHEAD WORD oldnumber, WORD type, WORD newnumber)
 	GETBIDENTITY
 	WORD *w, *m, n, k, i = -1;
 	CBUF *C = cbuf+AT.ebufnum;
+	WORD eattensor = type & EATTENSOR;
+	type = type & ~EATTENSOR;
 DEBUG(WORD *mm;)
 	AN.WildReserve = 0;
 	m = AT.WildMask;
@@ -1560,8 +1562,8 @@ DEBUG(MesPrint("Thread %w(d): m=(%d,%d,%d,%d)(%d)",mm[0],mm[1],mm[2],mm[3],C->nu
 				w[3] = C->numrhs;
 				w = AN.argaddress;
 DEBUG(mm=m;)
-				if ( ( newnumber & EATTENSOR ) != 0 ) {
-					n = newnumber & ~EATTENSOR;
+				if ( eattensor ) {
+					n = newnumber;
 					*m++ = n;
 					w = AN.argaddress;
 				}
@@ -1764,6 +1766,8 @@ WORD CheckWild(PHEAD WORD oldnumber, WORD type, WORD newnumber, WORD *newval)
 	WORD *w, *m, *s, n, old2, inset;
 	WORD n2, oldval, dirty, i, j, notflag = 0, retblock = 0;
 	CBUF *C = cbuf+AT.ebufnum;
+	WORD eattensor = type & EATTENSOR;
+	type = type & ~EATTENSOR;
 	m = AT.WildMask;
 	w = AN.WildValue;
 	n = AN.NumWild;
@@ -1867,8 +1871,8 @@ WORD CheckWild(PHEAD WORD oldnumber, WORD type, WORD newnumber, WORD *newval)
 				if ( w[2] == oldnumber && *w == ARGTOARG ) {
 					if ( !*m ) return(0);		/* nihil obstat */
 					m = C->rhs[w[3]];
-					if ( ( newnumber & EATTENSOR ) != 0 ) {
-						n = newnumber & ~EATTENSOR;
+					if ( eattensor ) {
+						n = newnumber;
 						if ( *m != 0 ) {
 							if ( n == *m ) {
 								m++;
