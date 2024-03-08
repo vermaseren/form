@@ -799,8 +799,8 @@ int MatchCy(PHEAD WORD *pattern, WORD *fun, WORD *inter, WORD par)
 					if ( *p == FUNNYWILD ) {
 						p++; wc = 1;
 						AN.argaddress = t;
-						if ( CheckWild(BHEAD *p,ARGTOARG,funnycount|EATTENSOR,t) ) break;
-						AddWild(BHEAD *p,ARGTOARG,funnycount|EATTENSOR);
+						if ( CheckWild(BHEAD *p,ARGTOARG|EATTENSOR,funnycount,t) ) break;
+						AddWild(BHEAD *p,ARGTOARG|EATTENSOR,funnycount);
 						j += funnycount-1; t += funnycount-1;
 					}
 					else if ( *p >= AM.OffsetIndex + WILDOFFSET
@@ -957,8 +957,8 @@ int MatchCy(PHEAD WORD *pattern, WORD *fun, WORD *inter, WORD par)
 					if ( *p == FUNNYWILD ) {
 						p++; wc = thewildcards[renum[*p]];
 						AN.argaddress = t;
-						if ( CheckWild(BHEAD *p,ARGTOARG,wc|EATTENSOR,t) ) break;
-						AddWild(BHEAD *p,ARGTOARG,wc|EATTENSOR);
+						if ( CheckWild(BHEAD *p,ARGTOARG|EATTENSOR,wc,t) ) break;
+						AddWild(BHEAD *p,ARGTOARG|EATTENSOR,wc);
 						j += wc-1; t += wc-1; wc = 1;
 					}
 					else if ( *p >= AM.OffsetIndex + WILDOFFSET
