@@ -323,6 +323,18 @@ typedef int (*TFUN1)();
 #define SORTPOWERFIRST 2
 #define SORTANTIPOWER 3
 
+/* These control the output of WriteStats. The different sort
+ * types have differently formatted stats. These variables should
+ * not have arbitrary values since they are also used as array
+ * indices by WriteStats. */
+#define STATSSPLITMERGE 0
+#define STATSMERGETOFILE 1
+#define STATSPOSTSORT 2
+/* CHECKLOGTYPE implies that statistics will not be printed in
+ * the log file if AM.LogType = 1 (when running with -ll or -F). */
+#define NOCHECKLOGTYPE 0
+#define CHECKLOGTYPE 1
+
 #define NMIN4SHIFT 4
 /*
 	The next are the main codes.

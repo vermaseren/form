@@ -71,7 +71,7 @@ LONG numcompares;
 /*
   	#] Includes : 
 	#[ SortUtilities :
- 		#[ WriteStats :				VOID WriteStats(lspace,par)
+		#[ WriteStats :				VOID WriteStats(lspace,par,checkLogType)
 */
  
 char *toterms[] = { "   ", " >>", "-->" };
@@ -81,16 +81,18 @@ char *toterms[] = { "   ", " >>", "-->" };
  *
  *		@param plspace The size in bytes currently occupied
  *		@param par
- *		par = 0 after a splitmerge.
- *		par = 1 after merge to sortfile.
- *		par = 2 after the sort
+ *		par = 0 = STATSSPLITMERGE after a splitmerge.
+ *		par = 1 = STATSMERGETOFILE after merge to sortfile.
+ *		par = 2 = STATSPOSTSORT after the sort
+ *		@param checkLogType == CHECKLOGTYPE: The output should not
+ *		go to the log file if AM.LogType is 1.
  *
  *		current expression is to be found in AR.CurExpr.
  *		terms are in S->TermsLeft.
  *		S->GenTerms.
  */
 
-VOID WriteStats(POSITION *plspace, WORD par)
+VOID WriteStats(POSITION *plspace, WORD par, WORD checkLogType)
 {
 	GETIDENTITY
 	LONG millitime, y = 0x7FFFFFFFL >> 1;
@@ -107,7 +109,7 @@ VOID WriteStats(POSITION *plspace, WORD par)
 #endif
 		if ( Expressions == 0 ) return;
 
-		if ( par == 0 ) {
+		if ( par == STATSSPLITMERGE ) {
 			if ( AC.ShortStatsMax == 0 ) return;
 			AR.ShortSortCount++;
 			if ( AR.ShortSortCount < AC.ShortStatsMax ) return;
@@ -115,7 +117,17 @@ VOID WriteStats(POSITION *plspace, WORD par)
 		AR.ShortSortCount = 0;
 
 		S = AT.SS;
+
 		MLOCK(ErrorMessageLock);
+
+		/* If the statistics should not go to the log file, temporarily hide the
+		 * LogHandle. This must be done within the ErrorMessageLock region to
+		 * avoid a data race between threads. */
+		const WORD oldLogHandle = AC.LogHandle;
+		if ( checkLogType && AM.LogType ) {
+			AC.LogHandle = -1;
+		}
+
 		if ( AC.ShortStats ) {}
 		else {
 #ifdef WITHPTHREADS
@@ -160,7 +172,7 @@ VOID WriteStats(POSITION *plspace, WORD par)
 		  if ( PF.me != MASTER ) {
 			const int identity = PF.me;
 #endif
-			if ( par == 0 || par == 2 ) {
+			if ( par == STATSSPLITMERGE || par == STATSPOSTSORT ) {
 				SETBASEPOSITION(pp,y);
 				if ( ISLESSPOS(*plspace,pp) ) {
 					MesPrint("%d: %7l.%2is %8l>%10l%3s%10l:%10p %s %s",identity,
@@ -227,7 +239,7 @@ VOID WriteStats(POSITION *plspace, WORD par)
 					}
 				}
 			}
-			else if ( par == 1 ) {
+			else if ( par == STATSMERGETOFILE ) {
 				SETBASEPOSITION(pp,y);
 				if ( ISLESSPOS(*plspace,pp) ) {
 					MesPrint("%d: %7l.%2is %10l:%10p",identity,millitime,timepart,
@@ -283,7 +295,7 @@ VOID WriteStats(POSITION *plspace, WORD par)
 			} } else
 #endif
 			{
-			if ( par == 0 || par == 2 ) {
+			if ( par == STATSSPLITMERGE || par == STATSPOSTSORT ) {
 				SETBASEPOSITION(pp,y);
 				if ( ISLESSPOS(*plspace,pp) ) {
 					MesPrint("%7l.%2is %8l>%10l%3s%10l:%10p %s %s",
@@ -350,7 +362,7 @@ VOID WriteStats(POSITION *plspace, WORD par)
 					}
 				}
 			}
-			else if ( par == 1 ) {
+			else if ( par == STATSMERGETOFILE ) {
 				SETBASEPOSITION(pp,y);
 				if ( ISLESSPOS(*plspace,pp) ) {
 					MesPrint("%7l.%2is %10l:%10p",millitime,timepart,
@@ -406,7 +418,7 @@ VOID WriteStats(POSITION *plspace, WORD par)
 			}
 		} }
 		else {
-		if ( par == 1 ) {
+		if ( par == STATSMERGETOFILE ) {
 			if ( use_wtime ) {
 				MesPrint("WTime = %7l.%2i sec",millitime,timepart);
 			}
@@ -448,7 +460,7 @@ VOID WriteStats(POSITION *plspace, WORD par)
 #endif
 		}
 #if ( BITSINLONG > 32 )
-		if ( par == 0 )
+		if ( par == STATSSPLITMERGE )
 			if ( S->TermsLeft >= 10000000000L ) {
 				MesPrint("%16s%8l Terms %s = %16l",EXPRNAME(AR.CurExpr),
 				AN.ninterms,FG.swmes[par],S->TermsLeft);
@@ -460,13 +472,13 @@ VOID WriteStats(POSITION *plspace, WORD par)
 		else {
 			if ( S->TermsLeft >= 10000000000L ) {
 #ifdef WITHPTHREADS
-				if ( identity > 0 && par == 2 ) {
+				if ( identity > 0 && par == STATSPOSTSORT ) {
 					MesPrint("%16s         Terms in thread = %16l",
 					EXPRNAME(AR.CurExpr),S->TermsLeft);
 				}
 				else
 #elif defined(WITHMPI)
-				if ( PF.me != MASTER && par == 2 ) {
+				if ( PF.me != MASTER && par == STATSPOSTSORT ) {
 					MesPrint("%16s         Terms in process= %16l",
 					EXPRNAME(AR.CurExpr),S->TermsLeft);
 				}
@@ -479,13 +491,13 @@ VOID WriteStats(POSITION *plspace, WORD par)
 			}
 			else {
 #ifdef WITHPTHREADS
-				if ( identity > 0 && par == 2 ) {
+				if ( identity > 0 && par == STATSPOSTSORT ) {
 					MesPrint("%16s         Terms in thread = %10l",
 					EXPRNAME(AR.CurExpr),S->TermsLeft);
 				}
 				else
 #elif defined(WITHMPI)
-				if ( PF.me != MASTER && par == 2 ) {
+				if ( PF.me != MASTER && par == STATSPOSTSORT ) {
 					MesPrint("%16s         Terms in process= %10l",
 					EXPRNAME(AR.CurExpr),S->TermsLeft);
 				}
@@ -498,18 +510,18 @@ VOID WriteStats(POSITION *plspace, WORD par)
 			}
 		}
 #else
-		if ( par == 0 )
+		if ( par == STATSSPLITMERGE )
 			MesPrint("%16s%8l Terms %s = %10l",EXPRNAME(AR.CurExpr),
 			AN.ninterms,FG.swmes[par],S->TermsLeft);
 		else {
 #ifdef WITHPTHREADS
-			if ( identity > 0 && par == 2 ) {
+			if ( identity > 0 && par == STATSPOSTSORT ) {
 				MesPrint("%16s         Terms in thread = %10l",
 				EXPRNAME(AR.CurExpr),S->TermsLeft);
 			}
 			else
 #elif defined(WITHMPI)
-			if ( PF.me != MASTER && par == 2 ) {
+			if ( PF.me != MASTER && par == STATSPOSTSORT ) {
 				MesPrint("%16s         Terms in process= %10l",
 				EXPRNAME(AR.CurExpr),S->TermsLeft);
 			}
@@ -571,6 +583,10 @@ VOID WriteStats(POSITION *plspace, WORD par)
 		MesPrint("Total number of mallocs: %l, frees: %l"
 			,nummallocs,numfrees);
 #endif
+		/* Put back the original LogHandle, it was changed if the statistics were
+		 * not printed in the log file. */
+		AC.LogHandle = oldLogHandle;
+
 		MUNLOCK(ErrorMessageLock);
 	}
 }
@@ -829,7 +845,7 @@ LONG EndSort(PHEAD WORD *buffer, int par)
 #endif
 			DIFPOS(oldpos,position,oldpos);
 			S->SpaceLeft = BASEPOSITION(oldpos);
-			WriteStats(&oldpos,(WORD)2);
+			WriteStats(&oldpos,STATSPOSTSORT,NOCHECKLOGTYPE);
 			pp = oldpos;
 			goto RetRetval;
 		}
@@ -845,11 +861,9 @@ LONG EndSort(PHEAD WORD *buffer, int par)
 		ADD2POS(pp,S->fPatches[S->fPatchN]);
 	}
 	if ( S == AT.S0 ) {
-		WORD oldLogHandle = AC.LogHandle;
-		if ( AC.LogHandle >= 0 && AM.LogType && ( ( S->lPatch > 0 )
-			|| S->file.handle >= 0 ) ) AC.LogHandle = -1;
-		if ( S->lPatch > 0 || S->file.handle >= 0 ) { WriteStats(&pp,0); }
-		AC.LogHandle = oldLogHandle;
+		if ( S->lPatch > 0 || S->file.handle >= 0 ) {
+			WriteStats(&pp,STATSSPLITMERGE,CHECKLOGTYPE);
+		}
 	}
 	if ( par == 2 ) { AR.outfile = newout = AllocFileHandle(0,(char *)0); }
 	if ( S->lPatch > 0 ) {
@@ -878,15 +892,12 @@ LONG EndSort(PHEAD WORD *buffer, int par)
 			if ( S == AT.S0 )
 #endif
 			{
-				WORD oldLogHandle = AC.LogHandle;
 				POSITION pppp;
 				SETBASEPOSITION(pppp,0);
 				SeekFile(S->file.handle,&pppp,SEEK_CUR);
 				SeekFile(S->file.handle,&pp,SEEK_END);
 				SeekFile(S->file.handle,&pppp,SEEK_SET);
-				if ( AC.LogHandle >= 0 && AM.LogType ) AC.LogHandle = -1;
-				WriteStats(&pp,(WORD)1);
-				AC.LogHandle = oldLogHandle;
+				WriteStats(&pp,STATSMERGETOFILE,CHECKLOGTYPE);
 				UpdateMaxSize();
 			}
 		}
@@ -916,7 +927,7 @@ LONG EndSort(PHEAD WORD *buffer, int par)
 #ifdef WITHPTHREADS
 					if ( AS.MasterSort && ( fout == AR.outfile ) ) goto RetRetval;
 #endif
-					WriteStats(&pp,2);
+					WriteStats(&pp,STATSPOSTSORT,NOCHECKLOGTYPE);
 					UpdateMaxSize();
 				}
 				else {
@@ -996,15 +1007,12 @@ TooLarge:
 			if ( S == AT.S0 )
 #endif
 			{
-				WORD oldLogHandle = AC.LogHandle;
 				POSITION pppp;
 				SETBASEPOSITION(pppp,0);
 				SeekFile(S->file.handle,&pppp,SEEK_CUR);
 				SeekFile(S->file.handle,&pp,SEEK_END);
 				SeekFile(S->file.handle,&pppp,SEEK_SET);
-				if ( AC.LogHandle >= 0 && AM.LogType ) AC.LogHandle = -1;
-				WriteStats(&pp,(WORD)1);
-				AC.LogHandle = oldLogHandle;
+				WriteStats(&pp,STATSMERGETOFILE,CHECKLOGTYPE);
 			}
 #ifdef WITHERRORXXX
 			if ( S != AT.S0 ) {
@@ -1085,7 +1093,7 @@ TooLarge:
 #endif
 		pp = S->SizeInFile[0];
 		MULPOS(pp,sizeof(WORD));
-		WriteStats(&pp,2);
+		WriteStats(&pp,STATSPOSTSORT,NOCHECKLOGTYPE);
 		UpdateMaxSize();
 	}
 RetRetval:
@@ -4438,10 +4446,7 @@ WORD StoreTerm(PHEAD WORD *term)
 			ADD2POS(pp,S->fPatches[S->fPatchN]);
 		}
 		if ( S == AT.S0 ) {	/* Only statistics at ground level */
-			WORD oldLogHandle = AC.LogHandle;
-			if ( AC.LogHandle >= 0 && AM.LogType ) AC.LogHandle = -1;
-			WriteStats(&pp,(WORD)0);
-			AC.LogHandle = oldLogHandle;
+			WriteStats(&pp,STATSSPLITMERGE,CHECKLOGTYPE);
 		}
 		if ( ( S->lPatch >= S->MaxPatches ) ||
 			( ( (WORD *)(((UBYTE *)(S->lFill + sSpace)) + 2*AM.MaxTer ) ) >= S->lTop ) ) {
@@ -4459,10 +4464,7 @@ WORD StoreTerm(PHEAD WORD *term)
 			ADD2POS(pp,S->fPatches[S->fPatchN]);
 
 			if ( S == AT.S0 ) {	/* Only statistics at ground level */
-				WORD oldLogHandle = AC.LogHandle;
-				if ( AC.LogHandle >= 0 && AM.LogType ) AC.LogHandle = -1;
-				WriteStats(&pp,(WORD)1);
-				AC.LogHandle = oldLogHandle;
+				WriteStats(&pp,STATSMERGETOFILE,CHECKLOGTYPE);
 			}
 			S->lPatch = 0;
 			S->lFill = S->lBuffer;
