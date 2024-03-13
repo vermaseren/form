@@ -1775,7 +1775,7 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 				genterms += PF_stats[k][3];
 			}
 			AT.SS->GenTerms = genterms;
-			WriteStats(&PF_exprsize, 2);
+			WriteStats(&PF_exprsize, STATSPOSTSORT, NOCHECKLOGTYPE);
 			Expressions[AR.CurExpr].size = PF_exprsize;
 		}
 		PF_Statistics(PF_stats,0);
