@@ -722,7 +722,7 @@ extern WORD   WriteExpression(WORD *,LONG);
 extern WORD   WriteInnerTerm(WORD *,WORD);
 extern VOID   WriteLists(VOID);
 extern VOID   WriteSetup(VOID);
-extern VOID   WriteStats(POSITION *,WORD);
+extern VOID   WriteStats(POSITION *,WORD,WORD);
 extern WORD   WriteSubTerm(WORD *,WORD);
 extern WORD   WriteTerm(WORD *,WORD *,WORD,WORD,WORD);
 extern WORD   execarg(PHEAD WORD *,WORD);

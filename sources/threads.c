@@ -3980,7 +3980,7 @@ EndOfMerge:
 	for ( j = 1; j <= numberofworkers; j++ ) {
 		S->GenTerms += AB[j]->T.SS->GenTerms;
 	}
-	WriteStats(&position,2);
+	WriteStats(&position,STATSPOSTSORT,NOCHECKLOGTYPE);
 	Expressions[AR0.CurExpr].counter = S->TermsLeft;
 	Expressions[AR0.CurExpr].size = position;
 /*
@@ -4122,7 +4122,7 @@ int SortBotMasterMerge()
 		S->GenTerms += AB[j]->T.SS->GenTerms;
 	}
 	S->TermsLeft = numberofterms;
-	WriteStats(&position,2);
+	WriteStats(&position,STATSPOSTSORT,NOCHECKLOGTYPE);
 	Expressions[AR.CurExpr].counter = S->TermsLeft;
 	Expressions[AR.CurExpr].size = position;
 	AS.MasterSort = 0;
