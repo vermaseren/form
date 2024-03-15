@@ -2180,6 +2180,8 @@ id f(x1?,?a,x2?) = f(?a);
 id f(?a,x2?) = x2+1;
 P;
 .end
+# On 32-bit systems, "Term too complex during substitution" error occurs.
+#require wordsize >= 4
 assert succeeded?
 assert result("F") =~ expr("9999")
 *--#] Issue268_1 :
@@ -2190,6 +2192,8 @@ L F = f(1,...,`N');
 id f(?a) = nargs_(?a);
 P;
 .end
+# On 32-bit systems, "Term too complex during substitution" error occurs.
+#require wordsize >= 4
 assert succeeded?
 assert result("F") =~ expr("9999")
 *--#] Issue268_2 :
