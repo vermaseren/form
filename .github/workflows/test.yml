@@ -25,7 +25,7 @@ jobs:
           - {bin: tform, test: multithreaded, timeout: 10}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0  # ensures a reachable tag
 
@@ -62,7 +62,7 @@ jobs:
       - name: Cache library
         id: cache-formlib
         if: contains(fromJson('["forcer"]'), matrix.test)
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: formlib
           key: formlib-${{ matrix.test }}
@@ -127,7 +127,7 @@ jobs:
           - {bin: parvorm, group: 10/10}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0  # ensures a reachable tag
 
@@ -181,7 +181,7 @@ jobs:
         bin: [vorm, tvorm, parvorm]
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0  # ensures a reachable tag
 
@@ -223,15 +223,13 @@ jobs:
 
       - name: Generate LCOV coverage data
         run: |
-          lcov -d . -c -o coverage.info
-          lcov -r coverage.info */usr/include/* -o coverage.info
+          lcov -d . -c -o coverage.lcov
+          lcov -r coverage.lcov */usr/include/* -o coverage.lcov
 
       - name: Coveralls Parallel
-        uses: coverallsapp/github-action@1.1.3
+        uses: coverallsapp/github-action@v2
         with:
-          github-token: ${{ secrets.github_token }}
           flag-name: run-${{ matrix.test_number }}
-          path-to-lcov: coverage.info
           parallel: true
 
   # Post LCOV coverage data to coveralls.io.
@@ -240,10 +238,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Coveralls Finished
-      uses: coverallsapp/github-action@1.1.3
+      uses: coverallsapp/github-action@v2
       with:
-        github-token: ${{ secrets.github_token }}
-        path-to-lcov: coverage.info
         parallel-finished: true
 
   # Tests with a 32-bit container.
