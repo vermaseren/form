@@ -2316,7 +2316,10 @@ Identify f(x?) = x;
 
 Print;
 .end
-assert succeeded?
+# On 32-bit systems, "Collect f" does not fit in the default
+# MaxTermSize and gives "Bracket contents too long in Collect
+# statement" warning.
+assert wordsize >= 4 ? succeeded? : warning?
 assert result("test") =~ expr("0")
 *--#] Issue336_1 :
 *--#[ Issue336_2 :
