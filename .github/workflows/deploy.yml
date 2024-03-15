@@ -113,7 +113,7 @@ jobs:
           if [ "$RUNNER_OS" == "macOS" ]; then
             mkdir static-lib
             ln -s /usr/local/opt/gmp/lib/libgmp.a static-lib/libgmp.a
-            ln -s /usr/local/opt/gmp/lib/libmpfr.a static-lib/libmpfr.a
+            ln -s /usr/local/opt/mpfr/lib/libmpfr.a static-lib/libmpfr.a
             export LIBRARY_PATH="$(pwd)/static-lib:${LIBRARY_PATH:-}"
             opts="$opts --disable-static-link"
           fi
