@@ -22,6 +22,7 @@ jobs:
           - {bin: tform, test: checkpoint, timeout: 10}
           - {bin: form, test: forcer, timeout: 60}
           - {bin: tform, test: forcer, timeout: 60}
+          - {bin: tform, test: multithreaded, timeout: 10}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
