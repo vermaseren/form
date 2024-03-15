@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0  # ensures a reachable tag
 
@@ -34,7 +34,7 @@ jobs:
           tar -tf $distname.tar.gz
 
       - name: Upload tarball as artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: src
           path: '*.tar.gz'
@@ -81,7 +81,7 @@ jobs:
             ruby
 
       - name: Download tarball
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: src
 
@@ -158,7 +158,7 @@ jobs:
 
       - name: Upload binary as artifact
         if: steps.check-portability.outcome == 'success' && steps.check-portability.conclusion == 'success'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.bin }}-${{ matrix.os }}
           path: |
@@ -173,7 +173,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download tarball
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: src
 
@@ -212,7 +212,7 @@ jobs:
           file $distname.pdf
 
       - name: Upload document as artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: doc-pdf
           path: '*.pdf'
@@ -226,7 +226,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download tarball
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: src
 
@@ -271,7 +271,7 @@ jobs:
           tar -tf $distname.tar.gz
 
       - name: Upload file as artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: doc-html
           path: '*.tar.gz'
@@ -290,7 +290,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download all artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           path: artifacts
 
@@ -353,7 +353,7 @@ jobs:
       # Upload the distributions as an artifact, regardless of whether
       # the commit has a versioning tag. This makes checking and debugging easy.
       - name: Upload distributions as artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: dist
           path: |
