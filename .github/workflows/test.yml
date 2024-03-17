@@ -229,7 +229,7 @@ jobs:
       - name: Coveralls Parallel
         uses: coverallsapp/github-action@v2
         with:
-          flag-name: run-${{ matrix.test_number }}
+          flag-name: ${{ matrix.bin }}
           parallel: true
 
   # Post LCOV coverage data to coveralls.io.
