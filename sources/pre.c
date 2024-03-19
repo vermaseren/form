@@ -7162,9 +7162,14 @@ int DoPrePrependPath(UBYTE *s)
 
 int DoTimeOutAfter(UBYTE *s)
 {
+#ifdef HAVE_ALARM
 	ULONG x;
+#else
+	DUMMYUSE(s);
+#endif
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
 	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
+#ifdef HAVE_ALARM
 	while ( *s == ' ' || *s == '\t' ) s++;
 	x = 0;
 	while ( FG.cTable[*s] == 1 ) {
@@ -7179,6 +7184,10 @@ int DoTimeOutAfter(UBYTE *s)
 		MesPrint("@proper syntax is #TimeoutAfter number");
 		return(-1);
 	}
+#else
+	Error0("#timeoutafter not implemented on this computer/system");
+	return(-1);
+#endif
 }
 
 /*
