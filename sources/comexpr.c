@@ -828,7 +828,7 @@ IllLeft:MesPrint("&Illegal LHS");
 		AN.RepPoint = AT.RepCount + 1;
         ow = (WORD *)(((UBYTE *)(AT.WorkPointer)) + AM.MaxTer);
 		mm = s; ww = ow; i = *mm;
-		while ( --i >= 0 ) *ww++ = *mm++; AT.WorkPointer = ww;
+		while ( --i >= 0 ) {*ww++ = *mm++;} AT.WorkPointer = ww;
 		AC.lhdollarflag = 0; oldEside = AR.Eside; AR.Eside = LHSIDE;
 		AR.Cnumlhs = C->numlhs;
 		AR.PolyFun = 0;
