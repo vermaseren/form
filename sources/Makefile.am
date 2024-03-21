@@ -42,6 +42,7 @@ SRCBASE = \
 	notation.c \
 	opera.c \
 	optimize.cc \
+	package.cc \
 	pattern.c \
 	poly.cc \
 	poly.h \
