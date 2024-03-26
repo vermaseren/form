@@ -1296,7 +1296,7 @@ sigDoneSymbol:;
 						}
 /*
 						Now we have only roots of unity which should be
-						registered in the list of sysmbols.
+						registered in the list of symbols.
 */
 						if ( t[t[1]-1] < 0 ) ncoef = -ncoef;
 						ts = t + FUNHEAD+ARGHEAD+3;
@@ -3187,7 +3187,7 @@ onegammamatrix:
 /*
 		Sort the functions
 		From a purists point of view this can be improved.
-		There arel slow and fast arguments and no conversions are
+		There are slow and fast arguments and no conversions are
 		taken into account here.
 */
 		for ( i = 1; i < ncom; i++ ) {

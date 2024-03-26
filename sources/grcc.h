@@ -20,7 +20,7 @@ namespace Grcc {
 //==============================================================
 // For debugging
 //
-// #define MONITOR     // in gaph elimination
+// #define MONITOR     // in graph elimination
 // #define CHECK       // check consistency
 #define DEBUGABORT
 // #define DEBUG
@@ -238,17 +238,17 @@ class Interaction {
     Model *mdl;           // the model
     char  *name;          // the name of the interaction
     int   *plist;        // the list of particle codes
-    int   *clist;        // the oders of coupling constants
+    int   *clist;        // the orders of coupling constants
     int   *slist;        // the sorted list of particle codes
 
     int    id;            // id of this interaction
-    int    csum;          // the total oders of coupling constants
+    int    csum;          // the total orders of coupling constants
     int    nlegs;         // the number of legs
     int    loop;          // the number of loops
     int    icode;         // user defined interaction code 
 
     int    nplist;        // the list of particle codes
-    int    nclist;        // the oders of coupling constants
+    int    nclist;        // the orders of coupling constants
     int    nslist;        // the sorted list of particle codes
 
     //-----------------------------
@@ -351,7 +351,7 @@ class SProcess {
   //  In sprocess the number of nodes and edges are fixed.
   //  A node is considered as 
   //    (degree, total order of coupling constants),
-  //  which pair of deta defines a class of nodes.
+  //  which pair of data defines a class of nodes.
  
   public:
     Model       *model;       // model
@@ -606,7 +606,7 @@ class EGraph {
 
     BigInt mId;             // id of mgraph
     BigInt aId;             // id of agraph in the same mgraph
-    BigInt sId;             // sequenctial no. of agraph
+    BigInt sId;             // sequential no. of agraph
     BigInt gSubId;          // ???
     Bool   assigned;        // mgraph (False) or agraph (True)
 
@@ -765,7 +765,7 @@ class MGraph {
     // initial conditions
     Options  *opt;         // options
 
-    // symmbery group
+    // symmetry group
     SGroup   *group;       // symmetry group
     MOrbits  *orbits;      // Orbits of nodes with respect to symmetry group
 
@@ -907,7 +907,7 @@ class MCOpi {
     int  next;     // # external particles of the 1PI comp.
     int  nedges;   // # edges in the 1PI comp.
     int  loop;     // # loops in the 1PI comp.
-    int  ctloop;   // # loops in the couter terms in the OP comp.
+    int  ctloop;   // # loops in the counter terms in the OP comp.
 
     MCOpi(void);
     ~MCOpi(void);
@@ -956,7 +956,7 @@ class MConn {
     int       *articuls;    // buffer for nodes for articulation points
 
     int       *opisp;       // buffer for nodes in 1PI components
-    int       *opistk;      // stack of nodes for 1PI compoinents.
+    int       *opistk;      // stack of nodes for 1PI components.
     Edge2n    *blksp;       // buffer for edges in blocks
     Edge2n    *blkstk;      // stack of edges for blocks
     int        snodes;      // # nodes
@@ -965,7 +965,7 @@ class MConn {
     // opi components (edge-connected)
     int        nopic;       // # 1PI components (n1PIComps)
     int        nlpopic;     // # looped 1PI components (n1PIComps)
-    int        nctopic;     // # 1PI components of one couter term.
+    int        nctopic;     // # 1PI components of one counter term.
     int        nbridges;    // # bridges
     int        ne0bridges;  // # bridges whose next=0
     int        ne1bridges;  // # bridges whose next=1

@@ -204,7 +204,7 @@ int StudyPattern(WORD *lhs)
 	We sort things and then write the sorted pattern.
 	Of course we may not play with the order of the noncommuting functions.
 	Of course we have to become even smarter in the future and look during
-	the sorting which wildcards are asigned when.
+	the sorting which wildcards are assigned when.
 	But for now this should do.
 */
 	for ( nc = numfun-1; nc >= 0; nc-- ) { if ( AN.FunInfo[nc].commute ) break; }

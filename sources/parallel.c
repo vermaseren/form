@@ -600,7 +600,7 @@ newterms:
 			PF_IRecvRbuf(rbuf,a,src);
 		}
 /*
-			now savely make next buffer active
+			now safely make next buffer active
 */
 		a = rbuf->active = next;
 	}
@@ -2104,7 +2104,7 @@ LONG PF_BroadcastNumber(LONG x)
  * caller must free it.
  *
  * @param[in,out]  length  on the master, the length of the buffer to be
- * broadcast. On the slaves, it receives the length of transfered buffer.
+ * broadcast. On the slaves, it receives the length of transferred buffer.
  * The actual transfer occurs only if the length is greater than 0.
  */
 void PF_BroadcastBuffer(WORD **buffer, LONG *length)
@@ -2154,7 +2154,7 @@ int PF_BroadcastString(UBYTE *str)
 	int clength = 0;
 /*
 		If string does not fit to the PF_buffer, it
-		will be split into chanks. Next chank is started at  str+clength
+		will be split into chunks. Next chunk is started at  str+clength
 */
 		UBYTE *cstr=str;
 /*
@@ -4574,7 +4574,7 @@ static void PF_CatchErrorMessagesForAll(void)
  *
  * @param[in,out]  src  the source process. The output value is that of the actual found message.
  * @return              the tag value of the next incoming message if found,
- *                      0 if a nonbloking probe (input src != PF_ANY_SOURCE) did not
+ *                      0 if a nonblocking probe (input src != PF_ANY_SOURCE) did not
  *                      find any messages. The negative returned value indicates an error.
  */
 static int PF_ProbeWithCatchingErrorMessages(int *src)

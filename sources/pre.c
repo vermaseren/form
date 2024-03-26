@@ -1849,7 +1849,7 @@ theend:			M_free(nums,"Expand ...");
 			We make a new allocation and copy from the old.
 			Compute space.
 */
-			x2 = s - strngs - i;  /* -1 for eond-of-string and +1 for the operator*/
+			x2 = s - strngs - i;  /* -1 for end-of-string and +1 for the operator*/
 			for ( i1 = 0; i1 < i; i1++ ) {
 				i2 = nums[2*i1];
 				x1 = nums[2*i1+1];
@@ -4653,7 +4653,7 @@ int PreEq(int type, int val, UBYTE *t, int type2, int val2, UBYTE *t2, int eqop)
 		3: an expression between parentheses (type = 0)
 		4: a special function (type = 3)
 		If the object is not a number, an expression or a special operator
-		we try to interprete it as a string.
+		we try to interpret it as a string.
 */
 
 UBYTE *pParseObject(UBYTE *s, int *type, LONG *val2)
@@ -5751,7 +5751,7 @@ int DoRmExternal(UBYTE *s)
  		#[ DoFromExternal :
 				#fromexternal 
 					is used to read the text from the running external
-					program, the synthax is similar to the #include
+					program, the syntax is similar to the #include
 					directive.
 				#fromexternal "varname"
 					is used to read the text from the running external

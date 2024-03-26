@@ -89,14 +89,14 @@ always immediately returned to the system so if the user tries to
 access the memory after it is freed then the handler is triggered,
 also.
 
-The problem here is that we are able to allocate / protec only the
+The problem here is that we are able to allocate / protect only the
 whole page. So the user has to run the debugger twice: one time with
-the left alignment (#define MALLOCPROTECT <0), and then with the rigth
+the left alignment (#define MALLOCPROTECT <0), and then with the right
 alignment (#define MALLOCPROTECT >0). During the first run the possible
-errors like x[-1] will be catched, and the second run will manifest
+errors like x[-1] will be caught, and the second run will manifest
 reading over the allocated ares.
 
-The leftmost extra page is always allocated and mprotected. The size
+The leftmost extra page is always allocated and protected. The size
 of the allocated chunk is stored in the beginning of this page.
 
   	#] Documentation :

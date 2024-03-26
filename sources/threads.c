@@ -236,7 +236,7 @@ void StartHandleLock(VOID)
   	#[ StartAllThreads :
 */
 /**
- *	In this routine we start 'number' threats
+ *	In this routine we start 'number' threads.
  *	The routine that runs the show for each worker is called RunThread.
  *	It will call the allocations and all the worker specific action.
  *	Then the master has to wait till all workers are asleep before continuing.
@@ -3120,7 +3120,7 @@ NextBucket:;
 		Compiler buffer execution scribble space.....
 		This isn't copied along?
 		Look up ebufnum. There are 12 places with AddRHS!
-		Problem: one process alloces in ebuf. Then term is given to
+		Problem: one process allocates in ebuf. Then term is given to
 		other process. It would like to use from this ebuf, but the sender
 		finishes first and removes the ebuf (and/or overwrites it).
 
@@ -3266,7 +3266,7 @@ restart:;
 		thr = thrtogo;
 /*
 		If the number has changed there is good progress.
-		Maybe there is another thread that needs assistence.
+		Maybe there is another thread that needs assistance.
 		We start all over.
 */
 		if ( thr->totnum-thr->usenum < numtogo ) goto restart;

@@ -2277,7 +2277,7 @@ int ExpandEuler(WORD *term, WORD level)
 	5: Restart to see whether there are more Euler functions.
 	The compiler should check that there is no conflict between
 	the evaluate command and a potential polyfun or polyratfun.
-	Yet, when reading in expressions there can be a conclict.
+	Yet, when reading in expressions there can be a conflict.
 	Hence the Normalize routine should check as well.
 
 	par == MZV: MZV
@@ -2544,7 +2544,7 @@ int GetE(PHEAD mpf_t E)
  		#] GetE : 
  		#[ GetEMconst :
 
-	Gets the Euler-Mascarponi constant. (em_ in Form notation)
+	Gets the Euler-Mascheroni constant. (em_ in Form notation)
 
 
 int GetEMconst(PHEAD mpf_t EMconst)

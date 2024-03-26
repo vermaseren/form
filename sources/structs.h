@@ -265,7 +265,7 @@ typedef struct NaMeNode {
 typedef struct NaMeTree {
 	NAMENODE *namenode;      /**< [D] Vector of #NAMENODE's. Number of elements is #nodesize.
 	                              =0 if no memory has been allocated. */
-	UBYTE    *namebuffer;    /**< [D] Buffer that holds all the name strings refered to by the
+	UBYTE    *namebuffer;    /**< [D] Buffer that holds all the name strings referred to by the
 	                              NAMENODE's. Allocation size is #namesize. =0 if no memory
 	                              has been allocated. */
 	LONG     nodesize;       /**< Maximum number of elements in #namenode. */
@@ -1634,8 +1634,8 @@ struct P_const {
     LIST LoopList;                 /* (P) List of do loops */
     LIST ProcList;                 /* (P) List of procedures */
     INSIDEINFO inside;             /*     Information during #inside/#endinside */
-    NAMESPACE *firstnamespace;     /* is zero when no namespace spacified */
-    NAMESPACE *lastnamespace;      /* is zero when no namespace spacified */
+    NAMESPACE *firstnamespace;     /* is zero when no namespace specified */
+    NAMESPACE *lastnamespace;      /* is zero when no namespace specified */
     UBYTE *fullname;               /* buffer for namespace expanded names */
     UBYTE **PreSwitchStrings;      /* (P) The string in a switch */
     UBYTE *preStart;               /* (P) Preprocessor instruction buffer */
@@ -2009,7 +2009,7 @@ struct S_const {
 /*
  		#] S : 
  		#[ R : The R struct defines objects changed at run time.
-               They determine the environment that has to be transfered
+               They determine the environment that has to be transferred
                together with a term during multithreaded execution.
 */
 /**
@@ -2060,10 +2060,10 @@ struct R_const {
 #endif
     WORD    GetFile;               /* (R) Where to get the terms {like Hide} */
     WORD    KeptInHold;            /* (R) */
-    WORD    BracketOn;             /* (R) Intensly used in poly_ */
+    WORD    BracketOn;             /* (R) Intensely used in poly_ */
     WORD    MaxBracket;            /* (R) Size of BrackBuf. Changed by poly_ */
     WORD    CurDum;                /* (R) Current maximum dummy number */
-    WORD    DeferFlag;             /* (R) For defered brackets */
+    WORD    DeferFlag;             /* (R) For deferred brackets */
     WORD    TePos;                 /* (R) */
     WORD    sLevel;                /* (R) Sorting level */
     WORD    Stage4Name;            /* (R) Sorting only */
@@ -2377,7 +2377,7 @@ struct N_const {
     WORD    NumWild;               /* (N) Used in Wildcard */
     WORD    RepFunNum;             /* (N) Used in pattern matching */
     WORD    DisOrderFlag;          /* (N) Disorder option? Used in pattern matching */
-    WORD    WildDirt;              /* (N) dirty in wldcard substitution. */
+    WORD    WildDirt;              /* (N) dirty in wildcard substitution. */
     WORD    NumFound;              /* (N) in reshuf only. Local? */
     WORD    WildReserve;           /* (N) Used in the wildcards */
     WORD    TeInFun;               /* (R) Passing type of action */
@@ -2505,10 +2505,10 @@ struct O_const {
     int     FloatPrec;
 #endif
     WORD    schemenum;             /* for feeding a Horner scheme to Optimize */
-    WORD    transFlag;             /* ()  >0 indicades that translations have to be done */
-    WORD    powerFlag;             /* ()  >0 indicades that some exponents/powers had to be adjusted */
+    WORD    transFlag;             /* ()  >0 indicates that translations have to be done */
+    WORD    powerFlag;             /* ()  >0 indicates that some exponents/powers had to be adjusted */
     WORD    mpower;                /*     For maxpower adjustment to larger value */
-    WORD    resizeFlag;            /* ()  >0 indicades that something went wrong when resizing words */
+    WORD    resizeFlag;            /* ()  >0 indicates that something went wrong when resizing words */
     WORD    bufferedInd;           /* ()  Contains extra INDEXENTRIES, see ReadSaveIndex() for an explanation */
     WORD    OutSkip;               /* (O) How many chars to skip in output line */
     WORD    IsBracket;             /* (O) Controls brackets */

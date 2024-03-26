@@ -333,11 +333,11 @@ TP=T+1;while(TP<TT){if(*TP==AR.PolyFun){TP[2]|=(DIRTYFLAG|MUSTCLEANPRF);}TP+=TP[
 
 #ifdef WITHFLOAT
 /*
-	The following macro's are needed to avoid prblems with the compilers
+	The following macro's are needed to avoid problems with the compilers
 	and gmp.h. For the C++ files we need the Form include files to be inside
 	and extern C {} environment, but then the structs.h needs gmp.h to
 	recognise the mpf_t datatype. This causes no end of problems.
-	Hence we collect the sensitve objects as (void *) and cast them to
+	Hence we collect the sensitive objects as (void *) and cast them to
 	something usable with the macro's below. This way the gmp.h file
 	needs to be included only in a very limited number of .c files.
 */

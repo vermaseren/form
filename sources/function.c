@@ -973,7 +973,7 @@ FullOK:				if ( AN.SignCheck && AN.ExpectedSign ) goto NoGamma;
 				else goto NoGamma;
 			}
 			else if ( *m < MINSPEC && *m >= (AM.OffsetVector+WILDOFFSET)
-			&& *t < MINSPEC ) {			/* Wildcard vecor */
+			&& *t < MINSPEC ) {			/* Wildcard vector */
 				if ( !CheckWild(BHEAD *m-WILDOFFSET,VECTOVEC,*t,&newvalue) ) {
 					AddWild(BHEAD *m-WILDOFFSET,VECTOVEC,newvalue);
 					j = 1;

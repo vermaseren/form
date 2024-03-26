@@ -583,7 +583,7 @@ IllPos:			MesPrint("&Illegal character at this position: %s",in);
 */
 	if ( error == 0 && simp1token(AC.tokens) ) error = 1;
 /*
-	Collect wildcards for the prototype. Symplify the leftover wildcards
+	Collect wildcards for the prototype. Simplify the leftover wildcards
 */
 	if ( error == 0 && leftright == LHSIDE && simpwtoken(AC.tokens) )
 				error = 1;
