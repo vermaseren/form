@@ -625,7 +625,7 @@ static  FORM_INLINE char *addStr(char *to, char *from)
 
 
 /*Try to write (atomically) short buffer (of length count) to fd.
-  timeout is a timeout in millisecs. Returns number of writen bytes or -1:*/
+  timeout is a timeout in millisecs. Returns number of written bytes or -1:*/
 static FORM_INLINE ssize_t writeSome(int fd, char *buf, size_t count, int timeout)
 {
 	ssize_t res = 0;
@@ -636,7 +636,7 @@ static FORM_INLINE ssize_t writeSome(int fd, char *buf, size_t count, int timeou
 
 	/*Add O_NONBLOCK:*/
 	fcntl(fd,F_SETFL, flags | O_NONBLOCK);
-	/* important -- in order to avoid blocking of short rceiver buffer*/
+	/* important -- in order to avoid blocking of short receiver buffer*/
 
 	do{
 		FD_ZERO(&wfds);
@@ -674,7 +674,7 @@ static FORM_INLINE ssize_t writeSome(int fd, char *buf, size_t count, int timeou
 
 /*Try to read short buffer (of length not more than count)
   from fd. timeout is a timeout in millisecs. Returns number 
-  of writen bytes or -1: */
+  of written bytes or -1: */
 static FORM_INLINE ssize_t readSome(int fd, char *buf, size_t count, int timeout)
 {
 	ssize_t res = 0;
@@ -1223,13 +1223,13 @@ static FORM_INLINE void *createExternalChannel(
 	int gpid = 0;
 	ECINFOSTRUCT *psetInfo;
 #ifdef WITHMPI
-	char statusbuf[2]={'\0','\0'};/*'\0' if run_cmd retuns ok, '!' othervise.*/
+	char statusbuf[2]={'\0','\0'};/*'\0' if run_cmd retuns ok, '!' otherwise.*/
 #endif
 	extHandlerInit(h);
 
 	h->pid=0;
 
-	if( cmd==NULL ){/*Instead of strting a new command, use preset channel:*/
+	if( cmd==NULL ){/*Instead of starting a new command, use preset channel:*/
 		psetInfo=(ECINFOSTRUCT *)shellname;
 		shellname=NULL;
 		h->killSignal=0;

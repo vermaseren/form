@@ -220,11 +220,11 @@ int PF_LibTerminate(int error)
 /**
  * Probes the next incoming message.
  * If src == PF_ANY_SOURCE this operation is blocking,
- * otherwise nonbloking.
+ * otherwise nonblocking.
  *
  * @param[in,out]  src  the source process number. In output, the process number of actual found source.
  * @return              the tag value of the next incoming message if found,
- *                      0 if a nonbloking probe (input src != PF_ANY_SOURCE) did not
+ *                      0 if a nonblocking probe (input src != PF_ANY_SOURCE) did not
  *                      find any messages. A negative returned value indicates an error.
  */
 int PF_Probe(int *src)

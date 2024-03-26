@@ -4704,7 +4704,7 @@ ReadSaveTerm32(UBYTE *bin, UBYTE *binend, UBYTE **bout, UBYTE *boutend, UBYTE *t
 		out = newtermsize + 1;
 	}
 	else {
-		/* do deprompression of necessary. always return if the space in the
+		/* do decompression of necessary. always return if the space in the
 		   buffer is not sufficient */
 		INT32 rbuf;
 		r = (INT32 *)AR.CompressBuffer;

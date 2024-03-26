@@ -4058,7 +4058,7 @@ void optimize_expression_given_Horner () {
 		instr = generate_instructions(tree, true);
 	else
 		instr = generate_instructions(tree, false);
-	/// eventually do greedy optimations
+	/// eventually do greedy optimizations
 	if (AO.Optimize.method == O_CSEGREEDY || AO.Optimize.method == O_GREEDY) {
 		instr = merge_operators(instr, false);
 		instr = optimize_greedy(instr, time_limit-(TimeWallClock(1)-start_time));

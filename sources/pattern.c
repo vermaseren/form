@@ -1162,7 +1162,7 @@ SubCoef:
  		#] Substitute : 
  		#[ FindSpecial :		WORD FindSpecial(term)
 
-	Routine to detect symplifications regarding the special functions
+	Routine to detect simplifications regarding the special functions
 	exponent, denominator.
 
 
@@ -2055,7 +2055,7 @@ VOID SubsInAll(PHEAD0)
 					AT.aebufnum.
 					Problem: the SUBEXPRESSION assumes automatically
 					that the compiler buffer is AT.ebufnum. We have to
-					correct that in TranferBuffer.
+					correct that in TransferBuffer.
 */
 					p = pstart + SUBEXPSIZE;
 					while ( p < fill ) {

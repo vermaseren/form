@@ -1087,7 +1087,7 @@ const factorized_poly polyfact::squarefree_factors (const poly &a) {
  *   - The polynomial a must be univariate.
  *   - The polynomial a must be squarefree.
  *   - The polynomial a must have coefficients in Z/p.
- *   - For efficiency, dense representaions of polynomials are used.
+ *   - For efficiency, dense representations of polynomials are used.
  *
  *   [for details, see "Algorithms for Computer Algebra", pp. 346-359]
  */

@@ -1001,7 +1001,7 @@ class TestCases
       return false
     end
 
-    # check --execlude NAME
+    # check --exclude NAME
     if !@exclude_patterns.empty?
       @exclude_patterns.each do |pat|
         if name =~ pat

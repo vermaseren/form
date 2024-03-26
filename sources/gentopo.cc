@@ -238,7 +238,7 @@ MNode::MNode(int vid, int vdeg, Bool vext, int vclss)
     id     = vid;    // id of the node
     deg    = vdeg;   // degree of the node
     freelg = vdeg;   // number of free legs
-    clss   = vclss;  // class to which the node belogns
+    clss   = vclss;  // class to which the node belongs
     ext    = vext;   // external node or not
 }
 

@@ -1647,8 +1647,8 @@ EOF
     assert result("F", 1) =~ expr("
       x*w(1) + x^2*w(2) + x^3*ww(3) + x^4*www(1) + x^5*www(2) + x^6*www(3)
     ")
-*--#] Dictionaries_6 :
-*--#[ DiracAlgebla_1 :
+*--#] Dictionaries_6 : 
+*--#[ DiracAlgebra_1 :
 *
 *   Symmetric trace of a gamma5 and 12 regular matrices
 *
@@ -1664,8 +1664,8 @@ tracen,1;
 	assert stdout =~ /Generated terms =      51975$/
 	assert stdout =~ /Terms in output =      51975$/
 	assert bytesize("F") == 459582 * wordsize
-*--#] DiracAlgebla_1 :
-*--#[ DiracAlgebla_2 :
+*--#] DiracAlgebra_1 :
+*--#[ DiracAlgebra_2 :
 *
 *   Regular trace of a gamma5 and 12 regular matrices
 *
@@ -1677,7 +1677,7 @@ trace4,1;
 	assert @stdout =~ /Generated terms =       1053$/
 	assert @stdout =~ /Terms in output =       1029$/
 	assert bytesize("F") == 10142 * wordsize
-*--#] DiracAlgebla_2 :
+*--#] DiracAlgebra_2 :
 *--#[ NotesMetric_1 :
 Indices m1,m2,m3,n1,n2,n3,i1,i2,i3;
 Cfunction eta(symmetric),e(antisymmetric);
