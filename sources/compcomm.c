@@ -39,7 +39,9 @@
 
 #include "form3.h"
 #include "comtool.h"
+#ifdef WITHFLOAT
 #include <gmp.h>
+#endif
 
 static KEYWORD formatoptions[] = {
 	 {"allfloat",       (TFUN)0,    ALLINTEGERDOUBLE,   0}
@@ -4290,7 +4292,9 @@ OnlyNum:
 			u[1] = WORDDIF(w,u);
 			u[2] = (u[1] - 3)/2;
 			if ( level ) u[2] = -u[2];
+#ifdef WITHFLOAT
 DoneWithNumber:
+#endif
 			gotexp = 1;
 		}
 		else if ( *p == '+' ) { p++; goto ReDo; }

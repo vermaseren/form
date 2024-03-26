@@ -373,9 +373,9 @@ AC_ARG_ENABLE([debug],
 	[enable_debug=no])
 AC_ARG_ENABLE([float],
 	[AS_HELP_STRING([--enable-float],
-		[build with the float feature @<:@default=check@:>@])],
+		[build with the float feature @<:@default=yes@:>@])],
 	[AS_IF([test "x$enableval" != xno && test "x$enableval" != xcheck], [enable_float=yes])],
-	[enable_float=check])
+	[enable_float=yes])
 
 # Check for scalar version
 build_form=$enable_scalar
@@ -651,19 +651,22 @@ AS_IF([test "x$enable_parform" = xyes && test "x$enable_debug" = xyes], [build_p
 AM_CONDITIONAL([BUILD_PARFORM], [test "x$build_parform" = xyes])
 AM_CONDITIONAL([BUILD_PARVORM], [test "x$build_parvorm" = xyes])
 
+AS_IF([test "x$build_form" = xyes || test "x$build_tform" = xyes || test "x$build_parform" = xyes ||
+	test "x$build_vorm" = xyes || test "x$build_tvorm" = xyes || test "x$build_parvorm" = xyes], [build_any=yes], [build_any=no])
+
 # Check for float
 AS_IF([test "x$enable_float" != xno],
 	[AS_IF([test "x$with_gmp" = xyes && test "x$with_mpfr" = xyes],
 		[enable_float=yes],
-		[AS_IF([test "x$enable_float" = xyes],
+		[AS_IF([test "x$enable_float" = xyes && test "x$build_any" = xyes],
 			[AC_MSG_FAILURE([test for the float feature failed. It requires both GMP and MPFR. Give --disable-float if you want to build without the float feature.])])
 		enable_float=no
 		])])
 AS_IF([test "x$enable_float" = xyes],
 	[AC_DEFINE(WITHFLOAT, [], [Define to enable the float feature.])],
 	[AS_IF([test "x$with_mpfr" = xyes],
-		[AC_MSG_WARN([mpfr is not required without the float feature. Build without mpfr.])
-		with_mpfr=no])])
+		[AC_MSG_WARN([mpfr is not required without the float feature.])])])
+AM_CONDITIONAL([WITHFLOAT], [test "x$enable_float" = xyes])
 
 # Check for wall-clock time
 ok=no

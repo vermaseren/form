@@ -12,12 +12,10 @@ SRCBASE = \
 	diawrap.cc \
 	dict.c \
 	dollar.c \
-	evaluate.c \
 	execute.c \
 	extcmd.c \
 	factor.c \
 	findpat.c \
-	float.c \
 	form3.h \
 	fsizes.h \
 	ftypes.h \
@@ -82,6 +80,12 @@ endif
 if ONWINDOWS
 SRCBASE += \
 	fwin.h
+endif
+
+if WITHFLOAT
+SRCBASE += \
+	evaluate.c \
+	float.c
 endif
 
 SRCPTHREAD = \
