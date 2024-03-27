@@ -782,8 +782,13 @@ LONG EndSort(PHEAD WORD *buffer, int par)
 				while ( ( t = *ss++ ) != 0 ) {
 					j = *t;
 					if ( ( sSpace += j ) > AM.MaxTer/((LONG)sizeof(WORD)) ) {
+						/* Too big! Get the total size for useful error message */
+						while ( ( t = *ss++ ) != 0 ) {
+							sSpace += *t;
+						}
 						MLOCK(ErrorMessageLock);
-						MesPrint("Sorted function argument too long.");
+						MesPrint("Sorted function argument too long: %d words", sSpace);
+						MesPrint("MaxTermSize: %d words", AM.MaxTer/((LONG)sizeof(WORD)) );
 						MUNLOCK(ErrorMessageLock);
 						retval = -1; goto RetRetval;
 					}
@@ -987,7 +992,12 @@ TooLarge:
 							to = buffer;
 							if ( to >= AT.WorkSpace && to < AT.WorkTop && to+j > AT.WorkTop )
 								goto WorkSpaceError;
-							if ( j > AM.MaxTer ) goto TooLarge;
+							if ( j > AM.MaxTer ) {
+								MLOCK(ErrorMessageLock);
+								MesPrint("Encountered term of size: %d words.", j/(LONG)sizeof(WORD) );
+								MUNLOCK(ErrorMessageLock);
+								goto TooLarge;
+							}
 							NCOPY(to,t,j);
 						}
 					}
