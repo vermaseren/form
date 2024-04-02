@@ -248,6 +248,36 @@ assert result("F") =~ expr("1234")
 assert result("G") =~ expr("5678")
 assert result("H") =~ expr("9012")
 *--#] AppendPath :
+*--#[ TimeoutAfter_1 :
+#procedure problematicprocedure
+* Do nothing.
+#endprocedure
+
+#timeoutafter 1000
+#call problematicprocedure
+#timeoutafter 0
+.end
+#require unix?
+assert succeeded?
+*--#] TimeoutAfter_1 :
+*--#[ TimeoutAfter_2 :
+#procedure problematicprocedure
+* Infinite loop.
+  #do i=1,1
+    #redefine i "0"
+  #enddo
+#endprocedure
+
+#timeoutafter 1
+#call problematicprocedure
+#timeoutafter 0
+.end
+#require unix?
+# ParFORM may terminate without printing the error message,
+# depending on the MPI environment.
+#pend_if mpi?
+assert runtime_error?
+*--#] TimeoutAfter_2 :
 *--#[ dedup :
 * Test deduplication
 #-

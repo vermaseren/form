@@ -7162,14 +7162,14 @@ int DoPrePrependPath(UBYTE *s)
 
 int DoTimeOutAfter(UBYTE *s)
 {
-#ifdef HAVE_ALARM
+#ifdef WITH_ALARM
 	ULONG x;
 #else
 	DUMMYUSE(s);
 #endif
 	if ( AP.PreSwitchModes[AP.PreSwitchLevel] != EXECUTINGPRESWITCH ) return(0);
 	if ( AP.PreIfStack[AP.PreIfLevel] != EXECUTINGIF ) return(0);
-#ifdef HAVE_ALARM
+#ifdef WITH_ALARM
 	while ( *s == ' ' || *s == '\t' ) s++;
 	x = 0;
 	while ( FG.cTable[*s] == 1 ) {
