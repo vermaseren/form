@@ -1640,7 +1640,7 @@ int main(int argc, char **argv)
 	if ( !AM.FromStdin ) PrintHeader(1);
 	IniVars();
 	Globalize(1);
-#ifdef HAVE_ALARM
+#ifdef WITH_ALARM
 	if ( AM.TimeLimit > 0 ) alarm(AM.TimeLimit);
 #endif
 	TimeCPU(0);
