@@ -2,7 +2,7 @@
 \def\formversiondesc{\repoversiondesc}
 \def\formdate{\repodate}
 %begin{latexonly}  % To avoid latex2html/latex2html#37
-\providecommand{\formversiondesc}{@VERSION@}
+\providecommand{\repoversiondesc}{@VERSION@???}
 \providecommand{\repodate}{\today}
 %end{latexonly}
 
