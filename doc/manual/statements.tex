@@ -381,7 +381,7 @@ the expression is active and is being manipulated. Hence the brackets can
 survive skip (see \ref{substaskip}), hide (see \ref{substahide}) and even 
 save (see \ref{substasave}) and load (see \ref{substaload}) statements. The 
 bracket information can be used by the collect (see \ref{substacollect}) 
-and keep (see \ref{substakeep}) statements, as well in r.h.s. expressions 
+and keep (see \ref{substakeep}) statements, as well in r.h.s.\ expressions 
 when the contents of individual brackets of an expression can be picked up 
 (see \ref{brackets}). \vspace{4mm}
 
@@ -1002,7 +1002,7 @@ Syntax & denominators functionname;
 
 \noindent This statement\index{denominators} allows the user to rename all 
 occurrences of the built-in denominator function. This built-in function is 
-kind of an oddity inside \FORM. Denominators are presented by a very special 
+kind of an oddity inside \FORM\@. Denominators are presented by a very special 
 function which doesn't really have a name and hence is rather hard to 
 address. In addition there are special rules connected to denominators. 
 Hence it is usually better to collect denominators inside functions that 
@@ -1189,7 +1189,7 @@ Syntax & drop; \\
 \noindent In the first variety this statement\index{drop} eliminates all 
 expressions\index{expression} from the system. In the second variety it 
 eliminates only the expressions that are mentioned from the system. All 
-expressions that are to be dropped can still be used in the r.h.s. of other 
+expressions that are to be dropped can still be used in the r.h.s.\ of other 
 expressions inside the current module. Basically the expressions to be 
 dropped are not treated for execution and after the module has finished 
 completely they are removed. See also the ndrop 
@@ -1657,7 +1657,7 @@ will be affected.
 as such to be factorized after they have been processed and already written 
 to the output. This means that each expression, after having been written, 
 is read again and factorized. Then the factorized result is written over 
-the original output. After that FORM will start executing the statements of 
+the original output. After that \FORM{} will start executing the statements of 
 the current module on the next expression, sort it, write it to output, and 
 if necessary read it again and factorize it.
 
@@ -1808,7 +1808,7 @@ result, but is potentially still unsafe.
 Here the answer will be 5, because after u has been dropped the expressions 
 will be renumbered. Hence now dummy becomes the first expression, and 
 eventually v becomes the second expression. The references in the table 
-elements are not renumbered. Hence the r.h.s. of B(1) keeps pointing at the 
+elements are not renumbered. Hence the r.h.s.\ of B(1) keeps pointing at the 
 second expression, which at the moment of application has the value 5. One 
 can see now also why the original example crashes. First dummy was the 
 first expression and at the moment of application F is the first (existing) 
@@ -1861,7 +1861,7 @@ Syntax & fi[xindex] \verb:{:{\tt<}number{\tt>}:{\tt<}value{\tt>}\verb:}:;
 number\index{fixindex} of a fixed\index{fixed index} index\index{index} 
 (hence a positive short integer with a value less than 
 ConstIndex\index{constindex} (see \ref{setup}). The value should be a 
-short\index{short integer} integer, i.e. its absolute value should be less 
+short\index{short integer} integer, i.e.\ its absolute value should be less 
 than $2^{15}$ on 32\index{32 bits} bit computers and less than $2^{31}$ on 
 64\index{64 bits} bit 
 computers. One can define more than one fixed index in one statement. 
@@ -1939,13 +1939,13 @@ the setup file (see \ref{setup}). Its default is the underscore character.}
 \leftvitem{3.5cm}{doublefortran\index{doublefortran}\index{format!doublefortran}}
 \rightvitem{13cm}{Same as the fortran mode, but fractions are printed with 
 double floating point numbers, because some compilers convert numbers like 
-1. into 1.E0. With this format \FORM\ will force double precision by using 
+1.\ into 1.E0. With this format \FORM\ will force double precision by using 
 1.D0.}
 
 \leftvitem{3.5cm}{quadruplefortran\index{quadruplefortran}\index{format!quadruplefortran}}
 \rightvitem{13cm}{Same as the fortran mode, but fractions are printed with 
 quadruple floating point numbers, because some compilers convert numbers like 
-1. into 1.E0. With this format \FORM\ will force quadruple precision by using 
+1.\ into 1.E0. With this format \FORM\ will force quadruple precision by using 
 1.Q0.}
 
 \leftvitem{3.5cm}{quadfortran\index{quadfortran}\index{format!quadfortran}}
@@ -2296,7 +2296,7 @@ Syntax & id[entify] [{\tt<}options{\tt>}] {\tt<}pattern{\tt>} = {\tt<}expression
 
 \noindent The statement\index{id}\index{identify} tries to match the 
 pattern\index{pattern}. If the pattern matches one or more times, it will 
-be replaced by the expression in the r.h.s. taking the possible 
+be replaced by the expression in the r.h.s.\ taking the possible 
 wildcard\index{wildcard} substitutions into account. For the description of 
 the patterns, see chapter \ref{pattern}.
 
@@ -2305,7 +2305,7 @@ the patterns, see chapter \ref{pattern}.
 \lefttabitem{multi\index{multi}}
 \tabitem{This option is for combinations of symbols and dotproducts only 
 and it does not use wildcard powers. \FORM\ determines how many times the 
-pattern fits in one pattern matching action. Then the r.h.s. is substituted 
+pattern fits in one pattern matching action. Then the r.h.s.\ is substituted 
 to that power. It is the default for these kinds of patterns.}
 
 \lefttabitem{many\index{many}}
@@ -2319,7 +2319,7 @@ is substituted (with its own wildcard substitutions).}
 \tabitem{This option should be followed by one or more sets\index{set}. After 
 the sets the pattern can be specified. The pattern will only be substituted 
 if none of the objects mentioned in the sets will be left after the pattern 
-has been taken out. This holds only for objects 'at ground level'; i.e. the 
+has been taken out. This holds only for objects 'at ground level'; i.e.\ the 
 pattern matcher will not look inside function arguments for this. Note 
 that this is a special case of the option 'only'.}
 
@@ -2368,7 +2368,7 @@ because technically they are no options that concern the pattern matching.
 In addition it is not allowed to be in an idold/also statement, and it 
 cannot be followed by such a statement. Most severely: it can have only 
 functions in the left hand side. These functions can have all kinds of 
-arguments, but outside the functions symbols, vectors, dotproducts etc. are 
+arguments, but outside the functions symbols, vectors, dotproducts etc.\ are 
 not allowed. This is due to the fact that the backtracking when a wildcard 
 combination fails, does not include such objects and it is this 
 backtracking mechanism that is used to generate all matches. For the 
@@ -2957,7 +2957,7 @@ makes that there is only one factor. In the first expression the last
 factor is seen as a single factor and not two factor2 because of the extra 
 parentheses. Only parentheses at ground level are used to recognize 
 factors. If one needs those factors anyway, one should either leave away 
-those parentheses or use an extra Factorize statement to have FORM 
+those parentheses or use an extra Factorize statement to have \FORM{} 
 refactorize the expression.
 \vspace{10mm}
 
@@ -3211,7 +3211,7 @@ are representing a sum. The term by term order in which the \$-variables
 obtain their value is not relevant.}
 
 \noindent The options `local', `maximum', `minimum' and `sum' are for 
-parallel versions of \FORM. The presence of \$-variables can be a problem 
+parallel versions of \FORM\@. The presence of \$-variables can be a problem 
 when the order of processing of the terms is not well defined. These 
 options tell \FORM\ what these \$-variables are used for. In the above 
 cases \FORM\ can take the appropriate action when gathering information 
@@ -3843,12 +3843,12 @@ three lines of text and one blank line.}
 ignored.}
  
 \leftvitem{3.5cm}{threads\index{off!threads}}
-\rightvitem{13cm}{Disallows multithreaded running in \TFORM.
+\rightvitem{13cm}{Disallows multithreaded running in \TFORM\@.
 In other versions of \FORM\ this option is ignored.}
 
 \leftvitem{3.5cm}{threadstats\index{off!threadstats}}
 \rightvitem{13cm}{Turns off the thread by thread printing of the statistics 
-in \TFORM. Only the master thread will be printing statistics. Other 
+in \TFORM\@. Only the master thread will be printing statistics. Other 
 versions of \FORM\ will ignore this option.}
  
 \leftvitem{3.5cm}{totalsize\index{off!totalsize}}
@@ -3963,7 +3963,7 @@ off.}
 \leftvitem{3.5cm}{parallel\index{on!parallel}}
 \rightvitem{13cm}{Allows the running of the program in parallel mode unless 
 other problems prevent this. This is of course only relevant for parallel 
-versions of \FORM. The default is on.}
+versions of \FORM\@. The default is on.}
  
 \leftvitem{3.5cm}{powerfirst\index{on!powerfirst}}
 \rightvitem{13cm}{In this mode polynomials are sorted in a way that high 
@@ -4010,16 +4010,16 @@ parameters in the setup file (see \ref{setup}).}
 \rightvitem{13cm}{Same as `On statistics'.}
  
 \leftvitem{3.5cm}{threadloadbalancing\index{on!threadloadbalancing}}
-\rightvitem{13cm}{\vspace{1.5ex}Causes the load balancing mechanism in \TFORM
+\rightvitem{13cm}{\vspace{1.5ex}Causes the load balancing mechanism in \TFORM{}
 to be turned on or off. Default is on. Ignored by other versions of \FORM.}
  
 \leftvitem{3.5cm}{threads\index{on!threads}}
 \rightvitem{13cm}{Allows the running of the program in multithreaded mode 
 unless other problems prevent this. This is of course only relevant for 
-\TFORM. Other versions of \FORM\ ignore this. The default is on.}
+\TFORM\@. Other versions of \FORM\ ignore this. The default is on.}
  
 \leftvitem{3.5cm}{threadstats\index{on!threadstats}}
-\rightvitem{13cm}{Only active for \TFORM. It determines whether all threads 
+\rightvitem{13cm}{Only active for \TFORM\@. It determines whether all threads 
 print their run time statistics or only the master thread does so. Default 
 is on.}
  
@@ -4287,7 +4287,7 @@ scheduled for printing. The options are\vspace{2mm}
 \leftvitem{2cm}{{\tt<}filename{\tt>}}
 \rightvitem{14cm}{The results will be printed to the file. The {\tt<} and 
 {\tt>} are mandatory for this option.} This option can only be used in the 
-version that prints out individual terms, i.e. the version with the format 
+version that prints out individual terms, i.e.\ the version with the format 
 string.
 
 \leftvitem{1cm}{+f}
@@ -4877,7 +4877,7 @@ the arguments in the outfun depends however on the order in which \FORM\
 encounters the vertices. Hence the outfun will often be 
 cyclesymmetric\index{symmetric!cycle}\index{cyclesymmetric} (see 
 \ref{substafunctions} and \ref{substacyclesymmetrize}). If \FORM\ has to 
-exchange indices to make a `proper loop' (i.e. giving relevance to the 
+exchange indices to make a `proper loop' (i.e.\ giving relevance to the 
 first index as if it is something incoming and the second index as if it is 
 something outgoing) and if the vertex function is 
 antisymmetric\index{antisymmetric}\index{symmetric!anti}, each exchange will 
@@ -5425,7 +5425,7 @@ to be declared):
 
 \leftvitem{2.4cm}{x\hash{}c}
 \rightvitem{13.8cm}{The symbol is complex\index{complex}. This means that two 
-spaces are reserved for this symbol, one for x and one for x\hash (the 
+spaces are reserved for this symbol, one for x and one for x\hash{} (the 
 complex conjugate).}
 
 \leftvitem{2.4cm}{x\hash{}i}
@@ -5661,7 +5661,7 @@ into account that each element declared causes some overhead. \vspace{4mm}
 definition of a dollar variable\index{\$-variable} (this is allowed! See 
 \ref{dollars}) parallel execution of the entire remainder of the \FORM\ 
 program is switched off. This is of course only relevant for parallel 
-versions of \FORM. But if at all possible one should try to find better 
+versions of \FORM\@. But if at all possible one should try to find better 
 solutions than this use of dollar variables, allowing future parallel 
 processing of the program.
 
@@ -5758,7 +5758,7 @@ tablebases\index{tablebase}.\vspace{10mm}
 \noindent \begin{tabular}{ll}
 Type & Declaration\\
 Syntax & ThreadBucketSize,number;
-\\ See also & the section on \TFORM (\ref{tform})
+\\ See also & the section on \TFORM~(\ref{tform})
 \end{tabular} \vspace{4mm}
 
 \noindent This statement\index{threadbucketsize} is only active in 
@@ -6040,7 +6040,7 @@ parg\_.}
 \rightvitem{13cm}{encode(r1,r2):base=number will interpret the arguments as 
 the digits in a base 2 number system, compute the complete number and 
 replace the arguments by a single argument that is that number. The number 
-must fit inside a single FORM word and so must each of the original 
+must fit inside a single \FORM{} word and so must each of the original 
 arguments. They should actually be smaller than the number of the base.}
 
 \leftvitem{3.2cm}{decode\index{transform!decode}\index{decode}}
@@ -6097,7 +6097,7 @@ evaluates to a legal number during execution.}
 \leftvitem{3.2cm}{islyndon\index{transform!islyndon}\index{islyndon}}
 \rightvitem{13cm}{islyndon(r1,r2)=(yes,no) will test whether the indicated 
 range of arguments forms a Lyndon word\index{Lyndon word} according to the 
-ordering of arguments in FORM. The yes and no arguments are what the main 
+ordering of arguments in \FORM\@. The yes and no arguments are what the main 
 term will be multiplied by when the range forms a Lyndon word or does not 
 respectively. Because the definition of a Lyndon word is the unique minimal 
 cyclic permutation of the arguments, and because often we may need the 
@@ -6109,7 +6109,7 @@ islyndon+(r1,r2)=(yes,no).}
 \leftvitem{3.2cm}{tolyndon\index{transform!tolyndon}\index{tolyndon}}
 \rightvitem{13cm}{tolyndon(r1,r2)=(yes,no) will permute the given range in 
 a cyclic manner till it is (if possible) a Lyndon word\index{Lyndon word} 
-according to the ordering of arguments in FORM. The yes and no arguments 
+according to the ordering of arguments in \FORM\@. The yes and no arguments 
 are what the main term will be multiplied by when afterwards the range 
 forms a Lyndon word or does not respectively. Because the definition of a 
 Lyndon word is the unique minimal cyclic permutation of the arguments, and 
@@ -6232,7 +6232,7 @@ it takes effect after an expression has been processed in the current
 module (see also the factorize~\ref{substafactorize} statement).
 
 \noindent Because an immediate multiplication of all factors is sometimes 
-far from optimal, FORM uses a binary scheme to combine factors. After each 
+far from optimal, \FORM{} uses a binary scheme to combine factors. After each 
 step there will be a sort operation. This means that when statistics are 
 printed, there may be several statistics for this step.
 
@@ -6272,7 +6272,7 @@ the module in which the unhide statement occurs. For more information one
 should look at the hide statement in \ref{substahide}. \vspace{4mm}
 
 \noindent Note that if only a number of expressions is taken from the hide 
-system, the hide file may be left with `holes', i.e. space between the 
+system, the hide file may be left with `holes', i.e.\ space between the 
 remaining expressions that contain no relevant information any longer. 
 {\FORM} contains no mechanism to use the space in these holes. Hence if 
 space is at a premium and many holes develop one should unhide all 
@@ -6296,7 +6296,7 @@ See also & trace4 (\ref{substatrace}), tracen (\ref{substatracen}),
 
 \noindent Sets\index{unittrace} the value of the trace of the 
 unit\index{unit matrix} matrix\index{matrix!unit} in the Dirac\index{Dirac} 
-algebra\index{algebra!Dirac} (i.e. the object \verb:g1_(n): for trace line 
+algebra\index{algebra!Dirac} (i.e.\ the object \verb:g1_(n): for trace line 
 \verb:n:)). The parameter \verb:value: can be either a short positive 
 number or any symbol with the exception of \verb:i_:. See also 
 chapter~\ref{gammaalgebra}. \vspace{10mm}

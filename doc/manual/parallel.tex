@@ -8,7 +8,7 @@
 simultaneously. Which version can be used profitably depends very much on 
 the architecture of the computer one is using. Each version has its own 
 control commands which are ignored by the other version and the sequential 
-version of \FORM. The parallel versions are:
+version of \FORM\@. The parallel versions are:
 \begin{itemize}
 \item \ParFORM\index{ParFORM}: This version runs on processors that have 
 their own memory and preferably their own disk. Each processor gets a copy 
@@ -69,7 +69,7 @@ with \TFORM\ would give improvement\index{improvement factor} factors above
 on a quad opteron\index{opteron} machine. This was without modifying even a 
 single statement in the programs. Of course these numbers depend very much 
 on the type of the problem and the programming style used. As of yet there 
-is very little experience with parallel versions of \FORM. Hence people will 
+is very little experience with parallel versions of \FORM\@. Hence people will 
 have to discover what are good ways of getting the most out of their 
 computer. It is expected that there will be much progress in the coming 
 years.
@@ -202,12 +202,12 @@ the master thread. Putting a statement like
 \end{verbatim}
 would show which thread is processing which term and when.
 
-These are all the commands that specifically concern \TFORM. When more 
+These are all the commands that specifically concern \TFORM\@. When more 
 experience is gained using \TFORM, more parameters and commands may become 
 available.
 
 The fact that the threads need private\index{private} data makes that \TFORM\ 
-will use more memory than \FORM. Most of the buffers are not very large, but 
+will use more memory than \FORM\@. Most of the buffers are not very large, but 
 of course there are some buffers which need to be large, like the sort 
 buffers and the scratch input\index{input}/hide\index{hide} buffers. The 
 sizes that the user specifies for these buffers are for the corresponding 
@@ -240,7 +240,7 @@ extent on the environment.
 
 \ParFORM{} uses MPI for communications between the master and workers. 
 Actually terms are distributed by using point-to-point send/receive 
-operations of MPI. Since there is some latency for establishing a 
+operations of MPI\@. Since there is some latency for establishing a 
 connection between processes, especially between those running on different 
 computers, it is best to send terms in groups, like buckets in \TFORM{}. 
 The default number of terms in a bucket is currently 1000 in \ParFORM{}. It 

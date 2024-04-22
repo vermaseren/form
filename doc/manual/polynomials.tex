@@ -2,7 +2,7 @@
 \chapter{Polynomials and Factorization}
 \label{polynomials}
 
-\noindent Starting with version 4, FORM is equipped with powerful handling 
+\noindent Starting with version 4, \FORM{} is equipped with powerful handling 
 of rational polynomials and with factorization capabilities. Because this 
 creates many new possibilities, it brings a whole new category of commands 
 with it. We will list most of these here.
@@ -32,9 +32,9 @@ manipulation of multivariate polynomials, and in particular the GCD
 operation, can be rather time consuming.
 
 \noindent The PolyRatFun has one limitation as compared to the regular 
-PolyFun: in its arguments one may use only symbols. Of course FORM is 
+PolyFun: in its arguments one may use only symbols. Of course \FORM{} is 
 equipped with a mechanism to replace other objects by extra internally 
-generated symbols~\ref{substaextrasymbols}. One could imagine FORM to 
+generated symbols~\ref{substaextrasymbols}. One could imagine \FORM{} to 
 automatically convert these objects to symbols, do the polynomial 
 arithmetic and then convert back. This is done with factorization and the 
 gcd\_~\ref{fungcd}\index{gcd\_}\index{function!gcd\_}, 
@@ -54,7 +54,7 @@ which there is neither a PolyFun nor a PolyRatFun one can use
 to indicate that after this there is no function with that status.
 
 \noindent When a PolyRatFun has only a single argument, this argument is 
-interpreted as the numerator of a fraction. FORM will add automatically a 
+interpreted as the numerator of a fraction. \FORM{} will add automatically a 
 second argument which has the value 1.
 
 \noindent The second important polynomial facility is factorization. This 
@@ -248,7 +248,7 @@ bracket with the n-th power of the symbol factor\_ outside the bracket:
 factorized format. For this we have the 
 LocalFactorized~\ref{substalfactorized} and 
 GlobalFactorized~\ref{substagfactorized} commands. These commands can 
-be abbreviated to LFactorized, GFactorized or even LF and GF. One should 
+be abbreviated to LFactorized, GFactorized or even LF and GF\@. One should 
 notice that these commands do not execute a factorization. They accept the 
 factors as the user provides them:
 % THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
@@ -557,7 +557,7 @@ till execution time.
 number of variables used. For example factorization of $x^{60}-1$ is much 
 faster than factorization of $x^{60}-y^{60}$. One could argue that the 
 second formula can be converted into the first, but there is a limit to 
-what FORM should do and what the user should do.
+what \FORM{} should do and what the user should do.
 % THIS EXAMPLE IS PART OF THE TESTSUITE. CHANGES HERE SHOULD BE APPLIED THERE AS
 % WELL! (PolyandFact_16)
 \begin{verbatim}
@@ -644,7 +644,7 @@ removed as their functionality has been completely taken over by the new
 functions gcd\_~\ref{fungcd}, div\_~\ref{fundiv} and rem\_~\ref{funrem} and 
 some statements like normalize~\ref{substanormalize}, 
 makeinteger~\ref{substamakeinteger} and factarg~\ref{substafactarg}. Unlike 
-regular functions, the functions gcd\_. div\_ and rem\_ have the 
+regular functions, the functions gcd\_, div\_ and rem\_ have the 
 peculiarity that if one of the arguments is just an expression or a 
 \$-expression, this expression is not evaluated until the function is 
 evaluated. This means that the evaluated expression does not have to fit 

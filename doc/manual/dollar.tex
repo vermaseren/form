@@ -6,7 +6,7 @@ In the older versions of \FORM\ there were two types of variables: the
 preprocessor variables\index{variables!preprocessor} and the algebraic 
 variables\index{variables!algebraic}. The preprocessor 
 variables are string variables that are used by the edit features of the 
-preprocessor to prepare the input for the compiler part of \FORM. The 
+preprocessor to prepare the input for the compiler part of \FORM\@. The 
 algebraic objects are the expressions and the various algebraic variables 
 like the symbols, functions, vectors etc. There existed however very few 
 possibilities to communicate from the algebraic level to the decision 
@@ -105,14 +105,14 @@ How does one give a value to a dollar variable?
 \begin{itemize}
 \item In the preprocessor. This is done with an instruction of the type 
 \verb:#$var = 0;:. This is an instruction that can run over more than one 
-line. The r.h.s. can be any algebraic expression. Specifically it can 
+line. The r.h.s.\ can be any algebraic expression. Specifically it can 
 contain dollar variables or local/global expressions. Such 
 expressions are worked out during the preprocessing. Hence this variable 
 acquires a value immediately.
 \item During execution when control reaches a statement of the form 
-\verb:$var = expression;:. Again the r.h.s. can contain any normal 
+\verb:$var = expression;:. Again the r.h.s.\ can contain any normal 
 algebraic expression including dollar variables and local/global 
-expressions. The r.h.s. will be evaluated and the value will be assigned to 
+expressions. The r.h.s.\ will be evaluated and the value will be assigned to 
 \verb:$var:. In the case that \verb:$var: had already a value, the old 
 value will be deleted and the new value will be `installed'.
 \item During execution when the dollar variable is assigned the value of a 

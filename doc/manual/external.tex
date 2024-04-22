@@ -328,7 +328,7 @@ preprocessor
 variables ``PIPE1\_''\index{PIPE1\_}, ``PIPE2\_''\index{PIPE2\_}, etc.
 For example, if `PIPES\_'\index{PIPES\_} is 3 then there are 3 
 pre-opened external channels with the descriptors `PIPE1\_',
-`PIPE2\_' and `PIPE3\_' so e.g. the following instruction could
+`PIPE2\_' and `PIPE3\_' so e.g.\ the following instruction could
 be used:
 \begin{verbatim}
    #setexternal `PIPE2_'
@@ -387,8 +387,8 @@ ASCIIdecimal format with an appended newline character to the descriptor 8
 and then \FORM\ will wait for the answer from the descriptor 5. The answer 
 must be two comma-separated integers in ASCII decimal format followed by a 
 newline character. The first integer corresponds to the \FORM\ PID while the 
-second one is the parent process PID. If the answer is not obtained after 
-some timeout, or if it is not correct (i.e. it is not a list of two 
+second one is the parent process PID\@. If the answer is not obtained after 
+some timeout, or if it is not correct (i.e.\ it is not a list of two 
 integers or the first integer is not the \FORM\ PID) then \FORM\ fails. If 
 everything is correct, \FORM\ creates the pre-opened channel and puts its 
 descriptor in the preprocessor variable ``PIPE1\_''.
@@ -400,7 +400,7 @@ After all pairs have been processed \FORM\ creates the preprocessor variable
 pre-opened external channels.
 
 The order of processing the pairs of numbers in the argument is fixed 
-exactly as it was described above i.e. from the left to the right.
+exactly as it was described above i.e.\ from the left to the right.
 
 %--#] Embedding :
 

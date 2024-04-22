@@ -124,7 +124,7 @@ Path\index{setup!path}\index{path} variable.}
  
 \leftvitem{4.0cm}{MaxNumberSize\index{setup!maxnumbersize}\index{maxnumbersize}}
 \rightvitem{12.6cm}{Allows the setting of the maximum size of the numbers 
-in \FORM. The number should be given in words. For 32\index{32 bits} bit 
+in \FORM\@. The number should be given in words. For 32\index{32 bits} bit 
 systems a word is two bytes and for 64\index{64 bits} bit systems a word is 
 4 bytes. The number size is always limited by the maximum size of the terms 
 (see MaxTermSize). Actually it has to be less than half of MaxTermSize 
@@ -160,7 +160,7 @@ by placing a backspace character at the end of each line and then
 continuing at the next line. For cosmetic purposes \FORM\ puts usually a few 
 blank spaces at the beginning of the new line. \FORM\ itself can read this but 
 some programs cannot. Hence one can put \FORM\ in a mode in which these 
-blanks are omitted. The values of the variable are ON or OFF. There is also 
+blanks are omitted. The values of the variable are ON or OFF\@. There is also 
 a command to change this behaviour at runtime. See the on and off commands 
 in sections \ref{staonnospacesinnumbers} and \ref{staoffnospacesinnumbers}.}
 
@@ -177,7 +177,7 @@ will be shown.}
 
 \leftvitem{4.0cm}{NwriteThreadStatistics\index{setup!nwritethreadstatistics}
 \index{nwritethreadstatistics}}
-\rightvitem{12.6cm}{\vspace{1ex}This variable has the values ON or OFF. It controls for 
+\rightvitem{12.6cm}{\vspace{1ex}This variable has the values ON or OFF\@. It controls for 
 \TFORM{} whether the statistics of the individual threads will be printed. The
 default value is ON.}
  
@@ -212,12 +212,12 @@ as explained in the preprocessor
  
 \leftvitem{4.0cm}{ProcessBucketSize\index{setup!processbucketsize}\index{processbucketsize}}
 \rightvitem{12.6cm}{\label{setupprocessbucketsize} For the parallel version 
-\ParFORM. It is ignored in other versions. Tells \ParFORM\ how many terms 
+\ParFORM\@. It is ignored in other versions. Tells \ParFORM\ how many terms 
 there should be in the buckets that are being distributed over the 
 secondary processors. See also \ref{substaprocessbucketsize}.}
  
 \leftvitem{4.0cm}{ResetTimeOnClear\index{setup!resettimeonclear}\index{resettimeonclear}}
-\rightvitem{12.6cm}{The value is ON or OFF. The default value is ON. This 
+\rightvitem{12.6cm}{The value is ON or OFF\@. The default value is ON\@. This 
 means that by default the clock is reset after each .clear\index{.clear} 
 (see chapter \ref{modules} on modules) instruction at the end of a module.}
 
@@ -270,13 +270,13 @@ the setup file is ignored. If TempSortDir is not specified, then the value of
 TempDir is used also for sort files.}
  
 \leftvitem{4.0cm}{ThreadBucketSize\index{setup!threadbucketsize}\index{threadbucketsize}}
-\rightvitem{12.6cm}{Only relevant for \TFORM. The size of the number of 
+\rightvitem{12.6cm}{Only relevant for \TFORM\@. The size of the number of 
 terms sent to the workers simultaneously. 
 For details see the chapter on the parallel version (\ref{parallel}).}
  
 \leftvitem{4.0cm}{ThreadLoadBalancing\index{setup!threadloadbalancing}\index{threadloadbalancing}}
-\rightvitem{12.6cm}{\indent Only relevant for \TFORM. Possible values are ON 
-or OFF. For details see the chapter on the parallel version (\ref{parallel}).}
+\rightvitem{12.6cm}{\indent Only relevant for \TFORM\@. Possible values are ON 
+or OFF\@. For details see the chapter on the parallel version (\ref{parallel}).}
  
 \leftvitem{4.0cm}{Threads\index{setup!threads}\index{threads}}
 \rightvitem{12.6cm}{Only relevant for \TFORM\ (see chapter on the parallel 
@@ -375,7 +375,7 @@ terms of maximal size. This means that the sum of SmallExtension and
 LargeSize must be at least FilePatches times 2*MaxTermSize*(bytes in short 
 integer). It is possible to set the size of these caches directly with the 
 variable {\sl SortIOsize\index{sortiosize}}. If the variable is too large, 
-the variable FilePatches may be adjusted by \FORM. If there are more than 
+the variable FilePatches may be adjusted by \FORM\@. If there are more than 
 FilePatches patches in the sort file, a second sort file is needed for the 
 output of each `superpatch'\index{superpatch}. When the first sort file has 
 been treated, the second sort file can be treated in exactly the same way 
