@@ -6,7 +6,7 @@
 
 The preprocessor\index{preprocessor} is a program segment that reads and 
 edits\index{edit} the input, after which the processed input is offered to 
-the compiler\index{compiler} part of \FORM. When a module\index{module} 
+the compiler\index{compiler} part of \FORM\@. When a module\index{module} 
 instruction is encountered by the preprocessor, the compilation is halted 
 and the module is executed. The compiler buffers are cleared and \FORM\  
 will continue with the next module. The preprocessor acts almost purely on 
@@ -49,7 +49,7 @@ preprocessor variable `i' to be substituted first. If this happens to be
 the string "2", the result after the first substitution would be `a2r' and 
 then \FORM\ would look for its string value.
 
-The use of the backquotes is different from the earlier versions of \FORM. 
+The use of the backquotes is different from the earlier versions of \FORM\@. 
 There the preprocessor variables would be enclosed in a pair of quotes and 
 no nesting\index{nesting} was possible. \FORM\ still understands this old 
 notation because it does not lead to ambiguities. The user is however 
@@ -212,7 +212,7 @@ With the comma the preprocessor will leave this untouched, and hence now
 the set is passed properly.
 
 Good use of the preprocessor calculator can make life much easier for 
-\FORM. For example the following statements
+\FORM\@. For example the following statements
 \begin{verbatim}
     id  f(`i') = 1/(`i'+1);
     id  f(`i') = 1/{`i'+1};
@@ -375,7 +375,7 @@ add to it.
 \noindent See also prependpath~(\ref{preprependpath})
 
 \noindent Appends the given path relative to the current file to the end of
-the FORM path\index{path}.
+the \FORM{} path\index{path}.
 
 %--#] appendpath : 
 %--#[ break :
@@ -483,7 +483,7 @@ preprocessor calculator. Hence
     #call test(1,a)
 \end{verbatim}
 are all legal and give the same result, but only the last notation will 
-work in future versions of \FORM.
+work in future versions of \FORM\@.
 
 Nowadays also the use of the argument field wildcard (see chapter 
 \ref{pattern} on pattern matching) is allowed as in the 
@@ -1194,7 +1194,7 @@ functions that allow the asking of questions about objects. These are
 \leftvitem{3cm}{exists()}
 \rightvitem{13cm}{The argument of exists\index{exists} is the name of an 
 expression or a \$-variable. This function then returns one if this object 
-exists, cq. has been defined. Otherwise it returns zero. }
+exists, cq.\ has been defined. Otherwise it returns zero. }
  
 \leftvitem{3cm}{isdefined()}
 \rightvitem{13cm}{The argument of isdefined\index{isdefined} is the name of a 
@@ -1232,7 +1232,7 @@ returned (see \ref{substasymbols}).}
 \leftvitem{3cm}{sizeof()}
 \rightvitem{13cm}{The argument of termsin\index{termsin} is the name of an 
 expression or a \$-variable. This function then evaluates into the number 
-of \FORM words in that expression or variable.}
+of \FORM{} words in that expression or variable.}
  
 \leftvitem{3cm}{termsin()}
 \rightvitem{13cm}{The argument of termsin\index{termsin} is the name of an 
@@ -1474,7 +1474,7 @@ Time =       0.00 sec    Generated terms =         10
 \noindent See also appendpath~(\ref{preappendpath})
 
 \noindent Prepends the given path relative to the current file to the beginning
-of the FORM path\index{path}.
+of the \FORM{} path\index{path}.
 
 %--#] prependpath : 
 %--#[ printtimes :
@@ -1488,7 +1488,7 @@ of the FORM path\index{path}.
 
 \noindent Prints\index{\#printtimes} the current execution time and real 
 time in the same way as done at the end of the program. Helps in monitoring 
-the real time passed in TFORM jobs.
+the real time passed in \TFORM{} jobs.
 Example:
 \begin{verbatim}
     #Printtimes
@@ -1555,7 +1555,7 @@ housekeeping.
 \noindent See also \#call (\ref{precall})
 
 \noindent The default\index{\#procedureextension} extension of procedures 
-is .prc\index{.prc} in \FORM. It is however possible that this clashes with 
+is .prc\index{.prc} in \FORM\@. It is however possible that this clashes with 
 the extensions used by other programs like the Grace\index{Grace} system 
 (Yuasa et al, Prog. Theor. Phys. Suppl. 138(2000)18 ). In that case it is 
 possible to change the extension of the procedures in the current program. 
@@ -1824,13 +1824,13 @@ KILL\index{KILL signal} signal to the wholegroup, which means that also
 \noindent The \#setrandom\index{\#setrandom} instruction initializes the 
 random number generator 
 random\_~\ref{funrandom}\index{random\_}\index{function!random\_}. The 
-number that is used as a seed can have the length of two words in FORM. 
+number that is used as a seed can have the length of two words in \FORM\@. 
 This means that on a 32-bits computer it can be an (unsigned) 32-bits 
 integer and on a 64-bits computer it can be an (unsigned) 64 bits integer. 
 If there is no \#setrandom instruction the random number generator is 
 initialized in a built in standard way. The \#setrandom instruction also 
-initializes the random number generators of the workers when one uses TFORM 
-or ParFORM. They are initialized with different seeds that are derived in a 
+initializes the random number generators of the workers when one uses \TFORM{} 
+or \ParFORM\@. They are initialized with different seeds that are derived in a 
 non-trivial way from the seed given by the user and the number of the 
 worker.
 
@@ -1931,7 +1931,7 @@ instruction is issued. Example:
 \end{verbatim}
 Because the O3 format is still active, the final printing uses the 
 optimization as well. If the \#SkipExtraSymbols instruction would have been 
-omitted, the numbering would start again from one, while the rhs. of their 
+omitted, the numbering would start again from one, while the rhs.\ of their 
 definitions would contain the old extra symbols. The result would be 
 incorrect.
 

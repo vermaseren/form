@@ -5,7 +5,7 @@
 %--#[ General :
 
 \noindent Functions\index{function} are objects that can have arguments. 
-There exist several types of functions in \FORM. First there is the 
+There exist several types of functions in \FORM\@. First there is the 
 distinction between commuting\index{commuting} and 
 noncommuting\index{noncommuting} functions. Commuting functions commute 
 with all other objects. This property is used by the normalization routines 
@@ -485,7 +485,7 @@ there are no brackets the function is replaced by one.
 \noindent This function expects the name of an expression or a dollar 
 variable for its (single) argument. It will return the first term in this 
 expression or dollar variable. When it has to obtain the first term of an 
-expression, FORM uses the expression in the representation in which it was 
+expression, \FORM{} uses the expression in the representation in which it was 
 stored at the end of the previous module. If the expression did not exist 
 in the previous module, it will attempt to use the expression as defined 
 and processed in the current expression. If the expression has only been 
@@ -545,7 +545,7 @@ spinline indices are both numeric.
 of the arguments. The arguments can be any valid subexpressions, provided 
 the whole function fits inside a term. When an argument is only an active 
 expression or a \$-expression it is only expanded during evaluation of the 
-GCD. This way the contents of such expressions can exceed the maximum term 
+GCD\@. This way the contents of such expressions can exceed the maximum term 
 size. One should however realize that in that case the operation takes 
 place in allocated memory.
 This function replaces the experimental function 
@@ -942,11 +942,11 @@ gcd\_~\ref{fungcd}, div\_~\ref{fundiv} and rem\_~\ref{funrem}.
 \section{prime\_}\index{prime\_}\index{function!prime\_}
 \label{funprime}
 
-\noindent For a number of internal operations FORM needs prime numbers that 
+\noindent For a number of internal operations \FORM{} needs prime numbers that 
 are neither very large nor very small. Hence it generates, when needed 
-prime numbers that still fit inside a single FORM word, but are maximal 
+prime numbers that still fit inside a single \FORM{} word, but are maximal 
 within that limitation. Hence for a 64-bits computer in which the largest 
-positive `small' integer in FORM is $2^{31}-1$, it works its way down from 
+positive `small' integer in \FORM{} is $2^{31}-1$, it works its way down from 
 there. Once it has determined that a number is prime it stores it in a 
 list. The function prime\_ gives access to this list. The single argument 
 n (n a positive integer) makes that \verb:prime_(n): will be replaced by 
@@ -970,11 +970,11 @@ This function is useful when calculations generate very large intermediate
 coefficients, but in the end the answer is relatively simple again. In that 
 case one can do the calculation modulus one or more prime numbers. If more 
 prime numbers are used the Chinese remainder theorem\index{Chinese 
-remainder theorem}. can be used (see the exteuclidean\_ 
+remainder theorem} can be used (see the exteuclidean\_ 
 function~\ref{funexteuclidean} to combine the results and the 
 makerational\_ function~\ref{funmakerational} can be used if fractions have 
-to be reconstructed. An example of this kind of use is given in the simple 
-Groebner basis procedure that is in the packages library in the FORM site.
+to be reconstructed). An example of this kind of use is given in the simple 
+Groebner basis procedure that is in the packages library in the \FORM{} site.
 
 %--#] prime_ : 
 %--#[ putfirst_ :
@@ -1019,7 +1019,7 @@ Knuth with the parameters set at 89,38 to give as long a cycle as possible.
 For very large numbers the program pastes several random numbers together. 
 The generator can be initialized with the preprocessor 
 \#setrandom~\ref{presetrandom}\index{\#setrandom} instruction. When running 
-with TFORM or ParFORM each worker runs an independent generator with its 
+with \TFORM{} or \ParFORM{} each worker runs an independent generator with its 
 own seed. The seeds of the workers are derived from the seed of the master 
 and the number of the worker in a non-trivial way. It should be noted 
 however that with workers it may be impossible to reproduce previous runs 
@@ -1095,7 +1095,7 @@ mechanism.
 will exchange x and y. Because there is no definite order in which multiple 
 replace\_ functions are treated, one should not use more than a single one 
 at the same time inside a term. At times multiple replace\_ functions may 
-lead to confusion inside \FORM.
+lead to confusion inside \FORM\@.
 
 %--#] replace_ : 
 %--#[ reverse_ :
@@ -1131,7 +1131,7 @@ sign or the complexity properties externally.
 
 \section{sig\_}\index{sig\_}\index{function!sig\_}
 \label{funsig}
-\noindent Is replaced by the sign of the (numerical) argument, i.e. by -1 
+\noindent Is replaced by the sign of the (numerical) argument, i.e.\ by -1 
 if there is a single negative argument and by +1 if there is a single 
 numerical argument that is greater or equal to zero.
 
@@ -1150,7 +1150,7 @@ integer.
 \label{funsizeof}
 \noindent If there is a single argument and this argument is the name of an 
 active (or previously active during the current job) expression, the 
-function is replaced by the number\index{number of \FORM words} of \FORM 
+function is replaced by the number\index{number of \FORM{} words} of \FORM{} 
 words in this expression. Stored expressions that were entered via a load 
 statement (see \ref{substaload}) are excluded from this because for them 
 this information is not readily available.

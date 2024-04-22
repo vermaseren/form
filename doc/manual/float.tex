@@ -15,7 +15,7 @@ has either one or two arguments:
     #startfloat numberofbits <,maximumweight>
 \end{verbatim}
 The first argument is mandatory. It tells how many bits of accuracy are 
-required. \FORM will round to at least this precision. Because the internal 
+required. \FORM{} will round to at least this precision. Because the internal 
 routines work with WORDs the precision will be rounded up to the nearest 
 integer number of WORDs. The second argument is optional for when one wants 
 to work with multiple zeta values (MZVs) or Euler sums. It specifies the 
@@ -45,7 +45,7 @@ This can usually be seen by that the fractions are `rather wild', or that
 the result changes when the precision is increased. This statement can also 
 be abbreviated to `torat'.
 \item[evaluate] If this command has no arguments all floating point 
-functions that \FORM knows about will be evaluated. The currently allowed 
+functions that \FORM{} knows about will be evaluated. The currently allowed 
 arguments are the functions mzv\_, euler\_, sqrt\_ and mzvhalf\_. If any 
 (or more than one) of these are specified only those functions will be 
 evaluated.
