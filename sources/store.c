@@ -366,6 +366,7 @@ int CoSave(UBYTE *inp)
 	UBYTE *p, c;
 	WORD n = 0, i;
 	WORD error = 0, type, number;
+	WORD exprInStorageFlag = 0;
 	LONG RetCode = 0, wSize;
 	EXPRESSIONS e;
 	INDEXENTRY *ind;
@@ -421,6 +422,9 @@ int CoSave(UBYTE *inp)
 			c = *p; *p = 0;
 			if ( GetVar(inp,&type,&number,CEXPRESSION,NOAUTO) != NAMENOTFOUND ) {
 				if ( e[number].status == STOREDEXPRESSION ) {
+					if ( StrLen(AC.exprnames->namebuffer+e[number].name) > MAXENAME ) {
+						MesPrint("&Warning: saved expr name over %d char: %s", MAXENAME, AC.exprnames->namebuffer+e[number].name);
+					}
 /*
 		Here we have to locate the stored expression, copy its index entry
 		possibly after making a new fileindex and then copy the whole
@@ -518,11 +522,15 @@ NextExpr:;
 			,(LONG)sizeof(struct FiLeInDeX)) != (LONG)sizeof(struct FiLeInDeX) ) goto SavWrt;
 	}
 	else if ( !AP.preError ) {				/* All stored expressions should be saved. Easy */
+		/* Make sure there is at least one stored expression: */
 		if ( n > 0 ) { do {
-			if ( e->status == STOREDEXPRESSION ) break;
+			if ( StrLen(AC.exprnames->namebuffer+e->name) > MAXENAME ) {
+				MesPrint("&Warning: saved expr name over %d char: %s", MAXENAME, AC.exprnames->namebuffer+e->name);
+			}
+			if ( e->status == STOREDEXPRESSION ) exprInStorageFlag = 1;
 			e++;
 		} while ( --n > 0 ); }
-		if ( n ) {
+		if ( exprInStorageFlag ) {
 			wSize = TOLONG(AT.WorkTop) - TOLONG(AT.WorkPointer);
 			PUTZERO(scrpos);
 			SeekFile(AR.StoreData.Handle,&scrpos,SEEK_SET);		/* Start at the beginning */

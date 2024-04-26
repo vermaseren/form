@@ -1868,6 +1868,33 @@ for i in 1..3
   assert result("Hc#{i}") == result("Fc#{i}")
 end
 *--#] Issue191 : 
+*--#[ Issue192_1 :
+* Also related: Issue 334.
+Global abcdefghijklmnop = 16;
+Global abcdefghijklmnopq = 17;
+.store
+Save test.res;
+.end
+assert warning?("saved expr name over 16 char: abcdefghijklmnopq")
+*--#] Issue192_1 :
+*--#[ Issue192_2 :
+* Also related: Issue 334.
+Global abcdefghijklmnop = 16;
+Global abcdefghijklmnopq = 17;
+.store
+Save test.res abcdefghijklmnopq;
+.end
+assert warning?("saved expr name over 16 char: abcdefghijklmnopq")
+*--#] Issue192_2 :
+*--#[ Issue192_3 :
+* Also related: Issue 334.
+Global abcdefghijklmnop = 16;
+Global abcdefghijklmnopq = 17;
+.store
+Save test.res abcdefghijklmnop;
+.end
+assert succeeded?
+*--#] Issue192_3 :
 *--#[ Issue197 :
 * mul_ ignores denominator factors
 #if "{2^32}" == "0"
