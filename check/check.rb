@@ -356,6 +356,13 @@ module FormTest
             break
           end
         end
+        # MesPrint inevitably inserts newline characters when a line exceeds
+        # its length limit. To verify error/warning messages, here we remove
+        # newline characters that seem to be part of continuation lines
+        # (this simple implementation also removes newline characters that are
+        # not due to MesPrint).
+        @cleaned_stdout = @stdout.gsub(/\R(?= ?\S)(?!\S+ Line \d+)/, "")
+
         yield
       # NOTE: Here we catch all exceptions, though it is a very bad style. This
       #       is because, in Ruby 1.9, test/unit is implemented based on
@@ -618,30 +625,49 @@ module FormTest
   end
 
   # true if the FORM job put warning messages.
-  def warning?
-    @stdout =~ /(^|\R)\S+ Line \d+ --> Warning/
+  def warning?(expected_message = nil)
+    if expected_message.nil?
+      @stdout =~ /(^|\R)\S+ Line \d+ --> Warning/
+    else
+      @cleaned_stdout =~ Regexp.new("(^|\\R)\\S+ Line \\d+ --> Warning: .*#{Regexp.escape(expected_message)}")
+    end
   end
 
   # true if the FORM job put preprocessor errors.
-  def preprocess_error?
-    @stdout =~ /(^|\R)\S+ Line \d+ ==>/
+  def preprocess_error?(expected_message = nil)
+    if expected_message.nil?
+      @stdout =~ /(^|\R)\S+ Line \d+ ==>/
+    else
+      @cleaned_stdout =~ Regexp.new("(^|\\R)\\S+ Line \\d+ ==> .*#{Regexp.escape(expected_message)}")
+    end
   end
 
   # true if the FORM job put compile-time errors.
-  def compile_error?
-    @stdout =~ /(^|\R)\S+ Line \d+ -->/
+  def compile_error?(expected_message = nil)
+    if expected_message.nil?
+      @stdout =~ /(^|\R)\S+ Line \d+ -->/
+    else
+      @cleaned_stdout =~ Regexp.new("(^|\\R)\\S+ Line \\d+ --> .*#{Regexp.escape(expected_message)}")
+    end
   end
 
   # true if the FORM job put run-time errors.
   # NOTE: indeed this implementation detects abnormal terminations
   # via "Terminate()", which also happens for preprocessor/compiler errors.
-  def runtime_error?
+  def runtime_error?(expected_message = nil)
     if serial?
-      @stdout =~ /Program terminating at \S+ Line \d+ -->/
+      result = @stdout =~ /Program terminating at \S+ Line \d+ -->/
     elsif threaded?
-      @stdout =~ /Program terminating in thread \d+ at \S+ Line \d+ -->/
+      result = @stdout =~ /Program terminating in thread \d+ at \S+ Line \d+ -->/
     elsif mpi?
-      @stdout =~ /Program terminating in process \d+ at \S+ Line \d+ -->/
+      result = @stdout =~ /Program terminating in process \d+ at \S+ Line \d+ -->/
+    end
+    if expected_message.nil?
+      result
+    else
+      # NOTE: it just tests if the output contains the expected message,
+      # which is probably put before "Terminate()" is called.
+      result && @cleaned_stdout =~ Regexp.new(Regexp.escape(expected_message))
     end
   end
 
