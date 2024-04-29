@@ -1624,6 +1624,9 @@ int main(int argc, char **argv)
 #ifdef TRAPSIGNALS
 	setSignalHandlers();
 #endif
+#ifdef WINDOWS
+	_setmode(_fileno(stdout),O_BINARY);
+#endif
 
 #ifdef WITHPTHREADS
 	AB = ABdummy;
