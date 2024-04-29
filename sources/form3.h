@@ -195,6 +195,7 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <io.h>
+#include <fcntl.h>
 /* Undefine/rename conflicted symbols. */
 #undef VOID  /* WinNT.h */
 #undef MAXLONG  /* WinNT.h */
