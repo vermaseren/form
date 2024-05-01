@@ -356,6 +356,13 @@ module FormTest
             break
           end
         end
+        # MesPrint inevitably inserts newline characters when a line exceeds
+        # its length limit. To verify error/warning messages, here we remove
+        # newline characters that seem to be part of continuation lines
+        # (this simple implementation also removes newline characters that are
+        # not due to MesPrint).
+        @cleaned_stdout = @stdout.gsub(/\R(?= ?\S)(?!\S+ Line \d+)/, "")
+
         yield
       # NOTE: Here we catch all exceptions, though it is a very bad style. This
       #       is because, in Ruby 1.9, test/unit is implemented based on
@@ -622,7 +629,7 @@ module FormTest
     if expected_message.nil?
       @stdout =~ /(^|\R)\S+ Line \d+ --> Warning/
     else
-      @stdout =~ Regexp.new("(^|\\R)\\S+ Line \\d+ --> Warning: .*#{Regexp.escape(expected_message)}")
+      @cleaned_stdout =~ Regexp.new("(^|\\R)\\S+ Line \\d+ --> Warning: .*#{Regexp.escape(expected_message)}")
     end
   end
 
@@ -631,7 +638,7 @@ module FormTest
     if expected_message.nil?
       @stdout =~ /(^|\R)\S+ Line \d+ ==>/
     else
-      @stdout =~ Regexp.new("(^|\\R)\\S+ Line \\d+ ==> .*#{Regexp.escape(expected_message)}")
+      @cleaned_stdout =~ Regexp.new("(^|\\R)\\S+ Line \\d+ ==> .*#{Regexp.escape(expected_message)}")
     end
   end
 
@@ -640,7 +647,7 @@ module FormTest
     if expected_message.nil?
       @stdout =~ /(^|\R)\S+ Line \d+ -->/
     else
-      @stdout =~ Regexp.new("(^|\\R)\\S+ Line \\d+ --> .*#{Regexp.escape(expected_message)}")
+      @cleaned_stdout =~ Regexp.new("(^|\\R)\\S+ Line \\d+ --> .*#{Regexp.escape(expected_message)}")
     end
   end
 
@@ -660,7 +667,7 @@ module FormTest
     else
       # NOTE: it just tests if the output contains the expected message,
       # which is probably put before "Terminate()" is called.
-      result && @stdout =~ Regexp.new(Regexp.escape(expected_message))
+      result && @cleaned_stdout =~ Regexp.new(Regexp.escape(expected_message))
     end
   end
 
