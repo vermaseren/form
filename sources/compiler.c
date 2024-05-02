@@ -1826,6 +1826,11 @@ ErrorBraces:
 				funflag = 0;
 				deno = 1;
 				break;
+			case TCONJUGATE:
+				MesPrint("&Complex conjugate operator (%#) is not implemented");
+				error = -1;
+				deno = 1;
+				break;
 			default:
 				MesPrint("&Internal error in code generator. Unknown object: %d",c);
 				error = -1;

@@ -2655,3 +2655,16 @@ assert stdout =~ exact_pattern(<<'EOF')
    nonempty(14): x y
 EOF
 *--#] Issue486 :
+*--#[ Issue499_1 :
+* Freeze in parsing complex conjugate
+S x#c;
+L F = x#;
+.end
+assert compile_error?("Complex conjugate operator (#) is not implemented")
+*--#] Issue499_1 :
+*--#[ Issue499_2 :
+S x#c;
+L F = #x;
+.end
+assert compile_error?("Illegal position for #")
+*--#] Issue499_2 :

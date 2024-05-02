@@ -307,8 +307,13 @@ donumber:		i = 0;
 					}
 				}
 				else if ( *in == '#' ) {
+					in++;
 					if ( object == 1 ) {	/* follows a name */
 						*out++ = TCONJUGATE;
+					}
+					else {
+						MesPrint("&Illegal position for %#");
+						error = 1;
 					}
 				}
 				else goto IllPos;
