@@ -2668,3 +2668,26 @@ L F = #x;
 .end
 assert compile_error?("Illegal position for #")
 *--#] Issue499_2 :
+*--#[ Issue508 :
+Off statistics;
+cf f g;
+s N;
+on highfirst;
+l F =
+#do i=1,5000
++ f(`i')*(g(1+N/`i')*g(N/`i'-1))^25
+#enddo
+;
+.sort
+makeinteger g;
+id f(N?) = N^50;
+id g(N?) = 1;
+print;
+.end
+#require linux?
+#ulimit -v 8_000_000
+# We assume more memory than a 32bit system can provide
+#require wordsize >= 4
+assert succeeded?
+assert result("F") =~ expr("5000")
+*--#] Issue508 :
