@@ -347,7 +347,7 @@ module FormTest
         nfiles.times do |i|
           ENV["FORM"] = FormTest.cfg.form_cmd
           @filename = "#{i + 1}.frm"
-          execute("#{FormTest.cfg.form_cmd} #{@filename}")
+          execute("#{ulimits}#{FormTest.cfg.form_cmd} #{@filename}")
           if !finished?
             info.status = "TIMEOUT"
             assert(false, "timeout (= #{timeout} sec) in #{@filename} of #{info.desc}")
@@ -531,6 +531,11 @@ module FormTest
   # The method to be called before the test.
   def prepare
     # Can be overridden in child classes.
+  end
+
+  # The sequence of ulimit commands to set the resource usage limits.
+  def ulimits
+    ""
   end
 
   # Test-result functions.
@@ -804,6 +809,7 @@ class TestCases
         requires = nil
         pendings = nil
         prepares = nil
+        ulimits = nil
         time_dilation = nil
 
         infile.each_line do |line|
@@ -835,6 +841,7 @@ class TestCases
               requires = nil
               pendings = nil
               prepares = nil
+              ulimits = nil
               time_dilation = nil
               if skipping
                 line = ""
@@ -888,6 +895,11 @@ class TestCases
                 prepares = prepares.join("; ")
                 line += "def prepare; #{prepares} end; "
               end
+              if !ulimits.nil?
+                ulimits.map! { |s| "ulimit #{s}; " }
+                ulimits = ulimits.join("")
+                line += "def ulimits; %(#{ulimits}) end; "
+              end
               if !time_dilation.nil?
                 line += "def timeout; super() * #{time_dilation} end;"
               end
@@ -936,6 +948,14 @@ class TestCases
               prepares = []
             end
             prepares << $1
+          elsif heredoc.nil? && line =~ /^\s*#\s*ulimit\s+(.*)/
+            # #ulimit <limits>
+            # Example: #ulimit -v 4_000_000
+            line = ""
+            if ulimits.nil?
+              ulimits = []
+            end
+            ulimits << $1.gsub(/(?<=\d)_(?=\d)/, "") # remove decimal marks (underscores)
           elsif heredoc.nil? && line =~ /^\s*#\s*time_dilation\s+(.*)/
             # #time_dilation <dilation>
             line = ""
@@ -947,8 +967,8 @@ class TestCases
               fatal("invalid time_dilation", inname, lineno)
             end
             info.time_dilation = time_dilation
-          elsif heredoc.nil? && line =~ /^\*\s*#\s*(require|prepare|pend_if|time_dilation)\s+(.*)/
-            # *#require/prepare/pend_if/time_dilation, commented out in the FORM way
+          elsif heredoc.nil? && line =~ /^\*\s*#\s*(require|prepare|pend_if|ulimit|time_dilation)\s+(.*)/
+            # *#<special instruction>, commented out in the FORM way
             line = ""
           else
             if heredoc.nil?
