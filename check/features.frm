@@ -220,7 +220,7 @@ assert result("F2")  =~ expr("0")
 assert result("F3")  =~ expr("0")
 assert result("F4")  =~ expr("0")
 *--#] partitions_ :
-*--#[ AppendPath :
+*--#[ AppendPath_unix :
 #include foo/foo1.h
 * foo/bar/p1.prc
 #call p1
@@ -238,6 +238,7 @@ P;
 #call p1
 P;
 .end
+#require unix?
 #prepare write "foo/foo1.h", "#prependpath bar\n"
 #prepare write "foo/foo2.h", "#appendpath bar\n"
 #prepare write "foo/bar/p1.prc", "#procedure p1()\nL F=1234;\n#endprocedure\n"
@@ -247,7 +248,36 @@ assert succeeded?
 assert result("F") =~ expr("1234")
 assert result("G") =~ expr("5678")
 assert result("H") =~ expr("9012")
-*--#] AppendPath :
+*--#] AppendPath_unix :
+*--#[ AppendPath_windows :
+#include foo\foo1.h
+* foo/bar/p1.prc
+#call p1
+P;
+.end
+#:path foo;bar
+#include foo1.h
+* foo/bar/p2.prc
+#call p2
+P;
+.end
+#:path foo;bar
+#include foo2.h
+* bar/p1.prc
+#call p1
+P;
+.end
+#require windows?
+#prepare write "foo/foo1.h", "#prependpath bar\n"
+#prepare write "foo/foo2.h", "#appendpath bar\n"
+#prepare write "foo/bar/p1.prc", "#procedure p1()\nL F=1234;\n#endprocedure\n"
+#prepare write "foo/bar/p2.prc", "#procedure p2()\nL G=5678;\n#endprocedure\n"
+#prepare write "bar/p1.prc", "#procedure p1()\nL H=9012;\n#endprocedure\n"
+assert succeeded?
+assert result("F") =~ expr("1234")
+assert result("G") =~ expr("5678")
+assert result("H") =~ expr("9012")
+*--#] AppendPath_windows :
 *--#[ TimeoutAfter_1 :
 #procedure problematicprocedure
 * Do nothing.
