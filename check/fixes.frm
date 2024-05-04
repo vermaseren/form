@@ -2841,6 +2841,65 @@ print;
 assert succeeded?
 assert result("F") =~ expr("5000")
 *--#] Issue508 :
+*--#[ Issue512_1 :
+#-
+* Sort which fills SmallExtension:
+
+#: SmallSize 1000K
+#: SmallExtension 1200K
+#: SubSmallSize 1000K
+#: SubSmallExtension 1200K
+#: SubTermsInSmall 2M
+
+Symbol x,n;
+CFunction f,g,prf;
+
+Local test = (<f(1)>+...+<f(150)>)*(<g(1)>+...+<g(100)>);
+.sort
+
+Off parallel;
+PolyRatFun prf;
+
+Identify f(x?) = prf(n-x,n+x);
+
+.end
+# Fails due to polynomial size on 32bit builds
+#require wordsize >= 4
+# Runtime errors may freeze ParFORM.
+#pend_if mpi?
+assert runtime_error?("Please increase SmallExtension setup parameter.")
+*--#] Issue512_1 :
+*--#[ Issue512_2 :
+#-
+
+* Sort which fills SubSmallExtension:
+
+#: SmallSize 1000K
+#: SmallExtension 1200K
+#: TermsInSmall 2M
+#: SubSmallSize 1000K
+#: SubSmallExtension 1200K
+#: SubTermsInSmall 2M
+
+Symbol x,n;
+CFunction f,g,prf;
+
+Local test = 1;
+.sort
+
+PolyRatFun prf;
+Term;
+	Multiply (<f(1)>+...+<f(150)>)*(<g(1)>+...+<g(100)>);
+	Identify f(x?) = prf(n-x,n+x);
+EndTerm;
+
+.end
+# Fails due to polynomial size on 32bit builds
+#require wordsize >= 4
+# Runtime errors may freeze ParFORM.
+#pend_if mpi?
+assert runtime_error?("Please increase SubSmallExtension setup parameter.")
+*--#] Issue512_2 :
 *--#[ Issue525 :
 #:threadbucketsize 5
 #:processbucketsize 5
