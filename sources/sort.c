@@ -2234,11 +2234,21 @@ WORD AddPoly(PHEAD WORD **ps1, WORD **ps2)
 					TalToLine((UWORD)(*s2++)); TokenToLine((UBYTE *)"  ");
 				}
 				FiniLine();
-				MesPrint("Please increase SmallExtension in %s",setupfilename);
+				if ( AR.sLevel > 0 ) {
+					MesPrint("Please increase SubSmallExtension setup parameter.");
+				}
+				else {
+					MesPrint("Please increase SmallExtension setup parameter.");
+				}
 				MUNLOCK(ErrorMessageLock);
 #else
 				MLOCK(ErrorMessageLock);
-				MesPrint("Please increase SmallExtension in %s",setupfilename);
+				if ( AR.sLevel > 0 ) {
+					MesPrint("Please increase SubSmallExtension setup parameter.");
+				}
+				else {
+					MesPrint("Please increase SmallExtension setup parameter.");
+				}
 				MUNLOCK(ErrorMessageLock);
 #endif
 				Terminate(-1);
