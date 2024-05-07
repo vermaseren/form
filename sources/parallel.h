@@ -101,9 +101,11 @@
       * (TU 7 Jun 2011)
       */
 }
+#    define OMPI_SKIP_MPICXX 1
 #    include <mpi.h>
 extern "C" {
 #  else
+#    define OMPI_SKIP_MPICXX 1
 #    include <mpi.h>
 #  endif
 
