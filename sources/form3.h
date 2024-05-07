@@ -140,15 +140,6 @@
 /* Workaround for MSVC. */
 #if defined(_MSC_VER)
 /*
- * Recent versions of MSVC++ (>= 2012) don't like reserved keywords being
- * macroized even when they are not available. This is problematic for
- * `alignof`, which is used in legacy `PADXXX` macros. We disable tests in
- * xkeycheck.h.
- */
-#if _MSC_VER >= 1700
-#define _ALLOW_KEYWORD_MACROS
-#endif
-/*
  * Old versions of MSVC didn't support C99 function `snprintf`, which is used
  * in poly.cc. On the other hand, macroizing `snprintf` gives a fatal error
  * with MSVC >= 2015.
@@ -331,20 +322,20 @@ typedef char BOOL;
 #define MAXPOSITIVE4   (MAXPOSITIVE / 4)               /* 0x00001FFFL  */
 
 /*
- * alignof(type) returns the number of bytes used in the alignment of
+ * form_alignof(type) returns the number of bytes used in the alignment of
  * the type.
  */
-#if !defined(alignof)
+#if !defined(form_alignof)
 #if defined(__GNUC__)
 /* GNU C compiler has "__alignof__". */
-#define alignof(type) __alignof__(type)
+#define form_alignof(type) __alignof__(type)
 #elif defined(_MSC_VER)
 /* Microsoft C compiler has "__alignof". */
-#define alignof(type) __alignof(type)
+#define form_alignof(type) __alignof(type)
 #elif !defined(__cplusplus)
 /* Generic case in C. */
 #include <stddef.h>
-#define alignof(type) offsetof(struct { char c_; type x_; }, x_)
+#define form_alignof(type) offsetof(struct { char c_; type x_; }, x_)
 #else
 /* Generic case in C++, at least works with a POD struct. */
 #include <cstddef>
@@ -354,7 +345,7 @@ template<typename T> struct calc {
 	enum { value = offsetof(X, x_) };
 };
 }
-#define alignof(type) alignof_impl_::calc<type>::value
+#define form_alignof(type) alignof_impl_::calc<type>::value
 #endif
 #endif
 
@@ -400,7 +391,7 @@ template<typename T> struct calc {
  * compile C99 and C++98+TR1 sources anyway).
  */
 #define PADDUMMY(type, size) \
-	UBYTE d_u_m_m_y[alignof(type) - ((size) & (alignof(type) - 1))]
+	UBYTE d_u_m_m_y[form_alignof(type) - ((size) & (form_alignof(type) - 1))]
 #define PADPOSITION(ptr_,long_,int_,word_,byte_) \
 	PADDUMMY(off_t, \
 		+ sizeof(int *) * (ptr_) \
