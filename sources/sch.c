@@ -2482,7 +2482,7 @@ WORD WriteAll()
 		 */
 		for ( n = 0; n < NumExpressions; n++ ) {
 			e = &Expressions[n];
-			if ( !e->printflag & PRINTON ) continue;
+			if ( (!e->printflag) & PRINTON ) continue;
 			switch ( e->status ) {
 				case LOCALEXPRESSION:
 				case GLOBALEXPRESSION:

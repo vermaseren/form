@@ -776,8 +776,7 @@ fi[]dnl
 my_test_COMPILEFLAGS=${COMPILEFLAGS+set}
 if test "$my_test_COMPILEFLAGS" != set; then
 	if test "x$vendor" = xgnu; then
-		# We don't use -pedantic option because of horrible warnings.
-		COMPILEFLAGS="-Wall -Wextra -Wpadded"
+		COMPILEFLAGS="-Wall -Wextra"
 		AX_HANDLE_EXTRA_WARNING([COMPILEFLAGS])
 		# Enable optimizations.
 		COMPILEFLAGS="$COMPILEFLAGS -O3"
