@@ -957,7 +957,12 @@ LONG EndSort(PHEAD WORD *buffer, int par)
 						UNLOCK(newout->pthreadslock);
 #endif
 					}
-					else if ( newout->handle >= 0 ) {	/* output too large */
+					else if ( newout->handle >= 0 ) {
+/*
+						We land here if par == 1 (function arg sort) and PutOut has created a file.
+						This means that the term is larger than SIOsize, which we ensure is at least
+						as large as MaxTermSize in setfile.c. Thus we know already that the term won't fit.
+*/
 TooLarge:
 						MLOCK(ErrorMessageLock);
 						MesPrint("(1)Output should fit inside a single term. Increase MaxTermSize?");

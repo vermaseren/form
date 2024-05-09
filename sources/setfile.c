@@ -604,6 +604,8 @@ int AllocSetups(VOID)
 	AM.SMaxFpatches = sp->value;
 	sp = GetSetupPar((UBYTE *)"subsortiosize");
 	AM.SIOsize = sp->value;
+	/* As for IOsize, make sure SIOsize is at least as large as AM.MaxTer. */
+	if ( AM.SIOsize < AM.MaxTer ) { AM.SIOsize = AM.MaxTer; sp->value = AM.SIOsize; }
 	sp = GetSetupPar((UBYTE *)"spectatorsize");
 	AM.SpectatorSize = sp->value;
 /*
