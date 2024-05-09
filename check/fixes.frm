@@ -1694,7 +1694,22 @@ P;
 .end
 assert succeeded?
 assert result("F") =~ expr("rat(1,ep^2 + 2*ep + 1)")
-*--#] Issue180 : 
+*--#] Issue180 :
+*--#[ Issue183 :
+#: MaxTermSize 16K
+#: SubTermsInSmall 800
+
+CF f;
+Auto S x;
+L F = f(<x1+x2+x3+x4>,...,<x6+x7+x8+x9>);
+*repeat id f(x1?,x2?,?a) = f(x1*x2,?a);  * error: Sorted function argument...
+transform f,mulargs(1,last);  * silent crash
+P;
+.end
+# Runtime errors may freeze ParFORM.
+#pend_if mpi?
+assert runtime_error?("Term too complex during normalization")
+*--#] Issue183 :
 *--#[ Issue185 :
 * Wrong result of content_
 
@@ -2002,6 +2017,29 @@ Symbol x;
 .end
 assert succeeded?
 *--#] Issue222 : 
+*--#[ Issue230 :
+#-
+#: MaxTermSize 16K
+#: SubTermsInSmall 800
+
+
+Off Statistics;
+
+Symbol x1,...,x11;
+CFunction f;
+
+Local test = f(x1+...+x11) - (x1+...+x11)^4;
+Identify f(x1?) = f(x1,x1,x1,x1);
+.sort
+
+Transform f mulargs(1,last);
+Identify f(x1?) = x1;
+
+Print +s;
+.end
+assert succeeded?
+assert result("test") =~ expr("0")
+*--#] Issue230 :
 *--#[ Issue231 :
 Symbol x,y,z;
 Local F = x + y + x*z;

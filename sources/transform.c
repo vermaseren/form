@@ -797,7 +797,7 @@ returnvalues:;
 							return(-1);
 						}
 						newterm = AT.WorkPointer;
-						if ( EndSort(BHEAD newterm,0) < 0 ) {}
+						if ( EndSort(BHEAD newterm,1) < 0 ) {}
 						if ( ( *newterm && *(newterm+*newterm) != 0 ) || *newterm == 0 ) {
 							MLOCK(ErrorMessageLock);
 							MesPrint("&yes/no information in islyndon/tolyndon does not evaluate into a single term");
@@ -1319,7 +1319,7 @@ WORD RunReplace(PHEAD WORD *fun, WORD *args, WORD *info)
 		return(-1);
 	}
 	newterm = AT.WorkPointer;
-	if ( EndSort(BHEAD newterm,0) < 0 ) {}
+	if ( EndSort(BHEAD newterm,1) < 0 ) {}
 	if ( ( *newterm && *(newterm+*newterm) != 0 ) || *newterm == 0 ) {
 		MLOCK(ErrorMessageLock);
 		MesPrint("&information in replace transformation does not evaluate into a single term");
@@ -1581,7 +1581,7 @@ getthisone:;
 							return(-1);
 						}
 						term4 = AT.WorkPointer;
-						if ( EndSort(BHEAD term4,0) < 0 ) {}
+						if ( EndSort(BHEAD term4,1) < 0 ) {}
 						if ( ( *term4 && *(term4+*term4) != 0 ) || *term4 == 0 ) {
 							MLOCK(ErrorMessageLock);
 							MesPrint("&information in replace transformation does not evaluate into a single term");
@@ -1708,7 +1708,7 @@ dothisnow:;
 				return(-1);
 			}
 			term4 = AT.WorkPointer;
-			if ( EndSort(BHEAD term4,0) < 0 ) {}
+			if ( EndSort(BHEAD term4,1) < 0 ) {}
 			if ( ( *term4 && *(term4+*term4) != 0 ) || *term4 == 0 ) {
 				MLOCK(ErrorMessageLock);
 				MesPrint("&information in replace transformation does not evaluate into a single term");
@@ -2677,7 +2677,7 @@ WORD RunAddArg(PHEAD WORD *fun, WORD *args)
 		}
 		n++;
 	}
-	if ( EndSort(BHEAD tstop+ARGHEAD,0) ) return(-1);
+	if ( EndSort(BHEAD tstop+ARGHEAD,1) ) return(-1);
 	num = 0;
 	f2 = tstop+ARGHEAD;
 	while ( *f2 ) { f2 += *f2; num++; }
@@ -2823,7 +2823,7 @@ WORD RunMulArg(PHEAD WORD *fun, WORD *args)
 	NewSort(BHEAD0);
 	Generator(BHEAD scratch,AR.Cnumlhs);
 	newterm = AT.WorkPointer;
-	EndSort(BHEAD newterm+ARGHEAD,0);
+	EndSort(BHEAD newterm+ARGHEAD,1);
 	C->Pointer = C->Buffer+oldcpointer_pos;
 	C->numrhs = nb;
 	w = newterm+ARGHEAD; while ( *w ) w += *w;
