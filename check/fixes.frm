@@ -2277,6 +2277,29 @@ assert succeeded?
 assert result("test", -2) =~ expr("f(0)*g(2)")
 assert result("test", -1) =~ expr("h(2,0)")
 *--#] Issue277 : 
+*--#[ Issue292 :
+#-
+#: MaxTermSize 16K
+#: SubTermsInSmall 800
+#: SubSortIOSize 8K
+
+CFunction f;
+AutoDeclare Symbol x;
+
+Local test = x - f(x);
+.sort
+
+Identify x = (x1+...+x11)^4;
+Argument f;
+	Identify x = (x1+...+x11)^4;
+EndArgument;
+.sort
+
+Identify f(x?) = x;
+Print test;
+.end
+assert result("test") =~ expr("0")
+*--#] Issue292 :
 *--#[ Issue307 :
 * replace_ with nested CFunctions crashes
 S N,j1;
