@@ -1923,6 +1923,9 @@ void *RunSortBot(void *dummy)
 			#[ INISORTBOT :
 */
 			case INISORTBOT:
+				AR.CompressBuffer = AB[0]->R.CompressBuffer;
+				AR.ComprTop = AB[0]->R.ComprTop;
+				AR.CompressPointer = AB[0]->R.CompressPointer;
 				AR.CurExpr = AB[0]->R.CurExpr;
 				AR.PolyFun = AB[0]->R.PolyFun;
 				AR.PolyFunInv = AB[0]->R.PolyFunInv;
