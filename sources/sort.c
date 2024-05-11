@@ -3839,7 +3839,16 @@ ConMer:
 					*m1 = im;
 				}
 #ifdef WITHPTHREADS
-				if ( AS.MasterSort && ( fout == AR.outfile ) ) { im = PutToMaster(BHEAD m1); }
+				/* Check here (and in the following) that we are at ground level
+				   (so S == AT.S0) to use PutToMaster. Control can reach here,
+				   with AS.MasterSort, but with S != AT.S0, when the SortBots are
+				   adding PolyRatFun and the sorting of their arguments requires
+				   large buffer patches to be merged. In this case, terms escape
+				   the PolyRatFun argument and end up at ground level, if we use
+				   PutToMaster. */
+				if ( AS.MasterSort && ( fout == AR.outfile ) && S == AT.S0 ) {
+					im = PutToMaster(BHEAD m1);
+				}
 				else
 #endif
 				if ( ( im = PutOut(BHEAD m1,&position,fout,1) ) < 0 ) goto ReturnError;
@@ -3848,7 +3857,9 @@ ConMer:
 				m1 += *m1;
 			}
 #ifdef WITHPTHREADS
-			if ( AS.MasterSort && ( fout == AR.outfile ) ) { PutToMaster(BHEAD 0); }
+			if ( AS.MasterSort && ( fout == AR.outfile ) && S == AT.S0 ) {
+				PutToMaster(BHEAD 0);
+			}
 			else
 #endif
 			if ( FlushOut(&position,fout,1) ) goto ReturnError;
@@ -3895,7 +3906,7 @@ ConMer:
 						*m1 = im;
 					}
 #ifdef WITHPTHREADS
-					if ( AS.MasterSort && ( fout == AR.outfile ) ) {
+					if ( AS.MasterSort && ( fout == AR.outfile ) && S == AT.S0 ) {
 						im = PutToMaster(BHEAD m1);
 					}
 					else
@@ -3921,7 +3932,9 @@ ConMer:
 				goto PatCall2;
 			}
 #ifdef WITHPTHREADS
-			if ( AS.MasterSort && ( fout == AR.outfile ) ) { PutToMaster(BHEAD 0); }
+			if ( AS.MasterSort && ( fout == AR.outfile ) && S == AT.S0 ) {
+				PutToMaster(BHEAD 0);
+			}
 			else
 #endif
 			if ( FlushOut(&position,fout,1) ) goto ReturnError;
@@ -4239,7 +4252,9 @@ NextTerm:
 			write to its destination.
 */
 #ifdef WITHPTHREADS
-		if ( AS.MasterSort && ( fout == AR.outfile ) ) { im = PutToMaster(BHEAD poin[k]); }
+		if ( AS.MasterSort && ( fout == AR.outfile ) && S == AT.S0 ) {
+			im = PutToMaster(BHEAD poin[k]);
+		}
 		else
 #endif
 		if ( ( im = PutOut(BHEAD poin[k],&position,fout,1) ) < 0 ) {
@@ -4256,7 +4271,9 @@ NextTerm:
 	}
 EndOfMerge:
 #ifdef WITHPTHREADS
-		if ( AS.MasterSort && ( fout == AR.outfile ) ) { PutToMaster(BHEAD 0); }
+		if ( AS.MasterSort && ( fout == AR.outfile ) && S == AT.S0 ) {
+			PutToMaster(BHEAD 0);
+		}
 		else
 #endif
 	if ( FlushOut(&position,fout,1) ) goto ReturnError;
