@@ -2681,6 +2681,40 @@ assert stdout =~ exact_pattern(<<'EOF')
 & p_q**(-2) + p_q**(-1) + p_q + p_q**2
 EOF
 *--#] Issue460_4 :
+*--#[ Issue468 :
+#-
+
+#: MaxTermSize 200K
+#: SortIOSize 200K
+#: SubSortIOSize 200K
+
+#: SubSmallSize 100K
+#: SubSmallExtension 200K
+#: SubTermsInSmall 5K
+
+#define N "30"
+
+Symbol a,b,c,d,e;
+CFunction prf;
+
+Local test =
+	+ prf((a+b+c+d)^`N'+1,(a+b+c+d)^`N')
+	- prf((a+b+c+d)^`N'-1,(a+b+c+d)^`N')
+	;
+.sort
+
+#message Enable prf
+PolyRatFun prf;
+.sort
+
+Multiply prf((a+b+c+d)^`N',1);
+
+Print;
+.end
+#require wordsize >= 4
+assert succeeded?
+assert result("test") =~ expr("prf(2,1)")
+*--#] Issue468 :
 *--#[ Issue486 :
 On codes;
 Symbol x,y;
