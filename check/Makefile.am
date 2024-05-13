@@ -35,4 +35,5 @@ EXTRA_DIST = \
 	features.frm \
 	fixes.frm \
 	forcer/forcer.frm \
-	formunit/fu.frm
+	formunit/fu.frm \
+	multithreaded/multithreaded.frm
