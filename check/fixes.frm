@@ -2750,6 +2750,47 @@ assert stdout =~ exact_pattern(<<'EOF')
    nonempty(14): x y
 EOF
 *--#] Issue486 :
+*--#[ Issue490_1 :
+T t;
+I i1,...,i4;
+L F = t(i1,i3)*t(i2,i4);
+id t(i1?,?a)*t(i2?,?b) = t(i1,i2,?a,?b);
+P;
+.end
+assert succeeded?
+assert result("F") =~ expr("t(i1,i2,i3,i4)")
+*--#] Issue490_1 :
+*--#[ Issue490_2 :
+T t(cyclic);
+I i1,...,i4;
+L F = t(i1,i3)*t(i2,i4);
+id t(i1?,?a)*t(i2?,?b) = t(i1,i2,?a,?b);
+P;
+.end
+assert succeeded?
+assert result("F") =~ expr("t(i1,i2,i3,i4)")
+*--#] Issue490_2 :
+*--#[ Issue490_3 :
+T t(cyclic);
+I i1,...,i6;
+L F = t(i1,i3,i2,i5)*t(i1,i4,i2,i6);
+id t(i1?,?a,i2?,?c)*t(i1?,?b,i2?,?d) = t(i1,i2)*t(?a,?b)*t(?c,?d);
+P;
+.end
+assert succeeded?
+assert result("F") =~ expr("t(i1,i2)*t(i3,i4)*t(i5,i6)")
+*--#] Issue490_3 :
+*--#[ Issue490_4 :
+T t;
+CF f;
+I i1,i2;
+L F = t(i1,i2)*t(i1,i2);
+id t(?a)*t(?a) = f(?a);
+P;
+.end
+assert succeeded?
+assert result("F") =~ expr("f(i1,i2)")
+*--#] Issue490_4 :
 *--#[ Issue499_1 :
 * Freeze in parsing complex conjugate
 S x#c;
