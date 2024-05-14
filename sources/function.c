@@ -1053,7 +1053,7 @@ toploop:
 			if ( *m == FUNNYWILD ) {
 				tobeeaten = AT.WildArgTaken[numofwildarg++];
 				if ( CheckWild(BHEAD m[1],ARGTOARG|EATTENSOR,tobeeaten,t) ) goto endloop;
-				AddWild(BHEAD m[1],ARGTOARG,i);
+				AddWild(BHEAD m[1],ARGTOARG|EATTENSOR,tobeeaten);
 				m += 2;
 				t += tobeeaten;
 				continue;
