@@ -3736,10 +3736,7 @@ OneTerm:
 */
 	while ( i >>= 1 ) {
 		if ( S->tree[i] > 0 ) {
-/*
-			In the old setup we had here B0 for the first argument
-*/
-			if ( ( c = CompareTerms(BHEAD poin[S->tree[i]],poin[k],(WORD)0) ) > 0 ) {
+			if ( ( c = CompareTerms(B0, poin[S->tree[i]],poin[k],(WORD)0) ) > 0 ) {
 /*
 				S->tree[i] is the smaller. Exchange and go on.
 */
@@ -3818,7 +3815,7 @@ OneTerm:
 					WORD *term1, *term2;
 					term1 = poin[S->tree[i]];
 					term2 = poin[k];
-					if ( MergeWithFloat(BHEAD &term1,&term2) == 0 )
+					if ( MergeWithFloat(B0, &term1,&term2) == 0 )
 						goto cancelled;
 					poin[S->tree[i]] = term1;
 				}
