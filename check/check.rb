@@ -347,7 +347,7 @@ module FormTest
         nfiles.times do |i|
           ENV["FORM"] = FormTest.cfg.form_cmd
           @filename = "#{i + 1}.frm"
-          execute("#{ulimits}#{FormTest.cfg.form_cmd} #{@filename}")
+          execute("#{ulimits}#{FormTest.cfg.form_cmd}#{extra_args} #{@filename}")
           if !finished?
             info.status = "TIMEOUT"
             assert(false, "timeout (= #{timeout} sec) in #{@filename} of #{info.desc}")
@@ -531,6 +531,11 @@ module FormTest
   # The method to be called before the test.
   def prepare
     # Can be overridden in child classes.
+  end
+
+  # Extra command-line arguments to be passed to FORM.
+  def extra_args
+    ""
   end
 
   # The sequence of ulimit commands to set the resource usage limits.
@@ -809,6 +814,7 @@ class TestCases
         requires = nil
         pendings = nil
         prepares = nil
+        extra_args = nil
         ulimits = nil
         time_dilation = nil
 
@@ -841,6 +847,7 @@ class TestCases
               requires = nil
               pendings = nil
               prepares = nil
+              extra_args = nil
               ulimits = nil
               time_dilation = nil
               if skipping
@@ -895,6 +902,9 @@ class TestCases
                 prepares = prepares.join("; ")
                 line += "def prepare; #{prepares} end; "
               end
+              if !extra_args.nil?
+                line += "def extra_args; %(#{extra_args}) end;"
+              end
               if !ulimits.nil?
                 ulimits.map! { |s| "ulimit #{s}; " }
                 ulimits = ulimits.join("")
@@ -948,6 +958,14 @@ class TestCases
               prepares = []
             end
             prepares << $1
+          elsif heredoc.nil? && line =~ /^\s*#\s*extra_args\s+(.*)/
+            # #extra_args <args>
+            # Example: #extra_args -w2
+            line = ""
+            if extra_args.nil?
+              extra_args = ""
+            end
+            extra_args += " " + $1.strip()
           elsif heredoc.nil? && line =~ /^\s*#\s*ulimit\s+(.*)/
             # #ulimit <limits>
             # Example: #ulimit -v 4_000_000
@@ -967,7 +985,7 @@ class TestCases
               fatal("invalid time_dilation", inname, lineno)
             end
             info.time_dilation = time_dilation
-          elsif heredoc.nil? && line =~ /^\*\s*#\s*(require|prepare|pend_if|ulimit|time_dilation)\s+(.*)/
+          elsif heredoc.nil? && line =~ /^\*\s*#\s*(extra_args|pend_if|prepare|require|time_dilation|ulimit)\s+(.*)/
             # *#<special instruction>, commented out in the FORM way
             line = ""
           else
