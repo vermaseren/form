@@ -9,20 +9,22 @@ jobs:
   # Simple tests on Linux; except the ParFORM case, they probably pass unless
   # the committer has forgotten running "make check".
   check:
-    name: Test (${{ matrix.test }}) for ${{ matrix.bin }}
+    name: Test (${{ matrix.test }}) for ${{ matrix.bin }}${{ matrix.nthreads && format(' -w{0}', matrix.nthreads) || '' }}
     runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
       matrix:
         include:
-          - {bin: form, test: default, timeout: 10}
-          - {bin: tform, test: default, timeout: 10}
+          - {bin: form, test: default}
+          - {bin: tform, test: default}
+          - {bin: tform, test: default, nthreads: 2}
           - {bin: parform, test: default, timeout: 15}
-          - {bin: form, test: checkpoint, timeout: 10}
-          - {bin: tform, test: checkpoint, timeout: 10}
+          - {bin: form, test: checkpoint}
+          - {bin: tform, test: checkpoint}
           - {bin: form, test: forcer, timeout: 60}
           - {bin: tform, test: forcer, timeout: 60}
-          - {bin: tform, test: multithreaded, timeout: 10}
+          - {bin: tform, test: forcer, nthreads: 2, timeout: 60}
+          - {bin: tform, test: multithreaded}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -81,12 +83,7 @@ jobs:
           esac
 
       - name: Test
-        run: |
-          testset=''
-          if [ "${{ matrix.test }}" != "default" ]; then
-            testset='-C ${{ matrix.test }}'
-          fi
-          ./check/check.rb ./sources/${{ matrix.bin }} --stat $testset --timeout ${{ matrix.timeout }}
+        run: ./check/check.rb ./sources/${{ matrix.bin }} --stat ${{ matrix.nthreads && format('-w{0}', matrix.nthreads) || '' }} ${{ matrix.timeout && format('--timeout {0}', matrix.timeout) || '' }} ${{ matrix.test != 'default' && format('-C {0}', matrix.test) || '' }}
         env:
           FORMPATH: ${{ github.workspace }}/formlib
 
@@ -94,7 +91,7 @@ jobs:
   # thoroughly by using Valgrind on Linux. To maximize the use of concurrent
   # jobs, we divide the tests into smaller parts.
   valgrind-check:
-    name: Valgrind check for ${{ matrix.bin }} (${{ matrix.group }})
+    name: Valgrind check for ${{ matrix.bin }}${{ matrix.nthreads && format(' -w{0}', matrix.nthreads) || '' }} (${{ matrix.group }})
     runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
@@ -115,6 +112,16 @@ jobs:
           - {bin: tvorm, group: 8/10}
           - {bin: tvorm, group: 9/10}
           - {bin: tvorm, group: 10/10}
+          - {bin: tvorm, nthreads: 2, group: 1/10}
+          - {bin: tvorm, nthreads: 2, group: 2/10}
+          - {bin: tvorm, nthreads: 2, group: 3/10}
+          - {bin: tvorm, nthreads: 2, group: 4/10}
+          - {bin: tvorm, nthreads: 2, group: 5/10}
+          - {bin: tvorm, nthreads: 2, group: 6/10}
+          - {bin: tvorm, nthreads: 2, group: 7/10}
+          - {bin: tvorm, nthreads: 2, group: 8/10}
+          - {bin: tvorm, nthreads: 2, group: 9/10}
+          - {bin: tvorm, nthreads: 2, group: 10/10}
           - {bin: parvorm, group: 1/10}
           - {bin: parvorm, group: 2/10}
           - {bin: parvorm, group: 3/10}
@@ -168,17 +175,21 @@ jobs:
         run: make -C sources -j 4 ${{ matrix.bin }}
 
       - name: Test
-        run: ./check/check.rb valgrind ./sources/${{ matrix.bin }} --stat -g ${{ matrix.group }} --retries 5
+        run: ./check/check.rb valgrind ./sources/${{ matrix.bin }} --stat -g ${{ matrix.group }} --retries 5 ${{ matrix.nthreads && format('-w{0}', matrix.nthreads) || '' }}
 
   # Generate LCOV coverage data to be posted to coveralls.io. Note that
   # we measure code coverage only for tests checked with Valgrind.
   coverage:
-    name: Code coverage for ${{ matrix.bin }}
+    name: Code coverage for ${{ matrix.bin }}${{ matrix.nthreads && format(' -w{0}', matrix.nthreads) || '' }}
     runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
       matrix:
-        bin: [vorm, tvorm, parvorm]
+        include:
+          - {bin: vorm}
+          - {bin: tvorm}
+          - {bin: tvorm, nthreads: 2}
+          - {bin: parvorm}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -219,7 +230,7 @@ jobs:
         run: make -C sources -j 4 ${{ matrix.bin }}
 
       - name: Test
-        run: ./check/check.rb ./sources/${{ matrix.bin }} --stat --timeout 30
+        run: ./check/check.rb ./sources/${{ matrix.bin }} --stat --timeout 30 ${{ matrix.nthreads && format('-w{0}', matrix.nthreads) || '' }}
 
       - name: Generate LCOV coverage data
         run: |
@@ -229,7 +240,7 @@ jobs:
       - name: Coveralls Parallel
         uses: coverallsapp/github-action@v2
         with:
-          flag-name: ${{ matrix.bin }}
+          flag-name: ${{ matrix.bin }}${{ matrix.nthreads && format(' -w{0}', matrix.nthreads) || '' }}
           parallel: true
 
   # Post LCOV coverage data to coveralls.io.
@@ -244,13 +255,17 @@ jobs:
 
   # Tests with a 32-bit container.
   check-i386:
+    name: 32-bit container check for ${{ matrix.bin }}${{ matrix.nthreads && format(' -w{0}', matrix.nthreads) || '' }}
     runs-on: ubuntu-latest
     container:
       image: i386/debian:11.5
     strategy:
       fail-fast: false
       matrix:
-        bin: [form, tform]
+        include:
+          - {bin: form}
+          - {bin: tform}
+          - {bin: tform, nthreads: 2}
     steps:
       # We have to use v1.
       # See https://github.com/actions/checkout/issues/334
@@ -277,4 +292,4 @@ jobs:
         run: make -C sources -j 4 ${{ matrix.bin }}
 
       - name: Test
-        run: ./check/check.rb ./sources/${{ matrix.bin }} --stat --wordsize 2
+        run: ./check/check.rb ./sources/${{ matrix.bin }} --stat --wordsize 2 ${{ matrix.nthreads && format('-w{0}', matrix.nthreads) || '' }}
