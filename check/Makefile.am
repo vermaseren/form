@@ -30,9 +30,12 @@ EXTRA_DIST = \
 	benchmark-fu.sh \
 	check-help.sh \
 	check.rb \
-	checkpoint/checkpoint.frm \
 	examples.frm \
+	extra/checkpoint.frm \
+	extra/color.frm \
+	extra/forcer.frm \
+	extra/multithreaded.frm \
 	features.frm \
 	fixes.frm \
-	forcer/forcer.frm \
-	formunit/fu.frm
+	formunit/fu.frm \
+	user.frm
