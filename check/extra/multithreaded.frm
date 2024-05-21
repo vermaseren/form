@@ -1,4 +1,4 @@
-#:FilePatches 2
+#:FilePatches 16
 #:LargePatches 2
 #:TermsInSmall 4
 
@@ -11,7 +11,7 @@
 .end
 
 *--#[ multithreaded_1 :
-#:FilePatches 2
+#:FilePatches 16
 #:LargePatches 2
 #:TermsInSmall 4
 
