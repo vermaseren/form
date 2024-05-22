@@ -53,7 +53,7 @@ static INDEXBLOCK scratchblock;
 static NAMESBLOCK scratchnamesblock;
  
 #define CFD(y,s,type,x,j) for(x=0,j=0;j<((int)sizeof(type));j++) \
-	x=(x<<8)+((*s++)&0x00FF); y=x;
+	{x=(x<<8)+((*s++)&0x00FF);} y=x;
 #define CTD(y,s,type,x,j) x=y;for(j=sizeof(type)-1;j>=0;j--){s[j]=x&0xFF; \
                       x>>=8;} s += sizeof(type);
 

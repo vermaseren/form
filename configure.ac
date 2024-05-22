@@ -806,11 +806,6 @@ DEBUGTOOL_LIBS=
 # -------------------------------------
 AC_DEFUN([AX_HANDLE_EXTRA_WARNING],
 [if test "x$enable_extra_warning" != xyes; then
-	# Too many misleading indentation in the FORM source code.
-	AX_CHECK_COMPILE_FLAG([-Wno-misleading-indentation],
-		[$1="$$1 -Wno-misleading-indentation"],
-		[],
-		[-Werror])
 	# Too many false positives.
 	# See: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=88443
 	AX_CHECK_COMPILE_FLAG([-Wno-stringop-overflow],
@@ -823,7 +818,6 @@ fi[]dnl
 my_test_COMPILEFLAGS=${COMPILEFLAGS+set}
 if test "$my_test_COMPILEFLAGS" != set; then
 	if test "x$vendor" = xgnu; then
-		# We don't use -pedantic option because of horrible warnings.
 		COMPILEFLAGS="-Wall -Wextra"
 		AX_HANDLE_EXTRA_WARNING([COMPILEFLAGS])
 		# Enable optimizations.
