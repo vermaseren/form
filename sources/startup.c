@@ -43,6 +43,7 @@
 #else
 #include <signal.h>
 #endif
+#include <execinfo.h>
 
 /*
  * A macro for translating the contents of `x' into a string after expanding.
@@ -1782,6 +1783,8 @@ VOID TerminateImpl(int errorcode, const char* file, int line, const char* functi
 {
 	if ( errorcode && firstterminate ) {
 		firstterminate = 0;
+
+		MLOCK(ErrorMessageLock);
 #ifdef WITHPTHREADS
 		MesPrint("Program terminating in thread %w at &");
 #elif defined(WITHMPI)
@@ -1790,6 +1793,39 @@ VOID TerminateImpl(int errorcode, const char* file, int line, const char* functi
 		MesPrint("Program terminating at &");
 #endif
 		MesPrint("Terminate called from %s:%d (%s)", file, line, function);
+
+#ifdef ENABLE_BACKTRACE
+		void *stack[64];
+		int stacksize, stop = 0;
+		stacksize = backtrace(stack, sizeof(stack)/sizeof(stack[0]));
+
+		/* First check whether eu-addr2line is available */
+		if ( !system("command -v eu-addr2line > /dev/null 2>&1") ) {
+			MesPrint("Backtrace:");
+			for (int i = 0; i < stacksize && !stop; i++) {
+				FILE *fp;
+				char cmd[512];
+				MesPrint("%#%2d: %", i);
+				snprintf(cmd, sizeof(cmd)/sizeof(cmd[0]), "eu-addr2line -s --pretty-print -f -i '%p' --pid=%d\n", stack[i], getpid());
+				fp = popen(cmd, "r");
+				while ( fgets(cmd, sizeof(cmd), fp) != NULL ) {
+					MesPrint("%s", cmd);
+					/* Don't show functions lower than "main" */
+					if ( strstr(cmd, "main") || strstr(cmd, "start_thread")  ) {
+						stop = 1;
+					}
+				}
+				pclose(fp);
+			}
+		}
+		else {
+			MesPrint("Backtrace: please install eu-addr2line for stack information.");
+		}
+#else
+		MesPrint("FORM compiled without backtrace support.");
+#endif
+
+		MUNLOCK(ErrorMessageLock);
 
 		Crash();
 	}
