@@ -1587,7 +1587,7 @@ static VOID onErrSig(int i)
 #endif
 	}
 	trappedTerminate = 1;
-	/*[13jul2005 mt]*//*Terminate(-1) on signal is here:*/
+	/*[13jul2005 mt]*//*TerminateImpl(-1) on signal is here:*/
 	Terminate(-1);
 }
 
@@ -1821,12 +1821,12 @@ dontremove:;
 
 /*
  		#] CleanUp : 
- 		#[ Terminate :
+ 		#[ TerminateImpl :
 */
 
 static int firstterminate = 1;
 
-VOID Terminate(int errorcode)
+VOID TerminateImpl(int errorcode, const char* file, int line, const char* function)
 {
 	if ( errorcode && firstterminate ) {
 		firstterminate = 0;
@@ -1837,6 +1837,8 @@ VOID Terminate(int errorcode)
 #else
 		MesPrint("Program terminating at &");
 #endif
+		MesPrint("Terminate called from %s:%d (%s)", file, line, function);
+
 		Crash();
 	}
 #ifdef TRAPSIGNALS
@@ -1905,7 +1907,7 @@ VOID Terminate(int errorcode)
 }
 
 /*
- 		#] Terminate : 
+ 		#] TerminateImpl : 
  		#[ PrintDeprecation :
 */
 
