@@ -1135,3 +1135,13 @@ Print +s;
 assert succeeded?
 assert result("F") =~ expr("0");
 *--#] Sortrealloc_2 :
+*--#[ TempSortDir :
+#: TempSortDir bad/path
+Local test = 1;
+.end
+if mpi?
+  assert runtime_error?("Could not create sort file: bad/path/0formxxx.sor")
+else
+  assert runtime_error?("Could not create sort file: bad/path/xformxxx.sor")
+end
+*--#] TempSortDir :
