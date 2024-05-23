@@ -186,6 +186,7 @@
  
 #define PREV(x) prevorder?prevorder:x
 
+#define Terminate(x) do { TerminateImpl(x, __FILE__, __LINE__, __FUNCTION__); } while(0)
 #define SETERROR(x) { Terminate(-1); return(-1); }
 
 /* use this macro to avoid the unused parameter warning */
@@ -382,7 +383,7 @@ static inline ULONG LongAbs(LONG x)
  */
 static inline int UnsignedToInt(unsigned int x)
 {
-	extern void Terminate(int);
+	extern void TerminateImpl(int, const char*, int, const char*);
 	if ( x <= INT_MAX ) return(x);
 	if ( x >= (unsigned int)INT_MIN ) return((int)(x - INT_MIN) + INT_MIN);
 	Terminate(1);
@@ -391,7 +392,7 @@ static inline int UnsignedToInt(unsigned int x)
 
 static inline WORD UWordToWord(UWORD x)
 {
-	extern void Terminate(int);
+	extern void TerminateImpl(int, const char*, int, const char*);
 	if ( x <= WORD_MAX_VALUE ) return(x);
 	if ( x >= (UWORD)WORD_MIN_VALUE ) return((WORD)(x - WORD_MIN_VALUE) + WORD_MIN_VALUE);
 	Terminate(1);
@@ -400,7 +401,7 @@ static inline WORD UWordToWord(UWORD x)
 
 static inline LONG ULongToLong(ULONG x)
 {
-	extern void Terminate(int);
+	extern void TerminateImpl(int, const char*, int, const char*);
 	if ( x <= LONG_MAX_VALUE ) return(x);
 	if ( x >= (ULONG)LONG_MIN_VALUE ) return((LONG)(x - LONG_MIN_VALUE) + LONG_MIN_VALUE);
 	Terminate(1);
@@ -760,7 +761,7 @@ extern VOID   PositionStream(STREAM *,LONG);
 extern int    ReverseStatements(STREAM *);
 extern int    ProcessOption(UBYTE *,UBYTE *,int);
 extern int    DoSetups(VOID);
-extern VOID   Terminate(int);
+extern VOID   TerminateImpl(int, const char *,int, const char *);
 extern NAMENODE *GetNode(NAMETREE *,UBYTE *);
 extern int    AddName(NAMETREE *,UBYTE *,WORD,WORD,int *);
 extern int    GetName(NAMETREE *,UBYTE *,WORD *,int);
