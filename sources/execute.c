@@ -875,11 +875,6 @@ WORD DoExecute(WORD par, WORD skip)
 		RetCode = PF_BroadcastModifiedDollars();
 		if ( RetCode ) return RetCode;
 	}
-	/* Broadcast redefined preprocessor variables. */
-	if ( AC.numpfirstnum > 0 ) {
-		RetCode = PF_BroadcastRedefinedPreVars();
-		if ( RetCode ) return RetCode;
-	}
 	/* Broadcast the list of objects converted to symbols in AM.sbufnum. */
 	if ( AC.topolynomialflag & TOPOLYNOMIALFLAG ) {
 		RetCode = PF_BroadcastCBuf(AM.sbufnum);
