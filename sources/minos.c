@@ -222,12 +222,13 @@ void convertiniinfo(INIINFO *in,INIINFO *out,int mode)
  		#[ LocateBase :
 */
 
-FILE *LocateBase(char **name, char **newname)
+FILE *LocateBase(char **name, char **newname, char *iomode)
 {
 	FILE *handle;
 	int  namesize, i;
 	UBYTE *s, *to, *u1, *u2, *indir;	
-	if ( ( handle = fopen(*name,"r+b") ) != 0 ) {
+	
+	if ( ( handle = fopen(*name,iomode) ) != 0 ) {
 		*newname = (char *)strDup1((UBYTE *)(*name),"LocateBase");
 		return(handle);
 	}
@@ -244,7 +245,7 @@ FILE *LocateBase(char **name, char **newname)
 		s = (UBYTE *)(*name);
 		while ( *s ) *to++ = *s++;
 		*to = 0;
-		if ( ( handle = fopen(*newname,"r+b") ) != 0 ) {
+		if ( ( handle = fopen(*newname,iomode) ) != 0 ) {
 			return(handle);
 		}
 		M_free(*newname,"LocateBase, incdir/file");
@@ -267,7 +268,7 @@ FILE *LocateBase(char **name, char **newname)
 			s = (UBYTE *)(*name);
 			while ( *s ) *to++ = *s++;
 			*to = 0;
-			if ( ( handle = fopen(*newname,"r+b") ) != 0 ) {
+			if ( ( handle = fopen(*newname,iomode) ) != 0 ) {
 				return(handle);
 			}
 			M_free(*newname,"LocateBase Path/file");
@@ -544,15 +545,23 @@ int ReadIniInfo(DBASE *d)
   	#[ GetDbase :
 */
 
-DBASE *GetDbase(char *filename)
+DBASE *GetDbase(char *filename, MLONG rwmode)
 {
 	FILE *f;
 	DBASE *d;
 	char *newname;
-	if ( ( f = LocateBase(&filename,&newname) ) == 0 ) {
-		
-		return(NewDbase(filename,0));
+	if ( rwmode == 0 ) {
+		if ( ( f = LocateBase(&filename,&newname,"rb") ) == 0 ) {
+	
+			return(NewDbase(filename,0));
+		}
+	} else {
+		if ( ( f = LocateBase(&filename,&newname,"r+b") ) == 0 ) {
+	
+			return(NewDbase(filename,0));
+		}	
 	}
+
 /*	setbuf(f,0); */
 	d = (DBASE *)From0List(&(AC.TableBaseList));
 	d->mode = 0;
@@ -562,6 +571,7 @@ DBASE *GetDbase(char *filename)
 	d->iblocks = 0;
 	d->nblocks = 0;
 	d->tablenames = 0;
+	d->rwmode = rwmode;
 
 	d->info.entriesinindex = 0;
 	d->info.numberofindexblocks = 0;
@@ -617,6 +627,7 @@ DBASE *NewDbase(char *name,MLONG number)
 	d->tablenamessize = 0;
 	d->topnumber = 0;
 	d->tablenamefill = 0;
+	d->rwmode = 1;
 
 	d->mode = 0;
 	if ( ( d->nblocks = (NAMESBLOCK **)Malloc1(sizeof(NAMESBLOCK *)*numnameblocks,
@@ -808,7 +819,7 @@ DBASE *OpenDbase(char *filename)
 	FILE *f;
 	DBASE *d;
 	char *newname;
-	if ( ( f = LocateBase(&filename,&newname) ) == 0 ) {
+	if ( ( f = LocateBase(&filename,&newname,"r+b") ) == 0 ) {
 		MesPrint("Cannot open file %s\n",filename);
 		return(0);
 	}
