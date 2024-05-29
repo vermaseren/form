@@ -571,6 +571,7 @@ WORD DoTableExpansion(WORD *term, WORD level)
 	TB,options;
 	Options are:
 		Open "File.tbl";                   Open for R/W
+		Open "File.tbl", readonly;         Open for R
 		Create "File.tbl";                 Create for write
 		Load "File.tbl", tablename;        Loads stubs of table
 		Load "File.tbl";                   Loads stubs of all tables
@@ -982,7 +983,7 @@ int CoTBenter(UBYTE *s)
 	int dict = AO.CurrentDictionary;
 	AO.CurrentDictionary = 0;
 	if ( ( d = FindTB(tablebasename) ) == 0 ) {
-		MesPrint("&No open tablebase with the name %s",tablebasename);
+		MesPrint("&No open tablebase with the name %s, check for existence of file or try readonly mode when opening.",tablebasename);
 		error = -1;
 		goto Endofall;
 	}
