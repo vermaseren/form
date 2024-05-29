@@ -124,6 +124,7 @@ typedef struct dbase {
 	MLONG		tablenamessize;
 	MLONG		topnumber;
 	MLONG		tablenamefill;
+	MLONG		rwmode;
 	INDEXBLOCK	**iblocks;
 	NAMESBLOCK  **nblocks;
 	FILE		*handle;

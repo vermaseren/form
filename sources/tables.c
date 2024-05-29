@@ -59,6 +59,7 @@
 
 #include "form3.h"
 #include "minos.h"
+#include "comtool.h"
 
 /* static UBYTE *sparse = (UBYTE *)"sparse"; */
 static UBYTE *tablebase = (UBYTE *)"tablebase";
@@ -770,12 +771,23 @@ int CoTBcreate(UBYTE *s)
 int CoTBopen(UBYTE *s)
 {
 	DBASE *d;
-	DUMMYUSE(s);
+	MLONG rw = 1;
+
+	SkipSpaces(&s);
+	
+	if ( *s ) {
+		if ( ConsumeOption(&s,"readonly") != 0 ) {
+			rw = 0;
+		} else {
+			MesPrint("&Invalid option for TableBase open: %s, ignoring", s);
+		}
+	}
+	
 	if ( ( d = FindTB(tablebasename) ) != 0 ) {
 		MesPrint("&There is already an open TableBase with the name %s",tablebasename);
 		return(-1);
 	}
-	d = GetDbase((char *)tablebasename);
+	d = GetDbase((char *)tablebasename, rw);
 	if ( CheckTableDeclarations(d) ) return(-1);
 	return(0);
 }
@@ -797,6 +809,11 @@ int CoTBaddto(UBYTE *s)
 	int i, j, error = 0, sum;
 	if ( ( d = FindTB(tablebasename) ) == 0 ) {
 		MesPrint("&No open tablebase with the name %s",tablebasename);
+		return(-1);
+	}
+	
+	if ( ( d->rwmode ) == 0 ) {
+		MesPrint("&Tablebase with the name %s opened in read only mode",tablebasename);
 		return(-1);
 	}
 	AO.DollarOutSizeBuffer = 32;
