@@ -185,7 +185,7 @@ int GetFloatArgument(PHEAD mpfr_t f_out,WORD *fun,int par)
 		if ( *arg == -SNUMBER ) {
 			mpfr_set_si(f_out,(LONG)(arg[1]),RND);
 		}
-		else if ( *arg == -SYMBOL && ( arg[1] == AM.numpi ) ) {
+		else if ( *arg == -SYMBOL && ( arg[1] == PISYMBOL ) ) {
 			mpfr_const_pi(f_out,RND);
 		}
 		else if ( *arg == -INDEX && arg[1] >= 0 && arg[1] < AM.OffsetIndex ) {
@@ -237,7 +237,7 @@ int GetFloatArgument(PHEAD mpfr_t f_out,WORD *fun,int par)
 			MUNLOCK(ErrorMessageLock);
 			Terminate(-1);
 		}
-		else if ( t[1] == SYMBOL && t[2] == 4 && t[3] == AM.numpi && t[4] == 1 ) {
+		else if ( t[1] == SYMBOL && t[2] == 4 && t[3] == PISYMBOL && t[4] == 1 ) {
 			if ( first ) {
 				mpfr_const_pi(f_out,RND);
 				first = 0;
@@ -275,12 +275,12 @@ int GetPiArgument(PHEAD WORD *arg)
 	One: determine whether there is a rational coefficient and a pi_:
 */
 	if ( *arg == -SNUMBER && arg[1] == 0 ) return(0);
-	if ( *arg == -SYMBOL && arg[1] == AM.numpi ) return(12);
+	if ( *arg == -SYMBOL && arg[1] == PISYMBOL ) return(12);
 	if ( *arg < 0 ) return(-1);
 	if ( arg[ARGHEAD] != *arg-ARGHEAD ) return(-1);
 	t = arg+ARGHEAD+1;
 	tn = arg+*arg; tstop = tn - ABS(tn[-1]);
-	if ( *t != SYMBOL || t[1] != 4 || t[2] != AM.numpi || t[3] != 1
+	if ( *t != SYMBOL || t[1] != 4 || t[2] != PISYMBOL || t[3] != 1
 		|| t+t[1] != tstop ) return(-1);
 /*
 	The denominator must be a divisor of 12
@@ -377,6 +377,27 @@ TestArgument:
 			There must be a single argument, except for the AGM function
 */
 			tnext = t+t[1]; tt = t+FUNHEAD; NEXTARG(tt);
+			if( *t == SYMBOL) {
+				for ( WORD* ti = t+2; ti < t+t[1]; ti+=2 ) {
+					if( ( *ti == PISYMBOL || *ti == EESYMBOL  || *ti == EMSYMBOL )
+					 && ( pars[2] == ALLFUNCTIONS || pars[3] == *ti ) ) {
+						if ( *ti == PISYMBOL )
+							mpfr_const_pi(auxr3,RND);
+						else if ( *ti == EESYMBOL ) {
+							mpfr_set_ui(auxr3,1,RND);
+							mpfr_exp(auxr3,auxr3,RND);
+						}
+						else if ( *ti == EMSYMBOL )
+							mpfr_const_euler(auxr3,RND);
+						if ( ti[1] != 1 )
+							mpfr_pow_si(auxr3,auxr3,ti[1],RND);
+						mpfr_mul(auxr2,auxr2,auxr3,RND);
+						ti[1] = 0;
+					}
+				}
+				first = 0;
+				goto nextfun;
+			}
 			if ( tt != tnext && *t != AGMFUNCTION ) goto nextfun;
 			if ( *t == SINFUNCTION ) {
 				pimul = GetPiArgument(BHEAD t+FUNHEAD);
@@ -626,6 +647,7 @@ label6:
 				case COSFUNCTION:
 				case TANFUNCTION:
 				case AGMFUNCTION:
+				case SYMBOL:
 					goto TestArgument;
 				case MZV:
 				case EULER:
