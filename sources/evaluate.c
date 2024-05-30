@@ -377,6 +377,27 @@ TestArgument:
 			There must be a single argument, except for the AGM function
 */
 			tnext = t+t[1]; tt = t+FUNHEAD; NEXTARG(tt);
+			if( *t == SYMBOL) {
+				for ( WORD* ti = t+2; ti < t+t[1]; ti+=2 ) {
+					if( ( *ti == PISYMBOL || *ti == EESYMBOL  || *ti == EMSYMBOL )
+					 && ( pars[2] == ALLFUNCTIONS || pars[3] == *ti ) ) {
+						if ( *ti == PISYMBOL )
+							mpfr_const_pi(auxr3,RND);
+						else if ( *ti == EESYMBOL ) {
+							mpfr_set_ui(auxr3,1,RND);
+							mpfr_exp(auxr3,auxr3,RND);
+						}
+						else if ( *ti == EMSYMBOL )
+							mpfr_const_euler(auxr3,RND);
+						if ( ti[1] != 1 )
+							mpfr_pow_si(auxr3,auxr3,ti[1],RND);
+						mpfr_mul(auxr2,auxr2,auxr3,RND);
+						ti[1] = 0;
+					}
+				}
+				first = 0;
+				goto nextfun;
+			}
 			if ( tt != tnext && *t != AGMFUNCTION ) goto nextfun;
 			if ( *t == SINFUNCTION ) {
 				pimul = GetPiArgument(BHEAD t+FUNHEAD);
@@ -626,6 +647,7 @@ label6:
 				case COSFUNCTION:
 				case TANFUNCTION:
 				case AGMFUNCTION:
+				case SYMBOL:
 					goto TestArgument;
 				case MZV:
 				case EULER:

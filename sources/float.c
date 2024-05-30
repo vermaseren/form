@@ -2429,6 +2429,11 @@ int CoEvaluate(UBYTE *s)
 */
 	  if ( ( ( type = GetName(AC.varnames,subkey,&numfun,NOAUTO) ) != CFUNCTION )
 			|| ( functions[numfun].spec != 0 ) ) {
+
+		if ( type == CSYMBOL ) {
+			Add4Com(TYPEEVALUATE,SYMBOL,numfun);
+			break;
+		}
 /*
 			This cannot work.
 */
