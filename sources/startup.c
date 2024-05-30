@@ -1068,7 +1068,7 @@ VOID StartVariables(VOID)
 	cbuf[AM.dbufnum].mnumrhs = cbuf[AM.dbufnum].numrhs;
 
 	AddSymbol((UBYTE *)"i_",-MAXPOWER,MAXPOWER,VARTYPEIMAGINARY,0);
-	AM.numpi = AddSymbol((UBYTE *)"pi_",-MAXPOWER,MAXPOWER,VARTYPENONE,0);
+	AddSymbol((UBYTE *)"pi_",-MAXPOWER,MAXPOWER,VARTYPENONE,0);
 /*
 	coeff_ should have the number COEFFSYMBOL and den_ the number DENOMINATOR
     and the three should be in this order!
