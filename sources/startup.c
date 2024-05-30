@@ -1080,6 +1080,8 @@ VOID StartVariables(VOID)
 	AddSymbol((UBYTE *)"dimension_",-MAXPOWER,MAXPOWER,VARTYPENONE,0);
 	AddSymbol((UBYTE *)"factor_",-MAXPOWER,MAXPOWER,VARTYPENONE,0);
 	AddSymbol((UBYTE *)"sep_",-MAXPOWER,MAXPOWER,VARTYPENONE,0);
+	AddSymbol((UBYTE *)"ee_",-MAXPOWER,MAXPOWER,VARTYPENONE,0);
+	AddSymbol((UBYTE *)"em_",-MAXPOWER,MAXPOWER,VARTYPENONE,0);
 	i = BUILTINSYMBOLS;  /* update this in ftypes.h when we add new symbols */
 /*
 	Next we add a number of dummy symbols for ensuring that the user defined
