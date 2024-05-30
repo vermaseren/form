@@ -774,3 +774,88 @@ P +s;
 .end
 assert result("F") =~ expr("+ 14680089444100552191986912125917036600599334564/4011728794505561362873666565")
 *--#] tueda_prf_1 :
+*--#[ fllor_symbol_evaluate :
+#-
+#StartFloat 64
+
+Symbol a,b;
+Local PI0 = a*b;
+Local PI1 = pi_;
+Local PI2 = pi_*3;
+Local PI3 = pi_*sqrt_(3);
+Local PI4 = pi_*pi_*pi_;
+Local PI5 = a*pi_*b;
+Local PI6 = sqrt_(pi_);
+
+Local EE1 = ee_;
+Local EE2 = pi_*ee_;
+
+Local EM1 = em_;
+
+ToFloat;
+Evaluate;
+
+Print;
+.end
+assert result("PI0") =~ expr("1.0e+00*a*b")
+assert result("PI1") =~ expr("3.14159265358979323846e+00")
+assert result("PI2") =~ expr("9.42477796076937971538e+00")
+assert result("PI3") =~ expr("5.4413980927026535518e+00")
+assert result("PI4") =~ expr("3.10062766802998201755e+01")
+assert result("PI5") =~ expr("3.14159265358979323846e+00*a*b")
+assert result("PI6") =~ expr("1.77245385090551602731e+00")
+assert result("EE1") =~ expr("2.71828182845904523537e+00")
+assert result("EE2") =~ expr("8.53973422267356706549e+00")
+assert result("EM1") =~ expr("5.77215664901532860607e-01")
+*--#] fllor_symbol_evaluate :
+*--#[ fllor_symbol_evaluate_pi :
+#-
+#StartFloat 64
+
+Local PI = pi_;
+Local EE = ee_;
+Local EM = em_;
+
+ToFloat;
+Evaluate pi_;
+
+Print;
+.end
+assert result("PI") =~ expr("3.14159265358979323846e+00")
+assert result("EE") =~ expr("1.0e+00*ee_")
+assert result("EM") =~ expr("1.0e+00*em_")
+*--#] fllor_symbol_evaluate_pi :
+*--#[ fllor_symbol_evaluate_ee :
+#-
+#StartFloat 64
+
+Local PI = pi_;
+Local EE = ee_;
+Local EM = em_;
+
+ToFloat;
+Evaluate ee_;
+
+Print;
+.end
+assert result("PI") =~ expr("1.0e+00*pi_")
+assert result("EE") =~ expr("2.71828182845904523537e+00")
+assert result("EM") =~ expr("1.0e+00*em_")
+*--#] fllor_symbol_evaluate_ee :
+*--#[ fllor_symbol_evaluate_em :
+#-
+#StartFloat 64
+
+Local PI = pi_;
+Local EE = ee_;
+Local EM = em_;
+
+ToFloat;
+Evaluate em_;
+
+Print;
+.end
+assert result("PI") =~ expr("1.0e+00*pi_")
+assert result("EE") =~ expr("1.0e+00*ee_")
+assert result("EM") =~ expr("5.77215664901532860607e-01")
+*--#] fllor_symbol_evaluate_em :
