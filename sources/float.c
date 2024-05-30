@@ -959,8 +959,8 @@ int PrintFloat(WORD *fun,int numdigits)
 			s2 = s1; n1 = n2;
 			while ( s1[-1] == '0' ) { s1--; n1--; }
 			if ( s1[-1] == '.' ) { s1++; n1++; }
+			while ( n2 < n ) { *s1++ = *s2++; n2++; }
 			n -= (n2-n1);
-			while ( n1 < n2 ) { *s1++ = *s2++; n1++; }
 			*s1 = 0;
 		}
 	}
@@ -2429,6 +2429,11 @@ int CoEvaluate(UBYTE *s)
 */
 	  if ( ( ( type = GetName(AC.varnames,subkey,&numfun,NOAUTO) ) != CFUNCTION )
 			|| ( functions[numfun].spec != 0 ) ) {
+
+		if ( type == CSYMBOL ) {
+			Add4Com(TYPEEVALUATE,SYMBOL,numfun);
+			break;
+		}
 /*
 			This cannot work.
 */
@@ -2482,78 +2487,5 @@ int CoEvaluate(UBYTE *s)
 
 /*
  		#] CoEvaluate : 
- 		#[ GetPi :
-
-	We use the Chudkovsky formula to obtain 1/pi_. This costs one division at
-	the end but the convergence is extremely rapid. (Around k=100 more than
-	14 decimal digits per step).
-	1/pi_ = 1/426680/sqrt(10005)*sum_(k,0,inf,fac_(6*k)*invfac_(3*k)
-	        *invfac(k)^3*(13591409+545140134*k)/(-640320)^(3*k))
-	THIS IS NOT FOR TRYING EXTREMELY LARGE NUMBERS OF DIGITS!
-	FOR THOSE THERE ARE OTHER ALGORITHMS
-*/
-
-int GetPi(PHEAD mpf_t pi)
-{
-	unsigned long ninc,nincden,nnum;
-	int k, nterms;
-/*
-	Start with the k = 0 term.
-*/
-	mpf_set_ui(aux1,13591409);
-/*
-	How many terms do we need?
-	The combination of the factorials and the power gives <(12/640320)^3
-	which means that 40/(53360^(3*k)) should be a nice upperlimit for the
-	last term. Hence: precision(in bits) = 47.11*k-5.32
-*/
-	mpf_set_ui(aux2,1);
-	mpf_set_ui(aux4,80040); /* = 640320/8 */
-	mpf_pow_ui(aux4,aux4,3);
-	nterms = (AC.DefaultPrecision-AC.MaxWeight+1+6)/47;
-	for ( k = 1; k <= nterms; k++ ) {
-		ninc = (6*k-5)*(6*k-3)*(6*k-1);
-		nincden = k*k*k;
-		nnum = 13591409+545140134*k;
-		mpf_mul_ui(aux2,aux2,ninc);
-		mpf_div_ui(aux2,aux2,nincden);
-		mpf_mul(aux2,aux2,aux4);
-		mpf_mul_ui(aux3,aux2,nnum);
-		if ( k%2 == 1 ) mpf_sub(aux1,aux1,aux3);
-		else            mpf_add(aux1,aux1,aux3);
-	}
-	mpf_ui_div(aux1,426680,aux1);
-	mpf_sqrt_ui(aux2,10005);
-	mpf_mul(pi,aux1,aux2);
-	return(0);
-}
-/*
- 		#] GetPi : 
- 		#[ GetE :
-
-	Gets a value for e. (ee_ in Form notation)
-
-
-int GetE(PHEAD mpf_t E)
-{
-	DUMMYUSE(E)
-	return(0);
-}
-
-
- 		#] GetE : 
- 		#[ GetEMconst :
-
-	Gets the Euler-Mascheroni constant. (em_ in Form notation)
-
-
-int GetEMconst(PHEAD mpf_t EMconst)
-{
-	DUMMYUSE(EMconst)
-	return(0);
-}
-
-
- 		#] GetEMconst : 
   	#] Functions : 
 */
