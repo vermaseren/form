@@ -959,8 +959,8 @@ int PrintFloat(WORD *fun,int numdigits)
 			s2 = s1; n1 = n2;
 			while ( s1[-1] == '0' ) { s1--; n1--; }
 			if ( s1[-1] == '.' ) { s1++; n1++; }
+			while ( n2 < n ) { *s1++ = *s2++; n2++; }
 			n -= (n2-n1);
-			while ( n1 < n2 ) { *s1++ = *s2++; n1++; }
 			*s1 = 0;
 		}
 	}
