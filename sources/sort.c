@@ -3315,7 +3315,7 @@ LONG SplitMerge(PHEAD WORD **Pointer, LONG number)
 {
 	GETBIDENTITY
 	SORTING *S = AT.SS;
-	WORD **pp3, **pp1, **pp2;
+	WORD **pp3, **pp1, **pp2, **pptop;
 	LONG i, newleft, newright, split;
 
 	if ( number < 2 ) return(number);
@@ -3331,6 +3331,7 @@ LONG SplitMerge(PHEAD WORD **Pointer, LONG number)
 		}
 		return(number);
 	}
+	pptop = Pointer + number;
 	split = number/2;
 	newleft  = SplitMerge(BHEAD Pointer,split);
 	newright = SplitMerge(BHEAD Pointer+split,number-split);
@@ -3354,12 +3355,13 @@ LONG SplitMerge(PHEAD WORD **Pointer, LONG number)
 			if ( AddCoef(BHEAD pp1,pp2) > 0 ) pp1++;
 			else newleft--;
 		  }
-		  pp2++; newright--;
+		  *pp2++ = 0; newright--;
 		}
 		else pp1++;
 		newleft += newright;
 		if ( pp1 < pp2 ) {
 			while ( --newright >= 0 ) *pp1++ = *pp2++;
+			while ( pp1 < pptop ) *pp1++ = 0;
 		}
 		return(newleft);
 	}
@@ -3371,8 +3373,9 @@ LONG SplitMerge(PHEAD WORD **Pointer, LONG number)
 		if ( AN.SplitScratch ) M_free(AN.SplitScratch,"AN.SplitScratch");
 		AN.SplitScratch = (WORD **)Malloc1(AN.SplitScratchSize*sizeof(WORD *),"AN.SplitScratch");
 	}
+
 	pp3 = AN.SplitScratch; pp1 = Pointer;
-	for ( i = 0; i < newleft; i++ ) *pp3++ = *pp1++;
+	for ( i = 0; i < newleft; i++ ) { *pp3++ = *pp1++; }
 	AN.InScratch = newleft;
 	pp1 = AN.SplitScratch; pp2 = Pointer + split; pp3 = Pointer;
 /*
@@ -3396,27 +3399,31 @@ LONG SplitMerge(PHEAD WORD **Pointer, LONG number)
 
 	while ( newleft > 0 && newright > 0 ) {
 		if ( ( i = CompareTerms(BHEAD *pp1,*pp2,(WORD)0) ) < 0 ) {
-			*pp3++ = *pp2++;
+			*pp3++ = *pp2;
+			*pp2++ = 0;
 			newright--;
 		}
 		else if ( i > 0 ) {
-			*pp3++ = *pp1++;
+			*pp3++ = *pp1;
+			*pp1++ = 0;
 			newleft--;
 		}
 		else {
 		  if ( S->PolyWise ) { if ( AddPoly(BHEAD pp1,pp2) > 0 ) *pp3++ = *pp1; }
 		  else {               if ( AddCoef(BHEAD pp1,pp2) > 0 ) *pp3++ = *pp1; }
-		  pp1++; pp2++; newleft--; newright--;
+		  *pp1++ = 0; *pp2++ = 0; newleft--; newright--;
 		}
 	}
-	for ( i = 0; i < newleft; i++ ) *pp3++ = *pp1++;
+	for ( i = 0; i < newleft; i++ ) { *pp3++ = *pp1; *pp1++ = 0; }
 	if ( pp3 == pp2 ) {
 		pp3 += newright;
 	} else {
-		for ( i = 0; i < newright; i++ ) *pp3++ = *pp2++;
+		for ( i = 0; i < newright; i++ ) { *pp3++ = *pp2++; }
 	}
+	newleft = pp3 - Pointer;
+	while ( pp3 < pptop ) *pp3++ = 0;
 	AN.InScratch = 0;
-	return(pp3 - Pointer);
+	return(newleft);
 }
 
 #else
@@ -3545,7 +3552,7 @@ VOID GarbHand(VOID)
 */
 #ifdef TESTGARB
 	MLOCK(ErrorMessageLock);
-	MesPrint("in:  S->sFill = %x, S->sTop2 = %x",S->sFill,S->sTop2);
+	MesPrint("in:  S->sFill = %l, S->sTop2 = %l",S->sFill-S->sBuffer,S->sTop2-S->sBuffer);
 #endif
 	Point = S->sPointer;
 	k = S->sTerms;
@@ -3558,7 +3565,7 @@ VOID GarbHand(VOID)
 		if ( ( s2 = *Point++ ) != 0 ) { total += *s2; }
 	}
 #ifdef TESTGARB
-	MesPrint("total = %l, nterms = %l",2*total,AN.InScratch);
+	MesPrint("total = %l, nterms = %l",total,AN.InScratch);
 	MUNLOCK(ErrorMessageLock);
 #endif
 /*
@@ -3618,7 +3625,7 @@ VOID GarbHand(VOID)
 	S->sFill = s2;
 #ifdef TESTGARB
 	MLOCK(ErrorMessageLock);
-	MesPrint("out: S->sFill = %x, S->sTop2 = %x",S->sFill,S->sTop2);
+	MesPrint("out: S->sFill = %l, S->sTop2 = %l",S->sFill-S->sBuffer,S->sTop2-S->sBuffer);
 	if ( S->sFill >= S->sTop2 ) {
 		MesPrint("We are in deep trouble");
 	}

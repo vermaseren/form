@@ -2900,6 +2900,61 @@ EndTerm;
 #pend_if mpi?
 assert runtime_error?("Please increase SubSmallExtension setup parameter.")
 *--#] Issue512_2 :
+*--#[ Issue512_3 :
+#-
+
+* Sort which fits in SmallExtension, but needs GarbHand
+
+#: SmallSize 1000K
+#: SmallExtension 5090K
+#: TermsInSmall 2M
+#: SubSmallSize 1000K
+#: SubSmallExtension 1200K
+#: SubTermsInSmall 2M
+
+Symbol x,n;
+CFunction f,g,prf;
+
+Local test = (<f(1)>+...+<f(150)>)*(<g(1)>+...+<g(100)>);
+.sort
+
+PolyRatFun prf;
+Identify f(x?) = prf(n-x,n+x);
+
+.end
+# Fails due to polynomial size on 32bit builds
+#require wordsize >= 4
+assert succeeded?
+*--#] Issue512_3 :
+*--#[ Issue512_4 :
+#-
+
+* Sort which fits in SubSmallExtension, but needs GarbHand
+
+#: SmallSize 1000K
+#: SmallExtension 1200K
+#: TermsInSmall 2M
+#: SubSmallSize 1000K
+#: SubSmallExtension 5090K
+#: SubTermsInSmall 2M
+
+Symbol x,n;
+CFunction f,g,prf;
+
+Local test = 1;
+.sort
+
+PolyRatFun prf;
+Term;
+	Multiply (<f(1)>+...+<f(150)>)*(<g(1)>+...+<g(100)>);
+	Identify f(x?) = prf(n-x,n+x);
+EndTerm;
+
+.end
+# Fails due to polynomial size on 32bit builds
+#require wordsize >= 4
+assert succeeded?
+*--#] Issue512_4 :
 *--#[ Issue525 :
 #:threadbucketsize 5
 #:processbucketsize 5
