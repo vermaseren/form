@@ -25,7 +25,9 @@ Options:
   -s, --shell                 shell script output
   -v, --only-version          only-version output
   -o <file>, --output <file>  output to <file>
-  --date-format <format>      date format (default: '%b %e %Y')
+  --date-format <format>      date format (default: '%b %e %Y' as __DATE__)
+  --date-locale <locale>      date locale (default: C)
+  --date-timezone <timezone>  date timezone (default: GMT0)
 END
 }
 
@@ -33,7 +35,7 @@ END
 #   fmt_isodate <isodate> <format>
 fmt_isodate() {
   # dash (0.5.5.1) needs the following exports.
-  export LANG
+  export LC_ALL
   export TZ
   # BSD date
   date -j -f '%Y-%m-%d %H:%M:%S %z' "$1" +"$2" 2>/dev/null ||
@@ -56,6 +58,8 @@ refdir=$rootdir
 mode=raw
 output_file=
 date_format='%b %e %Y'
+date_locale=C
+date_timezone=GMT0  # for better compatibility than UTC0
 
 next=
 for a in "$@"; do
@@ -92,6 +96,12 @@ for a in "$@"; do
       ;;
     --date-format)
       next=date_format
+      ;;
+    --date-locale)
+      next=date_locale
+      ;;
+    --date-timezone)
+      next=date_timezone
       ;;
     *)
       echo "$prog: error: unknown option $a" >&2
@@ -140,12 +150,12 @@ if [ "$mode" != "only-version" ]; then
   if git_C diff-index --quiet HEAD .; then
     # If the working tree is not dirty, use the latest commit date.
     isodate=$(git_C log -1 --pretty=%ci .)
-    date=$(LANG=C TZ=UTC fmt_isodate "$isodate" "$date_format")
+    date=$(LC_ALL="$date_locale" TZ="$date_timezone" fmt_isodate "$isodate" "$date_format")
   else
     # If the working tree is dirty, suffix "-dirty" to the revision identifier
     # and use the current date time.
     revision="$revision-dirty"
-    date=$(LANG=C TZ=UTC date +"$date_format")
+    date=$(LC_ALL="$date_locale" TZ="$date_timezone" date +"$date_format")
   fi
   # Version description.
   # Examples: "4.3.0", "v4.3.0-1-g7c9706c"
