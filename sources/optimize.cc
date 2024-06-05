@@ -4449,15 +4449,19 @@ WORD generate_expression (WORD exprnr) {
 	// scan for the original expression (marked by *t<0) and give the
 	// terms to Generator
 	WORD *t = AO.OptimizeResult.code;
-    {
+	{
 		WORD old = AR.Cnumlhs; AR.Cnumlhs = 0;
+		// We can use the remaining part of the WorkSpace for every term that
+		// goes through Generator. We have WorkSpace problems here if we use
+		// the (modified) AT.WorkPointer every time in the loop.
+		WORD* currentWorkPointer = AT.WorkPointer;
 		while (*t!=0) {
 			bool is_expr = *t < 0;
 			t++;
 			while (*t!=0) {
 				if (is_expr) {
-					memcpy(AT.WorkPointer, t, *t*sizeof(WORD));
-					Generator(BHEAD AT.WorkPointer, C->numlhs);
+					memcpy(currentWorkPointer, t, *t*sizeof(WORD));
+					Generator(BHEAD currentWorkPointer, C->numlhs);
 				}
 				t+=*t;
 			}
