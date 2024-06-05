@@ -870,20 +870,22 @@ vector<WORD> Horner_tree (const WORD *expr, const vector<WORD> &order) {
 	}
 
 	// sort variables in individual terms using bubble sort
-	WORD *sorted = AT.WorkPointer;
+	WORD* sorted;
+	WORD* dynamicAlloc = 0;
 	LONG sumsize = 0;
 
 	for (const WORD *t=expr; *t!=0; t+=*t) {
 		sumsize += *t;
 	}
-	if ( sorted + sumsize > AT.WorkTop ) {
-		MLOCK(ErrorMessageLock);
-		MesPrint("=== Workspace overflow. %l bytes is not enough.",AM.WorkSize);
-		MesPrint("=== Change parameter WorkSpace in %s",setupfilename);
-		sumsize = (AT.WorkPointer-AT.WorkSpace+sumsize)*sizeof(WORD);
-		MesPrint("=== At least %l bytes are needed.",sumsize);
-		MUNLOCK(ErrorMessageLock);
-		Terminate(-1);
+
+	// We actually need sumsize + 1 WORDS available, due to the "*sorted = 0;"
+	// at the end of the sort loop.
+	if ( AT.WorkPointer + sumsize + 1 > AT.WorkTop ) {
+		dynamicAlloc = (WORD*)Malloc1(sizeof(*dynamicAlloc)*(sumsize+1), "Horner_tree alloc");
+		sorted = dynamicAlloc;
+	}
+	else {
+		sorted = AT.WorkPointer;
 	}
 
 	for (const WORD *t=expr; *t!=0; t+=*t) {
@@ -919,7 +921,12 @@ vector<WORD> Horner_tree (const WORD *expr, const vector<WORD> &order) {
 	}
 
 	*sorted = 0;
-	sorted = AT.WorkPointer;
+	if ( dynamicAlloc ) {
+		sorted = dynamicAlloc;
+	}
+	else {
+		sorted = AT.WorkPointer;
+	}
 
 	// find pointers to all terms and sort them efficiently
 	vector<const WORD *> terms;
@@ -956,6 +963,10 @@ vector<WORD> Horner_tree (const WORD *expr, const vector<WORD> &order) {
 		}
 	}
 	res.resize(j);
+
+	if ( dynamicAlloc ) {
+		M_free(dynamicAlloc, "Horner_tree alloc");
+	}
 
 #ifdef DEBUG
 	MesPrint ("*** [%s, w=%w] DONE: Horner_tree(%a)", thetime_str().c_str(), order.size(), &order[0]);
@@ -4442,15 +4453,19 @@ WORD generate_expression (WORD exprnr) {
 	// scan for the original expression (marked by *t<0) and give the
 	// terms to Generator
 	WORD *t = AO.OptimizeResult.code;
-    {
+	{
 		WORD old = AR.Cnumlhs; AR.Cnumlhs = 0;
+		// We can use the remaining part of the WorkSpace for every term that
+		// goes through Generator. We have WorkSpace problems here if we use
+		// the (modified) AT.WorkPointer every time in the loop.
+		WORD* currentWorkPointer = AT.WorkPointer;
 		while (*t!=0) {
 			bool is_expr = *t < 0;
 			t++;
 			while (*t!=0) {
 				if (is_expr) {
-					memcpy(AT.WorkPointer, t, *t*sizeof(WORD));
-					Generator(BHEAD AT.WorkPointer, C->numlhs);
+					memcpy(currentWorkPointer, t, *t*sizeof(WORD));
+					Generator(BHEAD currentWorkPointer, C->numlhs);
 				}
 				t+=*t;
 			}
