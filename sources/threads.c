@@ -4769,6 +4769,75 @@ int IniSortBlocks(int numworkers)
 
 /*
   	#] IniSortBlocks : 
+  	#[ UpdateSortBlocks :
+*/
+ 
+/**
+ *	A version of IniSortBlocks which only updates the pointers in the master's
+ *	buffer, to be used after reallocation of that buffer.
+ */
+int UpdateSortBlocks(int numworkers)
+{
+	ALLPRIVATES *B;
+	SORTING *S;
+	LONG totalsize, workersize, blocksize, numberofterms;
+	int maxter, id, j;
+	int numberofblocks = NUMBEROFBLOCKSINSORT, numparts;
+	WORD *w;
+
+	if ( numworkers == 0 ) return(0);
+
+#ifdef WITHSORTBOTS
+	if ( numworkers > 2 ) {
+		numparts = 2*numworkers - 2;
+		numberofblocks = numberofblocks/2;
+	}
+	else {
+		numparts = numworkers;
+	}
+#else
+	numparts = numworkers;
+#endif
+	S = AM.S0;
+	totalsize = S->LargeSize + S->SmallEsize;
+	workersize = totalsize / numparts;
+	maxter = AM.MaxTer/sizeof(WORD);
+	blocksize = ( workersize - maxter )/numberofblocks;
+	numberofterms = blocksize / maxter;
+	if ( numberofterms < MINIMUMNUMBEROFTERMS ) {
+/*
+		This should have been taken care of in RecalcSetups.
+*/
+		MesPrint("We have a problem with the size of the blocks in UpdateSortBlocks");
+		Terminate(-1);
+	}
+/*
+	Layout:  For each worker
+				block 0: size is maxter WORDS
+				numberofblocks blocks of size blocksize WORDS
+*/
+	w = S->lBuffer;
+	if ( w == 0 ) w = S->sBuffer;
+	for ( id = 1; id <= numparts; id++ ) {
+		B = AB[id];
+		AT.SB.MasterFill[0] = AT.SB.MasterStart[0] = w;
+		w += maxter;
+		AT.SB.MasterStop[0] = w;
+		for ( j = 1; j <= numberofblocks; j++ ) {
+			AT.SB.MasterFill[j] = AT.SB.MasterStart[j] = w;
+			w += blocksize;
+			AT.SB.MasterStop[j] = w;
+		}
+	}
+	if ( w > S->sTop2 ) {
+		MesPrint("Counting problem in UpdateSortBlocks");
+		Terminate(-1);
+	}
+	return(0);
+}
+
+/*
+  	#] UpdateSortBlocks : 
   	#[ DefineSortBotTree :
 */
  

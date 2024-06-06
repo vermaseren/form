@@ -1451,6 +1451,7 @@ extern int    MasterWaitThread(int);
 extern void   WakeupMasterFromThread(int,int);
 extern int    LoadReadjusted(VOID);
 extern int    IniSortBlocks(int);
+extern int    UpdateSortBlocks(int);
 extern int    TreatIndexEntry(PHEAD LONG);
 extern WORD   GetTerm2(PHEAD WORD *);
 extern void	SetHideFiles(VOID);
