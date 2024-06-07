@@ -1051,33 +1051,43 @@ if ( AC.SwitchInArray > 0 ) {
 	  AC.MultiBracketBuf = 0;
 	}
 
+#ifdef UNIX
 #ifdef SPLITALLOC
 	/*	Reallocate the sort buffers to reduce resident set usage */
 	/* AT.SS is the same as AT.S0 here */
 	SORTING* S = AT.S0;
-	M_free(S->lBuffer, "SPLITALLOC realloc lBuffer+sBuffer");
-	S->lBuffer = Malloc1(sizeof(*(S->lBuffer))*(S->LargeSize+S->SmallEsize), "SPLITALLOC realloc lBuffer+sBuffer");
-	S->lTop = S->lBuffer+S->LargeSize;
-	S->sBuffer = S->lTop;
-	if ( S->LargeSize == 0 ) { S->lBuffer = 0; S->lTop = 0; }
-	S->sTop = S->sBuffer + S->SmallSize;
-	S->sTop2 = S->sBuffer + S->SmallEsize;
-	S->sHalf = S->sBuffer + (LONG)((S->SmallSize+S->SmallEsize)>>1);
+	const int ret = madvise(S->lBuffer, sizeof(*(S->lBuffer))*(S->LargeSize+S->SmallEsize), MADV_DONTNEED);
+	if ( ret != 0 ) {
+		MesPrint("Warning: madvise failure.");
+	}
+//	M_free(S->lBuffer, "SPLITALLOC realloc lBuffer+sBuffer");
+//	S->lBuffer = Malloc1(sizeof(*(S->lBuffer))*(S->LargeSize+S->SmallEsize), "SPLITALLOC realloc lBuffer+sBuffer");
+//	S->lTop = S->lBuffer+S->LargeSize;
+//	S->sBuffer = S->lTop;
+//	if ( S->LargeSize == 0 ) { S->lBuffer = 0; S->lTop = 0; }
+//	S->sTop = S->sBuffer + S->SmallSize;
+//	S->sTop2 = S->sBuffer + S->SmallEsize;
+//	S->sHalf = S->sBuffer + (LONG)((S->SmallSize+S->SmallEsize)>>1);
 
 #ifdef WITHPTHREADS
 	/* The SortBots do not have a real sort buffer. */
 	/* AB[0] has been reallocated above already. */
 	for ( i = 1; i < AM.totalnumberofthreads; i++ ) {
 		SORTING* S = AB[i]->T.S0;
-		M_free(S->lBuffer, "SPLITALLOC realloc lBuffer+sBuffer");
-		S->lBuffer = Malloc1(sizeof(*(S->lBuffer))*(S->LargeSize+S->SmallEsize), "SPLITALLOC realloc lBuffer+sBuffer");
-		S->lTop = S->lBuffer+S->LargeSize;
-		S->sBuffer = S->lTop;
-		if ( S->LargeSize == 0 ) { S->lBuffer = 0; S->lTop = 0; }
-		S->sTop = S->sBuffer + S->SmallSize;
-		S->sTop2 = S->sBuffer + S->SmallEsize;
-		S->sHalf = S->sBuffer + (LONG)((S->SmallSize+S->SmallEsize)>>1);
+		const int ret = madvise(S->lBuffer, sizeof(*(S->lBuffer))*(S->LargeSize+S->SmallEsize), MADV_DONTNEED);
+		if ( ret != 0 ) {
+			MesPrint("Warning: madvise failure.");
+		}
+//		M_free(S->lBuffer, "SPLITALLOC realloc lBuffer+sBuffer");
+//		S->lBuffer = Malloc1(sizeof(*(S->lBuffer))*(S->LargeSize+S->SmallEsize), "SPLITALLOC realloc lBuffer+sBuffer");
+//		S->lTop = S->lBuffer+S->LargeSize;
+//		S->sBuffer = S->lTop;
+//		if ( S->LargeSize == 0 ) { S->lBuffer = 0; S->lTop = 0; }
+//		S->sTop = S->sBuffer + S->SmallSize;
+//		S->sTop2 = S->sBuffer + S->SmallEsize;
+//		S->sHalf = S->sBuffer + (LONG)((S->SmallSize+S->SmallEsize)>>1);
 	}
+#endif
 #endif
 #endif
 

@@ -457,6 +457,7 @@ template<typename T> struct calc {
 #include <time.h>
 #include <fcntl.h>
 #include <sys/file.h>
+#include <sys/mman.h>
 #include "unix.h"
 #endif
 #ifdef WITHZLIB

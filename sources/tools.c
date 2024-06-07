@@ -2302,7 +2302,7 @@ VOID *Malloc(LONG size)
 
 VOID *Malloc1(LONG size, const char *messageifwrong)
 {
-	VOID *mem;
+	VOID *mem = 0;
 #ifdef MALLOCDEBUG
 	char *t, *u;
 	int i;
@@ -2319,8 +2319,10 @@ VOID *Malloc1(LONG size, const char *messageifwrong)
 #ifdef MALLOCDEBUG
 	size += 2*BANNER;
 #endif
-	mem = (VOID *)M_alloc(size);
-	if ( mem == 0 ) {
+	/*mem = (VOID *)M_alloc(size);*/
+	/* Page-aligned memory required by madvise */
+	const int res = posix_memalign(&mem, sysconf(_SC_PAGESIZE), size);
+	if ( res != 0 ) {
 #ifndef MALLOCDEBUG
 		MLOCK(ErrorMessageLock);
 #endif
