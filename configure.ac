@@ -794,6 +794,29 @@ AC_ARG_ENABLE([extra-warning],
 	[],
 	[enable_extra_warning=no])
 
+# Check for backtrace (requires glibc):
+AC_ARG_ENABLE([backtrace],
+	[AS_HELP_STRING([--enable-backtrace],
+		[print a stack trace on Terminate @<:@default=check@:>@])],
+	[AS_IF(
+		[test "x$enableval" = xyes], [enable_backtrace=yes],
+		[test "x$enableval" = xno], [enable_backtrace=no],
+		[enable_backtrace=check]
+	)],
+	[enable_backtrace=check])
+AS_IF([test "x$enable_backtrace" != xno],
+	[flag=:
+	AS_IF([$flag], [AC_CHECK_LIB([c], [backtrace], [], [flag=false])])
+	AS_IF([$flag],
+		[AC_DEFINE(ENABLE_BACKTRACE, [], [Define to print a stack trace on Terminate.])
+			enable_backtrace=yes],
+		[AS_IF([test "x$enable_backtrace" = xyes],
+			[AC_MSG_FAILURE([test for backtrace failed. Give --disable-backtrace if you want to compile without backtrace.])])
+		AC_MSG_NOTICE([backtrace is not available])
+		enable_backtrace=no])
+	]
+)
+
 # Optimization/debugging flags
 AC_ARG_VAR([COMPILEFLAGS], [Compiler flags for release versions])
 AC_ARG_VAR([LINKFLAGS], [Linker flags for release versions])
@@ -827,10 +850,12 @@ if test "$my_test_COMPILEFLAGS" != set; then
 		COMPILEFLAGS="-Wall -Wextra"
 		AX_HANDLE_EXTRA_WARNING([COMPILEFLAGS])
 		# Enable optimizations.
-		COMPILEFLAGS="$COMPILEFLAGS -O3"
+		COMPILEFLAGS="$COMPILEFLAGS -O3 -g"
 		if test "x$enable_profile" != xgprof; then
 			# -pg conflicts with -fomit-frame-pointer.
-			COMPILEFLAGS="$COMPILEFLAGS -fomit-frame-pointer"
+#			COMPILEFLAGS="$COMPILEFLAGS -fomit-frame-pointer"
+#			Keep frame pointers for useful backtrace on crash.
+			COMPILEFLAGS="$COMPILEFLAGS"
 		fi
 		if test "x$enable_native" = xyes; then
 			# Use -march=native if available.
@@ -881,7 +906,7 @@ if test "$my_test_LINKFLAGS" != set; then
 		# Profilers needs symbol tables.
 		LINKFLAGS=
 	else
-		LINKFLAGS=-s
+		LINKFLAGS=
 	fi
 fi
 my_test_DEBUGCOMPILEFLAGS=${DEBUGCOMPILEFLAGS+set}
