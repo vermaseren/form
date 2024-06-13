@@ -1085,6 +1085,11 @@ if ( AC.SwitchInArray > 0 ) {
 		Warning("FORM compiled without SPLITALLOC, sortreallocate has no effect.");
 #endif
 	}
+	if ( AC.SortReallocateFlag == 2 ) {
+		/* The Flag was set for a single module by the preprocessor #sortreallocate,
+		   so turn it off again. */
+		AC.SortReallocateFlag = 0;
+	}
 
 	return(RetCode);
 }
