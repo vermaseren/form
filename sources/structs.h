@@ -1151,7 +1151,6 @@ typedef struct sOrT {
     WORD *sFill;                /* Filling point in the small buffer */
     WORD **sPointer;            /* Pointers to terms in the small buffer */
     WORD **PoinFill;            /* Filling point for pointers to the sm.buf */
-    WORD **SplitScratch;        /* Excess pointer space for the merge sort */
     WORD *cBuffer;              /* Compress buffer (if it exists) */
     WORD **Patches;             /* Positions of patches in large buffer */
     WORD **pStop;               /* Ends of patches in the large buffer */
@@ -1198,9 +1197,9 @@ typedef struct sOrT {
     WORD inNum;                 /* Number of patches on file (input) */
     WORD stage4;                /* Are we using stage4? */
 #ifdef WITHZLIB
-    PADPOSITION(28,12,12,3,0);
+    PADPOSITION(27,12,12,3,0);
 #else
-    PADPOSITION(25,12,12,3,0);
+    PADPOSITION(24,12,12,3,0);
 #endif
 } SORTING;
 
