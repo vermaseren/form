@@ -104,6 +104,7 @@ static KEYWORD precommands[] = {
 	,{"setrandom"    , DoSetRandom    , 0, 0}
 	,{"show"         , DoPreShow      , 0, 0}
 	,{"skipextrasymbols" , DoSkipExtraSymbols , 0, 0}
+	,{"sortreallocate", DoPreSortReallocate , 0, 0}
 #ifdef WITHFLOAT
     ,{"startfloat"   , DoStartFloat   , 0, 0}
 #endif
@@ -3777,6 +3778,23 @@ int DoPrePrintTimes(UBYTE *s)
 
 /*
  		#] DoPrePrintTimes : 
+		#[ DoPreSortReallocate :
+*/
+
+int DoPreSortReallocate(UBYTE *s)
+{
+	DUMMYUSE(s);
+	if ( AC.SortReallocateFlag == 0 ) {
+		/* Currently off, so set to 2. Then the reallocation code knows the flag was
+		   set here, since "On sortreallocate;" sets it to 1. */
+		AC.SortReallocateFlag = 2;
+	}
+	/* If the flag is already on, do nothing. */
+	return(0);
+}
+
+/*
+		#] DoPreSortReallocate :
  		#[ DoPreAppend :
 
 		Syntax:
