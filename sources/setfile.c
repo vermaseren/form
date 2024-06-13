@@ -922,7 +922,6 @@ SORTING *AllocSort(LONG inLargeSize, LONG inSmallSize, LONG inSmallEsize, LONG i
 		+(2*longerp+4)*sizeof(WORD)
 #endif
 		+terms2insmall*sizeof(WORD *)
-		+terms2insmall*sizeof(WORD *)/2
 		+LargeSize
 		+SmallEsize
 		+sortsize
@@ -938,8 +937,7 @@ SORTING *AllocSort(LONG inLargeSize, LONG inSmallSize, LONG inSmallEsize, LONG i
 	sort->Terms2InSmall = terms2insmall;
 
 	sort->sPointer = (WORD **)(sort+1);
-	sort->SplitScratch = sort->sPointer + terms2insmall;
-	sort->Patches = (WORD **)(sort->SplitScratch + terms2insmall/2);
+	sort->Patches = (WORD **)(sort->sPointer + terms2insmall);
 	sort->pStop = sort->Patches+longer;
 	sort->poina = sort->pStop+longer;
 	sort->poin2a = sort->poina + longerp;
@@ -1008,7 +1006,6 @@ SORTING *AllocSort(LONG inLargeSize, LONG inSmallSize, LONG inSmallEsize, LONG i
 	sort->Terms2InSmall = terms2insmall;
 
 	sort->sPointer     = Malloc1(sizeof(*(sort->sPointer    ))*terms2insmall, "SPLITALLOC sPointer");
-	sort->SplitScratch = Malloc1(sizeof(*(sort->SplitScratch))*terms2insmall/2, "SPLITALLOC SplitScratch");
 	sort->Patches      = Malloc1(sizeof(*(sort->Patches     ))*longer, "SPLITALLOC Patches");
 	sort->pStop        = Malloc1(sizeof(*(sort->pStop       ))*longer, "SPLITALLOC pStop");
 	sort->poina        = Malloc1(sizeof(*(sort->poina       ))*longerp, "SPLITALLOC poina");

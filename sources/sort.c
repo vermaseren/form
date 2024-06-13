@@ -4698,7 +4698,6 @@ void CleanUpSort(int num)
 				}
 #ifdef SPLITALLOC
 				M_free(S->sPointer, "SPLITALLOC sPointer");
-				M_free(S->SplitScratch, "SPLITALLOC SplitScratch");
 				M_free(S->Patches, "SPLITALLOC Patches");
 				M_free(S->pStop, "SPLITALLOC pStop");
 				M_free(S->poina, "SPLITALLOC poina");
