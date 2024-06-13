@@ -957,6 +957,7 @@ extern int    DoPrePrintTimes(UBYTE *);
 extern int    DoPreWrite(UBYTE *);
 extern int    DoPreClose(UBYTE *);
 extern int    DoPreRemove(UBYTE *);
+extern int    DoPreSortReallocate(UBYTE *);
 extern int    DoCommentChar(UBYTE *);
 extern int    DoPrcExtension(UBYTE *);
 extern int    DoPreReset(UBYTE *);
