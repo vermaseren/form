@@ -136,6 +136,7 @@ static KEYWORDV onoffoptions[] = {
 	,{"oldgcd", 		&(AC.OldGCDflag),	1,	0}
 	,{"innertest",      &(AC.InnerTest),  1,  0}
 	,{"wtimestats",     &(AC.WTimeStatsFlag),  1,  0}
+	,{"sortreallocate",	&(AC.SortReallocateFlag), 1, 0}
 };
 
 static WORD one = 1;
