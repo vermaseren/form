@@ -1,0 +1,3 @@
+[submodule "extern/zstd"]
+	path = extern/zstd
+	url = https://github.com/facebook/zstd
