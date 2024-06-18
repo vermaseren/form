@@ -71,6 +71,8 @@ SRCBASE = \
 	vector.h \
 	wildcard.c
 
+INCBASE =
+
 if ONUNIX
 SRCBASE += \
 	unixfile.c \
@@ -86,6 +88,19 @@ if WITHFLOAT
 SRCBASE += \
 	evaluate.c \
 	float.c
+endif
+
+if WITHZSTD
+SRCBASE += \
+	$(top_srcdir)/extern/zstd/zlibWrapper/gzclose.c \
+	$(top_srcdir)/extern/zstd/zlibWrapper/gzcompatibility.h \
+	$(top_srcdir)/extern/zstd/zlibWrapper/gzguts.h \
+	$(top_srcdir)/extern/zstd/zlibWrapper/gzlib.c \
+	$(top_srcdir)/extern/zstd/zlibWrapper/gzread.c \
+	$(top_srcdir)/extern/zstd/zlibWrapper/gzwrite.c \
+	$(top_srcdir)/extern/zstd/zlibWrapper/zstd_zlibwrapper.c \
+	$(top_srcdir)/extern/zstd/zlibWrapper/zstd_zlibwrapper.h
+INCBASE += -I$(top_srcdir)/extern/zstd/zlibWrapper
 endif
 
 SRCPTHREAD = \
@@ -143,7 +158,7 @@ bin_PROGRAMS =
 if BUILD_FORM
 bin_PROGRAMS += form
 form_SOURCES = $(SRCBASE)
-form_CPPFLAGS =
+form_CPPFLAGS = $(INCBASE)
 form_CFLAGS = $(COMPILEFLAGS)
 form_CXXFLAGS = $(COMPILEFLAGS)
 form_LDFLAGS = $(LINKFLAGS) $(STATIC_LDFLAGS)
@@ -158,7 +173,7 @@ endif
 if BUILD_VORM
 bin_PROGRAMS += vorm
 vorm_SOURCES = $(SRCBASE)
-vorm_CPPFLAGS = -DDEBUGGING
+vorm_CPPFLAGS = -DDEBUGGING $(INCBASE)
 vorm_CFLAGS = $(DEBUGCOMPILEFLAGS)
 vorm_CXXFLAGS = $(DEBUGCOMPILEFLAGS)
 vorm_LDFLAGS = $(DEBUGLINKFLAGS)
@@ -173,7 +188,7 @@ endif
 if BUILD_TFORM
 bin_PROGRAMS += tform
 tform_SOURCES = $(SRCBASE) $(SRCPTHREAD)
-tform_CPPFLAGS = -DWITHPTHREADS $(PTHREAD_CPPFLAGS)
+tform_CPPFLAGS = -DWITHPTHREADS $(PTHREAD_CPPFLAGS) $(INCBASE)
 tform_CFLAGS = $(COMPILEFLAGS) $(PTHREAD_CFLAGS)
 tform_CXXFLAGS = $(COMPILEFLAGS) $(PTHREAD_CFLAGS)
 tform_LDFLAGS = $(LINKFLAGS) $(STATIC_LDFLAGS)
@@ -188,7 +203,7 @@ endif
 if BUILD_TVORM
 bin_PROGRAMS += tvorm
 tvorm_SOURCES = $(SRCBASE) $(SRCPTHREAD)
-tvorm_CPPFLAGS = -DWITHPTHREADS -DDEBUGGING $(PTHREAD_CPPFLAGS)
+tvorm_CPPFLAGS = -DWITHPTHREADS -DDEBUGGING $(PTHREAD_CPPFLAGS) $(INCBASE)
 tvorm_CFLAGS = $(DEBUGCOMPILEFLAGS) $(PTHREAD_CFLAGS)
 tvorm_CXXFLAGS = $(DEBUGCOMPILEFLAGS) $(PTHREAD_CFLAGS)
 tvorm_LDFLAGS = $(DEBUGLINKFLAGS)
@@ -203,7 +218,7 @@ endif
 if BUILD_PARFORM
 bin_PROGRAMS += parform
 parform_SOURCES = $(SRCBASE) $(SRCPARALLEL)
-parform_CPPFLAGS = -DWITHMPI -DPF_WITHGETENV -DPF_WITHLOG $(MPI_CPPFLAGS)
+parform_CPPFLAGS = -DWITHMPI -DPF_WITHGETENV -DPF_WITHLOG $(MPI_CPPFLAGS) $(INCBASE)
 parform_CFLAGS = $(COMPILEFLAGS) $(MPI_CFLAGS)
 parform_CXXFLAGS = $(COMPILEFLAGS) $(MPI_CXXFLAGS)
 parform_LDFLAGS = $(LINKFLAGS) $(MPI_STATIC_LDFLAGS)
@@ -218,7 +233,7 @@ endif
 if BUILD_PARVORM
 bin_PROGRAMS += parvorm
 parvorm_SOURCES = $(SRCBASE) $(SRCPARALLEL)
-parvorm_CPPFLAGS = -DWITHMPI -DPF_WITHGETENV -DPF_WITHLOG -DDEBUGGING $(MPI_CPPFLAGS)
+parvorm_CPPFLAGS = -DWITHMPI -DPF_WITHGETENV -DPF_WITHLOG -DDEBUGGING $(MPI_CPPFLAGS) $(INCBASE)
 parvorm_CFLAGS = $(DEBUGCOMPILEFLAGS) $(MPI_CFLAGS)
 parvorm_CXXFLAGS = $(DEBUGCOMPILEFLAGS) $(MPI_CXXFLAGS)
 parvorm_LDFLAGS = $(DEBUGLINKFLAGS)
