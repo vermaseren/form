@@ -1377,6 +1377,10 @@ WORD IniVars(VOID)
 	AR.gzipCompress = GZIPDEFAULT;
 	AR.FoStage4[0].ziobuffer = 0;
 	AR.FoStage4[1].ziobuffer = 0;
+#ifdef WITHZSTD
+	/* Zstd compression is on by default, if we have compiled with it */
+	ZWRAP_useZSTDcompression(1);
+#endif
 #endif
 	AR.BracketOn = 0;
 	AC.bracketindexflag = 0;
