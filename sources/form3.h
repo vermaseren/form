@@ -450,7 +450,11 @@ template<typename T> struct calc {
 #include "unix.h"
 #endif
 #ifdef WITHZLIB
+#ifdef WITHZSTD
+#include <zstd_zlibwrapper.h>
+#else
 #include <zlib.h>
+#endif
 #endif
 #ifdef WITHPTHREADS
 #include <pthread.h>
