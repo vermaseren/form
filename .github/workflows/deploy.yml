@@ -72,7 +72,7 @@ jobs:
         if: runner.os == 'Linux'
         uses: awalsh128/cache-apt-pkgs-action@v1
         with:
-          packages: libmpfr-dev
+          packages: libmpfr-dev libzstd-dev
           version: 1.0
 
       - name: Install dependencies (Windows)
@@ -100,7 +100,7 @@ jobs:
 
       - name: Configure
         run: |
-          opts='--disable-dependency-tracking --disable-scalar --disable-threaded --disable-native --enable-static-link --with-gmp --with-zlib'
+          opts='--disable-dependency-tracking --disable-scalar --disable-threaded --disable-native --enable-static-link --with-gmp --with-zlib --with-zstd'
           case ${{ matrix.bin }} in
             form)  opts="$opts --enable-scalar";;
             tform) opts="$opts --enable-threaded";;
@@ -114,6 +114,7 @@ jobs:
             mkdir static-lib
             ln -s /usr/local/opt/gmp/lib/libgmp.a static-lib/libgmp.a
             ln -s /usr/local/opt/mpfr/lib/libmpfr.a static-lib/libmpfr.a
+            ln -s /usr/local/opt/zstd/lib/libzstd.a static-lib/libzstd.a
             export LIBRARY_PATH="$(pwd)/static-lib:${LIBRARY_PATH:-}"
             opts="$opts --disable-static-link"
           fi
