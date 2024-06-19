@@ -6,6 +6,68 @@
 #endif
 .end
 
+*--#[ compression_1 :
+#-
+* Test compression syntax
+On compress;
+Local test = 1;
+.sort
+On compress, gzip;
+.sort
+On compress, zstd;
+.sort
+On compress, gzip, 6;
+.sort
+On compress, zstd, 6;
+.sort
+Off compress;
+.sort
+Compress on;
+.sort
+Compress off;
+.sort
+Compress gzip;
+.sort
+Compress zstd;
+.sort
+Compress gzip, 6;
+.sort
+Compress zstd, 6;
+.end
+assert succeeded?
+*--#] compression_1 :
+*--#[ compression_2 :
+#-
+* Test compression syntax
+On compress, gizp;
+Local test = 1;
+.end
+assert runtime_error?("Unrecognized option in ON compress statement: gizp")
+*--#] compression_2 :
+*--#[ compression_3 :
+#-
+* Test compression syntax
+On compress, gzip, a;
+Local test = 1;
+.end
+assert runtime_error?("Unrecognized option in ON compress gzip/zstd statement: gzip,a, single digit expected")
+*--#] compression_3 :
+*--#[ compression_4 :
+#-
+* Test compression syntax
+Compress, gizp;
+Local test = 1;
+.end
+assert runtime_error?("Unknown Compress option: gizp. On, off, gzip or zstd expected.")
+*--#] compression_4 :
+*--#[ compression_5 :
+#-
+* Test compression syntax
+Compress, gzip, a;
+Local test = 1;
+.end
+assert runtime_error?("Unknown Compress gzip/zstd option: a. A digit was expected.")
+*--#] compression_5 :
 *--#[ divmod_1 :
 * Test div_, rem_ functions for monic univariate polynomials
 #-
