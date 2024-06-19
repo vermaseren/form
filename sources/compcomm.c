@@ -513,9 +513,14 @@ int CoCompress(UBYTE *s)
 	else {
 		t = s; while ( FG.cTable[*t] <= 1 ) t++;
 		c = *t; *t = 0;
-		if ( StrICmp(s,(UBYTE *)"gzip") == 0 ) {
+		if ( StrICmp(s,(UBYTE *)"zstd") == 0 ) {
+#ifndef WITHZSTD
+			Warning("zstd compression not supported on this platform");
+#endif
+		}
+		if ( ( StrICmp(s,(UBYTE *)"gzip") == 0 ) || ( StrICmp(s,(UBYTE *)"zstd") == 0 ) ) {
 #ifndef WITHZLIB
-			Warning("gzip compression not supported on this platform");
+			Warning("gzip/zstd compression not supported on this platform");
 #endif
 			s = t; *s = c;
 			if ( *s == 0 ) {
@@ -530,12 +535,12 @@ int CoCompress(UBYTE *s)
 				while ( *s == ' ' || *s == ',' || *s == '\t' ) s++;
 				if ( *s == 0 ) return(0);
 			}
-			MesPrint("&Unknown gzip option: %s, a digit was expected",t);
+			MesPrint("&Unknown gzip/zstd option: %s. A digit was expected",t);
 			return(1);
 
 		}
 		else {
-			MesPrint("&Unknown option: %s, on, off or gzip expected",s);
+			MesPrint("&Unknown option: %s. On, off, gzip or zstd expected",s);
 			return(1);
 		}
 	}
