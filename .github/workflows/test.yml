@@ -35,10 +35,10 @@ jobs:
         with:
           fetch-depth: 0  # ensures a reachable tag
 
-      - name: Install MPFR
+      - name: Install dependencies
         uses: awalsh128/cache-apt-pkgs-action@v1
         with:
-          packages: libmpfr-dev
+          packages: libmpfr-dev libzstd-dev
           version: 1.0
 
       - name: Install MPI if necessary
@@ -58,7 +58,7 @@ jobs:
           case ${{ matrix.bin }} in
             vorm|tvorm|parvorm) opts="$opts --enable-debug";;
           esac
-          opts="$opts --with-gmp --with-zlib"
+          opts="$opts --with-gmp --with-zlib --with-zstd"
           autoreconf -i
           ./configure $opts
 
@@ -132,16 +132,10 @@ jobs:
         with:
           fetch-depth: 0  # ensures a reachable tag
 
-      - name: Install Valgrind
+      - name: Install dependencies
         uses: awalsh128/cache-apt-pkgs-action@v1
         with:
-          packages: valgrind
-          version: 1.0
-
-      - name: Install MPFR
-        uses: awalsh128/cache-apt-pkgs-action@v1
-        with:
-          packages: libmpfr-dev
+          packages: libmpfr-dev libzstd-dev valgrind
           version: 1.0
 
       - name: Configure
@@ -154,7 +148,7 @@ jobs:
           case ${{ matrix.bin }} in
             vorm|tvorm|parvorm) opts="$opts --enable-debug";;
           esac
-          opts="$opts --with-gmp --with-zlib"
+          opts="$opts --with-gmp --with-zlib --with-zstd"
           autoreconf -i
           ./configure $opts
 
@@ -182,16 +176,10 @@ jobs:
         with:
           fetch-depth: 0  # ensures a reachable tag
 
-      - name: Install LCOV
+      - name: Install dependencies
         uses: awalsh128/cache-apt-pkgs-action@v1
         with:
-          packages: lcov
-          version: 1.0
-
-      - name: Install MPFR
-        uses: awalsh128/cache-apt-pkgs-action@v1
-        with:
-          packages: libmpfr-dev
+          packages: lcov libmpfr-dev libzstd-dev
           version: 1.0
 
       - name: Configure
@@ -201,7 +189,7 @@ jobs:
             vorm)    opts="$opts --enable-scalar --disable-threaded --disable-parform";;
             tvorm)   opts="$opts --disable-scalar --enable-threaded --disable-parform";;
           esac
-          opts="$opts --enable-debug --enable-coverage --with-gmp --with-zlib"
+          opts="$opts --enable-debug --enable-coverage --with-gmp --with-zlib --with-zstd"
           autoreconf -i
           ./configure $opts
 
@@ -254,7 +242,12 @@ jobs:
       - name: Install dependencies
         run: |
           apt-get update
-          apt-get -y install automake build-essential git libgmp-dev libmpfr-dev ruby zlib1g-dev
+          apt-get -y install automake build-essential git libgmp-dev libmpfr-dev libzstd-dev ruby zlib1g-dev
+
+      # Fix dubious ownership for Git operations.
+      # See https://github.com/actions/runner/issues/2033#issuecomment-1204205989
+      - name: Set ownership
+        run: chown -R $(id -u):$(id -g) $PWD
 
       - name: Configure
         run: |
@@ -263,7 +256,7 @@ jobs:
             form)  opts="$opts --enable-scalar --disable-threaded --disable-parform";;
             tform) opts="$opts --disable-scalar --enable-threaded --disable-parform";;
           esac
-          opts="$opts --disable-debug --with-gmp --with-zlib"
+          opts="$opts --disable-debug --with-gmp --with-zlib --with-zstd"
           autoreconf -i
           ./configure $opts
 
