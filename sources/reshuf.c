@@ -2144,7 +2144,7 @@ WORD DoShuffle(WORD *term, WORD level, WORD fun, WORD option)
 	passed on.
 */
 	SHback = AN.SHvar;
-	SH->finishuf = &FinishShuffle;
+	SH->finishuf = (FINISHUFFLE) &FinishShuffle;
 	SH->do_uffle = &DoShuffle;
 	SH->outterm = AT.WorkPointer;
 	AT.WorkPointer += *term;
@@ -2638,7 +2638,7 @@ retry2:;
 	*AN.RepPoint = 1;
 
 	SHback = AN.SHvar;
-	SH->finishuf = &FinishStuffle;
+	SH->finishuf = (FINISHUFFLE) &FinishStuffle;
 	SH->do_uffle = &DoStuffle;
 	SH->outterm = AT.WorkPointer;
 	AT.WorkPointer += *term;
@@ -2737,9 +2737,9 @@ int Stuffle(WORD *from1, WORD *from2, WORD *to)
 */
 	SH->stop1 = SH->ststop1;
 	SH->stop2 = SH->ststop2;
-	SH->finishuf = &FinishShuffle;
+	SH->finishuf = (FINISHUFFLE) &FinishShuffle;
 	if ( Shuffle(from1,from2,to) ) goto stuffcall;
-	SH->finishuf = &FinishStuffle;
+	SH->finishuf = (FINISHUFFLE) &FinishStuffle;
 /*
 	Now we have to select a pair, one from 1 and one from 2.
 */
