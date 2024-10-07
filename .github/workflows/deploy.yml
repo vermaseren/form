@@ -58,8 +58,11 @@ jobs:
           # platforms available.
           - {os: ubuntu-20.04, shell: bash, bin: form}
           - {os: ubuntu-20.04, shell: bash, bin: tform}
-          - {os: macos-11, shell: bash, bin: form}
-          - {os: macos-11, shell: bash, bin: tform}
+          - {os: macos-12, shell: bash, bin: form}
+          - {os: macos-12, shell: bash, bin: tform}
+          # The macos-14 runner image is based on the arm64 architecture.
+          - {os: macos-14, shell: bash, bin: form}
+          - {os: macos-14, shell: bash, bin: tform}
           # NOTE: Windows native executables have too many problems.
           # We include them in artifacts but not in releases.
           # Unfortunately, "allow-failure" is not available on GitHub Actions
@@ -110,10 +113,20 @@ jobs:
           # -l:libgmp.a to make partial static links possible.
           # As a workaround, we make a library directory with libgmp.a
           # but without libgmp.dylib so that the linker has to link libgmp.a.
+          # Note that the Homebrew installation path for Apple Silicon (arm64)
+          # differs from the one on macOS Intel (x86-64).
+          mkdir static-lib
           if [ "$RUNNER_OS" == "macOS" ]; then
-            mkdir static-lib
-            ln -s /usr/local/opt/gmp/lib/libgmp.a static-lib/libgmp.a
-            ln -s /usr/local/opt/mpfr/lib/libmpfr.a static-lib/libmpfr.a
+            if [ "$RUNNER_ARCH" == "ARM64" ]; then
+              ln -s /opt/homebrew/opt/gmp/lib/libgmp.a static-lib/libgmp.a
+              ln -s /opt/homebrew/opt/mpfr/lib/libmpfr.a static-lib/libmpfr.a
+              # The GMP and MPFR include directories, not located in the usual places,
+              # must be explicitly appended to the include paths.
+              export CPATH="/opt/homebrew/opt/gmp/include:/opt/homebrew/opt/mpfr/include:${CPATH:-}"
+            else
+              ln -s /usr/local/opt/gmp/lib/libgmp.a static-lib/libgmp.a
+              ln -s /usr/local/opt/mpfr/lib/libmpfr.a static-lib/libmpfr.a
+            fi
             export LIBRARY_PATH="$(pwd)/static-lib:${LIBRARY_PATH:-}"
             opts="$opts --disable-static-link"
           fi
@@ -127,7 +140,10 @@ jobs:
         continue-on-error: ${{ runner.os == 'Windows' }}
         run: |
           if [ "$RUNNER_OS" == "macOS" ]; then
-              export LIBRARY_PATH="$(pwd)/static-lib:${LIBRARY_PATH:-}"
+            if [ "$RUNNER_ARCH" == "ARM64" ]; then
+              export CPATH="/opt/homebrew/opt/gmp/include:/opt/homebrew/opt/mpfr/include:${CPATH:-}"
+            fi
+            export LIBRARY_PATH="$(pwd)/static-lib:${LIBRARY_PATH:-}"
           fi
           make -j 4
 
@@ -324,10 +340,18 @@ jobs:
             tar -c $pkgname/* | gzip -c -9 >dist/$pkgname.tar.gz
             rm -rf $pkgname
           fi
-          if ls artifacts/*-macos-*/*form >/dev/null 2>&1; then
+          if ls artifacts/*-macos-12/*form >/dev/null 2>&1; then
             pkgname=$distname-x86_64-osx
             mkdir $pkgname
-            mv artifacts/*-macos-*/*form $pkgname
+            mv artifacts/*-macos-12/*form $pkgname
+            chmod +x $pkgname/*form
+            tar -c $pkgname/* | gzip -c -9 >dist/$pkgname.tar.gz
+            rm -rf $pkgname
+          fi
+          if ls artifacts/*-macos-14/*form >/dev/null 2>&1; then
+            pkgname=$distname-arm64-osx
+            mkdir $pkgname
+            mv artifacts/*-macos-14/*form $pkgname
             chmod +x $pkgname/*form
             tar -c $pkgname/* | gzip -c -9 >dist/$pkgname.tar.gz
             rm -rf $pkgname
