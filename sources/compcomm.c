@@ -136,6 +136,7 @@ static KEYWORDV onoffoptions[] = {
 	,{"oldgcd", 		&(AC.OldGCDflag),	1,	0}
 	,{"innertest",      &(AC.InnerTest),  1,  0}
 	,{"wtimestats",     &(AC.WTimeStatsFlag),  1,  0}
+	,{"sortreallocate",	&(AC.SortReallocateFlag), 1, 0}
 };
 
 static WORD one = 1;
@@ -625,6 +626,14 @@ int CoOff(UBYTE *s)
 			if ( AC.TestValue ) {
 				M_free(AC.TestValue,"InnerTest");
 				AC.TestValue = 0;
+			}
+		}
+		else if ( StrICont(t,(UBYTE *)"sortreallocate") == 0 ) {
+			if ( AC.SortReallocateFlag == 2 ) {
+				/* The flag has been set by #sortreallocate, and it was off before. Leave it as 2,
+				   so that the reallocation still happens in the current module. It will be turned
+				   off after the reallocation is done. */
+				return(0);
 			}
 		}
 		*s = c;
