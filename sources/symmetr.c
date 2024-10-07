@@ -531,7 +531,7 @@ WORD Distribute(DISTRIBUTE *d, WORD first)
 	inc = d->cycle;
 	from = inc + d->n;
 	while ( *inc ) { j++; inc++; }
-	while ( !*inc && inc < from ) { i++; inc++; }
+	while ( inc < from && !*inc ) { i++; inc++; }
 	if ( inc >= from ) return(1);
 	d->sign ^= ((i&j)-j+1) & 1;
 	*inc = 0;
