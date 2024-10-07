@@ -1068,7 +1068,7 @@ VOID StartVariables(VOID)
 	cbuf[AM.dbufnum].mnumrhs = cbuf[AM.dbufnum].numrhs;
 
 	AddSymbol((UBYTE *)"i_",-MAXPOWER,MAXPOWER,VARTYPEIMAGINARY,0);
-	AM.numpi = AddSymbol((UBYTE *)"pi_",-MAXPOWER,MAXPOWER,VARTYPENONE,0);
+	AddSymbol((UBYTE *)"pi_",-MAXPOWER,MAXPOWER,VARTYPENONE,0);
 /*
 	coeff_ should have the number COEFFSYMBOL and den_ the number DENOMINATOR
     and the three should be in this order!
@@ -1080,6 +1080,8 @@ VOID StartVariables(VOID)
 	AddSymbol((UBYTE *)"dimension_",-MAXPOWER,MAXPOWER,VARTYPENONE,0);
 	AddSymbol((UBYTE *)"factor_",-MAXPOWER,MAXPOWER,VARTYPENONE,0);
 	AddSymbol((UBYTE *)"sep_",-MAXPOWER,MAXPOWER,VARTYPENONE,0);
+	AddSymbol((UBYTE *)"ee_",-MAXPOWER,MAXPOWER,VARTYPENONE,0);
+	AddSymbol((UBYTE *)"em_",-MAXPOWER,MAXPOWER,VARTYPENONE,0);
 	i = BUILTINSYMBOLS;  /* update this in ftypes.h when we add new symbols */
 /*
 	Next we add a number of dummy symbols for ensuring that the user defined
