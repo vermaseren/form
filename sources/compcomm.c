@@ -122,19 +122,19 @@ static KEYWORDV onoffoptions[] = {
 	,{"threadsortfilesynch",&(AC.ThreadSortFileSynch),1,  0}
 	,{"threadstats",	&(AC.ThreadStats),1,	0}
 	,{"finalstats",	    &(AC.FinalStats),1,	0}
-	,{"fewerstats",		&(AC.ShortStatsMax),	10,		0}
-	,{"fewerstatistics",&(AC.ShortStatsMax),	10,		0}
+	,{"fewerstats",		(int *)&(AC.ShortStatsMax),	10,		0}
+	,{"fewerstatistics",	(int *)&(AC.ShortStatsMax),	10,		0}
 	,{"processstats",	&(AC.ProcessStats),1,	0}
 	,{"oldparallelstats",&(AC.OldParallelStats),1,0}
 	,{"parallel",	    &(AC.parallelflag),PARALLELFLAG,NOPARALLEL_USER}
 	,{"nospacesinnumbers",&(AO.NoSpacesInNumbers),1,0}
-	,{"indentspace",    &(AO.IndentSpace),INDENTSPACE,0}
+	,{"indentspace",    (int *)&(AO.IndentSpace),INDENTSPACE,0}
 	,{"totalsize",		&(AM.PrintTotalSize),	1,	0}
 	,{"flag",			(int *)&(AC.debugFlags),	1,	0}
 	,{"oldfactarg",		&(AC.OldFactArgFlag),	1,	0}
 	,{"memdebugflag",	&(AC.MemDebugFlag),	1,	0}
 	,{"oldgcd", 		&(AC.OldGCDflag),	1,	0}
-	,{"innertest",      &(AC.InnerTest),  1,  0}
+	,{"innertest",      (int *)&(AC.InnerTest),  1,  0}
 	,{"wtimestats",     &(AC.WTimeStatsFlag),  1,  0}
 };
 
