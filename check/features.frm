@@ -1111,3 +1111,13 @@ format C;
 assert succeeded?
 assert !(file("out.c") =~ /[_] [+]=  /)
 *--#] Issue392_ContinuationLines_0 :
+*--#[ TempSortDir :
+#: TempSortDir bad/path
+Local test = 1;
+.end
+if mpi?
+  assert runtime_error?("Could not create sort file: bad/path/0formxxx.sor")
+else
+  assert runtime_error?("Could not create sort file: bad/path/xformxxx.sor")
+end
+*--#] TempSortDir :
