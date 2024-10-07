@@ -1768,6 +1768,11 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 			/* Now handle redefined preprocessor variables. */
 			if ( AC.numpfirstnum > 0 ) PF_UnpackRedefinedPreVars();
 		}
+		/* Broadcast redefined preprocessor variables. */
+		if ( AC.numpfirstnum > 0 ) {
+			int RetCode = PF_BroadcastRedefinedPreVars();
+			if ( RetCode ) return RetCode;
+		}
 		if ( ! AC.OldParallelStats ) {
 			/* Now we can calculate AT.SS->GenTerms from the statistics of the slaves. */
 			LONG genterms = 0;
@@ -1917,6 +1922,11 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 		/* Now handle redefined preprocessor variables. */
 		if ( AC.numpfirstnum > 0 ) PF_PackRedefinedPreVars();
 		PF_LongSingleSend(MASTER, PF_ENDSORT_MSGTAG);
+		/* Broadcast redefined preprocessor variables. */
+		if ( AC.numpfirstnum > 0 ) {
+			int RetCode = PF_BroadcastRedefinedPreVars();
+			if ( RetCode ) return RetCode;
+		}
 /*
 			#] Collect (stats,prepro...) : 
 
