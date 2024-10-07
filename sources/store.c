@@ -423,7 +423,9 @@ int CoSave(UBYTE *inp)
 			if ( GetVar(inp,&type,&number,CEXPRESSION,NOAUTO) != NAMENOTFOUND ) {
 				if ( e[number].status == STOREDEXPRESSION ) {
 					if ( StrLen(AC.exprnames->namebuffer+e[number].name) > MAXENAME ) {
-						MesPrint("&Warning: saved expr name over %d char: %s", MAXENAME, AC.exprnames->namebuffer+e[number].name);
+						char msg[100];
+						snprintf(msg, sizeof(msg), "saved expr name over %d char: %s", MAXENAME, AC.exprnames->namebuffer+e[number].name);
+						Warning(msg);
 					}
 /*
 		Here we have to locate the stored expression, copy its index entry
@@ -525,7 +527,9 @@ NextExpr:;
 		/* Make sure there is at least one stored expression: */
 		if ( n > 0 ) { do {
 			if ( StrLen(AC.exprnames->namebuffer+e->name) > MAXENAME ) {
-				MesPrint("&Warning: saved expr name over %d char: %s", MAXENAME, AC.exprnames->namebuffer+e->name);
+				char msg[100];
+				snprintf(msg, sizeof(msg), "saved expr name over %d char: %s", MAXENAME, AC.exprnames->namebuffer+e->name);
+				Warning(msg);
 			}
 			if ( e->status == STOREDEXPRESSION ) exprInStorageFlag = 1;
 			e++;

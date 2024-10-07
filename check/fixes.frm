@@ -1910,6 +1910,18 @@ Save test.res abcdefghijklmnop;
 .end
 assert succeeded?
 *--#] Issue192_3 :
+*--#[ Issue192_4 :
+* Also related: Issue 334.
+Global abcdefghijklmnop1 = 17;
+Global abcdefghijklmnop2 = 17;
+.store
+#do i = 1,2
+    Save test.res abcdefghijklmnop`i';
+#enddo
+.end
+assert warning?("saved expr name over 16 char: abcdefghijklmnop1")
+assert warning?("saved expr name over 16 char: abcdefghijklmnop2")
+*--#] Issue192_4 :
 *--#[ Issue197 :
 * mul_ ignores denominator factors
 #if "{2^32}" == "0"
