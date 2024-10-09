@@ -43,7 +43,9 @@
 #else
 #include <signal.h>
 #endif
-#include <execinfo.h>
+#ifdef ENABLE_BACKTRACE
+	#include <execinfo.h>
+#endif
 
 /*
  * A macro for translating the contents of `x' into a string after expanding.
