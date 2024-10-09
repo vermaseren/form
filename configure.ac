@@ -806,7 +806,7 @@ AC_ARG_ENABLE([backtrace],
 	[enable_backtrace=check])
 AS_IF([test "x$enable_backtrace" != xno],
 	[flag=:
-	AS_IF([$flag], [AC_CHECK_LIB([c], [backtrace], [], [flag=false])])
+	AS_IF([$flag], [AC_SEARCH_LIBS([backtrace], [c], [], [flag=false])])
 	AS_IF([$flag], [AC_CHECK_HEADERS([execinfo.h], [], [flag=false])])
 	AS_IF([$flag],
 		[AC_DEFINE(ENABLE_BACKTRACE, [], [Define to print a stack trace on Terminate.])
