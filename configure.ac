@@ -807,6 +807,7 @@ AC_ARG_ENABLE([backtrace],
 AS_IF([test "x$enable_backtrace" != xno],
 	[flag=:
 	AS_IF([$flag], [AC_CHECK_LIB([c], [backtrace], [], [flag=false])])
+	AS_IF([$flag], [AC_CHECK_HEADERS([execinfo.h], [], [flag=false])])
 	AS_IF([$flag],
 		[AC_DEFINE(ENABLE_BACKTRACE, [], [Define to print a stack trace on Terminate.])
 			enable_backtrace=yes],
@@ -1081,6 +1082,16 @@ if test "x$with_mpfr" = xyes; then
 fi
 if test "x$with_zlib" = xyes; then
 	echo "    zlib"
+	atleastone=yes
+fi
+if test $atleastone = no; then
+	echo "    <NONE>"
+fi
+echo
+echo "Optionally enabled features:"
+atleastone=no
+if test "x$enable_backtrace" = xyes; then
+	echo "    backtrace"
 	atleastone=yes
 fi
 if test $atleastone = no; then
