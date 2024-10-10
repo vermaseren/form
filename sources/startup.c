@@ -43,6 +43,9 @@
 #else
 #include <signal.h>
 #endif
+#ifdef ENABLE_BACKTRACE
+	#include <execinfo.h>
+#endif
 
 /*
  * A macro for translating the contents of `x' into a string after expanding.
@@ -1554,7 +1557,7 @@ static VOID onErrSig(int i)
 #endif
 	}
 	trappedTerminate = 1;
-	/*[13jul2005 mt]*//*Terminate(-1) on signal is here:*/
+	/*[13jul2005 mt]*//*TerminateImpl(-1) on signal is here:*/
 	Terminate(-1);
 }
 
@@ -1773,15 +1776,17 @@ dontremove:;
 
 /*
  		#] CleanUp : 
- 		#[ Terminate :
+ 		#[ TerminateImpl :
 */
 
 static int firstterminate = 1;
 
-VOID Terminate(int errorcode)
+VOID TerminateImpl(int errorcode, const char* file, int line, const char* function)
 {
 	if ( errorcode && firstterminate ) {
 		firstterminate = 0;
+
+		MLOCK(ErrorMessageLock);
 #ifdef WITHPTHREADS
 		MesPrint("Program terminating in thread %w at &");
 #elif defined(WITHMPI)
@@ -1789,6 +1794,56 @@ VOID Terminate(int errorcode)
 #else
 		MesPrint("Program terminating at &");
 #endif
+		MesPrint("Terminate called from %s:%d (%s)", file, line, function);
+
+#ifdef ENABLE_BACKTRACE
+		void *stack[64];
+		int stacksize, stop = 0;
+		stacksize = backtrace(stack, sizeof(stack)/sizeof(stack[0]));
+
+		/* First check whether eu-addr2line is available */
+		if ( !system("command -v eu-addr2line > /dev/null 2>&1") ) {
+			MesPrint("Backtrace:");
+			for (int i = 0; i < stacksize && !stop; i++) {
+				FILE *fp;
+				char cmd[512];
+				MesPrint("%#%2d: %", i);
+				snprintf(cmd, sizeof(cmd)/sizeof(cmd[0]), "eu-addr2line -s --pretty-print -f -i '%p' --pid=%d\n", stack[i], getpid());
+				fp = popen(cmd, "r");
+				while ( fgets(cmd, sizeof(cmd), fp) != NULL ) {
+					MesPrint("%s", cmd);
+					/* Don't show functions lower than "main" */
+					if ( strstr(cmd, "main") || strstr(cmd, "RunThread") || strstr(cmd, "RunSortBot") ) {
+						stop = 1;
+					}
+				}
+				pclose(fp);
+			}
+		}
+		else {
+			/* eu-addr2line not found */
+			char **strings;
+			strings = backtrace_symbols(stack, stacksize);
+			MesPrint("Backtrace:");
+			for ( int i = 0; i < stacksize && !stop; i++ ) {
+				char *p = strings[i];
+				while ( *p && *p != '(' ) p++;
+				MesPrint("%#%2d: %s\n", i, p);
+				/* Don't show functions lower than "main" */
+				if ( strstr(p, "main") || strstr(p, "RunThread") || strstr(p, "RunSortBot") ) {
+					stop = 1;
+				}
+				/* Maybe check stopping conditions? */
+			}
+			MesPrint("Please install eu-addr2line for readable stack information.");
+			free(strings);
+		}
+#else
+		MesPrint("FORM compiled without backtrace support.");
+#endif
+
+		MUNLOCK(ErrorMessageLock);
+
 		Crash();
 	}
 #ifdef TRAPSIGNALS
@@ -1857,7 +1912,7 @@ VOID Terminate(int errorcode)
 }
 
 /*
- 		#] Terminate : 
+ 		#] TerminateImpl : 
  		#[ PrintRunningTime :
 */
 
