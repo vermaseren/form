@@ -893,16 +893,17 @@ if test "$my_test_COMPILEFLAGS" != set; then
 fi
 my_test_LINKFLAGS=${LINKFLAGS+set}
 if test "$my_test_LINKFLAGS" != set; then
+	LINKFLAGS=-rdynamic
 	if test "x$vendor" = xgnu && test "x$print_os" = xOSX; then
 		# On OS X Mavericks, -s option has a funny effect: though the linker
 		# warns the option is obsolete and being ignored, it causes an internal
 		# error "atom not found in symbolIndex...".
-		LINKFLAGS=
+		LINKFLAGS="$LINKFLAGS"
 	elif test "x$enable_profile" != xno && test "x$enable_profile" != xunavailable; then
 		# Profilers needs symbol tables.
-		LINKFLAGS=
+		LINKFLAGS="$LINKFLAGS"
 	else
-		LINKFLAGS=
+		LINKFLAGS="$LINKFLAGS"
 	fi
 fi
 my_test_DEBUGCOMPILEFLAGS=${DEBUGCOMPILEFLAGS+set}
@@ -973,7 +974,7 @@ if test "$my_test_DEBUGCOMPILEFLAGS" != set && test "x$enable_debug" = xyes; the
 fi
 my_test_DEBUGLINKFLAGS=${DEBUGLINKFLAGS+set}
 if test "$my_test_DEBUGLINKFLAGS" != set && test "x$enable_debug" = xyes; then
-	DEBUGLINKFLAGS=
+	DEBUGLINKFLAGS=-rdynamic
 	if test "x$vendor" = xgnu; then
 		# Coverage option.
 		if test "x$enable_coverage" = xyes; then
