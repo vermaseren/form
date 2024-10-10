@@ -1813,7 +1813,7 @@ VOID TerminateImpl(int errorcode, const char* file, int line, const char* functi
 				while ( fgets(cmd, sizeof(cmd), fp) != NULL ) {
 					MesPrint("%s", cmd);
 					/* Don't show functions lower than "main" */
-					if ( strstr(cmd, "main") || strstr(cmd, "start_thread")  ) {
+					if ( strstr(cmd, "main") || strstr(cmd, "RunThread") || strstr(cmd, "RunSortBot") ) {
 						stop = 1;
 					}
 				}
@@ -1821,7 +1821,22 @@ VOID TerminateImpl(int errorcode, const char* file, int line, const char* functi
 			}
 		}
 		else {
-			MesPrint("Backtrace: please install eu-addr2line for stack information.");
+			/* eu-addr2line not found */
+			char **strings;
+			strings = backtrace_symbols(stack, stacksize);
+			MesPrint("Backtrace:");
+			for ( int i = 0; i < stacksize && !stop; i++ ) {
+				char *p = strings[i];
+				while ( *p && *p != '(' ) p++;
+				MesPrint("%#%2d: %s\n", i, p);
+				/* Don't show functions lower than "main" */
+				if ( strstr(p, "main") || strstr(p, "RunThread") || strstr(p, "RunSortBot") ) {
+					stop = 1;
+				}
+				/* Maybe check stopping conditions? */
+			}
+			MesPrint("Please install eu-addr2line for readable stack information.");
+			free(strings);
 		}
 #else
 		MesPrint("FORM compiled without backtrace support.");
