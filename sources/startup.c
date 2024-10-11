@@ -45,6 +45,10 @@
 #endif
 #ifdef ENABLE_BACKTRACE
 	#include <execinfo.h>
+#ifdef LINUX
+	#include <stdint.h>
+	#include <inttypes.h>
+#endif
 #endif
 
 /*
@@ -1810,9 +1814,9 @@ VOID TerminateImpl(int errorcode, const char* file, int line, const char* functi
 				// Leave an initial space
 				cmd[0] = ' ';
 				MesPrint("%#%2d:%", i);
-				snprintf(cmd+1, sizeof(cmd)/sizeof(cmd[0])-1, "eu-addr2line -s --pretty-print -f -i '%p' --pid=%d\n", stack[i], getpid());
+				snprintf(cmd+1, sizeof(cmd)-1, "eu-addr2line -s --pretty-print -f -i '%p' --pid=%d\n", stack[i], getpid());
 				fp = popen(cmd+1, "r");
-				while ( fgets(cmd+1, sizeof(cmd)/sizeof(cmd[0])-1, fp) != NULL ) {
+				while ( fgets(cmd+1, sizeof(cmd)-1, fp) != NULL ) {
 					MesPrint("%s", cmd);
 					/* Don't show functions lower than "main" (or thread equivalent) */
 					if ( strstr(cmd, " main ") || strstr(cmd, " RunThread ") || strstr(cmd, " RunSortBot ") ) {
@@ -1822,8 +1826,66 @@ VOID TerminateImpl(int errorcode, const char* file, int line, const char* functi
 				pclose(fp);
 			}
 		}
+#ifdef LINUX
+		else if ( !system("command -v addr2line > /dev/null 2>&1") ) {
+			/* Get the executable path. */
+			char exe_path[PATH_MAX];
+			{
+				ssize_t len = readlink("/proc/self/exe", exe_path, sizeof(exe_path) - 1);
+				if ( len != -1 ) {
+					exe_path[len] = '\0';
+				}
+				else {
+					goto backtrace_fallback;
+				}
+			}
+			/* Assume PIE binary and get the base address. */
+			uintptr_t base_address = 0;
+			{
+				char line[256];
+				FILE *maps = fopen("/proc/self/maps", "r");
+				if ( !maps ) {
+					goto backtrace_fallback;
+				}
+				/* See the format used by nommu_region_show() in fs/proc/nommu.c of the Linux source. */
+				if ( fgets(line, sizeof(line), maps) ) {
+					sscanf(line, "%" SCNxPTR "-", &base_address);
+				}
+				else {
+					fclose(maps);
+					goto backtrace_fallback;
+				}
+				fclose(maps);
+			}
+			char **strings;
+			strings = backtrace_symbols(stack, stacksize);
+			MesPrint("Backtrace:");
+			for ( int i = 0; i < stacksize && !stop; i++ ) {
+				FILE *fp;
+				char cmd[PATH_MAX + 512];
+				// Leave an initial space
+				cmd[0] = ' ';
+				uintptr_t addr = (uintptr_t)stack[i] - base_address;
+				MesPrint("%#%2d:%", i);
+				snprintf(cmd+1, sizeof(cmd)-1, "addr2line -e \"%s\" -i -p -s -f -C 0x%" PRIxPTR, exe_path, addr);
+				fp = popen(cmd+1, "r");
+				while ( fgets(cmd+1, sizeof(cmd)-1, fp) != NULL ) {
+					MesPrint("%s", cmd);
+					/* Don't show functions lower than "main" */
+					if ( strstr(cmd, " main ") || strstr(cmd, " RunThread ") || strstr(cmd, " RunSortBot ") ) {
+						stop = 1;
+					}
+				}
+				pclose(fp);
+			}
+			free(strings);
+		}
+#endif
 		else {
 			/* eu-addr2line not found */
+#ifdef LINUX
+backtrace_fallback:
+#endif
 			char **strings;
 			strings = backtrace_symbols(stack, stacksize);
 			MesPrint("Backtrace:");
@@ -1836,7 +1898,11 @@ VOID TerminateImpl(int errorcode, const char* file, int line, const char* functi
 					stop = 1;
 				}
 			}
+#ifdef LINUX
+			MesPrint("Please install addr2line or eu-addr2line for readable stack information.");
+#else
 			MesPrint("Please install eu-addr2line for readable stack information.");
+#endif
 			free(strings);
 		}
 #else
