@@ -1895,7 +1895,7 @@ VOID TerminateImpl(int errorcode, const char* file, int line, const char* functi
 		else {
 			/* eu-addr2line not found */
 #ifdef LINUX
-backtrace_fallback:
+backtrace_fallback: ;
 #endif
 			char **strings;
 			strings = backtrace_symbols(stack, stacksize);
