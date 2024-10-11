@@ -2409,7 +2409,7 @@ Local test = (
 	)^2;
 DropCoefficient;
 * Create rational polys, with both orderings of the num and den
-Identify f(a?)*f(b?) = rat(a,b) + rat(a,b);
+Identify f(a?)*f(b?) = rat(a,b) + rat(b,a);
 .sort
 DropCoefficient;
 #$i = 0;
@@ -2424,17 +2424,17 @@ Bracket x;
 .sort
 
 PolyRatFun rat;
-Collect f;
+* Give f for overflow, to suppress "Bracket contents too long" warning
+Collect f,f;
 .sort
 Identify x = 1;
 Identify f(x?) = x;
 
 Print;
 .end
-# On 32-bit systems, "Collect f" does not fit in the default
-# MaxTermSize and gives "Bracket contents too long in Collect
-# statement" warning.
-assert wordsize >= 4 ? succeeded? : warning?
+# False-positive valgrind errors on Ubuntu 20.04, MPICH
+#pend_if valgrind? && mpi?
+assert succeeded?
 assert result("test") =~ expr("0")
 *--#] Issue336_1 :
 *--#[ Issue336_2 :
@@ -2471,7 +2471,7 @@ Local test = (
 	)^2;
 DropCoefficient;
 * Create rational polys, with both orderings of the num and den
-Identify f(a?)*f(b?) = rat(a,b) + rat(a,b);
+Identify f(a?)*f(b?) = rat(a,b) + rat(b,a);
 .sort
 DropCoefficient;
 #$i = 0;
@@ -2491,6 +2491,8 @@ Identify f(x?) = x;
 
 Print;
 .end
+# False-positive valgrind errors on Ubuntu 20.04, MPICH
+#pend_if valgrind? && mpi?
 assert succeeded?
 assert result("test") =~ expr("0")
 *--#] Issue336_2 :
