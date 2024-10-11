@@ -2071,7 +2071,8 @@ int ArgFactorize(PHEAD WORD *argin, WORD *argout)
 			StoreTerm(BHEAD t);
 			t = tstop;
 		}
-		EndSort(BHEAD argin+ARGHEAD,0);
+		/* par = 1, in case the arg has more than SubTermsInSmall terms */
+		EndSort(BHEAD argin+ARGHEAD,1);
 		argin[*argin] = oldword;
 	}
 /*
@@ -2132,7 +2133,8 @@ int ArgFactorize(PHEAD WORD *argin, WORD *argout)
 			StoreTerm(BHEAD t);
 			t = tstop;
 		}
-		EndSort(BHEAD argfree+ARGHEAD,0);
+		/* par = 1, in case the arg has more than SubTermsInSmall terms */
+		EndSort(BHEAD argfree+ARGHEAD,1);
 		t = argfree+ARGHEAD;
 		while ( *t ) t += *t;
 		*argfree = t - argfree;
@@ -2224,7 +2226,8 @@ getout:
 			StoreTerm(BHEAD argextra);
 			t += *t; argextra += *argextra;
 		}
-		if ( EndSort(BHEAD argfree+ARGHEAD,0) ) { error = -2; goto getout; }
+		/* par = 1, in case the arg has more than SubTermsInSmall terms */
+		if ( EndSort(BHEAD argfree+ARGHEAD,1) ) { error = -2; goto getout; }
 		t = argfree + ARGHEAD;
 		while ( *t > 0 ) t += *t;
 		*argfree = t - argfree;
@@ -2247,63 +2250,64 @@ getout:
 		        Be careful: there should be more than one argument now.
 */
 	if ( error == 0 && action ) {
-	  a1 = a; NEXTARG(a1);
-	  if ( *a1 != 0 ) {
-		CBUF *C = cbuf+AC.cbufnum;
-		CBUF *CC = cbuf+AT.ebufnum;
-		WORD *oldworkpointer = AT.WorkPointer;
-		WORD *argcopy2 = TermMalloc("argcopy2"), *a1, *a2;
-		a1 = a; a2 = argcopy2;
-		while ( *a1 ) {
-			if ( *a1 < 0 ) {
-				if ( *a1 > -FUNCTION ) *a2++ = *a1++;
-				*a2++ = *a1++; *a2 = 0;
-				continue;
-			}
-			t = a1 + ARGHEAD;
-			tstop = a1 + *a1;
-			argextra = AT.WorkPointer;
-			NewSort(BHEAD0);
-			while ( t < tstop ) {
-				if ( ConvertFromPoly(BHEAD t,argextra,numxsymbol,CC->numrhs-startebuf+numxsymbol
-				,startebuf-numxsymbol,1) <= 0 ) {
-					TermFree(argcopy2,"argcopy2");
-					LowerSortLevel();
-					error = -3;
-					goto getout;
+		a1 = a; NEXTARG(a1);
+		if ( *a1 != 0 ) {
+			CBUF *C = cbuf+AC.cbufnum;
+			CBUF *CC = cbuf+AT.ebufnum;
+			WORD *oldworkpointer = AT.WorkPointer;
+			WORD *argcopy2 = TermMalloc("argcopy2"), *a1, *a2;
+			a1 = a; a2 = argcopy2;
+			while ( *a1 ) {
+				if ( *a1 < 0 ) {
+					if ( *a1 > -FUNCTION ) *a2++ = *a1++;
+					*a2++ = *a1++; *a2 = 0;
+					continue;
 				}
-				t += *t;
-				AT.WorkPointer = argextra + *argextra;
+				t = a1 + ARGHEAD;
+				tstop = a1 + *a1;
+				argextra = AT.WorkPointer;
+				NewSort(BHEAD0);
+				while ( t < tstop ) {
+					if ( ConvertFromPoly(BHEAD t,argextra,numxsymbol,CC->numrhs-startebuf+numxsymbol
+					,startebuf-numxsymbol,1) <= 0 ) {
+						TermFree(argcopy2,"argcopy2");
+						LowerSortLevel();
+						error = -3;
+						goto getout;
+					}
+					t += *t;
+					AT.WorkPointer = argextra + *argextra;
 /*
-				ConvertFromPoly leaves terms with subexpressions. Hence:
+					ConvertFromPoly leaves terms with subexpressions. Hence:
 */
-				if ( Generator(BHEAD argextra,C->numlhs) ) {
-					TermFree(argcopy2,"argcopy2");
-					LowerSortLevel();
-					error = -4;
-					goto getout;
+					if ( Generator(BHEAD argextra,C->numlhs) ) {
+						TermFree(argcopy2,"argcopy2");
+						LowerSortLevel();
+						error = -4;
+						goto getout;
+					}
 				}
+				AT.WorkPointer = oldworkpointer;
+				/* par = 1, in case the factor has more than SubTermsInSmall terms */
+				if ( EndSort(BHEAD a2+ARGHEAD,1) ) { error = -5; goto getout; }
+				t = a2+ARGHEAD; while ( *t ) t += *t;
+				*a2 = t - a2; a2[1] = 0; ZEROARG(a2);
+				ToFast(a2,a2); NEXTARG(a2);
+				a1 = tstop;
 			}
-			AT.WorkPointer = oldworkpointer;
-			if ( EndSort(BHEAD a2+ARGHEAD,0) ) { error = -5; goto getout; }
-			t = a2+ARGHEAD; while ( *t ) t += *t;
-			*a2 = t - a2; a2[1] = 0; ZEROARG(a2);
-			ToFast(a2,a2); NEXTARG(a2);
-			a1 = tstop;
+			i = a2 - argcopy2;
+			a2 = argcopy2; a1 = a;
+			NCOPY(a1,a2,i);
+			*a1 = 0;
+			TermFree(argcopy2,"argcopy2");
+/*
+			Erase the entries we made temporarily in cbuf[AT.ebufnum]
+*/
+			CC->numrhs = startebuf;
 		}
-		i = a2 - argcopy2;
-		a2 = argcopy2; a1 = a;
-		NCOPY(a1,a2,i);
-		*a1 = 0;
-		TermFree(argcopy2,"argcopy2");
-/*
-		Erase the entries we made temporarily in cbuf[AT.ebufnum]
-*/
-		CC->numrhs = startebuf;
-	  }
-	  else {	/* no factorization. recover the argument from before step 3. */
-		for ( i = 0; i <= *argcopy; i++ ) a[i] = argcopy[i];
-	  }
+		else {	/* no factorization. recover the argument from before step 3. */
+			for ( i = 0; i <= *argcopy; i++ ) a[i] = argcopy[i];
+		}
 	}
 /*
   	#] step 6 : 
@@ -2377,7 +2381,8 @@ return0:
 					StoreTerm(BHEAD t);
 					t = tstop;
 				}
-				EndSort(BHEAD a+ARGHEAD,0);
+				/* par = 1, in case the factor has more than SubTermsInSmall terms */
+				EndSort(BHEAD a+ARGHEAD,1);
 				a[*a] = oldword;
 				a += *a;
 			}
