@@ -1807,13 +1807,15 @@ VOID TerminateImpl(int errorcode, const char* file, int line, const char* functi
 			for (int i = 0; i < stacksize && !stop; i++) {
 				FILE *fp;
 				char cmd[512];
-				MesPrint("%#%2d: %", i);
-				snprintf(cmd, sizeof(cmd)/sizeof(cmd[0]), "eu-addr2line -s --pretty-print -f -i '%p' --pid=%d\n", stack[i], getpid());
-				fp = popen(cmd, "r");
-				while ( fgets(cmd, sizeof(cmd), fp) != NULL ) {
+				// Leave an initial space
+				cmd[0] = ' ';
+				MesPrint("%#%2d:%", i);
+				snprintf(cmd+1, sizeof(cmd)/sizeof(cmd[0])-1, "eu-addr2line -s --pretty-print -f -i '%p' --pid=%d\n", stack[i], getpid());
+				fp = popen(cmd+1, "r");
+				while ( fgets(cmd+1, sizeof(cmd)/sizeof(cmd[0])-1, fp) != NULL ) {
 					MesPrint("%s", cmd);
-					/* Don't show functions lower than "main" */
-					if ( strstr(cmd, "main") || strstr(cmd, "RunThread") || strstr(cmd, "RunSortBot") ) {
+					/* Don't show functions lower than "main" (or thread equivalent) */
+					if ( strstr(cmd, " main ") || strstr(cmd, " RunThread ") || strstr(cmd, " RunSortBot ") ) {
 						stop = 1;
 					}
 				}
@@ -1829,11 +1831,10 @@ VOID TerminateImpl(int errorcode, const char* file, int line, const char* functi
 				char *p = strings[i];
 				while ( *p && *p != '(' ) p++;
 				MesPrint("%#%2d: %s\n", i, p);
-				/* Don't show functions lower than "main" */
-				if ( strstr(p, "main") || strstr(p, "RunThread") || strstr(p, "RunSortBot") ) {
+				/* Don't show functions lower than "main" (or thread equivalent) */
+				if ( strstr(p, "(main+") || strstr(p, "(RunThread+") || strstr(p, "(RunSortBot+") ) {
 					stop = 1;
 				}
-				/* Maybe check stopping conditions? */
 			}
 			MesPrint("Please install eu-addr2line for readable stack information.");
 			free(strings);
