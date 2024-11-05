@@ -2863,3 +2863,83 @@ Print F;
 assert succeeded?
 assert result("F") =~ expr("0")
 *--#] Issue563 :
+*--#[ Issue567_1 :
+CF rat;
+Vector v;
+PolyRatFun rat;
+Local F = rat(v,1);
+.end
+# Runtime errors may freeze ParFORM.
+#pend_if mpi?
+assert runtime_error?("ERROR: polynomials and polyratfuns must contain symbols only")
+*--#] Issue567_1 :
+*--#[ Issue567_2 :
+CF rat;
+Index i;
+PolyRatFun rat;
+Local F = rat(i,1);
+.end
+# Runtime errors may freeze ParFORM.
+#pend_if mpi?
+assert runtime_error?("ERROR: polynomials and polyratfuns must contain symbols only")
+*--#] Issue567_2 :
+*--#[ Issue567_3a :
+CF rat;
+Function f;
+PolyRatFun rat;
+Local F = rat(f,1);
+.end
+# Runtime errors may freeze ParFORM.
+#pend_if mpi?
+assert runtime_error?("ERROR: polynomials and polyratfuns must contain symbols only")
+*--#] Issue567_3a :
+*--#[ Issue567_3b :
+CF rat;
+CFunction f;
+PolyRatFun rat;
+Local F = rat(f,1);
+.end
+# Runtime errors may freeze ParFORM.
+#pend_if mpi?
+assert runtime_error?("ERROR: polynomials and polyratfuns must contain symbols only")
+*--#] Issue567_3b :
+*--#[ Issue567_3c :
+CF rat;
+Table f(1);
+PolyRatFun rat;
+Local F = rat(f,1);
+.end
+# Runtime errors may freeze ParFORM.
+#pend_if mpi?
+assert runtime_error?("ERROR: polynomials and polyratfuns must contain symbols only")
+*--#] Issue567_3c :
+*--#[ Issue567_3d :
+CF rat;
+CTable f(1);
+PolyRatFun rat;
+Local F = rat(f,1);
+.end
+# Runtime errors may freeze ParFORM.
+#pend_if mpi?
+assert runtime_error?("ERROR: polynomials and polyratfuns must contain symbols only")
+*--#] Issue567_3d :
+*--#[ Issue567_3e :
+CF rat;
+Tensor f;
+PolyRatFun rat;
+Local F = rat(f,1);
+.end
+# Runtime errors may freeze ParFORM.
+#pend_if mpi?
+assert runtime_error?("ERROR: polynomials and polyratfuns must contain symbols only")
+*--#] Issue567_3e :
+*--#[ Issue567_3f :
+CF rat;
+CTensor f;
+PolyRatFun rat;
+Local F = rat(f,1);
+.end
+# Runtime errors may freeze ParFORM.
+#pend_if mpi?
+assert runtime_error?("ERROR: polynomials and polyratfuns must contain symbols only")
+*--#] Issue567_3f :
