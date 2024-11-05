@@ -2408,7 +2408,14 @@ void poly::get_variables (PHEAD vector<WORD *> es, bool with_arghead, bool sort_
 				degrees.push_back(1);
 			}
 		}
-		else {		
+		// JD: Here we need to check for non-symbol/number terms in fast notation.
+		else if (*e < 0) {
+			MLOCK(ErrorMessageLock);
+			MesPrint ((char*)"ERROR: polynomials and polyratfuns must contain symbols only");
+			MUNLOCK(ErrorMessageLock);
+			Terminate(1);
+		}
+		else {
 			for (int i=with_arghead ? ARGHEAD : 0; with_arghead ? i<e[0] : e[i]!=0; i+=e[i]) {
 				if (i+1<i+e[i]-ABS(e[i+e[i]-1]) && e[i+1]!=SYMBOL) {
 					MLOCK(ErrorMessageLock);
@@ -2417,7 +2424,7 @@ void poly::get_variables (PHEAD vector<WORD *> es, bool with_arghead, bool sort_
 					Terminate(1);
 				}
 				
-				for (int j=i+3; j<i+e[i]-ABS(e[i+e[i]-1]); j+=2) 
+				for (int j=i+3; j<i+e[i]-ABS(e[i+e[i]-1]); j+=2) {
 					if (!var_to_idx.count(e[j])) {
 						vars.push_back(e[j]);
 						var_to_idx[e[j]] = AN.poly_num_vars++;
@@ -2426,10 +2433,11 @@ void poly::get_variables (PHEAD vector<WORD *> es, bool with_arghead, bool sort_
 					else {
 						degrees[var_to_idx[e[j]]] = MaX(degrees[var_to_idx[e[j]]], e[j+1]);
 					}
+				}
 			}
 		}
 	}
-				 
+
 	// make sure an eventual FACTORSYMBOL appear as last
 	if (var_to_idx.count(FACTORSYMBOL)) {
 		int i = var_to_idx[FACTORSYMBOL];
@@ -2488,7 +2496,7 @@ const poly poly::argument_to_poly (PHEAD WORD *e, bool with_arghead, bool sort_u
 	
 	poly res(BHEAD 0);
 
-	 // fast notation
+	// fast notation
 	if (*e == -SNUMBER) {
 		if (denpoly!=NULL) *denpoly = poly(BHEAD 1);
 		
@@ -2529,7 +2537,7 @@ const poly poly::argument_to_poly (PHEAD WORD *e, bool with_arghead, bool sort_u
 	UWORD *dum = NumberMalloc("poly::argument_to_poly");
 	den[0]=1;
 	
- 	for (int i=with_arghead ? ARGHEAD : 0; with_arghead ? i<e[0] : e[i]!=0; i+=e[i]) {
+	for (int i=with_arghead ? ARGHEAD : 0; with_arghead ? i<e[0] : e[i]!=0; i+=e[i]) {
 		int ncoe = ABS(e[i+e[i]-1]/2);
 		UWORD *coe = (UWORD *)&e[i+e[i]-ncoe-1];
 		while (ncoe>0 && coe[ncoe-1]==0) ncoe--;
