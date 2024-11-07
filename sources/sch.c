@@ -338,130 +338,118 @@ VOID RatToLine(UWORD *a, WORD na)
 {
 	GETIDENTITY
 	WORD adenom, anumer;
+	UWORD maxInt;
+
+	if ( AC.OutputMode == CMODE ) {
+		// In C, integer literals over 2^32-1 are automatically promoted to longer types up to
+		// unsigned long long, however FORM has always given integers over 2^32-1 a floating suffix
+		// in C mode. Retain that behaviour here for now. In the future, maxInt could be a user-
+		// configurable parameter.
+		maxInt = 4294967295; 
+	}
+	else {
+		// In Fortran modes, literals over 2^31-1 should be printed with a float suffix
+		maxInt = 2147483647;
+	}
+
 	if ( na < 0 ) na = -na;
+
 	if ( AC.OutNumberType == RATIONALMODE ) {
-/*
-		We need some special provisions for the various Fortran modes.
-		In PFORTRAN we use
-				one     if denom = numerator = 1
-				integer     if denom = 1
-				(one/integer) if numerator = 1
-				((one*integer)/integer) in the general case
-*/
+
+		// Work out what is to be printed:
+		WORD isOne = 0, isOneOver = 0, isIntegral = 0;
+		WORD isLongNum = 0, isLongDen = 0;
+		UnPack(a,na,&adenom,&anumer);
+		if ( na == 1 && a[0] == 1 && a[1] == 1 ) { isOne = 1; isIntegral = 1; }
+		else if ( adenom == 1 && a[na] == 1 ) { isIntegral = 1; }
+		else if ( anumer == 1 && a[0] == 1 ) { isOneOver = 1; }
+		if ( anumer > 1 || ( anumer == 1 && a[0] > maxInt ) ) { isLongNum = 1; };
+		if ( adenom > 1 || ( adenom == 1 && a[na] > maxInt ) ) { isLongDen = 1; };
+
+		// Now sort out the float suffix for the numerator:
+		UBYTE* suffNum = (UBYTE*)"";
+		UBYTE* suffDen = (UBYTE*)"";
+		if ( isLongNum || !isIntegral || AC.Fortran90Kind || ( AO.DoubleFlag & 4 ) == 4 ) {
+			if ( AC.OutputMode == FORTRANMODE && AC.IsFortran90 == ISFORTRAN90 ) {
+				if ( AC.Fortran90Kind ) { suffNum = AC.Fortran90Kind; }
+				else { suffNum = (UBYTE*)"."; }
+			}
+			else if ( AC.OutputMode == FORTRANMODE || AC.OutputMode == CMODE ) {
+				if ( ( AO.DoubleFlag & 2 ) == 2 ) { suffNum = (UBYTE*)".Q0"; }
+				else if ( ( AO.DoubleFlag & 1 ) == 1 ) { suffNum = (UBYTE*)".D0"; }
+				else { suffNum = (UBYTE*)"."; }
+			}
+		}
+		// The same again, for the denominator:
+		if ( isLongDen || !isIntegral || AC.Fortran90Kind || ( AO.DoubleFlag & 4 ) == 4 ) {
+			if ( AC.OutputMode == FORTRANMODE && AC.IsFortran90 == ISFORTRAN90 ) {
+				if ( AC.Fortran90Kind ) { suffDen = AC.Fortran90Kind; }
+				else { suffDen = (UBYTE*)"."; }
+			}
+			else if ( AC.OutputMode == FORTRANMODE || AC.OutputMode == CMODE ) {
+				if ( ( AO.DoubleFlag & 2 ) == 2 ) { suffDen = (UBYTE*)".Q0"; }
+				else if ( ( AO.DoubleFlag & 1 ) == 1 ) { suffDen = (UBYTE*)".D0"; }
+				else { suffDen = (UBYTE*)"."; }
+			}
+		}
+		// In PFORTRAN mode, rationals don't get a suffix if the integers are not long
+		// Also the suffix is at least ".D0" (and never ".").
 		if ( AC.OutputMode == PFORTRANMODE ) {
-		  UnPack(a,na,&adenom,&anumer);
-		  if ( na == 1 && a[0] == 1 && a[1] == 1 ) {
-			AddToLine((UBYTE *)"one");
-			return;
-		  }
-		  if ( adenom == 1 && a[na] == 1 ) {
-			LongToLine(a,anumer);
-			if ( anumer > 1 ) {
-				if ( ( AO.DoubleFlag & 2 ) == 2 ) { AddToLine((UBYTE *)".Q0"); }
-				else { AddToLine((UBYTE *)".D0"); }
+			if ( isLongNum ) {
+				if ( ( AO.DoubleFlag & 2 ) == 2 ) { suffNum = (UBYTE*)".Q0"; }
+				else { suffNum = (UBYTE*)".D0"; }
 			}
-		  }
-		  else if ( anumer == 1 && a[0] == 1 ) {
-			a += na;
-			AddToLine((UBYTE *)"(one/");
-			LongToLine(a,adenom);
-			if ( adenom > 1 ) {
-				if ( ( AO.DoubleFlag & 2 ) == 2 ) { AddToLine((UBYTE *)".Q0"); }
-				else { AddToLine((UBYTE *)".D0"); }
+			if ( isLongDen ) {
+				if ( ( AO.DoubleFlag & 2 ) == 2 ) { suffDen = (UBYTE*)".Q0"; }
+				else { suffDen = (UBYTE*)".D0"; }
 			}
-			AddToLine((UBYTE *)")");
-		  }
-		  else {
-			if ( anumer > 1 || adenom > 1 ) {
+		}
+
+		// Finally, print the number:
+		// In PFORTRAN we use
+		//    one     if denom = numerator = 1
+		//    integer     if denom = 1
+		//    (one/integer) if numerator = 1
+		//    ((one*integer)/integer) in the general case
+		if ( AC.OutputMode == PFORTRANMODE ) {
+			if ( isOne ) {
+				AddToLine((UBYTE *)"one");
+			}
+			else if ( isOneOver ) {
+				AddToLine((UBYTE *)"(one/");
+				LongToLine(a+na,adenom);
+				AddToLine(suffDen);
+				AddToLine((UBYTE*)")");
+			}
+			else if ( isIntegral ) {
 				LongToLine(a,anumer);
-				if ( anumer > 1 ) {
-					if (  ( AO.DoubleFlag & 2 ) == 2 ) { AddToLine((UBYTE *)".Q0"); }
-					else { AddToLine((UBYTE *)".D0"); }
-				}
-				a += na;
-				AddToLine((UBYTE *)"/");
-				LongToLine(a,adenom);
-				if ( adenom > 1 ) {
-					if (  ( AO.DoubleFlag & 2 ) == 2 ) { AddToLine((UBYTE *)".Q0"); }
-					else { AddToLine((UBYTE *)".D0"); }
-				}
+				AddToLine(suffNum);
 			}
 			else {
+				// rational
 				AddToLine((UBYTE *)"((one*");
 				LongToLine(a,anumer);
-				a += na;
-				AddToLine((UBYTE *)")/");
-				LongToLine(a,adenom);
-				AddToLine((UBYTE *)")");
+				AddToLine(suffNum);
+				AddToLine((UBYTE*)")/");
+				LongToLine(a+na,adenom);
+				AddToLine(suffDen);
+				AddToLine((UBYTE*)")");
 			}
-		  }
 		}
+		// All other modes use the same printing code:
 		else {
-		  UnPack(a,na,&adenom,&anumer);
-		  LongToLine(a,anumer);
-		  a += na;
-		  if ( anumer && !( adenom == 1 && *a == 1 ) ) {
-			if ( AC.OutputMode == FORTRANMODE && AC.IsFortran90 == ISFORTRAN90 ) {
-				if ( AC.Fortran90Kind ) {
-					AddToLine(AC.Fortran90Kind);
-					AddToLine((UBYTE *)"/");
-				}
-				else {
-					AddToLine((UBYTE *)"./");
-				}
+			// Numerator:
+			LongToLine(a,anumer);
+			AddToLine(suffNum);
+			// Denominator, if it is not 1:
+			if (!isIntegral) {
+				AddToLine((UBYTE*)"/");
+				LongToLine(a+na,adenom);
+				AddToLine(suffDen);
 			}
-			else if ( AC.OutputMode == FORTRANMODE || AC.OutputMode == CMODE ) {
-				if ( ( AO.DoubleFlag & 2 ) == 2 ) { AddToLine((UBYTE *)".Q0/"); }
-				else if ( ( AO.DoubleFlag & 1 ) == 1 ) { AddToLine((UBYTE *)".D0/"); }
-				else { AddToLine((UBYTE *)"./"); }
-			}
-			else AddToLine((UBYTE *)"/");
-			LongToLine(a,adenom);
-			if ( AC.OutputMode == FORTRANMODE && AC.IsFortran90 == ISFORTRAN90 ) {
-				if ( AC.Fortran90Kind ) {
-					AddToLine(AC.Fortran90Kind);
-				}
-				else {
-					AddToLine((UBYTE *)".");
-				}
-			}
-			else if ( AC.OutputMode == FORTRANMODE || AC.OutputMode == CMODE ) {
-				if ( ( AO.DoubleFlag & 2 ) == 2 ) { AddToLine((UBYTE *)".Q0"); }
-				else if ( ( AO.DoubleFlag & 1 ) == 1 ) { AddToLine((UBYTE *)".D0"); }
-				else { AddToLine((UBYTE *)"."); }
-			}
-		  }
-		  else if ( ( anumer > 1 || ( AO.DoubleFlag & 4 ) == 4 ) && ( AC.OutputMode == FORTRANMODE
-		  || AC.OutputMode == CMODE ) ) {
-			if ( AC.OutputMode == FORTRANMODE && AC.IsFortran90 == ISFORTRAN90 ) {
-				if ( AC.Fortran90Kind ) {
-					AddToLine(AC.Fortran90Kind);
-				}
-				else {
-					AddToLine((UBYTE *)".");
-				}
-			}
-			else if ( ( AO.DoubleFlag & 2 ) == 2 ) { AddToLine((UBYTE *)".Q0"); }
-			else if ( ( AO.DoubleFlag & 1 ) == 1 ) { AddToLine((UBYTE *)".D0"); }
-			else { AddToLine((UBYTE *)"."); }
-		  }
-		  else if ( AC.OutputMode == FORTRANMODE && AC.IsFortran90 == ISFORTRAN90 ) {
-				if ( AC.Fortran90Kind ) {
-					AddToLine(AC.Fortran90Kind);
-				}
-				else {
-					AddToLine((UBYTE *)".");
-				}
-		  }
-		  else if ( ( AC.OutputMode == FORTRANMODE || AC.OutputMode == CMODE )
-		  && AO.DoubleFlag ) {
-			if ( anumer == 1 && adenom == 1 && a[0] == 1 &&
-				 ( AO.DoubleFlag & 4 ) == 0 ) {}
-			else if ( ( AO.DoubleFlag & 2 ) == 2 ) { AddToLine((UBYTE *)".Q0"); }
-			else if ( ( AO.DoubleFlag & 1 ) == 1 ) { AddToLine((UBYTE *)".D0"); }
-		  }
 		}
 	}
+
 	else {
 /*
 		This is the float mode
@@ -484,12 +472,12 @@ VOID RatToLine(UWORD *a, WORD na)
 			Divvy(BHEAD c,&na,&b,1);
 			UnPack(c,na,&adenom,&anumer);
 			exponent++;
-		}		
+		}
 		while ( BigLong(c,anumer,c+na,adenom) < 0 ) {
 			Mully(BHEAD c,&na,&b,1);
 			UnPack(c,na,&adenom,&anumer);
 			exponent--;
-		}		
+		}
 /*
 		Now division will give a number between 1 and 9
 */
