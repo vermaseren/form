@@ -1936,6 +1936,22 @@ definitions would contain the old extra symbols. The result would be
 incorrect.
 
 %--#] skipextrasymbols : 
+%--#[ sortreallocate :
+
+\section{\#sortreallocate}
+\label{presortreallocate}
+
+\noindent Syntax:
+
+\#sortreallocate\index{\#sortreallocate}
+
+\noindent See also ``On sortreallocate;'' (\ref{substaon}).
+
+\noindent Reallocates the small and large buffer (also on the worker threads)
+at the end of the current module. In some cases this can significantly reduce
+\FORM's memory usage as measured by ``resident set size''.
+
+%--#] sortreallocate : 
 %--#[ switch :
 
 \section{\#switch}
