@@ -118,7 +118,7 @@ public:
 	static const poly simple_poly (PHEAD int, const poly&, int=1, int=0, int=1);
 
 	// conversion from/to form notation
-	static void get_variables (PHEAD std::vector<WORD *>, bool, bool);
+	static void get_variables (PHEAD const std::vector<WORD *> &, bool, bool);
 	static const poly argument_to_poly (PHEAD WORD *, bool, bool, poly *den=NULL);
 	static void poly_to_argument (const poly &, WORD *, bool);
 	static void poly_to_argument_with_den (const poly &, WORD, const UWORD *, WORD *, bool);
