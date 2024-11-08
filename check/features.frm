@@ -1111,3 +1111,27 @@ format C;
 assert succeeded?
 assert !(file("out.c") =~ /[_] [+]=  /)
 *--#] Issue392_ContinuationLines_0 :
+*--#[ Sortrealloc_1 :
+On sortreallocate;
+Symbol x,y;
+Local F = (x+y)^10;
+.sort
+Identify x = - y;
+.sort
+Print +s;
+.end
+assert succeeded?
+assert result("F") =~ expr("0");
+*--#] Sortrealloc_1 :
+*--#[ Sortrealloc_2 :
+Symbol x,y;
+Local F = (x+y)^10;
+.sort
+#sortreallocate
+Identify x = - y;
+.sort
+Print +s;
+.end
+assert succeeded?
+assert result("F") =~ expr("0");
+*--#] Sortrealloc_2 :
