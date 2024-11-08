@@ -23,11 +23,12 @@ Print;
 .end
 ```
 
-and yields `F = 34 + 55*x`.
+and yields `E = 34 + 55*x`.
 
 The following FORM program matches the function `f` that has any arguments before encountering an `x` and any arguments after, and switches them around:
 
 ```form
+CFunction f;
 Symbol x;
 Local E = f(1,2,x,3,4);
 
@@ -37,7 +38,7 @@ Print;
 .end
 ```
 
-and yields `F = f(3,4,1,2)`.
+and yields `E = f(3,4,1,2)`.
 
 FORM can match many more complicated patterns and has many more features, as documented in the [additional information](#additional-information).
 
