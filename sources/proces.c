@@ -2206,7 +2206,12 @@ WORD InFunction(PHEAD WORD *term, WORD *termout)
 				*m++ = 3;
 				r = term + *term;
 				while ( t < r ) *m++ = *t++;
-				if ( (m-termout) > (LONG)(AM.MaxTer/sizeof(WORD)) ) goto TooLarge;
+				if ( (m-termout) > (LONG)(AM.MaxTer/sizeof(WORD)) ) {
+					MLOCK(ErrorMessageLock);
+					MesPrint("Output term too large (%d words) (MaxTermSize: %d words)", m-termout, AM.MaxTer/sizeof(WORD));
+					MUNLOCK(ErrorMessageLock);
+					goto TooLarge;
+				}
 				*termout = WORDDIF(m,termout);
 				return(0);
 			}
@@ -2279,7 +2284,12 @@ WORD InFunction(PHEAD WORD *term, WORD *termout)
 					r = term + *term;
 					t = v;
 					while ( t < r ) *m++ = *t++;
-					if ( (m-termout) > (LONG)(AM.MaxTer/sizeof(WORD)) ) goto TooLarge;
+					if ( (m-termout) > (LONG)(AM.MaxTer/sizeof(WORD)) ) {
+						MLOCK(ErrorMessageLock);
+						MesPrint("Output term too large (%d words) (MaxTermSize: %d words)", m-termout, AM.MaxTer/sizeof(WORD));
+						MUNLOCK(ErrorMessageLock);
+						goto TooLarge;
+					}
 					*termout = WORDDIF(m,termout);
 					AR.DeferFlag = olddefer;
 					AN.ncmod = oldncmod;
@@ -2463,7 +2473,12 @@ WORD InFunction(PHEAD WORD *term, WORD *termout)
 					r = term + *term;
 					t = v;
 					while ( t < r ) *m++ = *t++;
-					if ( (m-termout) > (LONG)(AM.MaxTer/sizeof(WORD)) ) goto TooLarge;
+					if ( (m-termout) > (LONG)(AM.MaxTer/sizeof(WORD)) ) {
+						MLOCK(ErrorMessageLock);
+						MesPrint("Output term too large (%d words) (MaxTermSize: %d words)", m-termout, AM.MaxTer/sizeof(WORD));
+						MUNLOCK(ErrorMessageLock);
+						goto TooLarge;
+					}
 					*termout = WORDDIF(m,termout);
 					AR.DeferFlag = olddefer;
 					AN.ncmod = oldncmod;
@@ -2505,7 +2520,12 @@ WORD InFunction(PHEAD WORD *term, WORD *termout)
 					from++;  /* Skip our function */
 					r = term + *term;
 					while ( from < r ) *m++ = *from++;
-					if ( (m-termout) > (LONG)(AM.MaxTer/sizeof(WORD)) ) goto TooLarge;
+					if ( (m-termout) > (LONG)(AM.MaxTer/sizeof(WORD)) ) {
+						MLOCK(ErrorMessageLock);
+						MesPrint("Output term too large (%d words) (MaxTermSize: %d words)", m-termout, AM.MaxTer/sizeof(WORD));
+						MUNLOCK(ErrorMessageLock);
+						goto TooLarge;
+					}
 					*termout = WORDDIF(m,termout);
 					return(0);
 				}
@@ -2646,7 +2666,12 @@ wrongtype:;
 					term += *term;
 					while ( from < term ) *m++ = *from++;
 					if ( sign < 0 ) m[-1] = -m[-1];
-					if ( (m-termout) > (LONG)(AM.MaxTer/sizeof(WORD)) ) goto TooLarge;
+					if ( (m-termout) > (LONG)(AM.MaxTer/sizeof(WORD)) ) {
+						MLOCK(ErrorMessageLock);
+						MesPrint("Output term too large (%d words) (MaxTermSize: %d words)", m-termout, AM.MaxTer/sizeof(WORD));
+						MUNLOCK(ErrorMessageLock);
+						goto TooLarge;
+					}
 					*termout = m - termout;
 					AN.ncmod = oldncmod;
 					return(0);
@@ -2690,7 +2715,6 @@ InFunc:
 
 TooLarge:
 	MLOCK(ErrorMessageLock);
-	MesPrint("Output term too large. Try to increase MaxTermSize in the setup.");
 	MesCall("InFunction");
 	MUNLOCK(ErrorMessageLock);
 	SETERROR(-1)
@@ -2799,7 +2823,7 @@ ComAct:		if ( t < u ) do { *m++ = *t++; } while ( t < u );
 			*termout = WORDDIF(m,termout);
 			if ( (*termout)*((LONG)sizeof(WORD)) > AM.MaxTer ) {
 				MLOCK(ErrorMessageLock);
-				MesPrint("Term too complex during substitution. MaxTermSize of %l is too small",AM.MaxTer);
+				MesPrint("Term too complex during substitution (%d words). MaxTermSize (%l words) is too small.", *termout, AM.MaxTer/(LONG)sizeof(WORD) );
 				goto InsCall2;
 			}
 			AT.WorkPointer = coef;
@@ -5735,7 +5759,7 @@ retry:
 	*AT.WorkPointer = n1 = WORDDIF(t,AT.WorkPointer);
 	if ( n1*((LONG)sizeof(WORD)) > AM.MaxTer ) {
 		MLOCK(ErrorMessageLock);
-		MesPrint("Term too complex. Maybe increasing MaxTermSize can help");
+		MesPrint("Term too complex (%d words). MaxTermSize (%l words) is too small.", n1, AM.MaxTer/(LONG)sizeof(WORD) );
 		goto PolyCall2;
 	}
 	m = term; t = AT.WorkPointer;
