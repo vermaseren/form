@@ -36,6 +36,7 @@
 #include "poly.h"
 #include "polygcd.h"
 
+#include <cassert>
 #include <cctype>
 #include <cmath>
 #include <algorithm>
@@ -2386,7 +2387,8 @@ const poly poly::simple_poly (PHEAD int x, const poly &a, int b, int p, int n) {
 
 // gets all variables in the expressions and stores them in AN.poly_vars
 // (it is assumed that AN.poly_vars=NULL)
-void poly::get_variables (PHEAD vector<WORD *> es, bool with_arghead, bool sort_vars) {
+void poly::get_variables (PHEAD const vector<WORD *> &es, bool with_arghead, bool sort_vars) {
+	assert(AN.poly_vars == NULL);
 
 	AN.poly_num_vars = 0;
 
@@ -2396,7 +2398,7 @@ void poly::get_variables (PHEAD vector<WORD *> es, bool with_arghead, bool sort_
 	
 	// extract all variables
 	for (int ei=0; ei<(int)es.size(); ei++) {
-		WORD *e = es[ei];
+		const WORD *e = es[ei];
 
 		// fast notation
 		if (*e == -SNUMBER) {
