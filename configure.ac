@@ -97,53 +97,6 @@ AM_PROG_CC_C_O
 AC_PROG_CXX([g++ c++ icpc])
 AC_PROG_LN_S
 
-# Checks for header files
-# NOTE: autoconf>=2.70 has started to warn obsolete macros.
-# We check if AC_CHECK_INCLUDES_DEFAULT (introduced in 2.70) is available
-# and switch to the new code if possible.
-m4_ifdef([AC_CHECK_INCLUDES_DEFAULT],
-	[AC_CHECK_INCLUDES_DEFAULT
-	AC_PROG_EGREP
-	AC_CHECK_HEADERS_ONCE([sys/time.h])
-	AC_DEFINE([TIME_WITH_SYS_TIME],
-		[1],
-		[Define to 1 if you can safely include both <sys/time.h> and <time.h>. This macro is obsolete.])],
-	[AC_HEADER_STDC
-	AC_HEADER_TIME])
-AC_CHECK_HEADERS([fcntl.h limits.h sys/file.h])
-
-AC_LANG_PUSH([C++])
-AC_CHECK_HEADERS([unordered_map tr1/unordered_map boost/unordered_map.hpp])
-AC_CHECK_HEADERS([unordered_set tr1/unordered_set boost/unordered_set.hpp])
-AC_LANG_POP([C++])
-
-# Checks for builtin functions
-ok=no
-AS_IF([test $ok != yes],
-	[AC_MSG_CHECKING([__builtin_popcount])
-	AC_LINK_IFELSE(
-		[AC_LANG_PROGRAM([], [
-			int x = __builtin_popcount((unsigned int)(-1));
-		])],
-		[ok=yes;
-		AC_DEFINE([HAVE_BUILTIN_POPCOUNT], [1], [Define to 1 if you have __builtin_popcount function.])])
-	AC_MSG_RESULT($ok)])
-AS_IF([test $ok != yes],
-	[AC_MSG_CHECKING([__popcnt])
-	AC_LINK_IFELSE(
-		[AC_LANG_PROGRAM([#include <intrin.h>], [
-			unsigned int x = __popcnt((unsigned int)(-1));
-		])],
-		[ok=yes;
-		AC_DEFINE([HAVE_POPCNT], [1], [Define to 1 if you have __popcnt function.])])
-	AC_MSG_RESULT($ok)])
-
-# Check for inline
-AC_C_INLINE
-
-# Sets _FILE_OFFSET_BITS if possible
-AC_SYS_LARGEFILE
-
 # Check for architecture and OS
 AC_CANONICAL_HOST
 case $host_os in
@@ -215,6 +168,105 @@ choke me
 ])], [break])
 done
 vendor=`echo $vendor | cut -d: -f1`
+
+# Check for the C++ standard
+AC_ARG_WITH([cxxstd],
+	[AS_HELP_STRING([--with-cxxstd=STANDARD],
+		[specify the C++ standard @<:@default=check@:>@])],
+	[],
+	[with_cxxstd=check])
+cxxstd_flag=
+if test "x$vendor" = xgnu; then
+	AC_LANG_PUSH([C++])
+	if test "x$with_cxxstd" = xcheck; then
+		AC_MSG_CHECKING([whether C++11 requires any flag])
+		ok=no
+		for opt in none -std=gnu++11; do
+			save_CXXFLAGS=$CXXFLAGS
+			CXXFLAGS="$CXXFLAGS $opt"
+			AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [
+				#if __cplusplus < 201103L
+					#error C+11 not supported
+				#endif
+			])], [ok=yes])
+			CXXFLAGS=$save_CXXFLAGS
+			if test "x$ok" = xyes; then
+				if test "x$opt" = xnone; then
+					cxxstd_flag=
+					AC_MSG_RESULT([no])
+				else
+					cxxstd_flag=$opt
+					AC_MSG_RESULT([$opt])
+				fi
+				break
+			fi
+		done
+		if test "x$ok" = xno; then
+			cxxstd_flag=
+			AC_MSG_RESULT([not supported])
+		fi
+	elif test "x$with_cxxstd" != xnone; then
+		cxxstd_flag="-std=$with_cxxstd"
+		AX_CHECK_COMPILE_FLAG([$cxxstd_flag],
+			[],
+			[AC_MSG_FAILURE([Invalid argument for --with-cxxstd])],
+			[-Werror])
+	fi
+	AC_LANG_POP([C++])
+fi
+if test "x$cxxstd_flag" != x; then
+	CXX="$CXX $cxxstd_flag"
+	if test "x$CXXCPP" != x; then
+		CXXCPP="$CXXCPP $cxxstd_flag"
+	fi
+fi
+
+# Checks for header files
+# NOTE: autoconf>=2.70 has started to warn obsolete macros.
+# We check if AC_CHECK_INCLUDES_DEFAULT (introduced in 2.70) is available
+# and switch to the new code if possible.
+m4_ifdef([AC_CHECK_INCLUDES_DEFAULT],
+	[AC_CHECK_INCLUDES_DEFAULT
+	AC_PROG_EGREP
+	AC_CHECK_HEADERS_ONCE([sys/time.h])
+	AC_DEFINE([TIME_WITH_SYS_TIME],
+		[1],
+		[Define to 1 if you can safely include both <sys/time.h> and <time.h>. This macro is obsolete.])],
+	[AC_HEADER_STDC
+	AC_HEADER_TIME])
+AC_CHECK_HEADERS([fcntl.h limits.h sys/file.h])
+
+AC_LANG_PUSH([C++])
+AC_CHECK_HEADERS([unordered_map tr1/unordered_map boost/unordered_map.hpp])
+AC_CHECK_HEADERS([unordered_set tr1/unordered_set boost/unordered_set.hpp])
+AC_LANG_POP([C++])
+
+# Checks for builtin functions
+ok=no
+AS_IF([test $ok != yes],
+	[AC_MSG_CHECKING([__builtin_popcount])
+	AC_LINK_IFELSE(
+		[AC_LANG_PROGRAM([], [
+			int x = __builtin_popcount((unsigned int)(-1));
+		])],
+		[ok=yes;
+		AC_DEFINE([HAVE_BUILTIN_POPCOUNT], [1], [Define to 1 if you have __builtin_popcount function.])])
+	AC_MSG_RESULT($ok)])
+AS_IF([test $ok != yes],
+	[AC_MSG_CHECKING([__popcnt])
+	AC_LINK_IFELSE(
+		[AC_LANG_PROGRAM([#include <intrin.h>], [
+			unsigned int x = __popcnt((unsigned int)(-1));
+		])],
+		[ok=yes;
+		AC_DEFINE([HAVE_POPCNT], [1], [Define to 1 if you have __popcnt function.])])
+	AC_MSG_RESULT($ok)])
+
+# Check for inline
+AC_C_INLINE
+
+# Sets _FILE_OFFSET_BITS if possible
+AC_SYS_LARGEFILE
 
 # POSIX or Windows API
 AC_ARG_WITH([api],
@@ -624,6 +676,9 @@ build_parform=$enable_parform
 AS_IF([test "x$enable_parform" = xyes && test "x$enable_debug" = xyes], [build_parvorm=yes], [build_parvorm=no])
 AM_CONDITIONAL([BUILD_PARFORM], [test "x$build_parform" = xyes])
 AM_CONDITIONAL([BUILD_PARVORM], [test "x$build_parvorm" = xyes])
+if test "x$MPICXX" != x && test "x$cxxstd_flag" != x; then
+	MPICXX="$MPICXX $cxxstd_flag"
+fi
 
 
 # Check for wall-clock time
