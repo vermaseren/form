@@ -587,6 +587,8 @@ DBASE *GetDbase(char *filename, MLONG rwmode)
 	d->handle = f;
 	if ( ReadIniInfo(d) || ReadIndex(d) ) { M_free(d,"index-d"); fclose(f); return(0); }
 	if ( ComposeTableNames(d) < 0 ) { FreeTableBase(d); fclose(f); return(0); }
+	// free allocation from previous str_dup
+	M_free(d->name, "from str_dup");
 	d->name = str_dup(filename);
 	d->fullname = newname;
 	return(d);
