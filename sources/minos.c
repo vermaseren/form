@@ -676,6 +676,8 @@ getout:
 		if ( i > 0 ) d->iblocks[i]->previousblock = d->iblocks[i-1]->position;
 		else d->iblocks[i]->previousblock = -1;
 		d->iblocks[i]->position = ftell(f);
+		// Initialise, to keep valgrind happy
+		d->iblocks[i]->flags = -1;
 /*----------change 10-feb-2003 */
 /*
 			Zero things properly. We don't want garbage in the file.
