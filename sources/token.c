@@ -144,13 +144,14 @@ dovariable:		c = *in; *in = 0;
 										}
 /*[06nov2003 mt]:*/
 #ifdef WITHMPI
-										else/*RHSide*/
+										else { /*RHSide*/
 											/* NOTE: We always set AC.RhsExprInModuleFlag regardless of
 											 *       AP.PreAssignFlag or AP.PreInsideLevel because we have to detect
 											 *       RHS expressions even in those cases. */
 											AC.RhsExprInModuleFlag = 1;
-											if ( !AP.PreAssignFlag && !AP.PreInsideLevel )
-												Expressions[number].vflags |= ISINRHS;
+										}
+										if ( !AP.PreAssignFlag && !AP.PreInsideLevel )
+											Expressions[number].vflags |= ISINRHS;
 #endif
 /*:[06nov2003 mt]*/
 										if ( AC.exprfillwarning == 0 ) {

@@ -133,6 +133,24 @@ public:
 
 	tree_node (int _var=0):
 		sum_results(0), num_visits(0), var(_var), finished(false) {}
+
+	tree_node(const tree_node& other):
+		childs(other.childs),
+		sum_results(other.sum_results),
+		num_visits(other.num_visits),
+		var(other.var),
+		finished(other.finished) {}
+
+	tree_node& operator=(const tree_node& other) {
+		if (this != &other) {
+			childs = other.childs;
+			sum_results = other.sum_results;
+			num_visits = other.num_visits;
+			var = other.var;
+			finished = other.finished;
+		}
+		return *this;
+	}
 };
 
 // global variables for multithreading
