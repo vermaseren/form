@@ -1323,7 +1323,7 @@ extern int    TryFileSetups(VOID);
 extern void   ExchangeExpressions(int,int);
 extern void   ExchangeDollars(int,int);
 extern int    GetFirstBracket(WORD *,int);
-extern int    GetFirstTerm(WORD *,int);
+extern int    GetFirstTerm(WORD *,int,int);
 extern int    GetContent(WORD *,int);
 extern int    CleanupTerm(WORD *);
 extern WORD   ContentMerge(PHEAD WORD *,WORD *);
