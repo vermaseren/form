@@ -1046,7 +1046,7 @@ MulIn:
 							AS.OldOnFile[t[FUNHEAD+1]] = e->onfile;
 						}
 						if ( *t == FIRSTTERM ) {
-							if ( GetFirstTerm(termout,t[FUNHEAD+1]) < 0 ) goto FromNorm;
+							if ( GetFirstTerm(termout,t[FUNHEAD+1],0) < 0 ) goto FromNorm;
 						}
 						else if ( *t == CONTENTTERM ) {
 							if ( GetContent(termout,t[FUNHEAD+1]) < 0 ) goto FromNorm;

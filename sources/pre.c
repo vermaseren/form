@@ -4727,7 +4727,7 @@ together:
 					if ( x != 1 ) x = 0;
 					else {
 						WORD *term = AT.WorkPointer;
-						if ( GetFirstTerm(term,numexp) < 0 ) {
+						if ( GetFirstTerm(term,numexp,1) < 0 ) {
 							MesPrint("@error reading expression in isnumerical(%s)",t);
 							Terminate(-1);
 						}
