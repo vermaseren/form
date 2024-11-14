@@ -4757,26 +4757,22 @@ void CleanUpSort(int num)
 					MUNLOCK(ErrorMessageLock);
 #endif
 				}
-#ifdef SPLITALLOC
-				M_free(S->sPointer, "SPLITALLOC sPointer");
-				M_free(S->Patches, "SPLITALLOC Patches");
-				M_free(S->pStop, "SPLITALLOC pStop");
-				M_free(S->poina, "SPLITALLOC poina");
-				M_free(S->poin2a, "SPLITALLOC poin2a");
-				M_free(S->fPatches, "SPLITALLOC fPatches");
-				M_free(S->fPatchesStop, "SPLITALLOC fPatchesStop");
-				M_free(S->inPatches, "SPLITALLOC inPatches");
-				M_free(S->tree, "SPLITALLOC tree");
-				M_free(S->used, "SPLITALLOC used");
-				M_free(S->fpcompressed, "SPLITALLOC fpcompressed");
-				M_free(S->fpincompressed, "SPLITALLOC fpincompressed");
-				M_free(S->ktoi, "SPLITALLOC ktoi");
-				M_free(S->lBuffer, "SPLITALLOC lBuffer+sBuffer");
-				M_free(S->file.PObuffer, "SPLITALLOC PObuffer");
-				M_free(S, "SPLITALLOC sorting struct");
-#else
-				M_free(S,"sorting struct");
-#endif
+				M_free(S->sPointer, "CleanUpSort: sPointer");
+				M_free(S->Patches, "CleanUpSort: Patches");
+				M_free(S->pStop, "CleanUpSort: pStop");
+				M_free(S->poina, "CleanUpSort: poina");
+				M_free(S->poin2a, "CleanUpSort: poin2a");
+				M_free(S->fPatches, "CleanUpSort: fPatches");
+				M_free(S->fPatchesStop, "CleanUpSort: fPatchesStop");
+				M_free(S->inPatches, "CleanUpSort: inPatches");
+				M_free(S->tree, "CleanUpSort: tree");
+				M_free(S->used, "CleanUpSort: used");
+				M_free(S->fpcompressed, "CleanUpSort: fpcompressed");
+				M_free(S->fpincompressed, "CleanUpSort: fpincompressed");
+				M_free(S->ktoi, "CleanUpSort: ktoi");
+				M_free(S->lBuffer, "CleanUpSort: lBuffer+sBuffer");
+				M_free(S->file.PObuffer, "CleanUpSort: PObuffer");
+				M_free(S, "CleanUpSort: sorting struct");
 			}
 			AN.FunSorts[i] = 0;
 		}
