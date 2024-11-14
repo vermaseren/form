@@ -432,8 +432,6 @@ template<typename T> struct calc {
 */
 #define WITHSORTBOTS
 
-#define SPLITALLOC
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
