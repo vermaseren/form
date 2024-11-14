@@ -1867,6 +1867,7 @@ struct C_const {
     int     MemDebugFlag;          /* Only used when MALLOCDEBUG in tools.c */
     int     OldGCDflag;
     int     WTimeStatsFlag;
+    int     SortReallocateFlag;    /* Controls reallocation of large+small buffer at module end */
 	int     doloopstacksize;
 	int     dolooplevel;
     int     CheckpointFlag;        /**< Tells preprocessor whether checkpoint code must executed.

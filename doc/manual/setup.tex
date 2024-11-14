@@ -439,6 +439,14 @@ the buffers of the master thread. The workers each get basically buffers
 with 1/N times the size of the buffer of the master. This may get made a 
 bit bigger when potential conflicts with MaxTermSize occur.
 
+The (typically) largest buffers (the small and large buffers) may be reallocated
+at the end of a single module (see \#sortreallocate (\ref{presortreallocate})) or
+at the end of each module (see ``On sortreallocate;'' (\ref{substaon})). In some
+cases this can significantly reduce \FORM's memory usage as measured by
+``resident set size''. For programs which consist of a large number of very
+quickly-running modules, this can incur a noticable performance penalty if performed
+every module.
+
 The default settings are
 \begin{center}
 \begin{tabular}{lrrr}

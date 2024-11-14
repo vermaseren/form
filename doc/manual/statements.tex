@@ -3836,6 +3836,10 @@ printed. This is the default.}
 \rightvitem{13cm}{Takes the writing of the statistics back from shorthand 
 mode to the regular statistics mode in which each statistics messages takes 
 three lines of text and one blank line.}
+
+\leftvitem{3.5cm}{sortreallocate\index{off!sortreallocate}}
+\rightvitem{13cm}{Turns off the reallocation of the small and large buffer
+at the end of each module.}
  
 \leftvitem{3.5cm}{threadloadbalancing\index{off!threadloadbalancing}}
 \rightvitem{13cm}{\vspace{1.5ex}Disables the loadbalancing mechanism of 
@@ -4000,6 +4004,14 @@ which the complete statistics are written on a single line only.}
  
 \leftvitem{3.5cm}{shortstats\index{on!shortstats}}
 \rightvitem{13cm}{Same as `On shortstatistics'.}
+
+\leftvitem{3.5cm}{sortreallocate\index{on!sortreallocate}}
+\rightvitem{13cm}{Reallocate the small and large buffer (also on the worker
+threads) at the end of every module. In some cases this can significantly reduce
+\FORM's memory usage as measured by ``resident set size''. For programs which
+consist of a large number of very quickly-running modules, this can incur a
+noticable performance penalty. See also \#sortreallocate (\ref{presortreallocate})
+for a single-module version of this feature.}
 
 \leftvitem{3.5cm}{statistics\index{on!statistics}}
 \rightvitem{13cm}{Turns the writing of runtime statistics on. This is the 
