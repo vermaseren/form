@@ -3065,6 +3065,84 @@ Local F = rat(f,1);
 #pend_if mpi?
 assert runtime_error?("ERROR: polynomials and polyratfuns must contain symbols only")
 *--#] Issue567_3f :
+*--#[ Issue577_1 :
+#-
+Off stats;
+Symbol x,y,z;
+
+Local test1 = 1;
+.sort
+Hide test1;
+Local test2 = 2;
+.sort
+
+Local test3 = 3;
+
+#if ( isnumerical(test1) )
+  #message test1
+#endif
+#if ( isnumerical(test2) )
+  #message test2
+#endif
+* This causes and error and terminate: test3 is not defined when preprocessing.
+*#if ( isnumerical(test3) )
+*  #message test3
+*#endif
+#message module1
+.sort
+
+#if ( isnumerical(test1) )
+  #message test1
+#endif
+#if ( isnumerical(test2) )
+  #message test2
+#endif
+#if ( isnumerical(test3) )
+  #message test3
+#endif
+#message module2
+.sort
+
+Local test4 = x*firstterm_(test1) + y*firstterm_(test2) + z*firstterm_(test3);
+Local test5 = x*firstterm_(test4);
+
+Multiply 2;
+
+print;
+.end
+# ParFORM has valgrind errors with this. See discussion in PR 586.
+#pend_if mpi?
+assert succeeded?
+assert result("test2") =~ expr("4")
+assert result("test3") =~ expr("6")
+assert result("test4") =~ expr("6*z + 4*y + 2*x")
+# This one does not work in TFORM. Consider it to be "illegal".
+# assert result("test5") =~ expr("12*x*z")
+assert stdout =~ exact_pattern(<<'EOF')
+~~~test1
+~~~test2
+~~~module1
+~~~test1
+~~~test2
+~~~test3
+~~~module2
+EOF
+*--#] Issue577_1 :
+*--#[ Issue577_2 :
+#-
+Off stats;
+
+Local test3 = 3;
+
+* This causes and error and terminate: test3 is not defined when preprocessing.
+#if ( isnumerical(test3) )
+  #message test3
+#endif
+.end
+# ParFORM has valgrind errors with this. See discussion in PR 586.
+#pend_if mpi?
+assert runtime_error?("isnumerical: expression is not yet defined!")
+*--#] Issue577_2 :
 *--#[ PullReq535 :
 * This test requires more than the specified 50K workspace.
 #:maxtermsize 200
