@@ -860,9 +860,6 @@ SORTING *AllocSort(LONG inLargeSize, LONG inSmallSize, LONG inSmallEsize, LONG i
 	int MaxFpatches = inMaxFpatches;
 	LONG IOsize = inIOsize;
 
-#ifndef SPLITALLOC
-	LONG allocation;
-#endif
 	LONG longer,terms2insmall,sortsize,longerp;
 	LONG IObuffersize = IOsize;
 	LONG IOtry;
@@ -924,21 +921,8 @@ SORTING *AllocSort(LONG inLargeSize, LONG inSmallSize, LONG inSmallEsize, LONG i
 	/* if ( IObuffersize != inIOsize/(LONG)sizeof(WORD) ) { MesPrint("Warning: IOsize adjusted: %l -> %l", inIOsize/sizeof(WORD), IObuffersize); } */
 #endif
 
-#ifndef SPLITALLOC
-	allocation =
-		 3*sizeof(POSITION)*(LONG)longer				/* Filepositions!! */
-		+2*sizeof(WORD *)*longer
-		+2*(longerp*(sizeof(WORD *)+sizeof(WORD)))
-		+(3*longerp+2)*sizeof(WORD)
-#ifdef WITHZLIB
-		+(2*longerp+4)*sizeof(WORD)
-#endif
-		+terms2insmall*sizeof(WORD *)
-		+LargeSize
-		+SmallEsize
-		+sortsize
-		+IObuffersize*sizeof(WORD) + fname2Size + 16;
-	sort = (SORTING *)Malloc1(allocation,"sort buffers");
+	/* Allocate separate buffers for most struct members, for better testing and debugging with valgrind. */
+	sort = Malloc1(sizeof(*sort), "AllocSort: sorting struct");
 
 	sort->LargeSize = LargeSize/sizeof(WORD);
 	sort->SmallSize = SmallSize/sizeof(WORD);
@@ -948,98 +932,29 @@ SORTING *AllocSort(LONG inLargeSize, LONG inSmallSize, LONG inSmallEsize, LONG i
 	sort->TermsInSmall = TermsInSmall;
 	sort->Terms2InSmall = terms2insmall;
 
-	sort->sPointer = (WORD **)(sort+1);
-	sort->Patches = (WORD **)(sort->sPointer + terms2insmall);
-	sort->pStop = sort->Patches+longer;
-	sort->poina = sort->pStop+longer;
-	sort->poin2a = sort->poina + longerp;
+	sort->sPointer     = Malloc1(sizeof(*(sort->sPointer    ))*terms2insmall, "AllocSort: sPointer");
+	sort->Patches      = Malloc1(sizeof(*(sort->Patches     ))*longer, "AllocSort: Patches");
+	sort->pStop        = Malloc1(sizeof(*(sort->pStop       ))*longer, "AllocSort: pStop");
+	sort->poina        = Malloc1(sizeof(*(sort->poina       ))*longerp, "AllocSort: poina");
+	sort->poin2a       = Malloc1(sizeof(*(sort->poin2a      ))*longerp, "AllocSort: poin2a");
 
-	sort->fPatches = (POSITION *)(sort->poin2a+longerp);
-	sort->fPatchesStop = sort->fPatches + longer;
-	sort->inPatches = sort->fPatchesStop + longer;
-	sort->tree = (WORD *)(sort->inPatches + longer);
-	sort->used = sort->tree+longerp;
-
-#ifdef WITHZLIB
-	sort->fpcompressed = sort->used+longerp;
-	sort->fpincompressed = sort->fpcompressed+longerp+2;
-	sort->ktoi = sort->fpincompressed+longerp+2;
-	sort->zsparray = 0;
-#else
-	sort->ktoi = sort->used + longerp;
-#endif
-
-	sort->lBuffer = (WORD *)(sort->ktoi + longerp + 2);
-	sort->lTop = sort->lBuffer+sort->LargeSize;
-
-	sort->sBuffer = sort->lTop;
-	if ( sort->LargeSize == 0 ) { sort->lBuffer = 0; sort->lTop = 0; }
-	sort->sTop = sort->sBuffer + sort->SmallSize;
-	sort->sTop2 = sort->sBuffer + sort->SmallEsize;
-	sort->sHalf = sort->sBuffer + (LONG)((sort->SmallSize+sort->SmallEsize)>>1);
-
-	sort->file.PObuffer = (WORD *)(sort->sTop2);
-	sort->file.POstop = sort->file.PObuffer+IObuffersize;
-	sort->file.POsize = IObuffersize * sizeof(WORD);
-	sort->file.POfill = sort->file.POfull = sort->file.PObuffer;
-	sort->file.active = 0;
-	sort->file.handle = -1;
-	PUTZERO(sort->file.POposition);
-#ifdef WITHPTHREADS
-	sort->file.pthreadslock = dummylock;
-#endif
-#ifdef WITHZLIB
-/*	sort->file.ziosize = IOsize; */
-	sort->file.ziosize = IObuffersize*sizeof(WORD);
-	sort->file.ziobuffer = 0;
-#endif
-	if ( AM.S0 != 0 ) {
-		sort->file.name = (char *)(sort->file.PObuffer + IObuffersize);
-		AllocSortFileName(sort);
-	}
-	else sort->file.name = 0;
-	sort->cBuffer = 0;
-	sort->cBufferSize = 0;
-	sort->f = 0;
-	sort->PolyWise = 0;
-#endif
-
-
-#ifdef SPLITALLOC
-	// Separate buffers.
-	sort = Malloc1(sizeof(*sort), "SPLITALLOC sorting struct");
-
-	sort->LargeSize = LargeSize/sizeof(WORD);
-	sort->SmallSize = SmallSize/sizeof(WORD);
-	sort->SmallEsize = SmallEsize/sizeof(WORD);
-	sort->MaxPatches = MaxPatches;
-	sort->MaxFpatches = MaxFpatches;
-	sort->TermsInSmall = TermsInSmall;
-	sort->Terms2InSmall = terms2insmall;
-
-	sort->sPointer     = Malloc1(sizeof(*(sort->sPointer    ))*terms2insmall, "SPLITALLOC sPointer");
-	sort->Patches      = Malloc1(sizeof(*(sort->Patches     ))*longer, "SPLITALLOC Patches");
-	sort->pStop        = Malloc1(sizeof(*(sort->pStop       ))*longer, "SPLITALLOC pStop");
-	sort->poina        = Malloc1(sizeof(*(sort->poina       ))*longerp, "SPLITALLOC poina");
-	sort->poin2a       = Malloc1(sizeof(*(sort->poin2a      ))*longerp, "SPLITALLOC poin2a");
-
-	sort->fPatches     = Malloc1(sizeof(*(sort->fPatches    ))*longer, "SPLITALLOC fPatches");
-	sort->fPatchesStop = Malloc1(sizeof(*(sort->fPatchesStop))*longer, "SPLITALLOC fPatchesStop");
-	sort->inPatches    = Malloc1(sizeof(*(sort->inPatches   ))*longer, "SPLITALLOC inPatches");
-	sort->tree         = Malloc1(sizeof(*(sort->tree        ))*longerp, "SPLITALLOC tree");
-	sort->used         = Malloc1(sizeof(*(sort->used        ))*longerp, "SPLITALLOC used");
+	sort->fPatches     = Malloc1(sizeof(*(sort->fPatches    ))*longer, "AllocSort: fPatches");
+	sort->fPatchesStop = Malloc1(sizeof(*(sort->fPatchesStop))*longer, "AllocSort: fPatchesStop");
+	sort->inPatches    = Malloc1(sizeof(*(sort->inPatches   ))*longer, "AllocSort: inPatches");
+	sort->tree         = Malloc1(sizeof(*(sort->tree        ))*longerp, "AllocSort: tree");
+	sort->used         = Malloc1(sizeof(*(sort->used        ))*longerp, "AllocSort: used");
 
 #ifdef WITHZLIB
-	sort->fpcompressed   = Malloc1(sizeof(*(sort->fpcompressed  ))*(longerp+2), "SPLITALLOC fpcompressed");
-	sort->fpincompressed = Malloc1(sizeof(*(sort->fpincompressed))*(longerp+2), "SPLITALLOC fpincompressed");
+	sort->fpcompressed   = Malloc1(sizeof(*(sort->fpcompressed  ))*(longerp+2), "AllocSort: fpcompressed");
+	sort->fpincompressed = Malloc1(sizeof(*(sort->fpincompressed))*(longerp+2), "AllocSort: fpincompressed");
 	sort->zsparray = 0;
 #endif
 
-	sort->ktoi         = Malloc1(sizeof(*(sort->ktoi))*(longerp+2), "SPLITALLOC ktoi");
+	sort->ktoi         = Malloc1(sizeof(*(sort->ktoi))*(longerp+2), "AllocSort: ktoi");
 
 	// The combined Large buffer and Small buffer (+ extension) are used.
 	// They must be allocated together.
-	sort->lBuffer      = Malloc1(sizeof(*(sort->lBuffer))*(sort->LargeSize+sort->SmallEsize), "SPLITALLOC lBuffer+sBuffer");
+	sort->lBuffer      = Malloc1(sizeof(*(sort->lBuffer))*(sort->LargeSize+sort->SmallEsize), "AllocSort: lBuffer+sBuffer");
 	sort->lTop = sort->lBuffer+sort->LargeSize;
 
 	sort->sBuffer = sort->lTop;
@@ -1048,7 +963,7 @@ SORTING *AllocSort(LONG inLargeSize, LONG inSmallSize, LONG inSmallEsize, LONG i
 	sort->sTop2 = sort->sBuffer + sort->SmallEsize;
 	sort->sHalf = sort->sBuffer + (LONG)((sort->SmallSize+sort->SmallEsize)>>1);
 
-	sort->file.PObuffer = Malloc1(IObuffersize*sizeof(*(sort->file.PObuffer))+fname2Size+16, "SPLITALLOC PObuffer");
+	sort->file.PObuffer = Malloc1(IObuffersize*sizeof(*(sort->file.PObuffer))+fname2Size+16, "AllocSort: PObuffer");
 	sort->file.POstop = sort->file.PObuffer+IObuffersize;
 	sort->file.POsize = IObuffersize * sizeof(WORD);
 	sort->file.POfill = sort->file.POfull = sort->file.PObuffer;
@@ -1071,7 +986,6 @@ SORTING *AllocSort(LONG inLargeSize, LONG inSmallSize, LONG inSmallEsize, LONG i
 	sort->cBufferSize = 0;
 	sort->f = 0;
 	sort->PolyWise = 0;
-#endif
 
 	return(sort);
 }
