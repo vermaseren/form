@@ -570,6 +570,7 @@ WORD DoTableExpansion(WORD *term, WORD level)
 	TB,options;
 	Options are:
 		Open "File.tbl";                   Open for R/W
+		Open "File.tbl", readonly;         Open for R
 		Create "File.tbl";                 Create for write
 		Load "File.tbl", tablename;        Loads stubs of table
 		Load "File.tbl";                   Loads stubs of all tables
@@ -770,12 +771,23 @@ int CoTBcreate(UBYTE *s)
 int CoTBopen(UBYTE *s)
 {
 	DBASE *d;
-	DUMMYUSE(s);
+	MLONG rw = 1;
+
+	while ( *s == ',' || *s == ' ' || *s == '\t' ) s++;
+	
+	if ( *s ) {
+		if ( strcmp((char*)s,"readonly") == 0 ) {
+			rw = 0;
+		} else {
+			MesPrint("&Invalid option for TableBase open: %s, ignoring", s);
+		}
+	}
+	
 	if ( ( d = FindTB(tablebasename) ) != 0 ) {
 		MesPrint("&There is already an open TableBase with the name %s",tablebasename);
 		return(-1);
 	}
-	d = GetDbase((char *)tablebasename);
+	d = GetDbase((char *)tablebasename, rw);
 	if ( CheckTableDeclarations(d) ) return(-1);
 	return(0);
 }
@@ -797,6 +809,11 @@ int CoTBaddto(UBYTE *s)
 	int i, j, error = 0, sum;
 	if ( ( d = FindTB(tablebasename) ) == 0 ) {
 		MesPrint("&No open tablebase with the name %s",tablebasename);
+		return(-1);
+	}
+	
+	if ( ( d->rwmode ) == 0 ) {
+		MesPrint("&Tablebase with the name %s opened in read only mode",tablebasename);
 		return(-1);
 	}
 	AO.DollarOutSizeBuffer = 32;
@@ -965,7 +982,7 @@ int CoTBenter(UBYTE *s)
 	int dict = AO.CurrentDictionary;
 	AO.CurrentDictionary = 0;
 	if ( ( d = FindTB(tablebasename) ) == 0 ) {
-		MesPrint("&No open tablebase with the name %s",tablebasename);
+		MesPrint("&No open tablebase with the name %s, check for existence of file or try readonly mode when opening.",tablebasename);
 		error = -1;
 		goto Endofall;
 	}
