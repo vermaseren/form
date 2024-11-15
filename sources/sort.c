@@ -3325,9 +3325,9 @@ LONG SplitMerge(PHEAD WORD **Pointer, LONG number)
 			pp3 = (WORD **)(*pp1); *pp1 = *pp2; *pp2 = (WORD *)pp3;
 		}
 		else if ( i == 0 ) {
-		  number--;
-		  if ( S->PolyWise ) { if ( AddPoly(BHEAD pp1,pp2) == 0 ) number = 0; }
-		  else               { if ( AddCoef(BHEAD pp1,pp2) == 0 ) number = 0; }
+			number--;
+			if ( S->PolyWise ) { if ( AddPoly(BHEAD pp1,pp2) == 0 ) number = 0; }
+			else               { if ( AddCoef(BHEAD pp1,pp2) == 0 ) number = 0; }
 		}
 		return(number);
 	}
@@ -3347,15 +3347,15 @@ LONG SplitMerge(PHEAD WORD **Pointer, LONG number)
 	( i = CompareTerms(BHEAD Pointer[newleft-1],Pointer[split],(WORD)0) ) >= 0 ) {
 		pp2 = Pointer+split; pp1 = Pointer+newleft-1;
 		if ( i == 0 ) {
-		  if ( S->PolyWise ) {
-			if ( AddPoly(BHEAD pp1,pp2) > 0 ) pp1++;
-			else newleft--;
-		  }
-		  else {               
-			if ( AddCoef(BHEAD pp1,pp2) > 0 ) pp1++;
-			else newleft--;
-		  }
-		  *pp2++ = 0; newright--;
+			if ( S->PolyWise ) {
+				if ( AddPoly(BHEAD pp1,pp2) > 0 ) pp1++;
+				else newleft--;
+			}
+			else {
+				if ( AddCoef(BHEAD pp1,pp2) > 0 ) pp1++;
+				else newleft--;
+			}
+			*pp2++ = 0; newright--;
 		}
 		else pp1++;
 		newleft += newright;
@@ -3369,30 +3369,49 @@ LONG SplitMerge(PHEAD WORD **Pointer, LONG number)
 	if ( split >= AN.SplitScratchSize ) {
 		AN.SplitScratchSize = (split*3)/2+100;
 		if ( AN.SplitScratchSize > S->Terms2InSmall/2 )
-			 AN.SplitScratchSize = S->Terms2InSmall/2;
+			AN.SplitScratchSize = S->Terms2InSmall/2;
 		if ( AN.SplitScratch ) M_free(AN.SplitScratch,"AN.SplitScratch");
 		AN.SplitScratch = (WORD **)Malloc1(AN.SplitScratchSize*sizeof(WORD *),"AN.SplitScratch");
 	}
 
 	pp3 = AN.SplitScratch; pp1 = Pointer;
-	for ( i = 0; i < newleft; i++ ) { *pp3++ = *pp1++; }
+	/* Move rather than copy, so GarbHand can't double-count. */
+	for ( i = 0; i < newleft; i++ ) { *pp3++ = *pp1; *pp1++ = 0; }
 	AN.InScratch = newleft;
 	pp1 = AN.SplitScratch; pp2 = Pointer + split; pp3 = Pointer;
+
 /*
 		An improvement in the style of Timsort
 */
 	while ( newleft > 8 ) {
+		/* Check the middle of the LHS terms */
 		LONG nnleft = newleft/2;
-		if ( ( i = CompareTerms(BHEAD pp1[nnleft],*pp2,(WORD)0) ) < 0 ) break;
-		pp3 += nnleft+1;
-		pp1 += nnleft+1;
-		newleft -= nnleft+1;
+		if ( ( i = CompareTerms(BHEAD pp1[nnleft],*pp2,(WORD)0) ) < 0 ) {
+			/* The terms are not in order. Break out and continue as normal. */
+			break;
+		}
+		/* The terms merge or are in order. Copy pointers up to this point. */
+		/* In the copy, zero the skipped pointers so GarbHand can't double-count. */
+		for (int iii = 0; iii < nnleft; iii++) {
+			*pp3++ = *pp1;
+			*pp1++ = 0;
+		}
+		newleft -= nnleft;
 		if ( i == 0 ) {
-			if ( S->PolyWise ) { i = AddPoly(BHEAD pp3-1,pp2); }
-			else               { i = AddCoef(BHEAD pp3-1,pp2); }
-			if ( i == 0 ) pp3--;
-			pp2++;
+			if ( S->PolyWise ) { i = AddPoly(BHEAD pp1,pp2); }
+			else               { i = AddCoef(BHEAD pp1,pp2); }
+			if ( i == 0 ) {
+				/* The terms cancelled. The next term goes in *pp3. Don't move. */
+			}
+			else {
+				/* The terms added. Advance pp3. */
+				*pp3++ = *pp1;
+			}
+			/* We have taken a LHS (copy) and RHS term. */
+			*pp2++ = 0;
 			newright--;
+			*pp1++ = 0;
+			newleft--;
 			break;
 		}
 	}
@@ -3409,9 +3428,9 @@ LONG SplitMerge(PHEAD WORD **Pointer, LONG number)
 			newleft--;
 		}
 		else {
-		  if ( S->PolyWise ) { if ( AddPoly(BHEAD pp1,pp2) > 0 ) *pp3++ = *pp1; }
-		  else {               if ( AddCoef(BHEAD pp1,pp2) > 0 ) *pp3++ = *pp1; }
-		  *pp1++ = 0; *pp2++ = 0; newleft--; newright--;
+			if ( S->PolyWise ) { if ( AddPoly(BHEAD pp1,pp2) > 0 ) *pp3++ = *pp1; }
+			else {               if ( AddCoef(BHEAD pp1,pp2) > 0 ) *pp3++ = *pp1; }
+			*pp1++ = 0; *pp2++ = 0; newleft--; newright--;
 		}
 	}
 	for ( i = 0; i < newleft; i++ ) { *pp3++ = *pp1; *pp1++ = 0; }
@@ -3468,7 +3487,7 @@ LONG SplitMerge(PHEAD WORD **Pointer, LONG number)
 			if ( AddPoly(BHEAD pp1,pp2) > 0 ) pp1++;
 			else newleft--;
 		  }
-		  else {               
+		  else {
 			if ( AddCoef(BHEAD pp1,pp2) > 0 ) pp1++;
 			else newleft--;
 		  }
