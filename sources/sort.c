@@ -51,6 +51,12 @@
 #define GZIPDEBUG
 */
 #define NEWSPLITMERGE
+/* Comment to turn off Timsort in SplitMerge for debugging: */
+#define NEWSPLITMERGETIMSORT
+/* During SplitMerge, print pointer array state on entry. Very spammy, for debugging. */
+/* #define SPLITMERGEDEBUG */
+/* Debug printing for GarbHand */
+/* #define TESTGARB */
 
 #include "form3.h"
 
@@ -3267,6 +3273,21 @@ LONG SplitMerge(PHEAD WORD **Pointer, LONG number)
 	WORD **pp3, **pp1, **pp2, **pptop;
 	LONG i, newleft, newright, split;
 
+#ifdef SPLITMERGEDEBUG
+	/* Print current array state on entry. */
+	printf("%4ld: ", number);
+	for (int ii = 0; ii < S->sTerms; ii++) {
+		if ( (S->sPointer)[ii] ) {
+			printf("%4d ", (unsigned)(S->sPointer[ii]-S->sBuffer));
+		}
+		else {
+			printf(".... ");
+		}
+	}
+	printf("\n");
+	fflush(stdout);
+#endif
+
 	if ( number < 2 ) return(number);
 	if ( number == 2 ) {
 		pp1 = Pointer; pp2 = pp1 + 1;
@@ -3329,6 +3350,7 @@ LONG SplitMerge(PHEAD WORD **Pointer, LONG number)
 	AN.InScratch = newleft;
 	pp1 = AN.SplitScratch; pp2 = Pointer + split; pp3 = Pointer;
 
+#ifdef NEWSPLITMERGETIMSORT
 /*
 		An improvement in the style of Timsort
 */
@@ -3364,6 +3386,7 @@ LONG SplitMerge(PHEAD WORD **Pointer, LONG number)
 			break;
 		}
 	}
+#endif
 
 	while ( newleft > 0 && newright > 0 ) {
 		if ( ( i = CompareTerms(*pp1,*pp2,(WORD)0) ) < 0 ) {
@@ -3403,6 +3426,21 @@ LONG SplitMerge(PHEAD WORD **Pointer, LONG number)
 	WORD **pp3, **pp1, **pp2;
 	LONG nleft, nright, i, newleft, newright;
 	WORD **pptop;
+
+#ifdef SPLITMERGEDEBUG
+	/* Print current array state on entry. */
+	printf("%4ld: ", number);
+	for (int ii = 0; ii < S->sTerms; ii++) {
+		if ( (S->sPointer)[ii] ) {
+			printf("%4d ", (unsigned)(S->sPointer[ii]-S->sBuffer));
+		}
+		else {
+			printf(".... ");
+		}
+	}
+	printf("\n");
+	fflush(stdout);
+#endif
 
 	if ( number < 2 ) return(number);
 	if ( number == 2 ) {
