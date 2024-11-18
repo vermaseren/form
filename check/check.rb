@@ -8,8 +8,8 @@ exec ruby "-S" "-x" "$0" "$@"
 # rubocop:enable all
 
 # Check the Ruby version.
-if RUBY_VERSION < "1.9.0"
-  warn("ruby 1.9 required for the test suite")
+if RUBY_VERSION < "2.0.0"
+  warn("ruby 2.0 required for the test suite")
   exit(1)
 end
 
