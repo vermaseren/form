@@ -2725,9 +2725,10 @@ EOF
 #: SortIOSize 200K
 #: SubSortIOSize 200K
 
-#: SubSmallSize 100K
-#: SubSmallExtension 200K
-#: SubTermsInSmall 5K
+#: SubLargeSize 134400480
+#: SubSmallSize 12800016
+#: SubSmallExtension 19200032
+#: SubTermsInSmall 5008
 
 #define N "30"
 
@@ -2845,19 +2846,17 @@ assert result("F") =~ expr("5000")
 #-
 * Sort which fills SmallExtension:
 
-#: SmallSize 1000K
-#: SmallExtension 1200K
-#: SubSmallSize 1000K
-#: SubSmallExtension 1200K
-#: SubTermsInSmall 2M
+* These are the smallest buffer sizes that are OK for -w4 tform workers
+#: SmallSize 10240064
+#: SmallExtension 15360096
+#: TermsInSmall 100K
 
 Symbol x,n;
-CFunction f,g,prf;
+CFunction g,f,prf;
 
-Local test = (<f(1)>+...+<f(150)>)*(<g(1)>+...+<g(100)>);
+Local test = (<f(1)>+...+<f(150)>)*(<g(1)>+...+<g(350)>);
 .sort
 
-Off parallel;
 PolyRatFun prf;
 
 Identify f(x?) = prf(n-x,n+x);
@@ -2873,13 +2872,11 @@ assert runtime_error?("Please increase SmallExtension setup parameter.")
 #-
 
 * Sort which fills SubSmallExtension:
-
-#: SmallSize 1000K
-#: SmallExtension 1200K
-#: TermsInSmall 2M
-#: SubSmallSize 1000K
-#: SubSmallExtension 1200K
-#: SubTermsInSmall 2M
+* These are the default sizes at the time of writing:
+#: SubSmallSize 2560016
+#: SubSmallExtension 3840032
+* These are not default:
+#: SubTermsInSmall 100K
 
 Symbol x,n;
 CFunction f,g,prf;
@@ -2904,18 +2901,14 @@ assert runtime_error?("Please increase SubSmallExtension setup parameter.")
 #-
 
 * Sort which fits in SmallExtension, but needs GarbHand
-
-#: SmallSize 1000K
-#: SmallExtension 5090K
-#: TermsInSmall 2M
-#: SubSmallSize 1000K
-#: SubSmallExtension 1200K
-#: SubTermsInSmall 2M
+#: SmallSize 10240064
+#: SmallExtension 20360K
+#: TermsInSmall 100K
 
 Symbol x,n;
-CFunction f,g,prf;
+CFunction g,f,prf;
 
-Local test = (<f(1)>+...+<f(150)>)*(<g(1)>+...+<g(100)>);
+Local test = (<f(1)>+...+<f(150)>)*(<g(1)>+...+<g(350)>);
 .sort
 
 PolyRatFun prf;
@@ -2930,13 +2923,11 @@ assert succeeded?
 #-
 
 * Sort which fits in SubSmallExtension, but needs GarbHand
-
-#: SmallSize 1000K
-#: SmallExtension 1200K
-#: TermsInSmall 2M
-#: SubSmallSize 1000K
+* These are the default sizes at the time of writing:
+#: SubSmallSize 2560016
+* These are not default:
 #: SubSmallExtension 5090K
-#: SubTermsInSmall 2M
+#: SubTermsInSmall 100K
 
 Symbol x,n;
 CFunction f,g,prf;
