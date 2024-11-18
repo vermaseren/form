@@ -1000,13 +1000,13 @@ AM_CONDITIONAL(CONFIG_MAKEINDEX, [test "x$MAKEINDEX" != x])
 AM_CONDITIONAL(CONFIG_HTLATEX, [test "x$HTLATEX" != x])
 AM_CONDITIONAL(CONFIG_LATEX2HTML, [test "x$LATEX2HTML" != x])
 
-# Check for Ruby >= 1.9 and test/unit.
+# Check for Ruby >= 2.0 and test/unit.
 AC_PATH_PROG(RUBY, ruby, "")
 ok=yes
 test "x$RUBY" = x && ok=no
 if test "x$ok" = xyes; then
-	AC_MSG_CHECKING([whether ruby >= 1.9])
-	$RUBY -e 'exit(1) if RUBY_VERSION < "1.9.0"' >/dev/null 2>&1 || ok=no
+	AC_MSG_CHECKING([whether ruby >= 2.0])
+	$RUBY -e 'exit(1) if RUBY_VERSION < "2.0.0"' >/dev/null 2>&1 || ok=no
 	AC_MSG_RESULT([$ok])
 fi
 if test "x$ok" = xyes; then
