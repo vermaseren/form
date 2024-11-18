@@ -30,7 +30,7 @@ like the GNU glibc.
 The threaded version of FORM needs a Posix compliant implementation of threads
 (pthreads). The parallel version ParFORM needs an MPI implementation.
 
-The automated test suite of FORM requires Ruby version >= 1.9 and the testing
+The automated test suite of FORM requires Ruby version >= 2.0 and the testing
 framework "test/unit". For the latter, you may need to install test-unit gem
 separately.
 
@@ -174,7 +174,7 @@ can be used.
 Testing
 =======
 
-If Ruby version >= 1.9 and "test/unit" are installed on your system, the
+If Ruby version >= 2.0 and "test/unit" are installed on your system, the
 configure script enables the automated test suite. Then you can run it by
 
     make check
