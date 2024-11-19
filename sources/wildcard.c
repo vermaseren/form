@@ -306,6 +306,7 @@ Seven:;
 				while ( t < u ) {
 					*m = *t;
 					subcount = 0;
+					/* Process the first vector of the DOTPRODUCT */
 					for ( si = 0; si < setflag; si += 2 ) {
 						if ( t == temp + setlist[si] ) goto ss2;
 					}
@@ -316,7 +317,17 @@ Seven:;
 								*m = s[3]; dirty = 1; break;
 							}
 							if ( *s == VECTOMIN ) {
-								*m = s[3]; dirty = 1; sgn += t[2]; break;
+								*m = s[3];
+								dirty = 1;
+								if ( ( ABS(t[2]) - 2*MAXPOWER ) < 0 ) {
+									/* The power is a number */
+									sgn += t[2];
+								}
+								else {
+									/* The power is a wildcard. Put a -, resolve later. */
+									sgn++;
+								}
+								break;
 							}
 							if ( *s == VECTOSUB ) {
 								*m = s[3]; dirty = 1; subcount = 1; break;
@@ -327,6 +338,7 @@ Seven:;
 ss2:
 					*++m = *++t;
 					s = subs;
+					/* Process the second vector of the DOTPRODUCT */
 					for ( si = 0; si < setflag; si += 2 ) {
 						if ( t == temp + setlist[si] ) goto ss3;
 					}
@@ -336,7 +348,17 @@ ss2:
 								*m = s[3]; dirty = 1; break;
 							}
 							if ( *s == VECTOMIN ) {
-								*m = s[3]; dirty = 1; sgn += t[1]; break;
+								*m = s[3];
+								dirty = 1;
+								if ( ( ABS(t[1]) - 2*MAXPOWER ) < 0 ) {
+									/* The power is a number */
+									sgn += t[1];
+								}
+								else {
+									/* The power is a wildcard. Put a -, resolve later. */
+									sgn++;
+								}
+								break;
 							}
 							if ( *s == VECTOSUB ) {
 								*m = s[3]; dirty = 1; subcount += 2; break;
@@ -345,12 +367,18 @@ ss2:
 						s += s[1];
 					}
 ss3:				*++m = *++t;
+					/* Process the power */
 					if ( ( ABS(*t) - 2*MAXPOWER ) < 0 ) goto RegPow;
 					s = subs;
 					for ( j = 0; j < i; j++ ) {
 						if ( ( ABS(*t) - 2*MAXPOWER ) == s[2] ) {
 							if ( *s == SYMTONUM ) {
 								*m = s[3];
+								/* Since the power is a wildcard, sgn is 0,1,2 depending whether
+									there were 0,1,2 VECTOMIN in the DOTPRODUCT. Multiply by the
+									power, which is positive currently. */
+								sgn *= *m;
+								/* Now flip the sign of the power, if the wildcard came with a - */
 								if ( *t < 0 ) *m = -*m;
 								dirty = 1;
 								break;
