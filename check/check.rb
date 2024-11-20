@@ -1247,14 +1247,56 @@ class FormConfig
         system("#{form_bin} #{frmname}")
         fatal("failed to get the version of '#{@form}'")
       end
-      if @wordsize.nil?
-        if @head =~ /FORM[^(]*\([^)]*\)\s*(\d+)-bits/
-          @wordsize = $1.to_i / 16
-        else
-          warn("failed to get the wordsize of '#{@form}'")
-          warn("assuming wordsize = 4")
-          @wordsize = 4
+      # Check the wordsize.
+      # Method 1: from the output header.
+      # Method 2: 2^64 = 0 (mod 2^64) => 64-bit machine => sizeof(WORD) = 4, etc.
+      wordsize1 = nil
+      wordsize2 = nil
+      if @head =~ /FORM[^(]*\([^)]*\)\s*(\d+)-bits/
+        wordsize1 = $1.to_i / 16
+      end
+      frmname2 = File.join(tmpdir, "ws.frm")
+      File.write(frmname2, <<-TEST_FRM)
+        #do w={2,4,8}
+          #message wordtest,`w',{2^(`w'*16-1)},{2^(`w'*16)}
+        #enddo
+        .end
+      TEST_FRM
+      out, _err, status = Open3.capture3("#{@form_bin} #{frmname2}")
+      if status.success?
+        out.split("\n").each do |output_line|
+          if output_line =~ /~~~wordtest,(\d+),(-?\d+),(-?\d+)/
+            w = $1.to_i
+            x = $2.to_i
+            y = $3.to_i
+            if x != 0 && y == 0
+              wordsize2 = w
+              break
+            end
+          end
         end
+      end
+      if !@wordsize.nil?
+        if !wordsize1.nil? && @wordsize != wordsize1
+          warn("--wordsize=#{@wordsize} specified but the header of '#{@form}' indicates the wordsize = #{wordsize1}")
+        end
+        if !wordsize2.nil? && @wordsize != wordsize2
+          warn("--wordsize=#{@wordsize} specified but the preprocessor calculator of '#{@form}' determined wordsize = #{wordsize2}")
+        end
+      end
+      if @wordsize.nil?
+        if !wordsize1.nil? && !wordsize2.nil? && wordsize1 != wordsize2
+          warn("the header of '#{@form}' indicates the wordsize = #{wordsize1} but the preprocessor calculator determined wordsize = #{wordsize2}")
+        elsif !wordsize1.nil?
+          @wordsize = wordsize1
+        else
+          @wordsize = wordsize2
+        end
+      end
+      if @wordsize.nil?
+        warn("failed to get the wordsize of '#{@form}'")
+        warn("assuming wordsize = 4")
+        @wordsize = 4
       end
       # Prepare for mpirun
       if @is_mpi
