@@ -57,23 +57,25 @@ end
 
 # Get a positive integer from the given environment variable.
 def read_env_positive_int(key, default_value)
+  if default_value <= 0
+    raise ArgumentError, "invalid default_value: #{default_value}"
+  end
+
   value = default_value
   if ENV.key?(key)
     begin
       value = Integer(ENV[key])
+      raise ArgumentError if value <= 0
     rescue ArgumentError, TypeError
-      warn("environment variable ignored: #{key} is not integer: #{ENV[key]}")
+      warn("environment variable ignored: #{key} is not positive integer: #{ENV[key]}")
+      value = default_value
     end
-  end
-  if value <= 0
-    warn("environment variable ignored: #{key} must be positive: #{ENV[key]}")
-    value = default_value
   end
   value
 end
 
 # Get the total size of the physical memory available on the host machine.
-def get_total_physical_memory
+def total_physical_memory
   platform = RbConfig::CONFIG["host_os"].downcase
   if platform.include?("linux")
     mem_info = `free -b | grep Mem`
@@ -84,8 +86,6 @@ def get_total_physical_memory
   elsif platform.include?("mingw") || platform.include?("mswin")
     mem_info = `wmic ComputerSystem get TotalPhysicalMemory`
     mem_info.split[1].to_i
-  else
-    nil
   end
 end
 
@@ -278,7 +278,7 @@ module FormTest
   def total_memory
     @@total_memory_mutex.synchronize do
       if @@cached_total_memory.nil?
-        result = get_total_physical_memory
+        result = total_physical_memory
         if result.nil?
           @@cached_total_memory = -1
         else
@@ -294,7 +294,7 @@ module FormTest
 
   def reveal_newlines(str)
     if FormTest.cfg.show_newlines
-      str.gsub(/\r/, "<CR>").gsub(/\n/, "<LF>\n")
+      str.gsub("\r", "<CR>").gsub("\n", "<LF>\n")
     else
       str
     end
@@ -318,9 +318,7 @@ module FormTest
     cleanup_files
     @tmpdir = TempDir.mktmpdir("#{self.class.name}_")
     nfiles.times do |i|
-      File.open(File.join(@tmpdir, "#{i + 1}.frm"), "w") do |file|
-        file.write(info.sources[i])
-      end
+      File.write(File.join(@tmpdir, "#{i + 1}.frm"), info.sources[i])
     end
   end
 
@@ -380,8 +378,8 @@ module FormTest
         @raw_stdout = @stdout
         @raw_stderr = @stderr
         if windows?
-          @stdout = @stdout.gsub(/\r\n/, "\n")
-          @stderr = @stderr.gsub(/\r\n/, "\n")
+          @stdout = @stdout.gsub("\r\n", "\n")
+          @stderr = @stderr.gsub("\r\n", "\n")
         end
         # MesPrint inevitably inserts newline characters when a line exceeds
         # its length limit. To verify error/warning messages, here we remove
@@ -512,7 +510,7 @@ module FormTest
       stderr_lines: stderr_lines,
       combined_lines: combined_lines,
       exit_status: exit_status,
-      finished_in_time: finished_in_time,
+      finished_in_time: finished_in_time
     }
   end
 
@@ -616,12 +614,12 @@ module FormTest
         # On Windows, we convert newline characters in the file into
         # the Unix-style newline characters used in our test cases.
         if windows?
-          result = result.gsub(/\r\n/, "\n")
+          result = result.gsub("\r\n", "\n")
         end
         return result
       end
     rescue StandardError
-      $stderr.puts("warning: failed to read '#{filename}'")
+      warn("failed to read '#{filename}'")
     end
     ""
   end
@@ -635,9 +633,7 @@ module FormTest
   def write(filename, text)
     fname = File.join(@tmpdir, filename)
     FileUtils.mkdir_p(File.dirname(fname))
-    File.open(fname, "w") do |f|
-      f.write(text)
-    end
+    File.write(fname, text)
   end
 
   # The working directory for the test.
@@ -930,7 +926,7 @@ class TestCases
               end
               if !ulimits.nil?
                 ulimits.map! { |s| "ulimit #{s}; " }
-                ulimits = ulimits.join("")
+                ulimits = ulimits.join
                 line += "def ulimits; %(#{ulimits}) end; "
               end
               if !time_dilation.nil?
@@ -1053,14 +1049,14 @@ class TestCases
     # construct regular expressions (wildcards: '*' and '?')
     @name_patterns.length.times do |i|
       if !@name_patterns[i].is_a?(Regexp)
-        s = @name_patterns[i].to_s.gsub("\*", ".*").tr("\?", ".")
+        s = @name_patterns[i].to_s.gsub("*", ".*").tr("?", ".")
         s = "^#{s}$"
         @name_patterns[i] = Regexp.new(s)
       end
     end
     @exclude_patterns.length.times do |i|
       if !@exclude_patterns[i].is_a?(Regexp)
-        s = @exclude_patterns[i].to_s.gsub("\*", ".*").tr("\?", ".")
+        s = @exclude_patterns[i].to_s.gsub("*", ".*").tr("?", ".")
         s = "^#{s}$"
         @exclude_patterns[i] = Regexp.new(s)
       end
@@ -1114,8 +1110,8 @@ class TestCases
     @classes_info.delete("Test_#{classname}")
     # It seems difficult to delete a class.
     # Instead, remove the test method.
-    klass = Object.const_get("Test_#{classname}".to_sym)
-    klass.send(:remove_method, "test_#{classname}".to_sym)
+    klass = Object.const_get(:"Test_#{classname}")
+    klass.send(:remove_method, :"test_#{classname}")
   end
 end
 
@@ -1189,13 +1185,11 @@ class FormConfig
     tmpdir = TempDir.mktmpdir("ver_")
     begin
       frmname = File.join(tmpdir, "ver.frm")
-      File.open(frmname, "w") do |f|
-        f.write(<<-'TEST_FRM')
-  #-
-  Off finalstats;
-  .end
-        TEST_FRM
-      end
+      File.write(frmname, <<-TEST_FRM)
+        #-
+        Off finalstats;
+        .end
+      TEST_FRM
 
       @head = ""
       out, _status = Open3.capture2e("#{@form_bin} #{frmname}")
@@ -1269,16 +1263,25 @@ class FormConfig
       end
       @form_cmd = cmdlist.join(" ")
       # Check the output header.
-      out, _err, status = Open3.capture3("#{@form_cmd} #{frmname}")
+      out, err, status = Open3.capture3("#{@form_cmd} #{frmname}")
       if status.success?
-        @head = out.split("\n").first
+        form_version_line = out.split("\n").first
+        if form_version_line.nil?
+          warn("failed to get the actual version of FORM")
+        else
+          @head = form_version_line
+        end
       else
         fatal("failed to execute '#{@form_cmd}'")
       end
       if !@valgrind.nil?
-        # Include valgrind version information.
-        out, _status = Open3.capture2e("#{@form_cmd} #{frmname}")
-        @head += "\n" + out.split("\n").select { |line| line.include?("Valgrind") }.first
+        # Include Valgrind version information.
+        valgrind_version_line = err.split("\n").select { |line| line.include?("Valgrind") }.first
+        if valgrind_version_line.nil?
+          warn("failed to get the version of Valgrind")
+        else
+          @head += "\n#{valgrind_version_line}"
+        end
       end
     ensure
       FileUtils.rm_rf(tmpdir)
@@ -1517,7 +1520,7 @@ def main
 
   # --path option.
   if !opts.path.nil?
-    ENV["PATH"] = "#{opts.path}#{File::PATH_SEPARATOR}#{ENV['PATH']}"
+    ENV["PATH"] = "#{opts.path}#{File::PATH_SEPARATOR}#{ENV.fetch('PATH', '')}"
   end
 
   # Set FORMPATH
@@ -1551,8 +1554,8 @@ def main
                                 opts.valgrind_opts,
                                 opts.wordsize,
                                 opts.ncpu,
-                                opts.timeout > 1 ? opts.timeout : 1,
-                                opts.retries > 1 ? opts.retries : 1,
+                                [opts.timeout, 1].max,
+                                [opts.retries, 1].max,
                                 opts.stat,
                                 opts.full,
                                 opts.verbose,
@@ -1658,11 +1661,11 @@ def format_time(time, max_time)
   end
   t = Float(t)
   h = Integer(t / 3600)
-  t = t % 3600
+  t %= 3600
   m = Integer(t / 60)
-  t = t % 60
+  t %= 60
   s = Integer(t)
-  t = t % 1
+  t %= 1
   ms = Integer(t * 1000)
   format("%s%02d:%02d:%02d.%03d", overflow ? ">" : " ", h, m, s, ms)
 end
