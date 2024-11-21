@@ -3899,16 +3899,22 @@ detailed information.}
 \rightvitem{13cm}{Turns compression mode on. This compression is a 
 relatively simple compression that hardly costs extra computer time but 
 saves roughly a factor two in disk storage. The old statement was `compress 
-on' but this should be avoided in the future. This setting is the default.}
+on' but this should be avoided in the future.}
 
 \leftvitem{3.5cm}{compress,gzip\index{gzip}}
 \rightvitem{13cm}{This option should be followed by a comma or a space and 
 a single digit. It activates the gzip compression for the sort file. This 
 compression can make the intermediate sort file considerably shorter at the 
-cost of some CPU time. This option can be used when disk space is at a 
-premium. The digit indicates the compression level. Zero means no 
-compression and 9 is the highest level. The default level is 6. Above that 
-the compression becomes very slow and doesn't gain very much extra.}
+cost of some CPU time. The digit indicates the compression level. Zero means
+no compression and 9 is the highest level. The default level is 6. Above that
+the compression becomes very slow and doesn't gain very much extra.
+This setting is the default if FORM is not compiled with Zstd support.}
+
+\leftvitem{3.5cm}{compress,zstd\index{zstd}}
+\rightvitem{13cm}{This option is functionally the same as `On compress,gzip;'
+but uses Zstd as the compression library, which provides better performance
+both in terms of CPU time and compression ratio. This setting is the default
+if FORM is compiled with Zstd support.}
 
 \leftvitem{3.5cm}{fewerstatistics\index{on!fewerstatistics}}
 \rightvitem{13cm}{Determines how many of the statistics \FORM\ prints when a 
