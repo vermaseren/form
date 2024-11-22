@@ -68,6 +68,58 @@ Local test = 1;
 .end
 assert runtime_error?("Unknown Compress gzip/zstd option: a. A digit was expected.")
 *--#] compression_5 :
+*--#[ compression_6 :
+#-
+
+* This is a trimmed down version of the benchmark in benchmarks/compression.frm.
+
+* Its purpose is to make sure use of the Zstd wrapper is valgrind clean.
+
+* Tiny buffers to force sort files
+#: TermsInSmall 256
+#: LargePatches 8
+
+Off statistics;
+Off threadstats;
+
+* This is the default when FORM is compiled with zstd support.
+*On compress,zstd;
+
+#define NTERMS "{2^14}"
+#define PADDING "0"
+#define BLOCKS "16"
+#define ITER "2"
+
+Symbol n,m,x,y;
+CFunction f,g,h,sum;
+
+Local test =
+	#do b = 1,`BLOCKS'
+		+ f(`b') * sum(x,1,{`NTERMS'/`BLOCKS'},g(x))
+	#enddo
+	- (1+`BLOCKS')*`NTERMS'*(`BLOCKS'+`NTERMS')/4/`BLOCKS'
+	;
+.sort
+Identify sum(?a) = sum_(?a);
+* Make the terms larger.
+Identify f(n?)*g(m?) = f(n)*g(m) * h((n*x+m*y)^`PADDING');
+
+* Pointlessly read and sort and write the terms
+#do i = 1,`ITER'
+	#message i = `i' / `ITER'
+	.sort
+#enddo
+
+#message Finish up
+Identify h(x?) = 1;
+Identify f(x?) = x;
+Identify g(x?) = x;
+
+Print;
+.end
+assert succeeded?
+assert result("test") =~ expr("0")
+*--#] compression_6 :
 *--#[ divmod_1 :
 * Test div_, rem_ functions for monic univariate polynomials
 #-
