@@ -553,7 +553,8 @@ DBASE *GetDbase(char *filename, MLONG rwmode)
 	if ( rwmode == 0 ) {
 		if ( ( f = LocateBase(&filename,&newname,"rb") ) == 0 ) {
 	
-			return(NewDbase(filename,0));
+			MesPrint("&Trying to open non-existent TableBase in readonly mode: %s", filename);
+			Terminate(-1);
 		}
 	} else {
 		if ( ( f = LocateBase(&filename,&newname,"r+b") ) == 0 ) {
