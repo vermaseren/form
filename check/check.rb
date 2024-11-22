@@ -691,9 +691,9 @@ module FormTest
   # true if the FORM job put warning messages.
   def warning?(expected_message = nil)
     if expected_message.nil?
-      @stdout =~ /(^|\R)\S+ Line \d+ --> Warning/
+      @stdout.include?("Warning:")
     else
-      @cleaned_stdout =~ Regexp.new("(^|\\R)\\S+ Line \\d+ --> Warning: .*#{Regexp.escape(expected_message)}")
+      @cleaned_stdout =~ Regexp.new("Warning: .*#{Regexp.escape(expected_message)}")
     end
   end
 
