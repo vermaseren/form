@@ -64,6 +64,14 @@ The tablebase can be loaded in a different program as in
     TableBase "no11.tbl" open;
 \end{verbatim}
 This loads the main index\index{index!main} of the file into memory.
+To protect against accidentally adding additional table to an existing
+tablebase or in case tablebases are stored in shared directories where
+not all users have write access, they can be opened using
+\begin{verbatim}
+    TableBase "no11.tbl" open, readonly;
+\end{verbatim}
+Trying to add tables to a tablebase opened in read-only mode results in an
+error.
 
 If one would like to compile the short version of the fill statements (the 
 normal action at this point) one needs to use the load\index{load} option. 
@@ -348,13 +356,15 @@ addto\index{addto} option. This is the default.
 
 TableBase "file.tbl" open;
 
+TableBase "file.tbl" open, readonly;
+
 \noindent See also create (\ref{tblcreate})
 
 \noindent This opens\index{open} an existing file with the indicated name. 
 It is assumed that the file has been created\index{create} with the 
 `create' option in a previous \FORM\ program. It gives the user access to the 
 contents of the tablebase. In addition it allows the user to add to its 
-contents.
+contents. If the read-only option is set, no contents can be added.
 
 \noindent Just like with other files, \FORM\ will look for the file in in 
 current directory and in all other directories mentioned in the environment 
