@@ -108,6 +108,14 @@ any longer.
         #endif
     #enddo
 \end{verbatim}
+\item[UNCHANGED\_] Takes the value 1 if all active expressions were unchanged in the
+                   previous module, and 0 otherwise. `UNCHANGED\_exprname' is 1 if the
+                   expression ``exprname'' was unchanged in the previous module, and
+                   0 otherwise.
+\item[ZERO\_] Takes the value 1 if all active expressions were zero in the
+                   previous module, and 0 otherwise. `ZERO\_exprname' is 1 if the
+                   expression ``exprname'' was zero in the previous module, and
+                   0 otherwise.
 \end{description}
 
 \noindent If \FORM\ cannot find a preprocessor variable, because it has 
