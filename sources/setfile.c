@@ -567,7 +567,7 @@ int AllocSetups()
 #endif
 	AM.S0 = 0;
 	AM.S0 = AllocSort(LargeSize,SmallSize,SmallEsize,TermsInSmall
-					,MaxPatches,MaxFpatches,IOsize);
+					,MaxPatches,MaxFpatches,IOsize,0);
 	/* AM.S0->file.ziosize was already set to a (larger) value by AllocSort, here it is re-set. */
 #ifdef WITHZLIB
 	AM.S0->file.ziosize = IOsize;
@@ -836,9 +836,12 @@ VOID WriteSetup()
 		Routine allocates a complete struct for sorting.
 		To be used for the main allocation of the sort buffers, and
 		in a later stage for the function and subroutine sort buffers.
+		The level arg denotes a main buffer allocation (0) or a sub-buffer
+		allocation (1), used only for printing warning messages for buffer
+		size adjustments in DEBUGGING mode.
 */
 SORTING *AllocSort(LONG inLargeSize, LONG inSmallSize, LONG inSmallEsize, LONG inTermsInSmall,
-                   int inMaxPatches, int inMaxFpatches, LONG inIOsize)
+                   int inMaxPatches, int inMaxFpatches, LONG inIOsize, int level)
 {
 	LONG LargeSize = inLargeSize;
 	LONG SmallSize = inSmallSize;
@@ -899,10 +902,13 @@ SORTING *AllocSort(LONG inLargeSize, LONG inSmallSize, LONG inSmallEsize, LONG i
 	}
 
 #if DEBUGGING
-	if ( LargeSize != inLargeSize ) { MesPrint("Warning: LargeSize adjusted: %l -> %l", inLargeSize, LargeSize); }
-	if ( SmallSize != inSmallSize ) { MesPrint("Warning: SmallSize adjusted: %l -> %l", inSmallSize, SmallSize); }
-	if ( SmallEsize != inSmallEsize ) {MesPrint("Warning: SmallEsize adjusted: %l -> %l", inSmallEsize, SmallEsize); }
-	if ( TermsInSmall != inTermsInSmall ) { MesPrint("Warning: TermsInSmall adjusted: %l -> %l", inTermsInSmall, TermsInSmall); }
+	char *prefix;
+	if ( level == 0 ) { prefix = ""; }
+	else { prefix = "Sub"; }
+	if ( LargeSize != inLargeSize ) { MesPrint("Warning: %sLargeSize adjusted: %l -> %l", prefix, inLargeSize, LargeSize); }
+	if ( SmallSize != inSmallSize ) { MesPrint("Warning: %sSmallSize adjusted: %l -> %l", prefix, inSmallSize, SmallSize); }
+	if ( SmallEsize != inSmallEsize ) {MesPrint("Warning: %sSmallEsize adjusted: %l -> %l", prefix, inSmallEsize, SmallEsize); }
+	if ( TermsInSmall != inTermsInSmall ) { MesPrint("Warning: %sTermsInSmall adjusted: %l -> %l", prefix, inTermsInSmall, TermsInSmall); }
 	if ( MaxPatches != inMaxPatches ) { MesPrint("Warning: MaxPatches adjusted: %d -> %d", inMaxPatches, MaxPatches); }
 	if ( MaxFpatches != inMaxFpatches ) {MesPrint("Warning: MaxFPatches adjusted: %d -> %d", inMaxFpatches, MaxFpatches); }
 	/* This one is always changed if the LargeSize has not been... */

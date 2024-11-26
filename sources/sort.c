@@ -646,7 +646,7 @@ WORD NewSort(PHEAD0)
 		if ( AN.FunSorts[AR.sLevel] == 0 ) {
 			AN.FunSorts[AR.sLevel] = AllocSort(
 				AM.SLargeSize,AM.SSmallSize,AM.SSmallEsize,AM.STermsInSmall
-					,AM.SMaxPatches,AM.SMaxFpatches,AM.SIOsize);
+					,AM.SMaxPatches,AM.SMaxFpatches,AM.SIOsize,1);
 		}
 		AN.FunSorts[AR.sLevel]->PolyFlag = 0;
 	}
