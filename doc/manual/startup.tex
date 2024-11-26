@@ -40,12 +40,8 @@ alphabetic characters. They are:
 \item[-l] Make a regular log file.
 \item[-ll] Make a log file without intermediate statistics.
 \item[-L] Same as -ll.
-\item[-M] Put the PID (process identifier) in the name of the temporary 
-     files. This makes for longer names, but gives a better guarantee of 
-     uniqueness. If a file with the created name exists already it will be 
-     overwritten. This option is for when several instances of \FORM\ are 
-     started at nearly the same time as can happen from minos or make (with 
-     the make -j option).
+\item[-M] This option is ignored. The PID (process identifier) of the
+     process is now always included in the name of the temporary files.
 \item[-p] Next argument/option is the path of a directory for 
      input, include, procedure and subroutine files.
 \item[-{pipe}] Indicates that \FORM\ is started up as the receiving 
