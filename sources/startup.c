@@ -649,6 +649,9 @@ int OpenInput(VOID)
 
 UBYTE *emptystring = (UBYTE *)".";
 UBYTE *defaulttempfilename = (UBYTE *)"xformxxx.str";
+/* This is the length of the above default, but with 7 spaces for PID digits
+   instead of the "xxx". (Previously FORM used 5 digits and this value was 14) */
+#define DEFAULTFNAMELENGTH 16
 
 VOID ReserveTempFiles(int par)
 {
@@ -683,7 +686,7 @@ VOID ReserveTempFiles(int par)
 */
 	s = AM.TempDir; i = 200;   /* Some extra for VMS */
 	while ( *s && *s != ':' ) { if ( *s == '\\' ) s++; s++; i++; }
-	FG.fnamesize = sizeof(UBYTE)*(i+14);
+	FG.fnamesize = sizeof(UBYTE)*(i+DEFAULTFNAMELENGTH);
 	FG.fname = (char *)Malloc1(FG.fnamesize,"name for temporary files");
 	s = AM.TempDir; t = (UBYTE *)FG.fname;
 	while ( *s && *s != ':' ) { if ( *s == '\\' ) s++; *t++ = *s++; }
@@ -696,7 +699,7 @@ VOID ReserveTempFiles(int par)
 	s = AM.TempSortDir; i = 200;   /* Some extra for VMS */
 	while ( *s && *s != ':' ) { if ( *s == '\\' ) s++; s++; i++; }
 
-	FG.fname2size = sizeof(UBYTE)*(i+14);
+	FG.fname2size = sizeof(UBYTE)*(i+DEFAULTFNAMELENGTH);
 	FG.fname2 = (char *)Malloc1(FG.fname2size,"name for sort files");
 	s = AM.TempSortDir; t = (UBYTE *)FG.fname2;
 	while ( *s && *s != ':' ) { if ( *s == '\\' ) s++; *t++ = *s++; }
@@ -710,35 +713,10 @@ VOID ReserveTempFiles(int par)
 	s = defaulttempfilename;
 #ifdef WITHMPI
 	{ 
-	  int iii;
-#ifdef SMP
-	  /* Very dirty quick-hack for the qcm smp machine at TTP */
-	  M_free(FG.fname,"name for temporary files");
-	  if(PF.me == 0){
-      /*[04nov2003 mt] To avoid segfault with -fast optimization option*/
-		/*[04nov2003 mt]:*/ /*NOTE, this is only a temporary stub!*/
-		/*FG.fname = "/formswap/xxxxxxxxxxxxxxxxxxxxx";*/
-		FG.fname = calloc(128,1);
-		strcpy(FG.fname,"/formswap/xxxxxxxxxxxxxxxxxxxxx");
-		/*:[04nov2003 mt]*/
-		t = (UBYTE *)FG.fname + 10;
-		FG.fnamebase = t-FG.fname;
-	  }
-	  else{
-		/*[04nov2003 mt]:*/
-		/*FG.fname = "/formswapx/xxxxxxxxxxxxxxxxxxxxx";*/
-		FG.fname = calloc(128,1);
-		strcpy(FG.fname,"/formswapx/xxxxxxxxxxxxxxxxxxxxx");
-		/*:[04nov2003 mt]*/
-		FG.fname[9] = '0' + PF.me;
-		t = (UBYTE *)FG.fname + 11;
-		FG.fnamebase = t-FG.fname;
-	  }
-#else
-	  iii = snprintf((char*)t,FG.fnamesize-((char*)t-FG.fname),"%d",PF.me);
-	  t+= iii;
-	  s+= iii; /* in case defaulttmpfilename is too short */
-#endif
+		int iii;
+		iii = snprintf((char*)t,FG.fnamesize-((char*)t-FG.fname),"%d",PF.me);
+		t+= iii;
+		s+= iii; /* in case defaulttmpfilename is too short */
 	}
 #endif
 	while ( *s ) *t++ = *s++;
@@ -753,8 +731,8 @@ VOID ReserveTempFiles(int par)
 		command tail.
 */
 	if ( AM.MultiRun ) {
-		int num = ((int)GetPID())%100000;
-		t += 2;
+		int num = ((int)GetPID())%10000000;
+		t += 4;
 		*t = 0;
 		t[-1] = 'r';
 		t[-2] = 't';
@@ -764,9 +742,11 @@ VOID ReserveTempFiles(int par)
 		t[-6] = (UBYTE)('0' + (num/10)%10);
 		t[-7] = (UBYTE)('0' + (num/100)%10);
 		t[-8] = (UBYTE)('0' + (num/1000)%10);
-		t[-9] = (UBYTE)('0' + num/10000);
+		t[-9] = (UBYTE)('0' + (num/10000)%10);
+		t[-10] = (UBYTE)('0' + (num/100000)%10);
+		t[-11] = (UBYTE)('0' + num/1000000);
 		if ( ( AC.StoreHandle = CreateFile((char *)FG.fname) ) < 0 ) {
-			t[-5] = 'x'; t[-6] = 'x'; t[-7] = 'x'; t[-8] = 'x'; t[-9] = 'x';
+			t[-5] = 'x'; t[-6] = 'x'; t[-7] = 'x'; t[-8] = 'x'; t[-9] = 'x'; t[-10] = 'x'; t[-11] = 'x';
 			goto classic;
 		}
 	}
@@ -815,7 +795,7 @@ classic:;
 /*
 	Now we should assign a name to the main sort file and the two stage 4 files.
 */
-	AM.S0->file.name = (char *)Malloc1(sizeof(char)*(i+14),"name for temporary files");
+	AM.S0->file.name = (char *)Malloc1(sizeof(char)*(i+DEFAULTFNAMELENGTH),"name for temporary files");
 	s = (UBYTE *)AM.S0->file.name;
 	t = (UBYTE *)FG.fname2;
 	i = 1;
