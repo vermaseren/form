@@ -737,7 +737,8 @@ ALLPRIVATES *InitializeOneThread(int identity)
 						 ,AM.S0->MaxPatches
 /*						 ,AM.S0->MaxPatches/numberofworkers  */
 						 ,AM.S0->MaxFpatches/numberofworkers
-						 ,AM.S0->file.POsize);
+						 ,AM.S0->file.POsize
+						 ,0);
 	}
 	AR.CompressPointer = AR.CompressBuffer;
 /*

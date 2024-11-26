@@ -876,7 +876,7 @@ extern int    ToFast(WORD *,WORD *);
 extern SETUPPARAMETERS *GetSetupPar(UBYTE *);
 extern int    RecalcSetups(VOID);
 extern int    AllocSetups(VOID);
-extern SORTING *AllocSort(LONG,LONG,LONG,LONG,int,int,LONG);
+extern SORTING *AllocSort(LONG,LONG,LONG,LONG,int,int,LONG,int);
 extern VOID   AllocSortFileName(SORTING *);
 extern UBYTE *LoadInputFile(UBYTE *,int);
 extern UBYTE  GetInput(VOID);
