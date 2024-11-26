@@ -60,10 +60,8 @@ Make a regular log file.
 Make a log file without intermediate statistics.
 .TP
 .BR "-M"
-Put the PID (process identifier) in the name of the temporary files. This makes for longer
-names, but gives a better guarantee of uniqueness. If a file with the created name exists
-already it will be overwritten. This option is for when several instances of FORM are started
-at nearly the same time as can happen from minos or make (with the make -j option).
+This option is ignored. The PID (process identifier) of the process is now always included
+in the name of the temporary files.
 .TP
 .BR "-p"
 Next argument/option is the path of a directory for input, include, procedure and subroutine

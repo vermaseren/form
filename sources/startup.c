@@ -240,6 +240,8 @@ int DoTail(int argc, UBYTE **argv)
 	AM.InputFileName = AM.LogFileName = AM.IncDir = AM.TempDir = AM.TempSortDir =
 	AM.SetupDir = AM.SetupFile = AM.Path = 0;
 	AM.FromStdin = 0;
+	/* Always use MultiRun, "-M" option is now ignored. */
+	AM.MultiRun = 1;
 	if ( argc < 1 ) {
 		onlyversion = 0;
 		goto printversion;
@@ -294,7 +296,8 @@ int DoTail(int argc, UBYTE **argv)
 				case 'L': /* Make log file with only final statistics */
 							AM.LogType = 1;  break;
 				case 'M': /* Multirun. Name of tempfiles will contain PID */
-							AM.MultiRun = 1;
+							/* This option is now ignored. We always use MultiRun. */
+							/* AM.MultiRun = 1; */
 							break;
 				case 'm': /* Read number of threads */
 				case 'w': /* Read number of workers */
@@ -685,11 +688,11 @@ VOID ReserveTempFiles(int par)
 	when one device is full we can continue on the next one.
 */
 	s = AM.TempDir; i = 200;   /* Some extra for VMS */
-	while ( *s && *s != ':' ) { if ( *s == '\\' ) s++; s++; i++; }
+	while ( *s && *s != PATHSEPARATOR ) { if ( *s == '\\' ) s++; s++; i++; }
 	FG.fnamesize = sizeof(UBYTE)*(i+DEFAULTFNAMELENGTH);
 	FG.fname = (char *)Malloc1(FG.fnamesize,"name for temporary files");
 	s = AM.TempDir; t = (UBYTE *)FG.fname;
-	while ( *s && *s != ':' ) { if ( *s == '\\' ) s++; *t++ = *s++; }
+	while ( *s && *s != PATHSEPARATOR ) { if ( *s == '\\' ) s++; *t++ = *s++; }
 	if ( (char *)t > FG.fname && t[-1] != SEPARATOR && t[-1] != ALTSEPARATOR )
 		*t++ = SEPARATOR;
 	*t = 0;
@@ -697,12 +700,12 @@ VOID ReserveTempFiles(int par)
 	FG.fnamebase = t-(UBYTE *)(FG.fname);
 
 	s = AM.TempSortDir; i = 200;   /* Some extra for VMS */
-	while ( *s && *s != ':' ) { if ( *s == '\\' ) s++; s++; i++; }
+	while ( *s && *s != PATHSEPARATOR ) { if ( *s == '\\' ) s++; s++; i++; }
 
 	FG.fname2size = sizeof(UBYTE)*(i+DEFAULTFNAMELENGTH);
 	FG.fname2 = (char *)Malloc1(FG.fname2size,"name for sort files");
 	s = AM.TempSortDir; t = (UBYTE *)FG.fname2;
-	while ( *s && *s != ':' ) { if ( *s == '\\' ) s++; *t++ = *s++; }
+	while ( *s && *s != PATHSEPARATOR ) { if ( *s == '\\' ) s++; *t++ = *s++; }
 	if ( (char *)t > FG.fname2 && t[-1] != SEPARATOR && t[-1] != ALTSEPARATOR )
 		*t++ = SEPARATOR;
 	*t = 0;
@@ -827,6 +830,7 @@ classic:;
 	if ( par == 0 ) {
 		s = (UBYTE *)((void *)(FG.fname2)); i = 0;
 		while ( *s ) { s++; i++; }
+		/* +1 for null terminator */
 		s = (UBYTE *)Malloc1(sizeof(char)*(i+1),"name for stage4 file a");
 		AR.FoStage4[1].name = (char *)s;
 		t = (UBYTE *)FG.fname2;
@@ -834,12 +838,14 @@ classic:;
 		s[-2] = '4'; s[-1] = 'a'; *s = 0;
 		s = (UBYTE *)((void *)(FG.fname)); i = 0;
 		while ( *s ) { s++; i++; }
+		/* +1 for null terminator */
 		s = (UBYTE *)Malloc1(sizeof(char)*(i+1),"name for stage4 file b");
 		AR.FoStage4[0].name = (char *)s;
 		t = (UBYTE *)FG.fname;
 		while ( *t ) *s++ = *t++;
 		s[-2] = '4'; s[-1] = 'b'; *s = 0;
 		for ( j = 0; j < 3; j++ ) {
+			/* +1 for null terminator */
 			s = (UBYTE *)Malloc1(sizeof(char)*(i+1),"name for scratch file");
 			AR.Fscr[j].name = (char *)s;
 			t = (UBYTE *)FG.fname;
@@ -852,6 +858,7 @@ classic:;
 		size_t tname;
 		s = (UBYTE *)((void *)(FG.fname2)); i = 0;
 		while ( *s ) { s++; i++; }
+		/* +1 for null terminator, +10 for 32bit int, +1 for "." */
 		tname = sizeof(char)*(i+12);
 		s = (UBYTE *)Malloc1(tname,"name for stage4 file a");
 		snprintf((char *)s,tname,"%s.%d",FG.fname2,AT.identity);
@@ -859,6 +866,7 @@ classic:;
 		AR.FoStage4[1].name = (char *)s;
 		s = (UBYTE *)((void *)(FG.fname)); i = 0;
 		while ( *s ) { s++; i++; }
+		/* +1 for null terminator, +10 for 32bit int, +1 for "." */
 		tname = sizeof(char)*(i+12);
 		s = (UBYTE *)Malloc1(tname,"name for stage4 file b");
 		snprintf((char *)s,tname,"%s.%d",FG.fname,AT.identity);
@@ -866,6 +874,7 @@ classic:;
 		AR.FoStage4[0].name = (char *)s;
 		if ( AT.identity == 0 ) {
 			for ( j = 0; j < 3; j++ ) {
+				/* +1 for null terminator */
 				s = (UBYTE *)Malloc1(sizeof(char)*(i+1),"name for scratch file");
 				AR.Fscr[j].name = (char *)s;
 				t = (UBYTE *)FG.fname;

@@ -1016,10 +1016,10 @@ VOID AllocSortFileName(SORTING *sort)
 	while ( *s ) *t++ = *s++;
 #ifdef WITHPTHREADS
 	t[-2] = 'F';
-	snprintf(t-1,FG.fname2size-(t-1-FG.fname2),"%d.%d",identity,AN.filenum);
+	snprintf(t-1,FG.fname2size-(t-1-sort->file.name),"%d.%d",identity,AN.filenum);
 #else
 	t[-2] = 'f';
-	snprintf(t-1,FG.fname2size-(t-1-FG.fname2),"%d",AN.filenum);
+	snprintf(t-1,FG.fname2size-(t-1-sort->file.name),"%d",AN.filenum);
 #endif
 	AN.filenum++;
 }
@@ -1062,10 +1062,10 @@ FILEHANDLE *AllocFileHandle(WORD par,char *name)
 		while ( *s ) *t++ = *s++;
 #ifdef WITHPTHREADS
 		t[-2] = 'F';
-		snprintf(t-1,20,"%d-%d",identity,AN.filenum);
+		snprintf(t-1,FG.fname2size-(t-1-fh->name),"%d-%d",identity,AN.filenum);
 #else
 		t[-2] = 'f';
-		snprintf(t-1,20,"%d",AN.filenum);
+		snprintf(t-1,FG.fname2size-(t-1-fh->name),"%d",AN.filenum);
 #endif
 		AN.filenum++;
 	  }

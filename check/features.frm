@@ -1259,22 +1259,14 @@ assert result("F") =~ expr("0");
 Local test = 1;
 .end
 #require unix?
-if mpi?
-  assert runtime_error?("Could not create sort file: bad/path/0formxxx.sor")
-else
-  assert runtime_error?("Could not create sort file: bad/path/xformxxx.sor")
-end
+assert runtime_error?
 *--#] TempSortDir_unix :
 *--#[ TempSortDir_windows :
 #: TempSortDir bad_path
 Local test = 1;
 .end
 #require windows?
-if mpi?
-  assert runtime_error?('Could not create sort file: bad_path\0formxxx.sor')
-else
-  assert runtime_error?('Could not create sort file: bad_path\xformxxx.sor')
-end
+assert runtime_error?
 *--#] TempSortDir_windows :
 *--#[ ZeroUnchanged :
 #-
