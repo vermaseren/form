@@ -962,6 +962,29 @@ L F7 = f(10000*g5_);
 #pend_if mpi?
 assert runtime_error?
 *--#] Issue94 : 
+*--#[ Issue95b :
+#-
+#:filepatches        4
+#:largesize      25600
+#:maxtermsize      200
+#:smallsize      12800
+#:termsinsmall      16
+
+Off stats;
+
+#define N "323"
+S x,k;
+L F = sum_(k,1,`N',x^k);
+.sort
+
+L CheckZero = F - {`N'*(`N'+1)/2};
+id x^k?pos_ = k;
+
+Print CheckZero;
+.end
+assert succeeded?
+assert result("CheckZero") =~ expr("0")
+*--#] Issue95b : 
 *--#[ Issue97_1 :
 * "Program terminating" with oldFactArg and dot products
 V e1, e2, k1, k2;

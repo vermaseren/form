@@ -1056,8 +1056,8 @@ TooLarge:
 			position = S->fPatches[S->fPatchN];
 			ss = S->sPointer;
 			if ( *ss ) {
-#ifdef WITHZLIB
 				*AR.CompressPointer = 0;
+#ifdef WITHZLIB
 				if ( S == AT.S0 && AR.NoCompress == 0 && AR.gzipCompress > 0 )
 					S->fpcompressed[S->fPatchN] = 1;
 				else
@@ -4780,8 +4780,10 @@ void CleanUpSort(int num)
 				M_free(S->inPatches, "CleanUpSort: inPatches");
 				M_free(S->tree, "CleanUpSort: tree");
 				M_free(S->used, "CleanUpSort: used");
+#ifdef WITHZLIB
 				M_free(S->fpcompressed, "CleanUpSort: fpcompressed");
 				M_free(S->fpincompressed, "CleanUpSort: fpincompressed");
+#endif
 				M_free(S->ktoi, "CleanUpSort: ktoi");
 				M_free(S->lBuffer, "CleanUpSort: lBuffer+sBuffer");
 				M_free(S->file.PObuffer, "CleanUpSort: PObuffer");
