@@ -717,6 +717,8 @@ int AllocSetups()
 	AM.NumStoreCaches = sp->value;
 	sp = GetSetupPar((UBYTE *)"sizestorecache");
 	AM.SizeStoreCache = sp->value;
+	/* Make sure this is a multiple of sizeof(WORD). */
+	AM.SizeStoreCache = ((AM.SizeStoreCache+sizeof(WORD)-1)/sizeof(WORD))*sizeof(WORD);
 #ifndef WITHPTHREADS
 /*
 	Install the store caches (15-aug-2006 JV)
