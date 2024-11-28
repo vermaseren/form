@@ -1695,7 +1695,9 @@ InNew:
 					num = *from++;
 					ADDPOS(*position,sizeof(WORD));
 					*to += (WORD)num;
-/*					first = 0; */
+					/* This next line has always been commented, but uncommenting it
+					   fixes a rare bug when loading certain save files. */
+					first = 0;
 					*InCompState = (WORD)(num + 2);
 				}
 				goto PastCon;
