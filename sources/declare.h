@@ -1694,6 +1694,9 @@ extern int AddToScratch(FILEHANDLE *,POSITION *,UBYTE *,POSITION *,int);
 extern int DoPreAppendPath(UBYTE *);
 extern int DoPrePrependPath(UBYTE *);
 
+extern int InstallPackage(UBYTE *);
+extern int DoPreUsePackage(UBYTE *);
+
 extern int DoSwitch(PHEAD WORD *, WORD *);
 extern int DoEndSwitch(PHEAD WORD *, WORD *);
 extern SWITCHTABLE *FindCase(WORD, WORD);
