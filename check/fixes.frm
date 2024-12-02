@@ -962,6 +962,40 @@ L F7 = f(10000*g5_);
 #pend_if mpi?
 assert runtime_error?
 *--#] Issue94 : 
+*--#[ Issue95 :
+#-
+#: filepatches 32
+#: largepatches 32
+#: largesize 6250000
+#: maxtermsize 1250
+#: smallsize 1250000
+#: smallextension 2500032
+#: termsinsmall 12500
+
+Off Statistics;
+
+Symbol x,n;
+
+* One fewer term than reported in the Issue, since now the
+* non-x term is in the initial definition of test.
+#define NTERMS "266905"
+
+Local test = sum_(n,1,`NTERMS',x^n) - `NTERMS'*(`NTERMS'+1)/2;
+.sort
+
+* Check all terms present
+Identify x^n?pos_ = n;
+
+Print;
+.end
+# This takes a long time for tform under valgrind.
+# tform -w4 also doesn't crash here anyway (but -w2 does).
+#pend_if valgrind? && threaded?
+# Also doesn't run properly for 32bit form.
+#require wordsize >= 4
+assert succeeded?
+assert result("test") =~ expr("0")
+*--#] Issue95 : 
 *--#[ Issue95b :
 #-
 #:filepatches        4
