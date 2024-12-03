@@ -3020,6 +3020,54 @@ P F;
 assert succeeded?
 assert result("F") =~ expr("0")
 *--#] Issue525 :
+*--#[ Issue544 :
+#-
+Off Statistics;
+
+Symbol x;
+Vector D,p,q,r,s;
+CFunction f,g,h,i,j,k,l,m;
+
+Local test =
+	#do i = -3,3
+		+ f(p,`i')
+		+ f(-q,`i')
+		+ f(p,q,`i')
+		+ f(-p,r,`i')
+		+ f(-p,-s,`i')
+	#enddo
+	;
+Identify f(?a) = f(?a) + g(?a) + h(?a) + i(?a) + j(?a) + k(?a) + l(?a) + m(?a);
+.sort
+
+Identify f(p?,x?) = D.p^x;
+Identify f(p?,q?,x?) = p.q^x;
+Identify g(p?,x?) = D.p^-x;
+Identify g(p?,q?,x?) = p.q^-x;
+
+Identify j(p?,x?) = (D.p)^x;
+Identify j(p?,q?,x?) = (p.q)^x;
+Identify k(p?,x?) = D.p^(x);
+Identify k(p?,q?,x?) = p.q^(x);
+
+#do i = -3,3
+	Identify h(p?,`i') =  - D.p^`i';
+	Identify h(p?,q?,`i') = - p.q^`i';
+	Identify i(p?,`i') = - D.p^-`i';
+	Identify i(p?,q?,`i') = - p.q^-`i';
+
+	Identify l(p?,`i') =  - (D.p)^`i';
+	Identify l(p?,q?,`i') = - (p.q)^`i';
+	Identify m(p?,`i') = - D.p^(-`i');
+	Identify m(p?,q?,`i') = - p.q^(-`i');
+#enddo
+
+
+Print +s;
+.end
+assert succeeded?
+assert result("test") =~ expr("0")
+*--#] Issue544 :
 *--#[ Issue563 :
 #: SubTermsInSmall 50
 
