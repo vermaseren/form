@@ -21,9 +21,9 @@ jobs:
           - {bin: parform, test: default, timeout: 15}
           - {bin: form, test: checkpoint}
           - {bin: tform, test: checkpoint}
-          - {bin: form, test: forcer, timeout: 60}
-          - {bin: tform, test: forcer, timeout: 60}
-          - {bin: tform, test: forcer, nthreads: 2, timeout: 60}
+          - {bin: form, test: extra, timeout: 60}
+          - {bin: tform, test: extra, timeout: 60}
+          - {bin: tform, test: extra, nthreads: 2, timeout: 60}
           - {bin: tform, test: multithreaded}
     steps:
       - name: Checkout repository
@@ -63,7 +63,7 @@ jobs:
 
       - name: Cache library
         id: cache-formlib
-        if: contains(fromJson('["forcer"]'), matrix.test)
+        if: contains(fromJson('["extra"]'), matrix.test)
         uses: actions/cache@v4
         with:
           path: formlib
@@ -74,7 +74,8 @@ jobs:
         run: |
           mkdir -p formlib
           case ${{ matrix.test }} in
-            forcer)
+            extra)
+              # forcer library for the forcer test in extra
               wget https://github.com/benruijl/forcer/archive/v1.0.0.tar.gz -O - | tar -x --gzip
               mv forcer-1.0.0/forcer.h formlib
               mv forcer-1.0.0/forcer formlib
