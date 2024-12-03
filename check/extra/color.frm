@@ -6,7 +6,7 @@
 #endif
 .end
 
-*--#[ tloop :
+*--#[ color_tloop :
 #-
 
 * This is a modified version of tloop.frm from the color.h example files.
@@ -57,7 +57,7 @@ Off Statistics;
 *
 *	Program by J.Vermaseren, 24-may-1997
 *
-#include include/color.h
+#include color.h
 AutoDeclare Index i,j,k;
 CFunction acc;
 Symbol x;
@@ -163,4 +163,4 @@ Local GG5 = - GG5
 .end
 #pend_if valgrind? && ncpu < 4
 assert succeeded?
-*--#] tloop :
+*--#] color_tloop :

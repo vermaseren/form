@@ -80,6 +80,8 @@ jobs:
               mv forcer-1.0.0/forcer.h formlib
               mv forcer-1.0.0/forcer formlib
               rm -rf forcer-1.0.0
+              # color library for the color test in extra
+              wget https://www.nikhef.nl/~form/maindir/packages/color/color.h -P formlib
               ;;
           esac
 
