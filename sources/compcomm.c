@@ -506,39 +506,52 @@ int CoCompress(UBYTE *s)
 	if ( StrICmp(s,(UBYTE *)"on") == 0 ) {
 		AC.NoCompress = 0;
 		AR.gzipCompress = 0;
+		return(0);
 	}
 	else if ( StrICmp(s,(UBYTE *)"off") == 0 ) {
 		AC.NoCompress = 1;
 		AR.gzipCompress = 0;
+		return(0);
 	}
 	else {
 		t = s; while ( FG.cTable[*t] <= 1 ) t++;
 		c = *t; *t = 0;
-		if ( StrICmp(s,(UBYTE *)"gzip") == 0 ) {
-#ifndef WITHZLIB
-			Warning("gzip compression not supported on this platform");
+		if ( StrICmp(s,(UBYTE *)"zstd") == 0 ) {
+#ifdef WITHZSTD
+			ZWRAP_useZSTDcompression(1);
+#else
+			Warning("zstd compression not supported on this platform.");
 #endif
-			s = t; *s = c;
-			if ( *s == 0 ) {
-				AR.gzipCompress = GZIPDEFAULT;  /* Normally should be 6 */
-				return(0);
-			}
-			while ( *s == ' ' || *s == ',' || *s == '\t' ) s++;
-			t = s;
-			if ( FG.cTable[*s] == 1 ) {
-				AR.gzipCompress = *s - '0';
-				s++;
-				while ( *s == ' ' || *s == ',' || *s == '\t' ) s++;
-				if ( *s == 0 ) return(0);
-			}
-			MesPrint("&Unknown gzip option: %s, a digit was expected",t);
-			return(1);
-
+		}
+		else if ( StrICmp(s,(UBYTE *)"gzip") == 0 ) {
+#ifdef WITHZSTD
+			ZWRAP_useZSTDcompression(0);
+#endif
+#ifndef WITHZLIB
+			Warning("gzip compression not supported on this platform.");
+#endif
 		}
 		else {
-			MesPrint("&Unknown option: %s, on, off or gzip expected",s);
+			MesPrint("&Unknown Compress option: %s. On, off, gzip or zstd expected.",s);
 			return(1);
 		}
+
+		/* Whether we are using zlib or zstd, accept and use a compression level. */
+		s = t; *s = c;
+		if ( *s == 0 ) {
+			AR.gzipCompress = GZIPDEFAULT;  /* Normally should be 6 */
+			return(0);
+		}
+		while ( *s == ' ' || *s == ',' || *s == '\t' ) s++;
+		t = s;
+		if ( FG.cTable[*s] == 1 ) {
+			AR.gzipCompress = *s - '0';
+			s++;
+			while ( *s == ' ' || *s == ',' || *s == '\t' ) s++;
+			if ( *s == 0 ) return(0);
+		}
+		MesPrint("&Unknown Compress gzip/zstd option: %s. A digit was expected.",t);
+		return(1);
 	}
 	return(0);
 }
@@ -675,34 +688,47 @@ int CoOn(UBYTE *s)
 			*s = c;
 			while ( *s == ' ' || *s == ',' || *s == '\t' ) s++;
 			if ( *s ) {
-			  t = s;
-			  while ( FG.cTable[*s] <= 1 ) s++;
-			  c = *s; *s = 0;
-			  if ( StrICmp(t,(UBYTE *)"gzip") == 0 ) {}
-			  else {
-				MesPrint("&Unrecognized option in ON compress statement: %s",t);
-				return(-1);
-			  }
-			  *s = c;
-			  while ( *s == ' ' || *s == ',' || *s == '\t' ) s++;
+				t = s;
+				while ( FG.cTable[*s] <= 1 ) s++;
+				c = *s; *s = 0;
+				if ( StrICmp(t,(UBYTE *)"gzip") == 0 ) {
 #ifndef WITHZLIB
-			  Warning("gzip compression not supported on this platform");
+					Warning("gzip compression not supported on this platform.");
 #endif
-			  if ( FG.cTable[*s] == 1 ) {
-				AR.gzipCompress = *s++ - '0';
-				while ( *s == ' ' || *s == ',' || *s == '\t' ) s++;
-				if ( *s ) {
-					MesPrint("&Unrecognized option in ON compress gzip statement: %s",t);
+#ifdef WITHZSTD
+					/* If gzip is specified, turn off zstd compression. zlib still goes via the wrapper. */
+					ZWRAP_useZSTDcompression(0);
+#endif
+				}
+				else if ( StrICmp(t,(UBYTE *)"zstd") == 0 ) {
+#ifdef WITHZSTD
+					ZWRAP_useZSTDcompression(1);
+#else
+					Warning("zstd compression not supported on this platform.");
+#endif
+				}
+				else {
+					MesPrint("&Unrecognized option in ON compress statement: %s",t);
 					return(-1);
 				}
-			  }
-			  else if ( *s == 0 ) {
-				AR.gzipCompress = GZIPDEFAULT;
-			  }
-			  else {
-				MesPrint("&Unrecognized option in ON compress gzip statement: %s, single digit expected",t);
-				return(-1);
-			  }
+				/* Whether we are using zlib or zstd, accept and use a compression level. */
+				*s = c;
+				while ( *s == ' ' || *s == ',' || *s == '\t' ) s++;
+				if ( FG.cTable[*s] == 1 ) {
+					AR.gzipCompress = *s++ - '0';
+					while ( *s == ' ' || *s == ',' || *s == '\t' ) s++;
+					if ( *s ) {
+						MesPrint("&Unrecognized option in ON compress gzip/zstd statement: %s",t);
+						return(-1);
+					}
+				}
+				else if ( *s == 0 ) {
+					AR.gzipCompress = GZIPDEFAULT;
+				}
+				else {
+					MesPrint("&Unrecognized option in ON compress gzip/zstd statement: %s, single digit expected.",t);
+					return(-1);
+				}
 			}
 		}
 		else if ( StrICont(t,(UBYTE *)"checkpoint") == 0 ) {
