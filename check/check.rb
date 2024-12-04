@@ -8,15 +8,17 @@ exec ruby "-S" "-x" "$0" "$@"
 # rubocop:enable all
 
 # Check the Ruby version.
-if RUBY_VERSION < "1.9.0"
-  warn("ruby 1.9 required for the test suite")
+if RUBY_VERSION < "2.0.0"
+  warn("ruby 2.0 required for the test suite")
   exit(1)
 end
 
 require "fileutils"
+require "io/console/size"
 require "open3"
 require "optparse"
 require "ostruct"
+require "rbconfig"
 require "set"
 require "thread"
 require "tmpdir"
@@ -55,31 +57,35 @@ end
 
 # Get a positive integer from the given environment variable.
 def read_env_positive_int(key, default_value)
+  if default_value <= 0
+    raise ArgumentError, "invalid default_value: #{default_value}"
+  end
+
   value = default_value
   if ENV.key?(key)
     begin
       value = Integer(ENV[key])
+      raise ArgumentError if value <= 0
     rescue ArgumentError, TypeError
-      warn("environment variable ignored: #{key} is not integer: #{ENV[key]}")
+      warn("environment variable ignored: #{key} is not positive integer: #{ENV[key]}")
+      value = default_value
     end
-  end
-  if value <= 0
-    warn("environment variable ignored: #{key} must be positive: #{ENV[key]}")
-    value = default_value
   end
   value
 end
 
 # Get the total size of the physical memory available on the host machine.
-def get_total_physical_memory
-  if RUBY_PLATFORM.downcase.include?("linux")
+def total_physical_memory
+  platform = RbConfig::CONFIG["host_os"].downcase
+  if platform.include?("linux")
     mem_info = `free -b | grep Mem`
     mem_info.split[1].to_i
-  elsif RUBY_PLATFORM.downcase.include?("darwin")
+  elsif platform.include?("darwin")
     mem_info = `sysctl -n hw.memsize`
     mem_info.to_i
-  else
-    nil
+  elsif platform.include?("mingw") || platform.include?("mswin")
+    mem_info = `wmic ComputerSystem get TotalPhysicalMemory`
+    mem_info.split[1].to_i
   end
 end
 
@@ -149,8 +155,8 @@ class TempDir
   at_exit { TempDir.cleanup }
 end
 
-# Register a finalization function before loading test/unit.
-at_exit { defined?(finalize) && finalize }
+# Register a function before loading test/unit.
+at_exit { defined?(output_detailed_statistics) && output_detailed_statistics }
 
 # We use test/unit, which is now not in the standard library.
 begin
@@ -158,6 +164,36 @@ begin
 rescue LoadError
   warn("test/unit required for the test suite")
   exit(1)
+end
+
+# Try a monkey patch to call output_detailed_statistics() before the test suite summary.
+begin
+  require "test/unit/ui/console/testrunner"
+
+  module Test
+    module Unit
+      module UI
+        module Console
+          class TestRunner
+            alias old_output_statistics output_statistics
+            alias _old_output output
+            alias _old_output_summary_marker output_summary_marker
+
+            def output_statistics(*args, **kwargs, &block)
+              if need_output_detailed_statistics?
+                output_summary_marker
+                output_detailed_statistics(method(:output))
+                output_summary_marker
+              end
+              old_output_statistics(*args, **kwargs, &block)
+            end
+          end
+        end
+      end
+    end
+  end
+rescue NameError, LoadError
+  # do nothing
 end
 
 # Find the path to a program.
@@ -168,7 +204,7 @@ def which(name)
     result = File.expand_path(name)
   else
     # Search from $PATH.
-    ENV["PATH"].split(":").each do |path|
+    ENV["PATH"].split(File::PATH_SEPARATOR).each do |path|
       candidate = File.join(path, name)
       if File.executable?(candidate)
         result = File.expand_path(candidate)
@@ -240,19 +276,24 @@ module FormTest
   # Host environment.
 
   def cygwin?
-    RUBY_PLATFORM =~ /cygwin/i
+    RbConfig::CONFIG["host_os"] =~ /cygwin/i
   end
 
   def mac?
-    RUBY_PLATFORM =~ /darwin/i
+    RbConfig::CONFIG["host_os"] =~ /darwin|mac os/i
   end
 
   def linux?
-    RUBY_PLATFORM =~ /linux/i
+    RbConfig::CONFIG["host_os"] =~ /linux/i
   end
 
   def unix?
-    cygwin? || mac? || linux?
+    cygwin? || mac? || linux? || RbConfig::CONFIG["host_os"] =~ /solaris|bsd/i
+  end
+
+  def windows?
+    # NOTE: "cygwin" is intentionally excluded.
+    RbConfig::CONFIG["host_os"] =~ /mswin|msys|mingw|bccwin|wince|emc/i
   end
 
   def travis?
@@ -267,7 +308,7 @@ module FormTest
   def total_memory
     @@total_memory_mutex.synchronize do
       if @@cached_total_memory.nil?
-        result = get_total_physical_memory
+        result = total_physical_memory
         if result.nil?
           @@cached_total_memory = -1
         else
@@ -280,6 +321,14 @@ module FormTest
 
   @@cached_total_memory = nil
   @@total_memory_mutex = Mutex.new
+
+  def reveal_newlines(str)
+    if FormTest.cfg.show_newlines
+      str.gsub("\r", "<CR>").gsub("\n", "<LF>\n")
+    else
+      str
+    end
+  end
 
   # Override methods in Test::Unit::TestCase.
 
@@ -299,9 +348,7 @@ module FormTest
     cleanup_files
     @tmpdir = TempDir.mktmpdir("#{self.class.name}_")
     nfiles.times do |i|
-      File.open(File.join(@tmpdir, "#{i + 1}.frm"), "w") do |file|
-        file.write(info.sources[i])
-      end
+      File.write(File.join(@tmpdir, "#{i + 1}.frm"), info.sources[i])
     end
   end
 
@@ -356,6 +403,14 @@ module FormTest
             break
           end
         end
+        # On Windows, we convert newline characters in stdout/stderr into
+        # the Unix-style newline characters used in our test cases.
+        @raw_stdout = @stdout
+        @raw_stderr = @stderr
+        if windows?
+          @stdout = @stdout.gsub("\r\n", "\n")
+          @stderr = @stderr.gsub("\r\n", "\n")
+        end
         # MesPrint inevitably inserts newline characters when a line exceeds
         # its length limit. To verify error/warning messages, here we remove
         # newline characters that seem to be part of continuation lines
@@ -379,7 +434,7 @@ module FormTest
         $stderr.puts("=" * 79)
         $stderr.puts("#{info.desc} FAILED")
         $stderr.puts("=" * 79)
-        $stderr.puts(@stdout)
+        $stderr.puts(reveal_newlines(@raw_stdout))
         $stderr.puts("=" * 79)
         $stderr.puts
         if info.status.nil?
@@ -397,7 +452,7 @@ module FormTest
           $stderr.puts("=" * 79)
           $stderr.puts("#{info.desc} SUCCEEDED")
           $stderr.puts("=" * 79)
-          $stderr.puts(@stdout)
+          $stderr.puts(reveal_newlines(@raw_stdout))
           $stderr.puts("=" * 79)
           $stderr.puts
         end
@@ -485,7 +540,7 @@ module FormTest
       stderr_lines: stderr_lines,
       combined_lines: combined_lines,
       exit_status: exit_status,
-      finished_in_time: finished_in_time,
+      finished_in_time: finished_in_time
     }
   end
 
@@ -585,10 +640,16 @@ module FormTest
   def file(filename)
     begin
       File.open(File.join(@tmpdir, filename), "r") do |f|
-        return f.read
+        result = f.read
+        # On Windows, we convert newline characters in the file into
+        # the Unix-style newline characters used in our test cases.
+        if windows?
+          result = result.gsub("\r\n", "\n")
+        end
+        return result
       end
     rescue StandardError
-      $stderr.puts("warning: failed to read '#{filename}'")
+      warn("failed to read '#{filename}'")
     end
     ""
   end
@@ -602,9 +663,7 @@ module FormTest
   def write(filename, text)
     fname = File.join(@tmpdir, filename)
     FileUtils.mkdir_p(File.dirname(fname))
-    File.open(fname, "w") do |f|
-      f.write(text)
-    end
+    File.write(fname, text)
   end
 
   # The working directory for the test.
@@ -632,9 +691,9 @@ module FormTest
   # true if the FORM job put warning messages.
   def warning?(expected_message = nil)
     if expected_message.nil?
-      @stdout =~ /(^|\R)\S+ Line \d+ --> Warning/
+      @stdout.include?("Warning:")
     else
-      @cleaned_stdout =~ Regexp.new("(^|\\R)\\S+ Line \\d+ --> Warning: .*#{Regexp.escape(expected_message)}")
+      @cleaned_stdout =~ Regexp.new("Warning: .*#{Regexp.escape(expected_message)}")
     end
   end
 
@@ -897,7 +956,7 @@ class TestCases
               end
               if !ulimits.nil?
                 ulimits.map! { |s| "ulimit #{s}; " }
-                ulimits = ulimits.join("")
+                ulimits = ulimits.join
                 line += "def ulimits; %(#{ulimits}) end; "
               end
               if !time_dilation.nil?
@@ -1020,14 +1079,14 @@ class TestCases
     # construct regular expressions (wildcards: '*' and '?')
     @name_patterns.length.times do |i|
       if !@name_patterns[i].is_a?(Regexp)
-        s = @name_patterns[i].to_s.gsub("\*", ".*").tr("\?", ".")
+        s = @name_patterns[i].to_s.gsub("*", ".*").tr("?", ".")
         s = "^#{s}$"
         @name_patterns[i] = Regexp.new(s)
       end
     end
     @exclude_patterns.length.times do |i|
       if !@exclude_patterns[i].is_a?(Regexp)
-        s = @exclude_patterns[i].to_s.gsub("\*", ".*").tr("\?", ".")
+        s = @exclude_patterns[i].to_s.gsub("*", ".*").tr("?", ".")
         s = "^#{s}$"
         @exclude_patterns[i] = Regexp.new(s)
       end
@@ -1081,14 +1140,14 @@ class TestCases
     @classes_info.delete("Test_#{classname}")
     # It seems difficult to delete a class.
     # Instead, remove the test method.
-    klass = Object.const_get("Test_#{classname}".to_sym)
-    klass.send(:remove_method, "test_#{classname}".to_sym)
+    klass = Object.const_get(:"Test_#{classname}")
+    klass.send(:remove_method, :"test_#{classname}")
   end
 end
 
 # FORM configuration.
 class FormConfig
-  def initialize(form, mpirun, mpirun_opts, valgrind, valgrind_opts, wordsize, ncpu, timeout, retries, stat, full, verbose)
+  def initialize(form, mpirun, mpirun_opts, valgrind, valgrind_opts, wordsize, ncpu, timeout, retries, stat, full, verbose, show_newlines)
     @form     = form
     @mpirun   = mpirun
     @mpirun_opts = mpirun_opts
@@ -1100,6 +1159,7 @@ class FormConfig
     @stat     = stat
     @full     = full
     @verbose  = verbose
+    @show_newlines = show_newlines
 
     @form_bin      = nil
     @mpirun_bin    = nil
@@ -1114,7 +1174,7 @@ class FormConfig
     @form_cmd    = nil
   end
 
-  attr_reader :form, :mpirun, :mpirun_opts, :valgrind, :valgrind_opts, :ncpu, :timeout, :retries, :stat, :full, :verbose,
+  attr_reader :form, :mpirun, :mpirun_opts, :valgrind, :valgrind_opts, :ncpu, :timeout, :retries, :stat, :full, :verbose, :show_newlines,
               :form_bin, :mpirun_bin, :valgrind_bin, :valgrind_supp, :head, :wordsize, :form_cmd
 
   def serial?
@@ -1131,9 +1191,7 @@ class FormConfig
 
   def check_bin(name, bin)
     # Check if the executable is available.
-    system("cd #{TempDir.root}; type #{bin} >/dev/null 2>&1")
-    if $? == 0
-      # OK.
+    if File.executable?(bin)
       return
     end
 
@@ -1157,16 +1215,15 @@ class FormConfig
     tmpdir = TempDir.mktmpdir("ver_")
     begin
       frmname = File.join(tmpdir, "ver.frm")
-      File.open(frmname, "w") do |f|
-        f.write(<<-'TEST_FRM')
-  #-
-  Off finalstats;
-  .end
-        TEST_FRM
-      end
+      File.write(frmname, <<-TEST_FRM)
+        #-
+        Off finalstats;
+        .end
+      TEST_FRM
 
       @head = ""
-      `#{@form_bin} #{frmname} 2>/dev/null`.split("\n").each do |output_line|
+      out, _status = Open3.capture2e("#{@form_bin} #{frmname}")
+      out.split("\n").each do |output_line|
         if output_line =~ /FORM/
           @head = output_line
           break
@@ -1190,14 +1247,56 @@ class FormConfig
         system("#{form_bin} #{frmname}")
         fatal("failed to get the version of '#{@form}'")
       end
-      if @wordsize.nil?
-        if @head =~ /FORM[^(]*\([^)]*\)\s*(\d+)-bits/
-          @wordsize = $1.to_i / 16
-        else
-          warn("failed to get the wordsize of '#{@form}'")
-          warn("assuming wordsize = 4")
-          @wordsize = 4
+      # Check the wordsize.
+      # Method 1: from the output header.
+      # Method 2: 2^64 = 0 (mod 2^64) => 64-bit machine => sizeof(WORD) = 4, etc.
+      wordsize1 = nil
+      wordsize2 = nil
+      if @head =~ /FORM[^(]*\([^)]*\)\s*(\d+)-bits/
+        wordsize1 = $1.to_i / 16
+      end
+      frmname2 = File.join(tmpdir, "ws.frm")
+      File.write(frmname2, <<-TEST_FRM)
+        #do w={2,4,8}
+          #message wordtest,`w',{2^(`w'*16-1)},{2^(`w'*16)}
+        #enddo
+        .end
+      TEST_FRM
+      out, _err, status = Open3.capture3("#{@form_bin} #{frmname2}")
+      if status.success?
+        out.split("\n").each do |output_line|
+          if output_line =~ /~~~wordtest,(\d+),(-?\d+),(-?\d+)/
+            w = $1.to_i
+            x = $2.to_i
+            y = $3.to_i
+            if x != 0 && y == 0
+              wordsize2 = w
+              break
+            end
+          end
         end
+      end
+      if !@wordsize.nil?
+        if !wordsize1.nil? && @wordsize != wordsize1
+          warn("--wordsize=#{@wordsize} specified but the header of '#{@form}' indicates the wordsize = #{wordsize1}")
+        end
+        if !wordsize2.nil? && @wordsize != wordsize2
+          warn("--wordsize=#{@wordsize} specified but the preprocessor calculator of '#{@form}' determined wordsize = #{wordsize2}")
+        end
+      end
+      if @wordsize.nil?
+        if !wordsize1.nil? && !wordsize2.nil? && wordsize1 != wordsize2
+          warn("the header of '#{@form}' indicates the wordsize = #{wordsize1} but the preprocessor calculator determined wordsize = #{wordsize2}")
+        elsif !wordsize1.nil?
+          @wordsize = wordsize1
+        else
+          @wordsize = wordsize2
+        end
+      end
+      if @wordsize.nil?
+        warn("failed to get the wordsize of '#{@form}'")
+        warn("assuming wordsize = 4")
+        @wordsize = 4
       end
       # Prepare for mpirun
       if @is_mpi
@@ -1236,14 +1335,25 @@ class FormConfig
       end
       @form_cmd = cmdlist.join(" ")
       # Check the output header.
-      @head = `#{@form_cmd} #{frmname} 2>/dev/null`.split("\n").first
-      if $? != 0
-        system("#{form_cmd} #{frmname}")
+      out, err, status = Open3.capture3("#{@form_cmd} #{frmname}")
+      if status.success?
+        form_version_line = out.split("\n").first
+        if form_version_line.nil?
+          warn("failed to get the actual version of FORM")
+        else
+          @head = form_version_line
+        end
+      else
         fatal("failed to execute '#{@form_cmd}'")
       end
       if !@valgrind.nil?
-        # Include valgrind version information.
-        @head += "\n#{`#{@form_cmd} @{frmname} 2>&1 >/dev/null | grep Valgrind`.split("\n")[0]}"
+        # Include Valgrind version information.
+        valgrind_version_line = err.split("\n").select { |line| line.include?("Valgrind") }.first
+        if valgrind_version_line.nil?
+          warn("failed to get the version of Valgrind")
+        else
+          @head += "\n#{valgrind_version_line}"
+        end
       end
     ensure
       FileUtils.rm_rf(tmpdir)
@@ -1344,6 +1454,7 @@ def main
   opts.group_count = nil
   opts.files = []
   opts.verbose = false
+  opts.show_newlines = false
 
   parser = OptionParser.new
   parser.banner = "Usage: #{File.basename($0)} [options] [--] [binname] [files|tests..]"
@@ -1387,6 +1498,8 @@ def main
             "Split tests and run only one group") { |group| opts.group_id, opts.group_count = parse_group(group) }
   parser.on("-v", "--verbose",
             "Enable verbose output")              { opts.verbose = true }
+  parser.on("--show-newlines",
+            "Show newline characters")            { opts.show_newlines = true }
   parser.on("-D TEST=NAME",
             "Alternative way to run tests NAME")  { |pat| opts.name_patterns << parse_def(pat) }
   begin
@@ -1479,7 +1592,7 @@ def main
 
   # --path option.
   if !opts.path.nil?
-    ENV["PATH"] = "#{opts.path}:#{ENV['PATH']}"
+    ENV["PATH"] = "#{opts.path}#{File::PATH_SEPARATOR}#{ENV.fetch('PATH', '')}"
   end
 
   # Set FORMPATH
@@ -1513,27 +1626,44 @@ def main
                                 opts.valgrind_opts,
                                 opts.wordsize,
                                 opts.ncpu,
-                                opts.timeout > 1 ? opts.timeout : 1,
-                                opts.retries > 1 ? opts.retries : 1,
+                                [opts.timeout, 1].max,
+                                [opts.retries, 1].max,
                                 opts.stat,
                                 opts.full,
-                                opts.verbose)
+                                opts.verbose,
+                                opts.show_newlines)
   FormTest.cfg.check
   puts("Check #{FormTest.cfg.form_bin}")
   puts(FormTest.cfg.head)
 end
 
-def finalize
-  return if FormTest.cfg.nil? || !FormTest.cfg.stat
+def need_output_detailed_statistics?
+  # Check if already done.
+  $output_detailed_statistics_done ||= false
+  return false if $output_detailed_statistics_done
 
-  infos = FormTest.tests.classes_info_list
+  # Check if --stat enabled.
+  return false if FormTest.cfg.nil? || !FormTest.cfg.stat
 
-  return if infos.empty?
+  # Check if enabled test cases exist.
+  return false if FormTest.tests.classes_info_list.empty?
+
+  true
+end
+
+def output_detailed_statistics(output = nil)
+  return if !need_output_detailed_statistics?
+
+  $output_detailed_statistics_done = true
+
+  # method to output
+  output ||= method(:puts)
 
   # Print detailed statistics.
 
-  term_width = guess_term_width
+  term_width = IO.console_size[1]
 
+  infos = FormTest.tests.classes_info_list
   max_foldname_width = infos.map { |info| info.foldname.length }.max
   max_where_width = infos.map { |info| info.where.length }.max + 2
   status_width = 7
@@ -1547,8 +1677,6 @@ def finalize
     bar_width = 40
   end
 
-  puts("default timeout: #{FormTest.cfg.timeout}s")
-
   infos.each do |info|
     (0..info.sources.length - 1).each do |i|
       t = 0
@@ -1560,22 +1688,26 @@ def finalize
         timeout *= info.time_dilation
       end
       if i == 0
-        puts(format("%s %s  %s %s%s",
-                    lpad(info.foldname, max_foldname_width),
-                    lpad("(#{info.where})", max_where_width),
-                    lpad(info.status.nil? ? "UNKNOWN" : info.status, status_width),
-                    bar_str(t, timeout, bar_width),
-                    format_time(t, timeout)))
+        output.call(format("%s %s  %s %s%s",
+                           lpad(info.foldname, max_foldname_width),
+                           lpad("(#{info.where})", max_where_width),
+                           lpad(info.status.nil? ? "UNKNOWN" : info.status, status_width),
+                           bar_str(t, timeout, bar_width),
+                           format_time(t, timeout)))
       else
-        puts(format("%s %s  %s %s%s",
-                    lpad("", max_foldname_width),
-                    lpad("", max_where_width),
-                    lpad("", status_width),
-                    bar_str(t, timeout, bar_width),
-                    format_time(t, timeout)))
+        output.call(format("%s %s  %s %s%s",
+                           lpad("", max_foldname_width),
+                           lpad("", max_where_width),
+                           lpad("", status_width),
+                           bar_str(t, timeout, bar_width),
+                           format_time(t, timeout)))
       end
     end
   end
+
+  output.call("Default timeout: #{FormTest.cfg.timeout}s")
+
+  true
 end
 
 # Return the string with padding to left.
@@ -1619,31 +1751,13 @@ def format_time(time, max_time)
   end
   t = Float(t)
   h = Integer(t / 3600)
-  t = t % 3600
+  t %= 3600
   m = Integer(t / 60)
-  t = t % 60
+  t %= 60
   s = Integer(t)
-  t = t % 1
+  t %= 1
   ms = Integer(t * 1000)
   format("%s%02d:%02d:%02d.%03d", overflow ? ">" : " ", h, m, s, ms)
-end
-
-# Return a guessed terminal width.
-def guess_term_width
-  require "io/console"
-  IO.console.winsize[1]
-rescue LoadError, NoMethodError
-  system("type tput >/dev/null 2>&1")
-  if $? == 0
-    cols = `tput cols 2>/dev/null`
-  else
-    cols = ENV["COLUMNS"] || ENV["TERM_WIDTH"]
-  end
-  begin
-    Integer(cols)
-  rescue ArgumentError, TypeError
-    80
-  end
 end
 
 if $0 == __FILE__
