@@ -857,6 +857,7 @@ VOID WriteSetup(VOID)
 SORTING *AllocSort(LONG inLargeSize, LONG inSmallSize, LONG inSmallEsize, LONG inTermsInSmall,
                    int inMaxPatches, int inMaxFpatches, LONG inIOsize, int level)
 {
+	DUMMYUSE(level); /* This is only used in DEBUGGING mode */
 	LONG LargeSize = inLargeSize;
 	LONG SmallSize = inSmallSize;
 	LONG SmallEsize = inSmallEsize;
