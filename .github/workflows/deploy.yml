@@ -5,6 +5,9 @@ on:
   pull_request:
   workflow_dispatch:
 
+env:
+  FORM_IGNORE_DEPRECATION: 1
+
 jobs:
   # Generate the tarball distribution, e.g., "form-v4.2.1.tar.gz" for v4.2.1.
   # The tarball will be tested in the following "build-bin" job.
