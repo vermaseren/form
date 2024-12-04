@@ -2016,6 +2016,34 @@ else
 end
 assert result("Zero") =~ expr("0")
 *--#] Issue197 : 
+*--#[ Issue214 :
+#-
+#: MaxTermSize 500
+#: ScratchSize 1K
+#: SortIOSize 1K
+
+Off compress;
+Symbol x,y,z,i;
+CFunction f;
+
+Local test = sum_(i,1,100,f(i*(x+y))*(x+y)^20) - 52824783675150;
+Bracket f;
+.sort
+Keep Brackets;
+
+Identify f(x?) = x;
+.sort
+
+Identify x = 1;
+Identify y = 2;
+
+Print +s;
+.end
+# This is not valgrind clean under parform
+#pend_if valgrind? && mpi?
+assert succeeded?
+assert result("test") =~ expr("0")
+*--#] Issue214 :
 *--#[ Issue219 :
 * Corrupted characters in {-9223372036854775808}
 #$n32  = -2^31;

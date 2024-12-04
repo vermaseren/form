@@ -1313,7 +1313,7 @@ WORD GetOneTerm(PHEAD WORD *term, FILEHANDLE *fi, POSITION *pos, int par)
 				goto ErrGet;
 			}
 			r++;
-			if ( i < 0 ) {
+			if ( i < 0 ) { /* Loading a compressed term */
 				*p = -i + 1;
 				while ( ++i <= 0 ) *term++ = *r++;
 				if ( par == 0 ) {
@@ -1337,10 +1337,11 @@ WORD GetOneTerm(PHEAD WORD *term, FILEHANDLE *fi, POSITION *pos, int par)
 					error = 3;
 					goto ErrGet;
 				}
-				*rr = *p;
+				*rr = *p; /* Write the proper term size to *AR.CompressPointer */
 			}
-			else {
+			else { /* Loading a regular term */
 				if ( !j ) return(0);
+				*rr = i; /* Write the proper term size to *AR.CompressPointer */
 				j--;
 			}
 			i = (WORD)j;
