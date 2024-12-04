@@ -58,8 +58,8 @@ jobs:
           # platforms available.
           - {os: ubuntu-20.04, shell: bash, bin: form}
           - {os: ubuntu-20.04, shell: bash, bin: tform}
-          - {os: macos-12, shell: bash, bin: form}
-          - {os: macos-12, shell: bash, bin: tform}
+          - {os: macos-13, shell: bash, bin: form}
+          - {os: macos-13, shell: bash, bin: tform}
           # The macos-14 runner image is based on the arm64 architecture.
           - {os: macos-14, shell: bash, bin: form}
           - {os: macos-14, shell: bash, bin: tform}
@@ -332,10 +332,10 @@ jobs:
             tar -c $pkgname/* | gzip -c -9 >dist/$pkgname.tar.gz
             rm -rf $pkgname
           fi
-          if ls artifacts/*-macos-12/*form >/dev/null 2>&1; then
+          if ls artifacts/*-macos-13/*form >/dev/null 2>&1; then
             pkgname=$distname-x86_64-osx
             mkdir $pkgname
-            mv artifacts/*-macos-12/*form $pkgname
+            mv artifacts/*-macos-13/*form $pkgname
             chmod +x $pkgname/*form
             tar -c $pkgname/* | gzip -c -9 >dist/$pkgname.tar.gz
             rm -rf $pkgname
