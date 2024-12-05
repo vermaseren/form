@@ -806,12 +806,8 @@ DEBUGTOOL_LIBS=
 # -------------------------------------
 AC_DEFUN([AX_HANDLE_EXTRA_WARNING],
 [if test "x$enable_extra_warning" != xyes; then
-	# Too many false positives.
-	# See: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=88443
-	AX_CHECK_COMPILE_FLAG([-Wno-stringop-overflow],
-		[$1="$$1 -Wno-stringop-overflow"],
-		[],
-		[-Werror])
+	# Currently no warnings are disabled without --enable-extra-warning
+	$1
 fi[]dnl
 ])
 

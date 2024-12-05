@@ -67,7 +67,8 @@
 #define ParseSignedNumber(x,s) { int sgn; ParseSign(sgn,s)\
           ParseNumber(x,s) if ( sgn ) x = -x; }
 
-#define NCOPY(s,t,n) while ( --n >= 0 ) *s++ = *t++;
+/* (n) is necessary here, since the macro is sometimes passed dereferenced pointers for n */
+#define NCOPY(s,t,n) { while ( (n)-- > 0 ) { *s++ = *t++; } }
 
 /*#define NCOPY(s,t,n) { memcpy(s,t,n*sizeof(WORD)); s+=n; t+=n; n = -1; }*/
 #define NCOPYI(s,t,n) while ( --n >= 0 ) *s++ = *t++;
