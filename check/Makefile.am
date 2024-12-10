@@ -32,7 +32,8 @@ EXTRA_DIST = \
 	check.rb \
 	checkpoint/checkpoint.frm \
 	examples.frm \
+	extra/color.frm \
+	extra/forcer.frm \
 	features.frm \
 	fixes.frm \
-	forcer/forcer.frm \
 	formunit/fu.frm
