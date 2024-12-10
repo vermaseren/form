@@ -3288,8 +3288,20 @@ restart:;
 		}
 		goto intercepted;
 	}
+/* This has always been commented. Indeed no lock is held here. */
 /*	UNLOCK(thr->lock); */
-	if ( numbusy > 0 ) return(1); /* Wait a bit.... */
+	if ( numbusy > 0 ) {
+		/* JD: this avoids large runtimes for tform tests under valgrind.
+		   What seems to happen is we return from here, goto Finalize, and
+		   end up in LoadReadjusted again without the threads having a
+		   chance to update their busy status. Then we end up here again.
+		   Sleep the thread for, say, 1us to allow threads to aquire the lock. */
+		struct timespec sleeptime;
+		sleeptime.tv_sec = 0;
+		sleeptime.tv_nsec = 1000L;
+		nanosleep(&sleeptime, NULL);
+		return(1); /* Wait a bit.... */
+	}
 	return(0);
 intercepted:;
 /*
@@ -3298,8 +3310,9 @@ intercepted:;
 	2: find the first untreated term.
 	3: put the terms in the free buckets.
 
-	Remember: we have the lock to avoid interference from the thread
-	that is being robbed.
+	Remember: we still have the lock to avoid interference from the thread
+	that is being robbed. We were holding it and then jumped here with
+	goto intercepted.
 */
 	numinput = thr->firstterm + thr->usenum;
 	nperbucket = numtogo / numfree;
