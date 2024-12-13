@@ -3133,6 +3133,59 @@ Print +s;
 assert succeeded?
 assert result("test") =~ expr("0")
 *--#] Issue544 :
+*--#[ Issue554_1 :
+CF f;
+S x;
+L F = f(x);
+id f(x?{}) = x;
+print;
+.end
+assert succeeded?
+assert result("F") =~ expr("f(x)")
+*--#] Issue554_1 :
+*--#[ Issue554_2 :
+CF f;
+S x;
+L F = f(x);
+id f(x?!{}) = x;
+print;
+.end
+assert succeeded?
+assert result("F") =~ expr("f(x)")
+*--#] Issue554_2 :
+*--#[ Issue554_3 :
+CF f;
+S x;
+Set empty: ;
+L F = f(x);
+id f(x?empty) = x;
+print;
+.end
+assert succeeded?
+assert result("F") =~ expr("f(x)")
+*--#] Issue554_3 :
+*--#[ Issue554_4 :
+CF f;
+S x;
+Set empty: ;
+L F = f(x);
+id f(x?!empty) = x;
+print;
+.end
+assert succeeded?
+assert result("F") =~ expr("f(x)")
+*--#] Issue554_4 :
+*--#[ Issue554_5 :
+CF f;
+S x,y;
+L F = f(1)+f(2)+f(3);
+id f(x?{}) = x;
+id f(y?{1,2}) = x^y;
+print;
+.end
+assert succeeded?
+assert result("F") =~ expr("x + x^2 + f(3)")
+*--#] Issue554_5 :
 *--#[ Issue563 :
 #: SubTermsInSmall 50
 

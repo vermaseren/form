@@ -2257,6 +2257,15 @@ NoMnot:
 */
 		w = SetElements + Sets[j].first;
 		m = SetElements + Sets[j].last;
+		if ( w == m ) {
+/*
+			The set is empty! In principle this could be a syntax error, but
+			let's choose to just not match. Using `goto NoMnot` would mean
+			that, e.g. `id f(x?!{}) = x;` would match.
+*/
+			goto NoMatch;
+		}
+
 		if ( ( Sets[j].flags & ORDEREDSET ) == ORDEREDSET ) {
 /*
 			We search first and ask questions later
