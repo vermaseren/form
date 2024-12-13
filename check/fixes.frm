@@ -3133,6 +3133,59 @@ Print +s;
 assert succeeded?
 assert result("test") =~ expr("0")
 *--#] Issue544 :
+*--#[ Issue554_1 :
+CF f;
+S x;
+L F = f(x);
+id f(x?{}) = x;
+print;
+.end
+assert succeeded?
+assert result("F") =~ expr("f(x)")
+*--#] Issue554_1 :
+*--#[ Issue554_2 :
+CF f;
+S x;
+L F = f(x);
+id f(x?!{}) = x;
+print;
+.end
+assert succeeded?
+assert result("F") =~ expr("f(x)")
+*--#] Issue554_2 :
+*--#[ Issue554_3 :
+CF f;
+S x;
+Set empty: ;
+L F = f(x);
+id f(x?empty) = x;
+print;
+.end
+assert succeeded?
+assert result("F") =~ expr("f(x)")
+*--#] Issue554_3 :
+*--#[ Issue554_4 :
+CF f;
+S x;
+Set empty: ;
+L F = f(x);
+id f(x?!empty) = x;
+print;
+.end
+assert succeeded?
+assert result("F") =~ expr("f(x)")
+*--#] Issue554_4 :
+*--#[ Issue554_5 :
+CF f;
+S x,y;
+L F = f(1)+f(2)+f(3);
+id f(x?{}) = x;
+id f(y?{1,2}) = x^y;
+print;
+.end
+assert succeeded?
+assert result("F") =~ expr("x + x^2 + f(3)")
+*--#] Issue554_5 :
 *--#[ Issue563 :
 #: SubTermsInSmall 50
 
@@ -3313,6 +3366,39 @@ Local test3 = 3;
 #pend_if mpi?
 assert runtime_error?("isnumerical: expression is not yet defined!")
 *--#] Issue577_2 :
+*--#[ Issue599 :
+#-
+On names;
+Off statistics;
+CFunction A1,...,A6;
+Symbol j,x,z,y;
+
+Local ff =
+	+ A1(1) + A2(2) + A3(3)
+		+ A4(1) + A5(2) + A6(3)
+		;
+
+Identify A1(j?{1,2,3}[x]) = A1({ 10, 20, 30}[x]);
+Identify A2(j?{1,2,3}[x]) = A2({+10,+20,+30}[x]);
+Identify A3(j?{1,2,3}[x]) = A3({-10,-20,-30}[x]);
+Identify A4(j?{1,2,3}[x]) = A4({+-10,--20,-+30}[x]);
+Identify A5(j?{1,2,3}[x]) = A5({--10,-+20,+-30}[x]);
+Identify A6(j?{1,2,3}[x]) = A6({-+10,+-20,--30}[x]);
+
+Print;
+.end
+assert succeeded?
+assert result("ff") =~ expr("A1(10) + A2(20) + A3(-30) + A4(-10) + A5(-20) + A6(30)")
+assert stdout =~ exact_pattern(<<'EOF')
+ Sets
+   {}: 1 2 3
+   {}: 10 20 30
+   {}: -10 -20 -30
+   {}: -10 20 -30
+   {}: 10 -20 -30
+   {}: -10 -20 30
+EOF
+*--#] Issue599 : 
 *--#[ PullReq535 :
 * This test requires more than the specified 50K workspace.
 #:maxtermsize 200

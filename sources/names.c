@@ -2160,7 +2160,10 @@ int DoElements(UBYTE *s, SETS set, UBYTE *name)
 	while ( *s ) {
 		if ( *s == ',' ) { s++; continue; }
 		sgn = 0;
-		while ( *s == '-' || *s == '+' ) { sgn ^= 1; s++; }
+		while ( *s == '-' || *s == '+' ) {
+			if ( *s == '-' ) sgn ^= 1;
+			s++;
+		}
 		cname = s;
 		if ( FG.cTable[*s] == 0 || *s == '_' || *s == '[' ) {
 			if ( ( s = SkipAName(s) ) == 0 ) {
