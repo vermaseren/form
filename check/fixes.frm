@@ -3132,6 +3132,94 @@ Print +s;
 assert succeeded?
 assert result("test") =~ expr("0")
 *--#] Issue544 :
+*--#[ Issue554_1 :
+CF f;
+S x;
+L F = f(x);
+id f(x?{}) = x;
+print;
+.end
+assert succeeded?
+assert result("F") =~ expr("f(x)")
+*--#] Issue554_1 :
+*--#[ Issue554_2 :
+CF f;
+S x;
+L F = f(x);
+id f(x?!{}) = x;
+print;
+.end
+assert succeeded?
+assert result("F") =~ expr("x")
+*--#] Issue554_2 :
+*--#[ Issue554_3 :
+CF f;
+S x;
+Set empty: ;
+L F = f(x);
+id f(x?empty) = x;
+print;
+.end
+assert succeeded?
+assert result("F") =~ expr("f(x)")
+*--#] Issue554_3 :
+*--#[ Issue554_4 :
+CF f;
+S x;
+Set empty: ;
+L F = f(x);
+id f(x?!empty) = x;
+print;
+.end
+assert succeeded?
+assert result("F") =~ expr("x")
+*--#] Issue554_4 :
+*--#[ Issue554_5 :
+CF f;
+S x,y;
+L F = f(1)+f(2)+f(3);
+id f(x?{}) = x;
+id f(y?{1,2}) = x^y;
+print;
+.end
+assert succeeded?
+assert result("F") =~ expr("x + x^2 + f(3)")
+*--#] Issue554_5 :
+*--#[ Issue554_6 :
+#-
+CF f,g,h,i;
+S x;
+
+#$x1 = f(1,3,5);
+#$x2 = f();
+
+#inside $x1
+  if (match(f(?a$a)));
+  endif;
+#endinside
+#inside $x2
+  if (match(f(?a$b)));
+  endif;
+#endinside
+
+L F = f(1,2,3,4,5,6);
+L G = g(1,2,3,4,5,6);
+L H = h(1,2,3,4,5,6);
+L I = i(1,2,3,4,5,6);
+
+repeat id f(?a,x? {`$a',},?b) = x * f(?a,?b);
+repeat id g(?a,x?!{`$a',},?b) = x * g(?a,?b);
+repeat id h(?a,x? {`$b',},?b) = x * h(?a,?b);
+repeat id i(?a,x?!{`$b',},?b) = x * i(?a,?b);
+
+P;
+.end
+assert succeeded?
+assert result("F") =~ expr("15*f(2,4,6)")
+assert result("G") =~ expr("48*g(1,3,5)")
+assert result("H") =~ expr("h(1,2,3,4,5,6)")
+assert result("I") =~ expr("720*i")
+*--#] Issue554_6 :
 *--#[ Issue563 :
 #: SubTermsInSmall 64
 
