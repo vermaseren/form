@@ -146,6 +146,7 @@ WORD *poly_gcd(PHEAD WORD *a, WORD *b, WORD fit) {
 	
 	// Extract variables
 	vector<WORD *> e;
+	e.reserve(2);
 	e.push_back(a);
 	e.push_back(b);
 	poly::get_variables(BHEAD e, false, true);
@@ -202,6 +203,7 @@ WORD *poly_divmod(PHEAD WORD *a, WORD *b, int divmod, WORD fit) {
 
 	// get variables
 	vector<WORD *> e;
+	e.reserve(2);
 	e.push_back(a);
 	e.push_back(b);
 	poly::get_variables(BHEAD e, false, false);
@@ -617,6 +619,7 @@ WORD *poly_ratfun_add (PHEAD WORD *t1, WORD *t2) {
 	
 	// Extract variables
 	vector<WORD *> e;
+	e.reserve(4);
 	
 	for (WORD *t=t1+FUNHEAD; t<t1+t1[1];) {
 		e.push_back(t);
@@ -626,6 +629,8 @@ WORD *poly_ratfun_add (PHEAD WORD *t1, WORD *t2) {
 		e.push_back(t);
 		NEXTARG(t);
 	}
+
+	assert(e.size() == 4);
 
 	poly::get_variables(BHEAD e, true, true);
 	
@@ -1679,6 +1684,7 @@ WORD *poly_inverse(PHEAD WORD *arga, WORD *argb) {
 	
 	// Extract variables
 	vector<WORD *> e;
+	e.reserve(2);
 	e.push_back(arga);
 	e.push_back(argb);
 	poly::get_variables(BHEAD e, false, true);
@@ -1808,6 +1814,7 @@ WORD *poly_mul(PHEAD WORD *a, WORD *b) {
 
 	// Extract variables
 	vector<WORD *> e;
+	e.reserve(2);
 	e.push_back(a);
 	e.push_back(b);
 	poly::get_variables(BHEAD e, false, false);  // TODO: any performance effect by sort_vars=true?
