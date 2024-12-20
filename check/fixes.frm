@@ -998,10 +998,9 @@ assert result("test") =~ expr("0")
 *--#] Issue95 : 
 *--#[ Issue95b :
 #-
-#:filepatches        4
-#:largesize      25600
+#:filepatches       16
+#:largepatches      20
 #:maxtermsize      200
-#:smallsize      12800
 #:termsinsmall      16
 
 Off stats;
@@ -3134,7 +3133,7 @@ assert succeeded?
 assert result("test") =~ expr("0")
 *--#] Issue544 :
 *--#[ Issue563 :
-#: SubTermsInSmall 50
+#: SubTermsInSmall 64
 
 CFunction f,g;
 Symbol a;
