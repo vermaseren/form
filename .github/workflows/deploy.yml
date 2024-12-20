@@ -89,7 +89,7 @@ jobs:
             mingw-w64-x86_64-gmp
             mingw-w64-x86_64-mpfr
             mingw-w64-x86_64-zlib
-            ruby
+            mingw-w64-x86_64-ruby
 
       - name: Download tarball
         uses: actions/download-artifact@v4
@@ -356,32 +356,19 @@ jobs:
             tar -c $pkgname/* | gzip -c -9 >dist/$pkgname.tar.gz
             rm -rf $pkgname
           fi
-          # Do not include Windows binaries into the distribution, for now.
-          #
-          # if ls artifacts/*-windows-*/*form.exe >/dev/null 2>&1; then
-          #   pkgname=$distname-x86_64-windows
-          #   mkdir $pkgname
-          #   mv artifacts/*-windows-*/*form.exe $pkgname
-          #   chmod +x $pkgname/*form.exe
-          #   # Zip may be more popular than tar.gz for Windows(?)
-          #   # tar -c $pkgname/* | gzip -c -9 >dist/$pkgname.tar.gz
-          #   zip -9 dist/$pkgname.zip $pkgname/*
-          #   rm -rf $pkgname
-          # fi
+          if ls artifacts/*-windows-*/*form.exe >/dev/null 2>&1; then
+            pkgname=$distname-x86_64-windows
+            mkdir $pkgname
+            mv artifacts/*-windows-*/*form.exe $pkgname
+            chmod +x $pkgname/*form.exe
+            # Zip may be more popular than tar.gz for Windows(?)
+            # tar -c $pkgname/* | gzip -c -9 >dist/$pkgname.tar.gz
+            zip -9 dist/$pkgname.zip $pkgname/*
+            rm -rf $pkgname
+          fi
 
       - name: Print distributions
         run: ls -l dist
-
-      # Publish the distributions to GitHub Releases, only if the commit has
-      # a versioning tag.
-      - name: Publish distributions
-        if: startsWith(github.ref, 'refs/tags/v')
-        uses: softprops/action-gh-release@v1
-        with:
-          files: |
-            dist/*.tar.gz
-            dist/*.zip
-            dist/*.pdf
 
       # Upload the distributions as an artifact, regardless of whether
       # the commit has a versioning tag. This makes checking and debugging easy.
@@ -394,3 +381,18 @@ jobs:
             dist/*.zip
             dist/*.pdf
           if-no-files-found: error
+
+      # For now, do not include Windows binaries into the distribution.
+      - name: Delete Windows binaries
+        run: rm -fv dist/*windows*
+
+      # Publish the distributions to GitHub Releases, only if the commit has
+      # a versioning tag.
+      - name: Publish distributions
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            dist/*.tar.gz
+            dist/*.zip
+            dist/*.pdf
