@@ -1830,10 +1830,9 @@ Print;
     Set PP:p1,...,p8;
     #define LOOPS "2"
     Local F = topologies_(`LOOPS',2,{3,},QQ,PP);
+    id node_(i_?,?a) = node_(i_-1,?a);  * for compatibility
     Print +f +s;
     .end
-# TODO: enable it
-#pend_if true
     assert succeeded?
     assert result("F") =~ expr("
        + node_(0,-Q1)*node_(1,-Q2)*node_(2,Q1,-p1,-p2)*node_(3,Q2,p1,-p3)*
@@ -1848,10 +1847,9 @@ Print;
     Set PP:p1,...,p8;
     #define LOOPS "2"
     Local F = topologies_(`LOOPS',2,{3,4},QQ,PP);
+    id node_(i_?,?a) = node_(i_-1,?a);  * for compatibility
     Print +f +s;
     .end
-# TODO: enable it
-#pend_if true
     assert succeeded?
     assert result("F") =~ expr("
        + node_(0,-Q1)*node_(1,-Q2)*node_(2,Q1,Q2,-p1,-p2)*node_(3,p1,p2,-p3,p3
@@ -1880,10 +1878,9 @@ Print;
     Set PP:p1,...,p8;
     #define LOOPS "2"
     Local F = topologies_(`LOOPS',-2,{3,4},QQ,PP);
+    id node_(i_?,?a) = node_(i_-1,?a);  * for compatibility
     Print +f +s;
     .end
-# TODO: enable it
-#pend_if true
     assert succeeded?
     assert result("F") =~ expr("
        + node_(0,-Q1)*node_(1,-Q2)*node_(2,Q1,Q2,-p1,-p2)*node_(3,p1,p2,-p3,p3
@@ -1896,10 +1893,10 @@ Print;
       node_(4,p1,p2,p3,p4)
        + node_(0,-Q1)*node_(1,-Q2)*node_(2,Q1,-p1,-p2)*node_(3,Q2,-p3,-p4)*
       node_(4,p1,p3,-p5)*node_(5,p2,p4,p5)
-       + node_(0,-Q1)*node_(1,-Q2)*node_(2,Q1,-p1,-p2)*node_(3,p1,-p3,-p4)*
-      node_(4,Q2,p2,p3,p4)
        + node_(0,-Q1)*node_(1,-Q2)*node_(2,Q1,-p1,-p2,-p3)*node_(3,Q2,p1,p2,p3
       )
+       + node_(0,-Q1)*node_(1,-Q2)*node_(2,-p1,-p2,-p3)*node_(3,Q2,p1,-p4)*
+      node_(4,Q1,p2,p3,p4)
        + node_(0,-Q1)*node_(1,-Q2)*node_(2,-p1,-p2,-p3)*node_(3,p1,p2,-p4)*
       node_(4,Q1,Q2,p3,p4)
     ")
@@ -1910,9 +1907,8 @@ Print;
     Set PP:p1,...,p17;
     #define LOOPS "6"
     Local F = topologies_(`LOOPS',-2,{3,},QQ,PP);
+    id node_(i_?,?a) = node_(i_-1,?a);  * for compatibility
     .end
-# TODO: enable it
-#pend_if true
     #time_dilation 2.0
     assert succeeded?
     assert nterms("F") == 2793
