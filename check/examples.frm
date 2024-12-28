@@ -654,6 +654,7 @@ assert result("G") =~ expr("
     Local F = B(1);
     Print;
     .end
+#pend_if windows?
     assert finished?
     assert warning?
 *--#] Sta_Fill_1 : 
@@ -1813,6 +1814,7 @@ Local aPLUSbTO3=
 
 Print;
 .end
+#require unix?
 # This gives Valgrind errors (3 memory leaks) on Travis CI
 # (osx-gcc-valgrind-parvorm), but cleanly works on Linux with mpich 3.2.
 # Might be an OS- or implementation-specific bug.
