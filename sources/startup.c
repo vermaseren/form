@@ -804,6 +804,9 @@ classic:;
 /*
 	Try to create the sort file already, so we can Terminate earlier if this fails.
 */
+#ifdef WITHPTHREADS
+	if ( par <= 1 ) {
+#endif
 	if ( ( AM.S0->file.handle = CreateFile((char *)AM.S0->file.name) ) < 0 ) {
 		MesPrint("Could not create sort file: %s", AM.S0->file.name);
 		Terminate(-1);
@@ -812,6 +815,9 @@ classic:;
 	CloseFile(AM.S0->file.handle);
 	AM.S0->file.handle = -1;
 	remove(AM.S0->file.name);
+#ifdef WITHPTHREADS
+	}
+#endif
 /*
 	With the stage4 and scratch file names we have to be a bit more careful.
 	They are to be allocated after the threads are initialized when there
