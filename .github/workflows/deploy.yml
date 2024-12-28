@@ -81,7 +81,7 @@ jobs:
             mingw-w64-x86_64-gcc
             mingw-w64-x86_64-gmp
             mingw-w64-x86_64-zlib
-            ruby
+            mingw-w64-x86_64-ruby
 
       - name: Download tarball
         uses: actions/download-artifact@v4
@@ -324,56 +324,33 @@ jobs:
           mv artifacts/src/*.tar.gz dist
           mv artifacts/doc-html/*.tar.gz dist
           mv artifacts/doc-pdf/*.pdf dist
-          if ls artifacts/*-ubuntu-*/*form >/dev/null 2>&1; then
-            pkgname=$distname-x86_64-linux
-            mkdir $pkgname
-            mv artifacts/*-ubuntu-*/*form $pkgname
-            chmod +x $pkgname/*form
-            tar -c $pkgname/* | gzip -c -9 >dist/$pkgname.tar.gz
-            rm -rf $pkgname
-          fi
-          if ls artifacts/*-macos-13/*form >/dev/null 2>&1; then
-            pkgname=$distname-x86_64-osx
-            mkdir $pkgname
-            mv artifacts/*-macos-13/*form $pkgname
-            chmod +x $pkgname/*form
-            tar -c $pkgname/* | gzip -c -9 >dist/$pkgname.tar.gz
-            rm -rf $pkgname
-          fi
-          if ls artifacts/*-macos-14/*form >/dev/null 2>&1; then
-            pkgname=$distname-arm64-osx
-            mkdir $pkgname
-            mv artifacts/*-macos-14/*form $pkgname
-            chmod +x $pkgname/*form
-            tar -c $pkgname/* | gzip -c -9 >dist/$pkgname.tar.gz
-            rm -rf $pkgname
-          fi
-          # Do not include Windows binaries into the distribution, for now.
-          #
-          # if ls artifacts/*-windows-*/*form.exe >/dev/null 2>&1; then
-          #   pkgname=$distname-x86_64-windows
-          #   mkdir $pkgname
-          #   mv artifacts/*-windows-*/*form.exe $pkgname
-          #   chmod +x $pkgname/*form.exe
-          #   # Zip may be more popular than tar.gz for Windows(?)
-          #   # tar -c $pkgname/* | gzip -c -9 >dist/$pkgname.tar.gz
-          #   zip -9 dist/$pkgname.zip $pkgname/*
-          #   rm -rf $pkgname
-          # fi
+          make_tar_gz() {
+            if ls artifacts/$2 >/dev/null 2>&1; then
+              pkgname=$distname-$1
+              mkdir $pkgname
+              mv artifacts/$2 $pkgname
+              chmod +x $pkgname/*form*
+              tar -c $pkgname/* | gzip -c -9 >dist/$pkgname.tar.gz
+              rm -rf $pkgname
+            fi
+          }
+          make_zip() {
+            if ls artifacts/$2 >/dev/null 2>&1; then
+              pkgname=$distname-$1
+              mkdir $pkgname
+              mv artifacts/$2 $pkgname
+              chmod +x $pkgname/*form*
+              zip -9 dist/$pkgname.zip $pkgname/*
+              rm -rf $pkgname
+            fi
+          }
+          make_tar_gz x86_64-linux '*-ubuntu-*/*form'
+          make_tar_gz x86_64-osx '*-macos-13/*form'
+          make_tar_gz arm64-osx '*-macos-14/*form'
+          make_zip x86_64-windows '*-windows-*/*form.exe'
 
       - name: Print distributions
         run: ls -l dist
-
-      # Publish the distributions to GitHub Releases, only if the commit has
-      # a versioning tag.
-      - name: Publish distributions
-        if: startsWith(github.ref, 'refs/tags/v')
-        uses: softprops/action-gh-release@v1
-        with:
-          files: |
-            dist/*.tar.gz
-            dist/*.zip
-            dist/*.pdf
 
       # Upload the distributions as an artifact, regardless of whether
       # the commit has a versioning tag. This makes checking and debugging easy.
@@ -386,3 +363,18 @@ jobs:
             dist/*.zip
             dist/*.pdf
           if-no-files-found: error
+
+      # To prevent the distribution of Windows binaries, uncomment the following lines.
+      # - name: Delete Windows binaries
+      #   run: rm -fv dist/*windows*
+
+      # Publish the distributions to GitHub Releases, only if the commit has
+      # a versioning tag.
+      - name: Publish distributions
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            dist/*.tar.gz
+            dist/*.zip
+            dist/*.pdf
