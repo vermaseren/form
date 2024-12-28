@@ -1727,6 +1727,9 @@ VOID CleanUp(WORD par)
 	int i;
 
 	if ( FG.fname ) {
+#ifdef WITHPTHREADS
+	if ( B ) {
+#endif
 	CleanUpSort(0);
 	for ( i = 0; i < 3; i++ ) {
 		if ( AR.Fscr[i].handle >= 0 ) {
@@ -1742,6 +1745,9 @@ VOID CleanUp(WORD par)
 			AR.Fscr[i].POfill = 0;
 		}
 	}
+#ifdef WITHPTHREADS
+	}
+#endif
 	if ( par > 0 ) {
 /*
 	Close all input levels above the lowest?
@@ -1759,12 +1765,18 @@ VOID CleanUp(WORD par)
 			}
 		}
 		CloseFile(AC.StoreHandle);
+#ifdef WITHPTHREADS
+	if ( B )
+#endif
 		if ( par >= 0 || AR.StoreData.Handle < 0 || AM.ClearStore ) {
 			remove(FG.fname);
 		}
 dontremove:;
 #else
 		CloseFile(AC.StoreHandle);
+#ifdef WITHPTHREADS
+	if ( B )
+#endif
 		if ( par >= 0 || AR.StoreData.Handle < 0 || AM.ClearStore > 0 ) {
 			remove(FG.fname);
 		}
