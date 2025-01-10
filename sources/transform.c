@@ -2677,7 +2677,7 @@ WORD RunAddArg(PHEAD WORD *fun, WORD *args)
 		}
 		n++;
 	}
-	if ( EndSort(BHEAD tstop+ARGHEAD,1) ) return(-1);
+	if ( EndSort(BHEAD tstop+ARGHEAD,1) < 0 ) return(-1);
 	num = 0;
 	f2 = tstop+ARGHEAD;
 	while ( *f2 ) { f2 += *f2; num++; }
