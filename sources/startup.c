@@ -261,10 +261,40 @@ int DoTail(int argc, UBYTE **argv)
 							AM.FileOnlyFlag = 1; AM.LogType = 1; break;
 				case 'h': /* For old systems: wait for key before exit */
 							AM.HoldFlag = 1; break;
-#ifdef WITHINTERACTION
-				case 'i': /* Interactive session (not used yet) */
-							AM.Interact = 1; break;
+				case 'i': /* -i or -install */
+							if ( s[1] == 'n' && s[2] == 's' && s[3] == 't'
+							&& s[4] == 'a' && s[5] == 'l' && s[6] == 'l'
+							&& s[7] == '\0' ) {
+								/* Install a package. */
+								UBYTE *package;
+								TAKEPATH(package);
+								if ( package ) {
+									int err = InstallPackage(package);
+									if ( err ) return(err);
+									return(1);
+								}
+								else {
+#ifdef WITHMPI
+									if ( PF.me == MASTER )
 #endif
+									printf("-install needs an argument\n");
+									errorflag++;
+								}
+							}
+							else {
+#ifdef WITHINTERACTION
+								if ( s[1] == '\0' ) {
+									/* Interactive session (not used yet) */
+									AM.Interact = 1; break;
+								}
+#endif
+#ifdef WITHMPI
+								if ( PF.me == MASTER )
+#endif
+								printf("Illegal option: %s\n",s);
+								errorflag++;
+							}
+							break;
 				case 'I': /* Next arg is dir for inc/prc/sub files */
 							TAKEPATH(AM.IncDir)  break;
 				case 'l': /* Make regular log file */
