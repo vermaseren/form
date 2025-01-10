@@ -2250,7 +2250,7 @@ getout:
 			t += *t; argextra += *argextra;
 		}
 		/* par = 1, in case the arg has more than SubTermsInSmall terms */
-		if ( EndSort(BHEAD argfree+ARGHEAD,1) ) { error = -2; goto getout; }
+		if ( EndSort(BHEAD argfree+ARGHEAD,1) < 0 ) { error = -2; goto getout; }
 		t = argfree + ARGHEAD;
 		while ( *t > 0 ) t += *t;
 		*argfree = t - argfree;
@@ -2312,7 +2312,7 @@ getout:
 				}
 				AT.WorkPointer = oldworkpointer;
 				/* par = 1, in case the factor has more than SubTermsInSmall terms */
-				if ( EndSort(BHEAD a2+ARGHEAD,1) ) { error = -5; goto getout; }
+				if ( EndSort(BHEAD a2+ARGHEAD,1) < 0 ) { error = -5; goto getout; }
 				t = a2+ARGHEAD; while ( *t ) t += *t;
 				*a2 = t - a2; a2[1] = 0; ZEROARG(a2);
 				ToFast(a2,a2); NEXTARG(a2);
