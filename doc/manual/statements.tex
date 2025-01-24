@@ -3758,6 +3758,10 @@ and their keywords are:
 \leftvitem{3.5cm}{allwarnings\index{off!allwarnings}}
 \rightvitem{13cm}{Turns off the printing of all warnings.}
 
+\leftvitem{3.5cm}{backtrace\index{off!backtrace}}
+\rightvitem{13cm}{Disables the printing of a stack trace on termination. This
+is the default for normal form builds.}
+
 \leftvitem{3.5cm}{checkpoint\index{off!checkpoint}}
 \rightvitem{13cm}{Deactivates the checkpoint mechanism. See
 \ref{checkpoints}.}
@@ -3893,6 +3897,12 @@ are printed as well. Default is off. }
 \leftvitem{3.5cm}{allwarnings\index{on!allwarnings}}
 \rightvitem{13cm}{Puts the printing of warnings in a mode in which all 
 warnings, even the very unimportant warnings are printed.}
+
+\leftvitem{3.5cm}{backtrace\index{on!backtrace}}
+\rightvitem{13cm}{Attempt to print a stack trace on termination, to assist with
+debugging. This is off by default for normal form builds and on by default for
+the debug binaries (vorm, tvorm, parvorm). For best results eu-addr2line or
+addr2line should be installed on the system.}
 
 \leftvitem{3.5cm}{checkpoint\index{on!checkpoint}}
 \rightvitem{13cm}{Activates the checkpoint mechanism that allows for
