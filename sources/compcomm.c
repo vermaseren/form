@@ -137,6 +137,7 @@ static KEYWORDV onoffoptions[] = {
 	,{"innertest",      &(AC.InnerTest),  1,  0}
 	,{"wtimestats",     &(AC.WTimeStatsFlag),  1,  0}
 	,{"sortreallocate",	&(AC.SortReallocateFlag), 1, 0}
+	,{"backtrace",		&(AC.PrintBacktraceFlag), 1, 0}
 };
 
 static WORD one = 1;
@@ -671,7 +672,12 @@ int CoOn(UBYTE *s)
 			MesPrint("&Unrecognized option in ON statement: %s",t);
 			*s = c; return(-1);
 		}
-		if ( StrICont(t,(UBYTE *)"compress") == 0 ) {
+		if ( StrICont(t,(UBYTE *)"backtrace") == 0 ) {
+#ifndef ENABLE_BACKTRACE
+			Warning("backtrace not supported on this platform");
+#endif
+		}
+		else if ( StrICont(t,(UBYTE *)"compress") == 0 ) {
 			AR.gzipCompress = 0;
 			*s = c;
 			while ( *s == ' ' || *s == ',' || *s == '\t' ) s++;
@@ -899,7 +905,7 @@ int CoOn(UBYTE *s)
 			}
 		}
 		else { *s = c; }
-	 	*onoffoptions[i].var = onoffoptions[i].type; 
+		*onoffoptions[i].var = onoffoptions[i].type;
 		AR.SortType = AC.SortType;
 		AC.mparallelflag = AC.parallelflag | AM.hparallelflag;
 	}
