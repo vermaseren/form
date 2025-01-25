@@ -2140,6 +2140,58 @@ that is used as a loop parameter in the \#do\index{\#do} instruction.
 \noindent Starts using a dictionary for output translation.
 
 %--#] usedictionary : 
+%--#[ usepackage :
+
+\section{\#usepackage}
+\label{preusepackage}
+
+\noindent Syntax:
+
+\#usepackage [$-+$] [site/]group/name@version [: [$-+$] filename [\# foldname]]
+ 
+\noindent See also include (\ref{preinclude}), 
+          prependpath (\ref{preprependpath}).
+
+\noindent Loads the specified package\index{package!manager}. If the package is 
+not in the system, \FORM{} will try to download and install it, which can be 
+also done via the {\tt -install} option. This is implemented with the use of 
+the shell and {\tt curl} or {\tt wget} utility, therefore works only on Unix 
+systems. Packages will be installed into the {\tt .form} directory inside the 
+user's home directory.
+
+The package to be loaded by this instruction is specified in the following 
+format:
+\begin{verbatim}
+    [site/]group/name@version
+\end{verbatim}
+Packages are expected to have been uploaded as public repositories on GitHub, 
+Bitbucket or GitLab. The optional {\tt site} component specifies the website 
+where the package exists: {\tt github.com}, {\tt bitbucket.org} or 
+{\tt gitlab.com}; the default value is {\tt github.com}. The {\tt group} 
+component specifies the group/owner account name and the {\tt name} component 
+is the repository name. The {\tt version} component is indeed to specify a 
+tag/commit in the repository. An example is:
+\begin{verbatim}
+    benruijl/forcer@v1.0.0
+\end{verbatim}
+
+If the package is available in the system, or both the downloading and 
+installation succeed, then the preprocessor prepends the package path to the 
+\FORM{} path. Next, the package file is opened and read as in the \#include 
+instruction. By default, the header file that has the same name as the package, 
+{\tt name.h}, will be included. Alternatively, one can specify which file 
+should be included (with an optional foldname) by writing it after a colon 
+({\tt :}). The optional $+$ or $-$ sign is, as in \#include, to control the 
+listing of the contents of the file. Examples:
+\begin{verbatim}
+    #usepackage benruijl/forcer@v1.0.0
+\end{verbatim}
+
+\begin{verbatim}
+    #usepackage benruijl/forcer@v1.0.0 : forcer/forcer-aux.h # decl
+\end{verbatim}
+
+%--#] usepackage : 
 %--#[ write :
 
 \section{\#write}

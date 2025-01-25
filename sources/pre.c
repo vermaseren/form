@@ -116,6 +116,7 @@ static KEYWORD precommands[] = {
 	,{"undefine"     , DoUndefine     , 0, 0}
 	,{"use"          , DoUse          , 0, 0}
 	,{"usedictionary", DoPreUseDictionary,0,0}
+	,{"usepackage"   , DoPreUsePackage,0,0}
 	,{"write"        , DoPreWrite     , 0, 0}
 };
 
