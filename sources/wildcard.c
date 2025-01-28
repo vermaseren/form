@@ -2257,6 +2257,17 @@ NoMnot:
 */
 		w = SetElements + Sets[j].first;
 		m = SetElements + Sets[j].last;
+		if ( w == m ) {
+/*
+			The set is empty! This is not a match unless we have !{}, in
+			which case it is.
+*/
+			if ( notflag ) return 0;
+			AN.oldtype = old2;
+			AN.oldvalue = oldval;
+			goto NoMatch;
+		}
+
 		if ( ( Sets[j].flags & ORDEREDSET ) == ORDEREDSET ) {
 /*
 			We search first and ask questions later
