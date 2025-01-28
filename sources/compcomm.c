@@ -608,6 +608,8 @@ int CoOff(UBYTE *s)
 			AR.gzipCompress = 0;
 		}
 		else if ( StrICont(t,(UBYTE *)"checkpoint") == 0 ) {
+			// TODO: set issue number
+			PrintDeprecation("checkpoint mechanism", "issues/xxxxx4");
 			AC.CheckpointInterval = 0;
 			if ( AC.CheckpointRunBefore ) { free(AC.CheckpointRunBefore); AC.CheckpointRunBefore = NULL; }
 			if ( AC.CheckpointRunAfter ) { free(AC.CheckpointRunAfter); AC.CheckpointRunAfter = NULL; }
@@ -706,6 +708,8 @@ int CoOn(UBYTE *s)
 			}
 		}
 		else if ( StrICont(t,(UBYTE *)"checkpoint") == 0 ) {
+			// TODO: set issue number
+			PrintDeprecation("checkpoint mechanism", "issues/xxxxx4");
 			AC.CheckpointInterval = 0;
 			if ( AC.CheckpointRunBefore ) { free(AC.CheckpointRunBefore); AC.CheckpointRunBefore = NULL; }
 			if ( AC.CheckpointRunAfter ) { free(AC.CheckpointRunAfter); AC.CheckpointRunAfter = NULL; }
