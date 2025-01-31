@@ -421,7 +421,7 @@ The program to do this with the diagrams\_ function is:
     Set pp:p1,...,p{3*`LOOPS'};
     Set empty:;
     Local F = diagrams_(PHI3,{phi,phi},empty,QQ,pp,`LOOPS',
-            'OnePI_'+`NoTadpoles\_'+`Symmetrize_'+`TopologiesOnly_');
+            `OnePI_'+`NoTadpoles_'+`Symmetrize_'+`TopologiesOnly_');
     .end
 
 Time =       0.85 sec    Generated terms =       2793
@@ -442,7 +442,7 @@ and without the symmetry:
     Set pp:p1,...,p{3*`LOOPS'};
     Set empty:;
     Local F = diagrams_(PHI3,{phi,phi},empty,QQ,pp,`LOOPS',
-            'OnePI_'+`NoTadpoles\_'+`TopologiesOnly\_');
+            `OnePI_'+`NoTadpoles_'+`TopologiesOnly_');
     .end
 
 Time =       0.15 sec    Generated terms =       4999
