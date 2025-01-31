@@ -1931,7 +1931,7 @@ Print;
     Set pp:p1,...,p{3*`LOOPS'};
     Set empty:;
     Local F = diagrams_(PHI3,{phi,phi},empty,QQ,pp,`LOOPS',
-            'OnePI_'+`NoTadpoles\_'+`Symmetrize_'+`TopologiesOnly_');
+            `OnePI_'+`NoTadpoles_'+`Symmetrize_'+`TopologiesOnly_');
     .end
     assert succeeded?
     assert nterms("F") == 2793
@@ -1947,7 +1947,7 @@ Print;
 *    Set pp:p1,...,p{3*`LOOPS'};
 *    Set empty:;
 *    Local F = diagrams_(PHI3,{phi,phi},empty,QQ,pp,`LOOPS',
-*            'OnePI_'+`NoTadpoles\_'+`TopologiesOnly_');
+*            `OnePI_'+`NoTadpoles_'+`TopologiesOnly_');
 *    .end
 *    assert succeeded?
 *    assert nterms("F") == 4999
