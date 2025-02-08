@@ -1926,7 +1926,7 @@ struct R_const {
     WORD    *CompressPointer;      /* (R) */
     COMPARE CompareRoutine;
     ULONG   *wranfia;
-    char    *moebiustable;
+    SBYTE   *moebiustable;
 
     LONG    OldTime;               /* (R) Zero time. Needed in timer. */
     LONG    InInBuf;               /* (R) Characters in input buffer. Scratch files. */
