@@ -285,6 +285,19 @@ jobs:
           (
             cd doc/manual/manual
             rm -f images.aux images.idx images.log images.pdf images.pl images.tex internals.pl labels.pl WARNINGS
+            # Print generated files.
+            ls -A -C
+            # Check if there are no unexpected files.
+            for f in $(ls -A); do
+              case "$f" in
+                index.html|manual.html|manual.css|img*.svg)
+                  ;;
+                *)
+                  echo "Error: unexpected file: $f" >&2
+                  exit 1
+                  ;;
+              esac
+            done
           )
           cp -r doc/manual/manual $distname
           tar -c $distname/* | gzip -c -9 > $distname.tar.gz
