@@ -1,0 +1,357 @@
+name: setup-build
+description: >-
+  Set up the build environment by installing necessary tools and dependencies.
+  It sets the CONFIG_ARGS environment variable. If necessary, it also sets
+  CPATH, LIBRARY_PATH, FORMPATH and DISTNAME, and runs autoreconf or extracts
+  a tar.gz archive, and lastly invokes ./configure.
+inputs:
+  features:
+    description: A list of features to enable, separated by spaces.
+    required: false
+    default: ''
+
+runs:
+  using: composite
+  steps:
+    - name: Initialize setup
+      id: setup
+      env:
+        available_features: >-
+          form=false tform=false parform=false vorm=false tvorm=false parvorm=false
+          gmp=true mpfr=true zlib=true
+          bash=false msys2=false debian=false container=false
+          untar=false autoreconf=false configure=true deploy=false
+          valgrind=false coverage=false
+          latex=false latex2html=false
+          formlib=false forcer=false color=false
+      shell: bash
+      run: |
+        ### Initialize setup ###
+
+        # First, parse the input.
+
+        available_features=$(echo "$available_features" | awk '{$1=$1; print}')
+
+        feature_names=''
+        for entry in $available_features; do
+          # Get "name=value".
+          feat_name=$(echo "$entry" | cut -d '=' -f 1)
+          feat_value=$(echo "$entry" | cut -d '=' -f 2)
+          feature_names="$feature_names $feat_name"
+          # Initialize the feature variable.
+          eval "feat_${feat_name}=${feat_value}"
+        done
+        feature_names=$(echo "$feature_names" | awk '{$1=$1; print}')
+
+        input_features=$(echo "${{ inputs.features }}" | awk '{$1=$1; print}')
+        feature_pattern='^('$(echo "$feature_names" | tr ' ' '|')')$'
+        no_feature_pattern='^('$(echo "no$feature_names" | tr ' ' '|no')')$'
+
+        for feat in $input_features; do
+          if [[ $feat =~ $feature_pattern ]]; then
+            eval "feat_${feat}=true"
+          elif [[ $feat =~ $no_feature_pattern ]]; then
+            feat=${feat#no}
+            eval "feat_${feat}=false"
+          else
+            echo "Error: unknown feature: $feat"
+            exit 1
+          fi
+        done
+
+        # Some features are enabled automatically,
+        # while others may require extra setup.
+
+        has_scalar=false
+        has_threaded=false
+        has_mpi=false
+        has_bin=false
+        if $feat_form || $feat_vorm; then
+          has_scalar=true
+        fi
+        if $feat_tform || $feat_tvorm; then
+          has_threaded=true
+        fi
+        if $feat_parform || $feat_parvorm; then
+          has_mpi=true
+        fi
+        if $has_scalar || $has_threaded || $has_mpi; then
+          has_bin=true
+        fi
+
+        if ! $has_bin; then
+          feat_gmp=false
+          feat_mpfr=false
+          feat_zlib=false
+        fi
+
+        if [ -f /etc/os-release ] && grep -qi '^ID=debian' /etc/os-release; then
+          feat_debian=true
+        fi
+
+        if [ -f /.dockerenv ]; then
+          feat_container=true
+        fi
+
+        if [ ! -f configure.ac ] && ls form-*.tar.gz 1>/dev/null 2>&1; then
+          feat_untar=true
+        fi
+
+        if [ ! -f configure ] && [ -f configure.ac ]; then
+          feat_autoreconf=true
+        fi
+
+        if $feat_color || $feat_forcer; then
+          feat_formlib=true
+          items=''
+          $feat_color && items="$items-color"
+          $feat_forcer && items="$items-forcer"
+          echo "formlib-key=formlib$items" >>"$GITHUB_OUTPUT"
+          echo "formlib-restore-keys=formlib-" >>"$GITHUB_OUTPUT"
+          echo "FORMPATH=${{ github.workspace }}/formlib" >>"$GITHUB_ENV"
+        fi
+
+        # Output the feature variables.
+
+        for feat in $feature_names; do
+          value=$(eval "echo \$feat_${feat}")
+          echo "$feat=$value"
+          echo "$feat=$value" >>"$GITHUB_OUTPUT"
+        done
+
+        # Make CONFIG_ARGS.
+
+        args='--disable-dependency-tracking'
+
+        if $has_scalar; then
+          args="$args --enable-scalar"
+        else
+          args="$args --disable-scalar"
+        fi
+        if $has_threaded; then
+          args="$args --enable-threaded"
+        else
+          args="$args --disable-threaded"
+        fi
+        if $has_mpi; then
+          args="$args --enable-parform"
+        else
+          args="$args --disable-parform"
+        fi
+
+        if $feat_vorm || $feat_tvorm || $feat_parvorm; then
+          args="$args --enable-debug"
+        fi
+
+        if $feat_coverage; then
+          args="$args --enable-coverage"
+        fi
+
+        if $has_bin; then
+          if $feat_deploy; then
+            # Avoid compiler optimizations specific to the build host.
+            args="$args --disable-native"
+            # Enable static linking whenever possible.
+            if ${{ runner.os != 'macOS' }}; then
+              args="$args --enable-static-link"
+            fi
+          fi
+
+          if ${{ runner.os == 'Windows' }}; then
+            args="$args --with-api=windows"
+          else
+            args="$args --with-api=posix"
+          fi
+        else
+          # This avoids checking optimization flags.
+          args="$args --disable-native"
+        fi
+
+        if $feat_gmp; then
+          args="$args --with-gmp"
+        else
+          args="$args --without-gmp"
+        fi
+
+        if $feat_mpfr; then
+          args="$args --with-mpfr"
+        else
+          args="$args --without-mpfr"
+        fi
+
+        if $feat_zlib; then
+          args="$args --with-zlib"
+        else
+          args="$args --without-zlib"
+        fi
+
+        echo "CONFIG_ARGS=$args" >>"$GITHUB_ENV"
+
+        # Determine DISTNAME if possible.
+
+        if [ -f ./scripts/git-version-gen.sh ] && command -v git >/dev/null 2>&1; then
+          echo "DISTNAME=form-$(./scripts/git-version-gen.sh -r | sed '2q;d' | sed 's/^v//')" >>"$GITHUB_ENV"
+        fi
+
+    # awalsh128/cache-apt-pkgs-action does not allow empty packages argument.
+    # See: https://github.com/awalsh128/cache-apt-pkgs-action/issues/149
+    # As a workaround, we need to check if any packages need to be installed.
+    - name: Install dependencies (Ubuntu)
+      if: >-
+        runner.os == 'Linux' && steps.setup.outputs.container == 'false' && (
+          steps.setup.outputs.coverage == 'true' ||
+          steps.setup.outputs.mpfr == 'true' ||
+          steps.setup.outputs.valgrind == 'true'
+        )
+      uses: awalsh128/cache-apt-pkgs-action@v1
+      with:
+        packages: >-
+          ${{ steps.setup.outputs.coverage == 'true' && 'lcov' || '' }}
+          ${{ steps.setup.outputs.mpfr == 'true' && 'libmpfr-dev' || '' }}
+          ${{ steps.setup.outputs.valgrind == 'true' && 'valgrind' || '' }}
+        version: 1.0
+
+    # Because we use i386/debian containers, here we do not assume that
+    # awalsh128/cache-apt-pkgs-action works properly.
+    # See: https://github.com/actions/cache/issues/675
+    - name: Install dependencies (Debian)
+      if: steps.setup.outputs.debian == 'true' && steps.setup.outputs.container == 'true'
+      shell: bash
+      run: |
+        ### Install dependencies ###
+
+        apt-get update
+        apt-get install -y -q automake g++ git make ruby \
+          ${{ steps.setup.outputs.coverage == 'true' && 'lcov' || '' }} \
+          ${{ steps.setup.outputs.gmp == 'true' && 'libgmp-dev' || '' }} \
+          ${{ steps.setup.outputs.mpfr == 'true' && 'libmpfr-dev' || '' }} \
+          ${{ steps.setup.outputs.valgrind == 'true' && 'valgrind' || '' }} \
+          ${{ steps.setup.outputs.zlib == 'true' && 'zlib1g-dev' || '' }}
+
+    - name: Install dependencies (Windows)
+      if: runner.os == 'Windows' && steps.setup.outputs.msys2 == 'true'
+      uses: msys2/setup-msys2@v2
+      with:
+        update: true
+        install: >-
+          make
+          mingw-w64-x86_64-gcc
+          mingw-w64-x86_64-ruby
+          ${{ steps.setup.outputs.gmp == 'true' && 'mingw-w64-x86_64-gmp' || '' }}
+          ${{ steps.setup.outputs.mpfr == 'true' && 'mingw-w64-x86_64-mpfr' || '' }}
+          ${{ steps.setup.outputs.zlib == 'true' && 'mingw-w64-x86_64-zlib' || '' }}
+
+    # awalsh128/cache-apt-pkgs-action does not work for MPICH.
+    # See: https://github.com/awalsh128/cache-apt-pkgs-action/issues/57#issuecomment-1304062077
+    - name: Install MPI if necessary
+      if: runner.os == 'Linux' && (steps.setup.outputs.parform == 'true' || steps.setup.outputs.parvorm == 'true')
+      shell: bash
+      run: |
+        ### Install MPI ###
+
+        sudo apt-get update
+        sudo apt-get install -y -q libmpich-dev
+
+    # Currently, cache-apt-pkgs-action doesn't work for LaTeX.
+    # See: https://github.com/awalsh128/cache-apt-pkgs-action/issues/57
+    - name: Install LaTeX.
+      if: runner.os == 'Linux' && (steps.setup.outputs.latex == 'true' || steps.setup.outputs.latex2html == 'true')
+      shell: bash
+      run: |
+        ### Install LaTeX ###
+
+        sudo apt-get update
+        sudo apt-get install -y -q \
+          ${{ steps.setup.outputs.latex == 'true' && 'texlive-latex-extra' || '' }} \
+          ${{ steps.setup.outputs.latex2html == 'true' && 'latex2html' || '' }}
+
+    # --static fails on macOS but we want to statically link
+    # the brewed gmp. The linker supports neither -Wl,-static nor
+    # -l:libgmp.a to make partial static links possible.
+    # As a workaround, we make a library directory with libgmp.a
+    # but without libgmp.dylib so that the linker has to link libgmp.a.
+    # Note that the Homebrew installation path for Apple Silicon (arm64)
+    # differs from the one on macOS Intel (x86-64).
+    - name: Set up statically linked libraries (macOS)
+      if: runner.os == 'macOS' && steps.setup.outputs.deploy
+      shell: bash
+      run: |
+        ### Set up statically linked libraries ###
+
+        mkdir static-lib
+        if [ "$RUNNER_ARCH" == "ARM64" ]; then
+          brew_dir=/opt/homebrew
+          # Include directories, not located in the usual places,
+          # must be explicitly appended to the include paths.
+          export CPATH="$brew_dir/opt/gmp/include:$brew_dir/opt/mpfr/include:${CPATH:-}"
+          echo "CPATH=$CPATH" >>"$GITHUB_ENV"
+        else
+          brew_dir=/usr/local
+        fi
+        ln -s $brew_dir/opt/gmp/lib/libgmp.a static-lib/libgmp.a
+        ln -s $brew_dir/opt/mpfr/lib/libmpfr.a static-lib/libmpfr.a
+        export LIBRARY_PATH="$(pwd)/static-lib:${LIBRARY_PATH:-}"
+        echo "LIBRARY_PATH=$LIBRARY_PATH" >>"$GITHUB_ENV"
+
+    - name: Cache FORM library
+      id: cache-formlib
+      if: steps.setup.outputs.formlib == 'true'
+      uses: actions/cache@v4
+      with:
+        path: formlib
+        key: ${{ steps.setup.outputs.formlib-key }}
+        restore-keys: ${{ steps.setup.outputs.formlib-restore-keys }}
+
+    - name: Install FORM libraries if necessary
+      if: steps.setup.outputs.formlib == 'true' && steps.cache-formlib.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        ### Install FORM libraries ###
+
+        mkdir -p formlib
+        if ${{ steps.setup.outputs.forcer }} && [ ! -f formlib/forcer.h ]; then
+          wget https://github.com/benruijl/forcer/archive/v1.0.0.tar.gz -O - | tar -x --gzip
+          mv forcer-1.0.0/forcer.h formlib
+          mv forcer-1.0.0/forcer formlib
+          rm -rf forcer-1.0.0
+        fi
+        if ${{ steps.setup.outputs.color }} && [ ! -f formlib/color.h ]; then
+          wget https://www.nikhef.nl/~form/maindir/packages/color/color.h -P formlib
+        fi
+
+    # Fix dubious ownership in containers for Git operations.
+    # See: https://github.com/actions/runner/issues/2033#issuecomment-1204205989
+    - name: Fix dubious ownership
+      if: steps.setup.outputs.container == 'true'
+      shell: bash
+      run: |
+        ### Fix dubious ownership
+
+        chown -R $(id -u):$(id -g) $PWD
+
+    - name: Uncompress tarball
+      if: steps.setup.outputs.untar == 'true'
+      shell: bash
+      run: |
+        ### Uncompress tarball ###
+
+        echo "DISTNAME=$(basename form-*.tar.gz .tar.gz)" >>"$GITHUB_ENV"
+
+        tar -xf form-*.tar.gz --strip-components 1
+        rm *.tar.gz
+
+    - name: Run Autoreconf
+      if: steps.setup.outputs.autoreconf == 'true'
+      shell: bash
+      run: |
+        ### Run Autoreconf ###
+
+        autoreconf -i
+
+    - name: Configure
+      if: steps.setup.outputs.configure == 'true'
+      shell: ${{ steps.setup.outputs.msys2 == 'true' && 'msys2' || 'bash' }} {0}
+      run: |
+        ### Configure ###
+
+        ./configure ${{ env.CONFIG_ARGS }}
