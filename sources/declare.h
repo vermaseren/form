@@ -642,6 +642,7 @@ extern WORD   Processor(VOID);
 extern WORD   Product(UWORD *,WORD *,WORD);
 extern VOID   PrtLong(UWORD *,WORD,UBYTE *);
 extern VOID   PrtTerms(VOID);
+extern void   PrintDeprecation(const char *,const char *);
 extern VOID   PrintRunningTime(VOID);
 extern LONG   GetRunningTime(VOID);
 extern WORD   PutBracket(PHEAD WORD *);
