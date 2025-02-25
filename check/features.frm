@@ -1277,3 +1277,26 @@ assert stdout =~ exact_pattern(<<'EOF')
 ~~~
 EOF
 *--#] ZeroUnchanged :
+*--#[ tablebase_ro_1 :
+Table,sparse,no1fill(1);
+Fill no1fill(1) = 1;
+Fill no1fill(2) = 2;
+Fill no1fill(3) = 3;
+TableBase "no1.tbl" create;
+TableBase "no1.tbl" addto no1fill;
+.end
+Table,sparse,no2fill(1);
+Fill no2fill(1) = 1;
+Fill no2fill(2) = 2;
+Fill no2fill(3) = 3;
+.sort
+TableBase "no1.tbl" open,readonly;
+TableBase "no1.tbl" addto no2fill;
+.end
+assert runtime_error?('Tablebase with the name no1.tbl opened in read only mode')
+*--#] tablebase_ro_1 :
+*--#[ tablebase_ro_2 :
+TableBase "no212.tbl" open, readonly;
+.end
+assert runtime_error?('Trying to open non-existent TableBase in readonly mode: no212.tbl')
+*--#] tablebase_ro_2 :
