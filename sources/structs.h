@@ -1600,11 +1600,12 @@ struct M_const {
     WORD    numpi;
     WORD    BracketFactors[8];
     BOOL    FromStdin;             /* read the input from STDIN */
+    BOOL    IgnoreDeprecation;     /* ignore deprecation warning */
 #ifdef WITHFLOAT
 #ifdef WITHPTHREADS
 	PADPOSITION(17,30,62,84,(sizeof(pthread_rwlock_t)+sizeof(pthread_mutex_t)*2)+1);
 #else
-	PADPOSITION(17,28,62,84,1);
+	PADPOSITION(17,28,62,84,2);
 #endif
 #else
 #ifdef WITHPTHREADS

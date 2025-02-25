@@ -194,6 +194,18 @@ static void PrintHeader(int with_full_info)
 			AC.LineLength = oldLineLength;
 		}
 	}
+#ifdef WINDOWS
+	PrintDeprecation("the native Windows version", "issues/623");
+#endif
+#ifdef ILP32
+	PrintDeprecation("the 32-bit version", "issues/624");
+#endif
+#ifdef WITHMPI
+	PrintDeprecation("the MPI version (ParFORM)", "issues/625");
+#endif
+	if ( AC.CheckpointFlag ) {
+		PrintDeprecation("the checkpoint mechanism", "issues/626");
+	}
 }
 
 /*
@@ -261,9 +273,17 @@ int DoTail(int argc, UBYTE **argv)
 							AM.FileOnlyFlag = 1; AM.LogType = 1; break;
 				case 'h': /* For old systems: wait for key before exit */
 							AM.HoldFlag = 1; break;
+				case 'i':
+							if ( StrCmp(s, (UBYTE *)"ignore-deprecation") == 0 ) {
+								AM.IgnoreDeprecation = 1;
+								break;
+							}
 #ifdef WITHINTERACTION
-				case 'i': /* Interactive session (not used yet) */
-							AM.Interact = 1; break;
+							/* Interactive session (not used yet) */
+							AM.Interact = 1;
+							break;
+#else
+							goto IllegalOption;
 #endif
 				case 'I': /* Next arg is dir for inc/prc/sub files */
 							TAKEPATH(AM.IncDir)  break;
@@ -426,6 +446,7 @@ printversion:;
 							}
 						}
 						else {
+IllegalOption:
 #ifdef WITHMPI
 							if ( PF.me == MASTER )
 #endif
@@ -1890,6 +1911,36 @@ VOID Terminate(int errorcode)
 
 /*
  		#] Terminate : 
+ 		#[ PrintDeprecation :
+*/
+
+/**
+ * Prints a deprecation warning for a given feature.
+ *
+ * @param feature  The name of the deprecated feature.
+ * @param issue    The associated issue, e.g., "issues/700".
+ */
+void PrintDeprecation(const char *feature, const char *issue) {
+#ifdef WITHMPI
+	if ( PF.me != MASTER ) return;
+#endif
+	if ( AM.IgnoreDeprecation ) return;
+
+	UBYTE *e = (UBYTE *)getenv("FORM_IGNORE_DEPRECATION");
+	if ( e && e[0] && StrCmp(e, (UBYTE *)"0") && StrICmp(e, (UBYTE *)"false") && StrICmp(e, (UBYTE *)"no") ) return;
+
+	MesPrint("DeprecationWarning: We are considering deprecating %s.", feature);
+	MesPrint("If you want this support to continue, leave a comment at:");
+	MesPrint("");
+	MesPrint("    https://github.com/vermaseren/form/%s", issue);
+	MesPrint("");
+	MesPrint("Otherwise, it will be discontinued in the future.");
+	MesPrint("To suppress this warning, use the -ignore-deprecation command line option or");
+	MesPrint("set the environment variable FORM_IGNORE_DEPRECATION=1.");
+}
+
+/*
+ 		#] PrintDeprecation : 
  		#[ PrintRunningTime :
 */
 
