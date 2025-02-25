@@ -230,7 +230,7 @@ jobs:
         run: make -C sources -j 4 ${{ matrix.bin }}
 
       - name: Test
-        run: ./check/check.rb ./sources/${{ matrix.bin }} --stat --timeout 30 ${{ matrix.nthreads && format('-w{0}', matrix.nthreads) || '' }}
+        run: ./check/check.rb ./sources/${{ matrix.bin }} --stat --timeout 30 ${{ matrix.nthreads && format('-w{0}', matrix.nthreads) || '' }} --fake-valgrind
 
       - name: Generate LCOV coverage data
         run: |
