@@ -5,6 +5,9 @@ on:
   pull_request:
   workflow_dispatch:
 
+env:
+  FORM_IGNORE_DEPRECATION: 1
+
 jobs:
   # Simple tests on Linux; except the ParFORM case, they probably pass unless
   # the committer has forgotten running "make check".
