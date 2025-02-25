@@ -5679,14 +5679,15 @@ int DoSetExternalAttr(UBYTE *s)
 			}
 		}else	if(strINCmp((UBYTE *)KILL,nam,lnam)==0){
 			int i,n=0;
-			for(i=0;i<lval;i++)
+			for(i=0;i<lval;i++) {
 				if( *val>='0' && *val<= '9' )
 					n = 10*n + *val++  - '0';
 				else{
 					MesPrint("@External channel: number expected for %s",KILL);
 					return(-1);
 				}
-				AX.killSignal=n;
+			}
+			AX.killSignal=n;
 		}else	if(strINCmp((UBYTE *)STDERR,nam,lnam)==0){
 			if( AX.stderrname != NULL ) {
 				M_free(AX.stderrname,"external channel stderrname");

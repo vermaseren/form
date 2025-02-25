@@ -2969,7 +2969,7 @@ if ( filelist ) MesPrint("    oldsize: %l, objectsize: %d, fullsize: %l"
 #define DODOUBLE(x) { x *s, *t, *u; if ( *start ) { \
 	oldsize = *(x **)stop - *(x **)start; newsize = 2*oldsize; \
 	t = u = (x *)Malloc1(newsize*sizeof(x),text); s = *(x **)start; \
-	for ( i = 0; i < oldsize; i++ ) *t++ = *s++; M_free(*start,"double"); } \
+	for ( i = 0; i < oldsize; i++ ) {*t++ = *s++;} M_free(*start,"double"); } \
 	else { newsize = 100; u = (x *)Malloc1(newsize*sizeof(x),text); } \
 	*start = (void *)u; *stop = (void *)(u+newsize); }
 
@@ -2995,7 +2995,7 @@ void DoubleBuffer(void **start, void **stop, int size, char *text)
 #define DOEXPAND(x) { x *newbuffer, *t, *m;                             \
 	t = newbuffer = (x *)Malloc1((newsize+2)*type,"ExpandBuffer");      \
 	if ( *buffer ) { m = (x *)*buffer; i = *oldsize;                    \
-		while ( --i >= 0 ) *t++ = *m++; M_free(*buffer,"ExpandBuffer"); \
+		while ( --i >= 0 ) {*t++ = *m++;} M_free(*buffer,"ExpandBuffer"); \
 	} *buffer = newbuffer; *oldsize = newsize; }
 
 void ExpandBuffer(void **buffer, LONG *oldsize, int type)
