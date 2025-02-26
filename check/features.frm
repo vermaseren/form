@@ -585,6 +585,7 @@ Evaluate;
 
 Print;
 .end
+#pend_if wordsize == 2
 assert result("PI0") =~ expr("1.0e+00*a*b")
 assert result("PI1") =~ expr("3.14159265358979323846e+00")
 assert result("PI2") =~ expr("9.42477796076937971538e+00")
@@ -609,6 +610,7 @@ Evaluate pi_;
 
 Print;
 .end
+#pend_if wordsize == 2
 assert result("PI") =~ expr("3.141592653589793238462643383279502884198e+00")
 assert result("EE") =~ expr("1.0e+00*ee_")
 assert result("EM") =~ expr("1.0e+00*em_")
@@ -626,6 +628,7 @@ Evaluate ee_;
 
 Print;
 .end
+#pend_if wordsize == 2
 assert result("PI") =~ expr("1.0e+00*pi_")
 assert result("EE") =~ expr("2.718281828459045235360287471352662497757247093699959574967e+00")
 assert result("EM") =~ expr("1.0e+00*em_")
@@ -643,6 +646,7 @@ Evaluate em_;
 
 Print;
 .end
+#pend_if wordsize == 2
 assert result("PI") =~ expr("1.0e+00*pi_")
 assert result("EE") =~ expr("1.0e+00*ee_")
 assert result("EM") =~ expr("5.7721566490153286060651209008240243104215933593992359880577e-01")
