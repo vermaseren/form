@@ -66,6 +66,12 @@ m4_define([serial_tests], [m4_esyscmd_s([
 	${AUTOMAKE:-automake} --version | head -1 |
 	awk '{split ($NF,a,"."); if (a[1] >= 2 || (a[1] == 1 && a[2] >= 13)) { print "serial-tests" }}'
 ])])
+# If automake >= 1.14, use the subdir-objects option of AM_INIT_AUTOMAKE (available in automake >= 1.13)
+# to suppress the "possible forward-incompatibility" warning.
+m4_define([subdir_objects], [m4_esyscmd_s([
+	${AUTOMAKE:-automake} --version | head -1 |
+	awk '{split ($NF,a,"."); if (a[1] >= 2 || (a[1] == 1 && a[2] >= 14)) { print "subdir-objects" }}'
+])])
 
 AC_PREREQ([2.59])
 AC_INIT([FORM], [FORM_VERSION], [https://github.com/vermaseren/form/issues])
@@ -73,7 +79,7 @@ AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_SRCDIR([sources/form3.h])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_AUX_DIR([build-aux])
-AM_INIT_AUTOMAKE([1.7 foreign -Wall dist-bzip2] serial_tests)
+AM_INIT_AUTOMAKE([1.7 foreign -Wall dist-bzip2] serial_tests subdir_objects)
 
 # Check for .version file
 AM_CONDITIONAL([FIXED_VERSION], [test -f $srcdir/.version])
@@ -349,6 +355,40 @@ AS_IF([test "x$with_zlib" != xno],
 			[AC_MSG_FAILURE([test for zlib failed. Give --without-zlib if you want to compile without zlib])])
 		AC_MSG_NOTICE([zlib is not available])
 		with_zlib=no])])
+
+# Check for zstd
+AC_ARG_WITH([zstd],
+	[AS_HELP_STRING([--with-zstd@<:@=DIR@:>@],
+		[use zstd for compression (installed in prefix DIR) @<:@default=check@:>@])],
+	[AS_IF([test "x$withval" != xyes && test "x$withval" != xno && test "x$withval" != xcheck],
+		[with_zstd=yes
+		CPPFLAGS="$CPPFLAGS -I$withval/include"
+		LDFLAGS="$LDFLAGS -L$withval/lib"])],
+	[with_zstd=check])
+AS_IF([test "x$with_zstd" != xno],
+	[flag=:
+	AS_IF([$flag], [AS_IF([test "x$with_zlib" = xno],
+		[AC_MSG_NOTICE([using zstd requires zlib])
+		flag=false])])
+	AS_IF([$flag], [AC_CHECK_HEADER([zstd.h], [], [flag=false])])
+	AS_IF([$flag], [AC_CHECK_LIB([zstd], [ZSTD_versionNumber], [LIBS="-lzstd $LIBS"], [flag=false])])
+	AS_IF([$flag],
+		[AC_DEFINE(WITHZSTD, [], [Define to use zstd for compression.])
+		with_zstd=yes],
+		[AS_IF([test "x$with_zstd" = xyes],
+			[AC_MSG_FAILURE([test for zstd failed. Give --without-zstd if you want to compile without zstd])])
+		AC_MSG_NOTICE([zstd is not available])
+		with_zstd=no])])
+AM_CONDITIONAL([WITHZSTD], [test "x$with_zstd" = xyes])
+
+# Ensure zstd/zlibWrapper
+AS_IF([test -f "$srcdir/extern/zstd/zlibWrapper/zstd_zlibwrapper.h"], [],
+	[AC_PATH_PROG([GIT], [git])
+		AS_IF([test -n "$GIT"], [(cd "$srcdir" && "$GIT" submodule update --init)])])
+AS_IF([test -f "$srcdir/extern/zstd/zlibWrapper/zstd_zlibwrapper.h"], [],
+	[AS_IF([test -d "$srcdir/.git"],
+		[AC_MSG_FAILURE([$srcdir/extern/zstd/zlibWrapper does not exist. Run git submodule update --init in the repository directory])],
+		[AC_MSG_FAILURE([$srcdir/extern/zstd/zlibWrapper does not exist])])])
 
 # enable-scalar/threaded/parform/debug/float
 AC_ARG_ENABLE([scalar],
@@ -1061,6 +1101,10 @@ if test "x$with_mpfr" = xyes; then
 fi
 if test "x$with_zlib" = xyes; then
 	echo "    zlib"
+	atleastone=yes
+fi
+if test "x$with_zstd" = xyes; then
+	echo "    zstd"
 	atleastone=yes
 fi
 if test $atleastone = no; then
