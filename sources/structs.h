@@ -1597,7 +1597,6 @@ struct M_const {
     WORD    havesortdir;
     WORD    vectorzero;            /* p0_ */
     WORD    ClearStore;
-    WORD    numpi;
     WORD    BracketFactors[8];
     BOOL    FromStdin;             /* read the input from STDIN */
     BOOL    IgnoreDeprecation;     /* ignore deprecation warning */
