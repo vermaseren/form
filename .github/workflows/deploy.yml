@@ -61,6 +61,8 @@ jobs:
           # platforms available.
           - {os: ubuntu-20.04, shell: bash, bin: form}
           - {os: ubuntu-20.04, shell: bash, bin: tform}
+          - {os: ubuntu-22.04-arm, shell: bash, bin: form}
+          - {os: ubuntu-22.04-arm, shell: bash, bin: tform}
           - {os: macos-13, shell: bash, bin: form}
           - {os: macos-13, shell: bash, bin: tform}
           # The macos-14 runner image is based on the arm64 architecture.
@@ -355,10 +357,11 @@ jobs:
               rm -rf $pkgname
             fi
           }
-          make_tar_gz x86_64-linux '*-ubuntu-*/*form'
+          make_tar_gz x86_64-linux '*-ubuntu-20.04/*form'
+          make_tar_gz arm64-linux '*-ubuntu-22.04-arm/*form'
           make_tar_gz x86_64-osx '*-macos-13/*form'
           make_tar_gz arm64-osx '*-macos-14/*form'
-          make_zip x86_64-windows '*-windows-*/*form.exe'
+          make_zip x86_64-windows '*-windows-2019/*form.exe'
 
       - name: Print distributions
         run: ls -l dist
