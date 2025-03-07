@@ -1231,12 +1231,21 @@ int WriteObject(DBASE *d,MLONG tablenumber,char *arguments,char *rhs,MLONG numbe
 	else buffer = 0;
 	if ( buffer ) {
 		ssize = size;
+#ifdef WITHZSTD
+		// Force the use of zlib for compressed Tablebase entries, so that tablebases created
+		// with zstd-supported FORM builds can be used by zstd-unsupported FORM builds.
+		const int old_isUsingZSTDcompression = ZWRAP_isUsingZSTDcompression();
+		ZWRAP_useZSTDcompression(0);
+#endif
 		if ( ( error = compress((Bytef *)buffer,&newsize,(Bytef *)rhs,ssize) ) != Z_OK ) {
 			MesPrint("Error = %d\n",error);
 			MesPrint("Due to error no compress used for element %s in file %s\n",arguments,d->name);
 			M_free(buffer,"tb,WriteObject");
 			buffer = 0;
 		}
+#ifdef WITHZSTD
+		ZWRAP_useZSTDcompression(old_isUsingZSTDcompression);
+#endif
 	}
 	if ( buffer ) {
 		rhs = buffer;
