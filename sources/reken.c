@@ -3729,7 +3729,7 @@ WORD Moebius(PHEAD WORD nn)
 {
 	WORD i,n = nn, x;
 	LONG newsize;
-	char *newtable, mu;
+	SBYTE *newtable, mu;
 #if ( BITSINWORD == 32 )
 	if ( AR.notfirstprime == 0 ) StartPrimeList(BHEAD0);
 #endif
@@ -3742,7 +3742,7 @@ WORD Moebius(PHEAD WORD nn)
 		if ( AR.moebiustablesize <= 0 ) { newsize = (LONG)nn + 20; }
 		else { newsize = (LONG)nn*2; }
 		if ( newsize > MAXPOSITIVE ) newsize = MAXPOSITIVE;
-		newtable = (char *)Malloc1(newsize*sizeof(char),"Moebius");
+		newtable = (SBYTE *)Malloc1(newsize*sizeof(SBYTE),"Moebius");
 		for ( i = 0; i < AR.moebiustablesize; i++ ) newtable[i] = AR.moebiustable[i];
 		for ( ; i < newsize; i++ ) newtable[i] = 2;
 		if ( AR.moebiustablesize > 0 ) M_free(AR.moebiustable,"Moebius");
