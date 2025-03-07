@@ -166,7 +166,8 @@ WORD *poly_gcd(PHEAD WORD *a, WORD *b, WORD fit) {
 	if ( fit ) {
 		if ( newsize*sizeof(WORD) >= (size_t)(AM.MaxTer) ) {
 			MLOCK(ErrorMessageLock);
-			MesPrint("poly_gcd: Term too complex. Maybe increasing MaxTermSize can help");
+			MesPrint("poly_gcd: Term too complex (%d words). Maybe increasing MaxTermSize (%d words) can help",
+				newsize, AM.MaxTer/sizeof(WORD));
 			MUNLOCK(ErrorMessageLock);
 			Terminate(-1);
 		}
@@ -351,7 +352,8 @@ WORD *poly_divmod(PHEAD WORD *a, WORD *b, int divmod, WORD fit) {
 		if ( fit ) {
 			if ( ressize*sizeof(WORD) > (size_t)(AM.MaxTer) ) {
 				MLOCK(ErrorMessageLock);
-				MesPrint("poly_divmod: Term too complex. Maybe increasing MaxTermSize can help");
+				MesPrint("poly_divmod: Term too complex (%d words). Maybe increasing MaxTermSize (%d words) can help",
+					ressize, AM.MaxTer/sizeof(WORD));
 				MUNLOCK(ErrorMessageLock);
 				Terminate(-1);
 			}
@@ -670,8 +672,8 @@ WORD *poly_ratfun_add (PHEAD WORD *t1, WORD *t2) {
 	if (num.size_of_form_notation() + den.size_of_form_notation() + 3 >= AM.MaxTer/(int)sizeof(WORD)) {
 		MLOCK(ErrorMessageLock);
 		MesPrint ("ERROR: PolyRatFun doesn't fit in a term");
-		MesPrint ("(1) num size = %d, den size = %d,  MaxTer = %d",num.size_of_form_notation(),
-				den.size_of_form_notation(),AM.MaxTer);
+		MesPrint ("(1) num size = %d, den size = %d, MaxTermSize = %d words",num.size_of_form_notation(),
+				den.size_of_form_notation(),AM.MaxTer/sizeof(WORD));
 		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
@@ -815,8 +817,8 @@ int poly_ratfun_normalize (PHEAD WORD *term) {
 	if (num1.size_of_form_notation() + den1.size_of_form_notation() + 3 >= AM.MaxTer/(int)sizeof(WORD)) {
 		MLOCK(ErrorMessageLock);
 		MesPrint ("ERROR: PolyRatFun doesn't fit in a term");
-		MesPrint ("(2) num size = %d, den size = %d,  MaxTer = %d",num1.size_of_form_notation(),
-				den1.size_of_form_notation(),AM.MaxTer);
+		MesPrint ("(2) num size = %d, den size = %d, MaxTermSize = %d words",num1.size_of_form_notation(),
+				den1.size_of_form_notation(),AM.MaxTer/sizeof(WORD));
 		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
@@ -973,7 +975,8 @@ WORD *poly_factorize (PHEAD WORD *argin, WORD *argout, bool with_arghead, bool i
 		// check size
 		if (len >= AM.MaxTer) {
 			MLOCK(ErrorMessageLock);
-			MesPrint ("ERROR: factorization doesn't fit in a term");
+			MesPrint ("ERROR: factorization doesn't fit in a term (len = %d, MaxTermSize = %d words)",
+				len/sizeof(WORD), AM.MaxTer/sizeof(WORD));
 			MUNLOCK(ErrorMessageLock);
 			Terminate(-1);
 		}
