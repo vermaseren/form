@@ -216,6 +216,47 @@ def which(name)
   result
 end
 
+# Puts a message using ANSI color codes if available.
+def puts_colored(output, something, color_name)
+  c = _make_color(output, color_name)
+  if !c.nil?
+    something = format("%s%s%s", c[0], something, c[1])
+  end
+  output.puts(something)
+end
+
+def _make_color(output, name)
+  if _guess_color_availability_for(output)
+    begin
+      require "test/unit/color-scheme"
+      return [
+        Test::Unit::ColorScheme.default[name].escape_sequence,
+        Test::Unit::Color.new("reset").escape_sequence
+      ]
+    rescue NameError, LoadError
+      # do nothing
+    end
+  end
+
+  nil
+end
+
+def _guess_color_availability_for(output)
+  return true if ENV["GITHUB_ACTIONS"] == "true"
+  return false unless output.tty?
+  return true if RUBY_PLATFORM =~ /mswin|mingw/
+
+  term = ENV.fetch("TERM", nil)
+  return true if term && term =~ /(?:term|screen)(?:-(?:256)?color)?\z/
+  if defined?(Test::Unit::UI::Console::TestRunner::TERM_COLOR_SUPPORT) &&
+     Test::Unit::UI::Console::TestRunner::TERM_COLOR_SUPPORT
+    return true
+  end
+  return true if ENV["EMACS"] == "t"
+
+  false
+end
+
 # To be mixed-in all FORM tests.
 module FormTest
   # Interplay with globals.
@@ -367,7 +408,7 @@ module FormTest
   # Called from derived classes' test_* methods.
   def do_test(&block)
     if !requires
-      info.status = "SKIPPED"
+      info.status = "OMITTED"
       if defined?(omit)
         omit(requires_str, &block)
       elsif defined?(skip)
@@ -436,7 +477,7 @@ module FormTest
         end
         $stderr.puts
         $stderr.puts("=" * 79)
-        $stderr.puts("#{info.desc} FAILED")
+        puts_colored($stderr, "#{info.desc} FAILED", "failure")
         $stderr.puts("=" * 79)
         $stderr.puts(reveal_newlines(@raw_stdout))
         $stderr.puts("=" * 79)
@@ -1713,9 +1754,14 @@ def output_detailed_statistics(output = nil)
                    bar_str(t, timeout, bar_width),
                    format_time(t, timeout))
       end
-      if !info.status.nil? && info.status == "FAILED"
+      color_key = case info.status
+                  when "FAILED", "TIMEOUT" then "failure"
+                  when "SKIPPED" then "pending"
+                  when "OMITTED" then "omission"
+                  end
+      if !color_key.nil?
         begin
-          output.call(s, color("failure"))
+          output.call(s, color(color_key))
         rescue StandardError
           output.call(s)
         end
