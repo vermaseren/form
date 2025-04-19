@@ -1971,7 +1971,8 @@ int PF_Init(int *argc, char ***argv)
 	PF.numsbufs = 2; /* might be changed by the environment variable on the master ! */
 	PF.numrbufs = 2; /* might be changed by the environment variable on the master ! */
 
-	PF_LibInit(argc,argv);
+	int ret = PF_LibInit(argc,argv);
+	if (ret) { return ret; }
 	PF_RealTime(PF_RESET);
 
 	PF.log = 0;
