@@ -375,7 +375,7 @@ AS_IF([test "x$enable_threaded" != xno],
 		#  none    : Cygwin
 		# -pthread : Linux/gcc (kernel threads), BSD/gcc (userland threads)
 		#  pthread : Linux, OSX
-		for a in none -pthread pthread; do
+		for a in -pthread none pthread; do
 			case $a in
 				none)
 					AC_MSG_CHECKING([whether pthreads works without any flags])
