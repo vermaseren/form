@@ -65,13 +65,14 @@ jobs:
           # The macos-14 runner image is based on the arm64 architecture.
           - {os: macos-14, shell: bash, bin: form}
           - {os: macos-14, shell: bash, bin: tform}
-          # NOTE: Windows native executables have too many problems.
-          # We include them in artifacts but not in releases.
+          # NOTE: Windows native executables may have some problems.
           # Unfortunately, "allow-failure" is not available on GitHub Actions
           # (https://github.com/actions/toolkit/issues/399).
           # We have to use "continue-on-error", instead.
-          - {os: windows-2019, shell: msys2, bin: form}
-          - {os: windows-2019, shell: msys2, bin: tform}
+          - {os: windows-2019, shell: msys2, sys: mingw64, bin: form}
+          - {os: windows-2019, shell: msys2, sys: mingw64, bin: tform}
+          - {os: windows-11-arm, shell: msys2, sys: clangarm64, bin: form}
+          - {os: windows-11-arm, shell: msys2, sys: clangarm64, bin: tform}
     steps:
       - name: Install dependencies (Ubuntu)
         if: runner.os == 'Linux'
@@ -80,11 +81,12 @@ jobs:
           packages: libmpfr-dev
           version: 1.0
 
-      - name: Install dependencies (Windows)
-        if: runner.os == 'Windows'
+      - name: Install dependencies (Windows/mingw64)
+        if: matrix.shell == 'msys2' && matrix.sys == 'mingw64'
         uses: msys2/setup-msys2@v2
         with:
           update: true
+          msystem: ${{ matrix.sys }}
           install: >-
             make
             mingw-w64-x86_64-gcc
@@ -92,6 +94,20 @@ jobs:
             mingw-w64-x86_64-mpfr
             mingw-w64-x86_64-zlib
             mingw-w64-x86_64-ruby
+
+      - name: Install dependencies (Windows/clangarm64)
+        if: matrix.shell == 'msys2' && matrix.sys == 'clangarm64'
+        uses: msys2/setup-msys2@v2
+        with:
+          update: true
+          msystem: ${{ matrix.sys }}
+          install: >-
+            make
+            mingw-w64-clang-aarch64-gcc-compat
+            mingw-w64-clang-aarch64-gmp
+            mingw-w64-clang-aarch64-mpfr
+            mingw-w64-clang-aarch64-zlib
+            mingw-w64-clang-aarch64-ruby
 
       - name: Download tarball
         uses: actions/download-artifact@v4
@@ -149,7 +165,6 @@ jobs:
           fi
           make -j 4
 
-      # NOTE: Currently, many tests on Windows miserably fail.
       - name: Test
         if: steps.build.outcome == 'success' && steps.build.conclusion == 'success'
         continue-on-error: ${{ runner.os == 'Windows' }}
@@ -359,6 +374,7 @@ jobs:
           make_tar_gz x86_64-osx '*-macos-13/*form'
           make_tar_gz arm64-osx '*-macos-14/*form'
           make_zip x86_64-windows '*-windows-2019/*form.exe'
+          make_zip arm64-windows '*-windows-11-arm/*form.exe'
 
       - name: Print distributions
         run: ls -l dist
