@@ -240,6 +240,8 @@ int DoTail(int argc, UBYTE **argv)
 	AM.InputFileName = AM.LogFileName = AM.IncDir = AM.TempDir = AM.TempSortDir =
 	AM.SetupDir = AM.SetupFile = AM.Path = 0;
 	AM.FromStdin = 0;
+	/* Always use MultiRun, "-M" option is now ignored. */
+	AM.MultiRun = 1;
 	if ( argc < 1 ) {
 		onlyversion = 0;
 		goto printversion;
@@ -294,7 +296,8 @@ int DoTail(int argc, UBYTE **argv)
 				case 'L': /* Make log file with only final statistics */
 							AM.LogType = 1;  break;
 				case 'M': /* Multirun. Name of tempfiles will contain PID */
-							AM.MultiRun = 1;
+							/* This option is now ignored. We always use MultiRun. */
+							/* AM.MultiRun = 1; */
 							break;
 				case 'm': /* Read number of threads */
 				case 'w': /* Read number of workers */
@@ -649,6 +652,9 @@ int OpenInput(VOID)
 
 UBYTE *emptystring = (UBYTE *)".";
 UBYTE *defaulttempfilename = (UBYTE *)"xformxxx.str";
+/* This is the length of the above default, but with 7 spaces for PID digits
+   instead of the "xxx". (Previously FORM used 5 digits and this value was 14) */
+#define DEFAULTFNAMELENGTH 16
 
 VOID ReserveTempFiles(int par)
 {
@@ -682,11 +688,11 @@ VOID ReserveTempFiles(int par)
 	when one device is full we can continue on the next one.
 */
 	s = AM.TempDir; i = 200;   /* Some extra for VMS */
-	while ( *s && *s != ':' ) { if ( *s == '\\' ) s++; s++; i++; }
-	FG.fnamesize = sizeof(UBYTE)*(i+14);
+	while ( *s && *s != PATHSEPARATOR ) { if ( *s == '\\' ) s++; s++; i++; }
+	FG.fnamesize = sizeof(UBYTE)*(i+DEFAULTFNAMELENGTH);
 	FG.fname = (char *)Malloc1(FG.fnamesize,"name for temporary files");
 	s = AM.TempDir; t = (UBYTE *)FG.fname;
-	while ( *s && *s != ':' ) { if ( *s == '\\' ) s++; *t++ = *s++; }
+	while ( *s && *s != PATHSEPARATOR ) { if ( *s == '\\' ) s++; *t++ = *s++; }
 	if ( (char *)t > FG.fname && t[-1] != SEPARATOR && t[-1] != ALTSEPARATOR )
 		*t++ = SEPARATOR;
 	*t = 0;
@@ -694,12 +700,12 @@ VOID ReserveTempFiles(int par)
 	FG.fnamebase = t-(UBYTE *)(FG.fname);
 
 	s = AM.TempSortDir; i = 200;   /* Some extra for VMS */
-	while ( *s && *s != ':' ) { if ( *s == '\\' ) s++; s++; i++; }
+	while ( *s && *s != PATHSEPARATOR ) { if ( *s == '\\' ) s++; s++; i++; }
 
-	FG.fname2size = sizeof(UBYTE)*(i+14);
+	FG.fname2size = sizeof(UBYTE)*(i+DEFAULTFNAMELENGTH);
 	FG.fname2 = (char *)Malloc1(FG.fname2size,"name for sort files");
 	s = AM.TempSortDir; t = (UBYTE *)FG.fname2;
-	while ( *s && *s != ':' ) { if ( *s == '\\' ) s++; *t++ = *s++; }
+	while ( *s && *s != PATHSEPARATOR ) { if ( *s == '\\' ) s++; *t++ = *s++; }
 	if ( (char *)t > FG.fname2 && t[-1] != SEPARATOR && t[-1] != ALTSEPARATOR )
 		*t++ = SEPARATOR;
 	*t = 0;
@@ -710,35 +716,10 @@ VOID ReserveTempFiles(int par)
 	s = defaulttempfilename;
 #ifdef WITHMPI
 	{ 
-	  int iii;
-#ifdef SMP
-	  /* Very dirty quick-hack for the qcm smp machine at TTP */
-	  M_free(FG.fname,"name for temporary files");
-	  if(PF.me == 0){
-      /*[04nov2003 mt] To avoid segfault with -fast optimization option*/
-		/*[04nov2003 mt]:*/ /*NOTE, this is only a temporary stub!*/
-		/*FG.fname = "/formswap/xxxxxxxxxxxxxxxxxxxxx";*/
-		FG.fname = calloc(128,1);
-		strcpy(FG.fname,"/formswap/xxxxxxxxxxxxxxxxxxxxx");
-		/*:[04nov2003 mt]*/
-		t = (UBYTE *)FG.fname + 10;
-		FG.fnamebase = t-FG.fname;
-	  }
-	  else{
-		/*[04nov2003 mt]:*/
-		/*FG.fname = "/formswapx/xxxxxxxxxxxxxxxxxxxxx";*/
-		FG.fname = calloc(128,1);
-		strcpy(FG.fname,"/formswapx/xxxxxxxxxxxxxxxxxxxxx");
-		/*:[04nov2003 mt]*/
-		FG.fname[9] = '0' + PF.me;
-		t = (UBYTE *)FG.fname + 11;
-		FG.fnamebase = t-FG.fname;
-	  }
-#else
-	  iii = snprintf((char*)t,FG.fnamesize-((char*)t-FG.fname),"%d",PF.me);
-	  t+= iii;
-	  s+= iii; /* in case defaulttmpfilename is too short */
-#endif
+		int iii;
+		iii = snprintf((char*)t,FG.fnamesize-((char*)t-FG.fname),"%d",PF.me);
+		t+= iii;
+		s+= iii; /* in case defaulttmpfilename is too short */
 	}
 #endif
 	while ( *s ) *t++ = *s++;
@@ -753,8 +734,8 @@ VOID ReserveTempFiles(int par)
 		command tail.
 */
 	if ( AM.MultiRun ) {
-		int num = ((int)GetPID())%100000;
-		t += 2;
+		int num = ((int)GetPID())%10000000;
+		t += 4;
 		*t = 0;
 		t[-1] = 'r';
 		t[-2] = 't';
@@ -764,9 +745,11 @@ VOID ReserveTempFiles(int par)
 		t[-6] = (UBYTE)('0' + (num/10)%10);
 		t[-7] = (UBYTE)('0' + (num/100)%10);
 		t[-8] = (UBYTE)('0' + (num/1000)%10);
-		t[-9] = (UBYTE)('0' + num/10000);
+		t[-9] = (UBYTE)('0' + (num/10000)%10);
+		t[-10] = (UBYTE)('0' + (num/100000)%10);
+		t[-11] = (UBYTE)('0' + num/1000000);
 		if ( ( AC.StoreHandle = CreateFile((char *)FG.fname) ) < 0 ) {
-			t[-5] = 'x'; t[-6] = 'x'; t[-7] = 'x'; t[-8] = 'x'; t[-9] = 'x';
+			t[-5] = 'x'; t[-6] = 'x'; t[-7] = 'x'; t[-8] = 'x'; t[-9] = 'x'; t[-10] = 'x'; t[-11] = 'x';
 			goto classic;
 		}
 	}
@@ -815,7 +798,7 @@ classic:;
 /*
 	Now we should assign a name to the main sort file and the two stage 4 files.
 */
-	AM.S0->file.name = (char *)Malloc1(sizeof(char)*(i+14),"name for temporary files");
+	AM.S0->file.name = (char *)Malloc1(sizeof(char)*(i+DEFAULTFNAMELENGTH),"name for temporary files");
 	s = (UBYTE *)AM.S0->file.name;
 	t = (UBYTE *)FG.fname2;
 	i = 1;
@@ -847,6 +830,7 @@ classic:;
 	if ( par == 0 ) {
 		s = (UBYTE *)((void *)(FG.fname2)); i = 0;
 		while ( *s ) { s++; i++; }
+		/* +1 for null terminator */
 		s = (UBYTE *)Malloc1(sizeof(char)*(i+1),"name for stage4 file a");
 		AR.FoStage4[1].name = (char *)s;
 		t = (UBYTE *)FG.fname2;
@@ -854,12 +838,14 @@ classic:;
 		s[-2] = '4'; s[-1] = 'a'; *s = 0;
 		s = (UBYTE *)((void *)(FG.fname)); i = 0;
 		while ( *s ) { s++; i++; }
+		/* +1 for null terminator */
 		s = (UBYTE *)Malloc1(sizeof(char)*(i+1),"name for stage4 file b");
 		AR.FoStage4[0].name = (char *)s;
 		t = (UBYTE *)FG.fname;
 		while ( *t ) *s++ = *t++;
 		s[-2] = '4'; s[-1] = 'b'; *s = 0;
 		for ( j = 0; j < 3; j++ ) {
+			/* +1 for null terminator */
 			s = (UBYTE *)Malloc1(sizeof(char)*(i+1),"name for scratch file");
 			AR.Fscr[j].name = (char *)s;
 			t = (UBYTE *)FG.fname;
@@ -872,6 +858,7 @@ classic:;
 		size_t tname;
 		s = (UBYTE *)((void *)(FG.fname2)); i = 0;
 		while ( *s ) { s++; i++; }
+		/* +1 for null terminator, +10 for 32bit int, +1 for "." */
 		tname = sizeof(char)*(i+12);
 		s = (UBYTE *)Malloc1(tname,"name for stage4 file a");
 		snprintf((char *)s,tname,"%s.%d",FG.fname2,AT.identity);
@@ -879,6 +866,7 @@ classic:;
 		AR.FoStage4[1].name = (char *)s;
 		s = (UBYTE *)((void *)(FG.fname)); i = 0;
 		while ( *s ) { s++; i++; }
+		/* +1 for null terminator, +10 for 32bit int, +1 for "." */
 		tname = sizeof(char)*(i+12);
 		s = (UBYTE *)Malloc1(tname,"name for stage4 file b");
 		snprintf((char *)s,tname,"%s.%d",FG.fname,AT.identity);
@@ -886,6 +874,7 @@ classic:;
 		AR.FoStage4[0].name = (char *)s;
 		if ( AT.identity == 0 ) {
 			for ( j = 0; j < 3; j++ ) {
+				/* +1 for null terminator */
 				s = (UBYTE *)Malloc1(sizeof(char)*(i+1),"name for scratch file");
 				AR.Fscr[j].name = (char *)s;
 				t = (UBYTE *)FG.fname;
