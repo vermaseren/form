@@ -3903,14 +3903,28 @@ detailed information.}
 \rightvitem{13cm}{Turns compression mode on. This compression is a 
 relatively simple compression that hardly costs extra computer time but 
 saves roughly a factor two in disk storage. The old statement was `compress 
-on' but this should be avoided in the future. This setting is the default.}
+on' but this should be avoided in the future. This setting is the default if
+\FORM\ has not been compiled with gzip or zstd support.}
 
 \leftvitem{3.5cm}{compress,gzip\index{gzip}}
-\rightvitem{13cm}{This option should be followed by a comma or a space and 
+\rightvitem{13cm}{This setting is the default, if \FORM\ has been compiled
+with gzip support but not with zstd support.
+This option may be followed by a comma or a space and 
 a single digit. It activates the gzip compression for the sort file. This 
 compression can make the intermediate sort file considerably shorter at the 
-cost of some CPU time. This option can be used when disk space is at a 
-premium. The digit indicates the compression level. Zero means no 
+cost of some CPU time.
+The digit indicates the compression level. Zero means no 
+compression and 9 is the highest level. The default level is 6. Above that 
+the compression becomes very slow and doesn't gain very much extra.}
+
+\leftvitem{3.5cm}{compress,zstd\index{zstd}}
+\rightvitem{13cm}{This setting is the default, if \FORM\ has been compiled with
+zstd support.
+This option may be followed by a comma or a space and 
+a single digit. It activates the zstd compression for the sort file. This 
+compression performs better than gzip, both in terms of compression/
+decompression rates and compression ratio.
+The digit indicates the compression level. Zero means no 
 compression and 9 is the highest level. The default level is 6. Above that 
 the compression becomes very slow and doesn't gain very much extra.}
 
