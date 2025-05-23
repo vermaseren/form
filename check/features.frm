@@ -1141,3 +1141,93 @@ else
   assert runtime_error?('Could not create sort file: bad_path\xformxxx.sor')
 end
 *--#] TempSortDir_windows :
+*--#[ ZeroUnchanged :
+#-
+
+#procedure exprinfo
+	#message Module `CMODULE_':
+	#do e = {`activeexprnames_'}
+		#if `ZERO_`e''
+			#message zero `e': `ZERO_`e''
+		#endif
+		#if `UNCHANGED_`e''
+			#message unchanged `e': `UNCHANGED_`e''
+		#endif
+	#enddo
+	#if `ZERO_'
+		#message All zero: `ZERO_'
+	#endif
+	#if `UNCHANGED_'
+		#message All unchanged: `UNCHANGED_'
+	#endif
+	#message
+#endprocedure
+
+
+Off stats;
+
+Symbol x,y;
+
+Local test1 = x;
+Local test2 = y;
+Local test3 = 1;
+.sort:1;
+
+#call exprinfo
+Identify x = 0;
+.sort:2;
+
+#call exprinfo
+Identify y = 0;
+.sort:3;
+
+#call exprinfo
+.sort:4;
+
+#call exprinfo
+Multiply 0;
+.sort:5;
+
+#message Here, test3 is incorrectly flagged as unchanged:
+#call exprinfo
+Print;
+.end
+assert succeeded?
+assert result("test1") =~ expr("0")
+assert result("test2") =~ expr("0")
+assert result("test3") =~ expr("0")
+assert stdout =~ exact_pattern(<<'EOF')
+~~~Module 2:
+~~~
+~~~Module 3:
+~~~zero test1: 1
+~~~unchanged test2: 1
+~~~unchanged test3: 1
+~~~
+~~~Module 4:
+~~~zero test1: 1
+~~~unchanged test1: 1
+~~~zero test2: 1
+~~~unchanged test3: 1
+~~~
+~~~Module 5:
+~~~zero test1: 1
+~~~unchanged test1: 1
+~~~zero test2: 1
+~~~unchanged test2: 1
+~~~unchanged test3: 1
+~~~All unchanged: 1
+~~~
+~~~Here, test3 is incorrectly flagged as unchanged:
+~~~Module 6:
+~~~zero test1: 1
+~~~unchanged test1: 1
+~~~zero test2: 1
+~~~unchanged test2: 1
+~~~zero test3: 1
+~~~unchanged test3: 1
+~~~All zero: 1
+~~~All unchanged: 1
+~~~
+EOF
+*--#] ZeroUnchanged :
