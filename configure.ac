@@ -765,7 +765,7 @@ DEBUGTOOL_LIBS=
 AC_DEFUN([AX_HANDLE_EXTRA_WARNING],
 [if test "x$enable_extra_warning" != xyes; then
 	# Currently no warnings are disabled without --enable-extra-warning
-	$1
+	$1="$$1"
 fi[]dnl
 ])
 
