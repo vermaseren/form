@@ -92,14 +92,14 @@ endif
 
 if WITHZSTD
 SRCBASE += \
-	$(top_srcdir)/extern/zstd/zlibWrapper/gzclose.c \
-	$(top_srcdir)/extern/zstd/zlibWrapper/gzcompatibility.h \
-	$(top_srcdir)/extern/zstd/zlibWrapper/gzguts.h \
-	$(top_srcdir)/extern/zstd/zlibWrapper/gzlib.c \
-	$(top_srcdir)/extern/zstd/zlibWrapper/gzread.c \
-	$(top_srcdir)/extern/zstd/zlibWrapper/gzwrite.c \
-	$(top_srcdir)/extern/zstd/zlibWrapper/zstd_zlibwrapper.c \
-	$(top_srcdir)/extern/zstd/zlibWrapper/zstd_zlibwrapper.h
+	../extern/zstd/zlibWrapper/gzclose.c \
+	../extern/zstd/zlibWrapper/gzcompatibility.h \
+	../extern/zstd/zlibWrapper/gzguts.h \
+	../extern/zstd/zlibWrapper/gzlib.c \
+	../extern/zstd/zlibWrapper/gzread.c \
+	../extern/zstd/zlibWrapper/gzwrite.c \
+	../extern/zstd/zlibWrapper/zstd_zlibwrapper.c \
+	../extern/zstd/zlibWrapper/zstd_zlibwrapper.h
 INCBASE += -I$(top_srcdir)/extern/zstd/zlibWrapper
 endif
 
