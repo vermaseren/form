@@ -100,7 +100,8 @@ SRCBASE += \
 	../extern/zstd/zlibWrapper/gzwrite.c \
 	../extern/zstd/zlibWrapper/zstd_zlibwrapper.c \
 	../extern/zstd/zlibWrapper/zstd_zlibwrapper.h
-INCBASE += -I$(top_srcdir)/extern/zstd/zlibWrapper
+# Slight abuse of INCBASE, in case zconf.h does not define STDC (e.g. on Fedora >= 40)
+INCBASE += -I$(top_srcdir)/extern/zstd/zlibWrapper -DSTDC
 endif
 
 SRCPTHREAD = \
