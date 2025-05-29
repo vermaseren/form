@@ -39,7 +39,9 @@ jobs:
         uses: awalsh128/cache-apt-pkgs-action@v1
         with:
           packages: libmpfr-dev libzstd-dev
-          version: 1.0
+          # We need to handle a bug that may cause cache key conflicts.
+          # See: https://github.com/awalsh128/cache-apt-pkgs-action/pull/150
+          version: ${{ runner.arch }}-1.0
 
       - name: Install MPI if necessary
         if: matrix.bin == 'parform' || matrix.bin == 'parvorm'
@@ -136,7 +138,9 @@ jobs:
         uses: awalsh128/cache-apt-pkgs-action@v1
         with:
           packages: libmpfr-dev libzstd-dev valgrind
-          version: 1.0
+          # We need to handle a bug that may cause cache key conflicts.
+          # See: https://github.com/awalsh128/cache-apt-pkgs-action/pull/150
+          version: ${{ runner.arch }}-1.0
 
       - name: Configure
         run: |
@@ -180,7 +184,9 @@ jobs:
         uses: awalsh128/cache-apt-pkgs-action@v1
         with:
           packages: lcov libmpfr-dev libzstd-dev
-          version: 1.0
+          # We need to handle a bug that may cause cache key conflicts.
+          # See: https://github.com/awalsh128/cache-apt-pkgs-action/pull/150
+          version: ${{ runner.arch }}-1.0
 
       - name: Configure
         run: |
