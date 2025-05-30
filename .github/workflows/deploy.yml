@@ -381,8 +381,13 @@ jobs:
           make_tar_gz arm64-osx '*-macos-14/*form'
           make_zip x86_64-windows '*-windows-2019/*form.exe'
 
-      - name: Print distributions
-        run: ls -l dist
+      - name: Summarize files for distribution
+        run: |
+          echo "Number of files: $(ls -1 dist | wc -l)" >> $GITHUB_STEP_SUMMARY
+          echo '' >> $GITHUB_STEP_SUMMARY
+          echo '| File Name | Size (bytes) |' >> $GITHUB_STEP_SUMMARY
+          echo '| --- | ---: |' >> $GITHUB_STEP_SUMMARY
+          ls -l dist | tail -n +2 | awk '{ printf "| %s | %s |\n", $9, $5 }' >> $GITHUB_STEP_SUMMARY
 
       # Upload the distributions as an artifact, regardless of whether
       # the commit has a versioning tag. This makes checking and debugging easy.
