@@ -20,21 +20,19 @@ jobs:
         with:
           fetch-depth: 0  # ensures a reachable tag
 
-      - name: Determine distname
-        run: |
-          echo "distname=form-$(./scripts/git-version-gen.sh -r | sed '2q;d' | sed 's/^v//')" >> $GITHUB_ENV
+      - name: Set up build
+        uses: ./.github/actions/setup-build
+        with:
+          features: ''
 
       - name: Build tarball distribution
-        run: |
-          autoreconf -i
-          ./configure --disable-dependency-tracking --disable-scalar --disable-threaded --disable-native --without-gmp --without-zlib
-          make distdir=$distname dist-gzip
+        run: make distdir=${{ env.DISTNAME }} dist-gzip
 
       - name: Print tarball information
         run: |
-          ls -l $distname.tar.gz
-          file $distname.tar.gz
-          tar -tf $distname.tar.gz
+          ls -l ${{ env.DISTNAME }}.tar.gz
+          file ${{ env.DISTNAME }}.tar.gz
+          tar -tf ${{ env.DISTNAME }}.tar.gz
 
       - name: Upload tarball as artifact
         uses: actions/upload-artifact@v4
@@ -68,96 +66,34 @@ jobs:
           # The macos-14 runner image is based on the arm64 architecture.
           - {os: macos-14, shell: bash, bin: form}
           - {os: macos-14, shell: bash, bin: tform}
-          # NOTE: Windows native executables have too many problems.
-          # We include them in artifacts but not in releases.
+          # NOTE: native Windows executables may encounter issues during build and testing.
           # Unfortunately, "allow-failure" is not available on GitHub Actions
           # (https://github.com/actions/toolkit/issues/399).
           # We have to use "continue-on-error", instead.
           - {os: windows-2019, shell: msys2, bin: form}
           - {os: windows-2019, shell: msys2, bin: tform}
     steps:
-      - name: Install dependencies (Ubuntu)
-        if: runner.os == 'Linux'
-        uses: awalsh128/cache-apt-pkgs-action@v1
+      - name: Checkout repository
+        uses: actions/checkout@v4
         with:
-          packages: libmpfr-dev libzstd-dev
-          # We need to handle a bug that may cause cache key conflicts.
-          # See: https://github.com/awalsh128/cache-apt-pkgs-action/pull/150
-          version: ${{ runner.arch }}-1.0
-
-      - name: Install dependencies (Windows)
-        if: runner.os == 'Windows'
-        uses: msys2/setup-msys2@v2
-        with:
-          update: true
-          install: >-
-            make
-            mingw-w64-x86_64-gcc
-            mingw-w64-x86_64-gmp
-            mingw-w64-x86_64-mpfr
-            mingw-w64-x86_64-zlib
-            mingw-w64-x86_64-ruby
+          sparse-checkout: .github/actions
+          sparse-checkout-cone-mode: false
 
       - name: Download tarball
         uses: actions/download-artifact@v4
         with:
           name: src
 
-      - name: Uncompress tarball
-        run: |
-          tar -xf *.tar.gz --strip-components 1
-          rm *.tar.gz
-
-      - name: Configure
-        run: |
-          opts='--disable-dependency-tracking --disable-scalar --disable-threaded --disable-native --enable-static-link --with-gmp --with-zlib --with-zstd'
-          case ${{ matrix.bin }} in
-            form)  opts="$opts --enable-scalar";;
-            tform) opts="$opts --enable-threaded";;
-          esac
-          # --static fails on macOS but we want to statically link
-          # the brewed gmp. The linker supports neither -Wl,-static nor
-          # -l:libgmp.a to make partial static links possible.
-          # As a workaround, we make a library directory with libgmp.a
-          # but without libgmp.dylib so that the linker has to link libgmp.a.
-          # The same for other libraries.
-          # Note that the Homebrew installation path for Apple Silicon (arm64)
-          # differs from the one on macOS Intel (x86-64).
-          if [ "$RUNNER_OS" == "macOS" ]; then
-            mkdir static-lib
-            if [ "$RUNNER_ARCH" == "ARM64" ]; then
-              ln -s /opt/homebrew/opt/gmp/lib/libgmp.a static-lib/libgmp.a
-              ln -s /opt/homebrew/opt/mpfr/lib/libmpfr.a static-lib/libmpfr.a
-              ln -s /opt/homebrew/opt/zstd/lib/libzstd.a static-lib/libzstd.a
-              # Include directories, not located in the usual places,
-              # must be explicitly appended to the include paths.
-              export CPATH="/opt/homebrew/opt/gmp/include:/opt/homebrew/opt/mpfr/include:/opt/homebrew/opt/zstd/include:${CPATH:-}"
-            else
-              ln -s /usr/local/opt/gmp/lib/libgmp.a static-lib/libgmp.a
-              ln -s /usr/local/opt/mpfr/lib/libmpfr.a static-lib/libmpfr.a
-              ln -s /usr/local/opt/zstd/lib/libzstd.a static-lib/libzstd.a
-            fi
-            export LIBRARY_PATH="$(pwd)/static-lib:${LIBRARY_PATH:-}"
-            opts="$opts --disable-static-link"
-          fi
-          if [ "$RUNNER_OS" == "Windows" ]; then
-            opts="$opts --with-api=windows"
-          fi
-          ./configure $opts
+      - name: Set up build
+        uses: ./.github/actions/setup-build
+        with:
+          features: ${{ matrix.bin }} ${{ matrix.shell }} deploy
 
       - name: Build
         id: build
         continue-on-error: ${{ runner.os == 'Windows' }}
-        run: |
-          if [ "$RUNNER_OS" == "macOS" ]; then
-            if [ "$RUNNER_ARCH" == "ARM64" ]; then
-              export CPATH="/opt/homebrew/opt/gmp/include:/opt/homebrew/opt/mpfr/include:/opt/homebrew/opt/zstd/include:${CPATH:-}"
-            fi
-            export LIBRARY_PATH="$(pwd)/static-lib:${LIBRARY_PATH:-}"
-          fi
-          make -j 4
+        run: make -j 4
 
-      # NOTE: Currently, many tests on Windows miserably fail.
       - name: Test
         if: steps.build.outcome == 'success' && steps.build.conclusion == 'success'
         continue-on-error: ${{ runner.os == 'Windows' }}
@@ -207,37 +143,27 @@ jobs:
     needs: build-src
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/actions
+          sparse-checkout-cone-mode: false
+
       - name: Download tarball
         uses: actions/download-artifact@v4
         with:
           name: src
 
+      - name: Set up build
+        uses: ./.github/actions/setup-build
+        with:
+          features: latex
+
       - name: Determine distname
-        run: |
-          echo "distname=$(basename *.tar.gz .tar.gz)-manual" >> $GITHUB_ENV
-
-      - name: Uncompress tarball
-        run: |
-          tar -xf *.tar.gz --strip-components 1
-          rm *.tar.gz
-
-      # Currently, cache-apt-pkgs-action doesn't work for LaTeX.
-      # https://github.com/awalsh128/cache-apt-pkgs-action/issues/57
-      # - name: Install LaTeX2HTML
-      #   uses: awalsh128/cache-apt-pkgs-action@v1
-      #   with:
-      #     packages: latex2html  # shares the same cache with build-doc-html
-      #     version: 1.0
-
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get -y install texlive-latex-extra
+        run: echo "distname=$DISTNAME-manual" >>"$GITHUB_ENV"
 
       - name: Build PDF file
         run: |
-          autoreconf -i
-          ./configure --disable-dependency-tracking --disable-scalar --disable-threaded --disable-native --without-gmp --without-zlib
           make pdf
           cp doc/manual/manual.pdf $distname.pdf
 
@@ -260,37 +186,27 @@ jobs:
     needs: build-src
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/actions
+          sparse-checkout-cone-mode: false
+
       - name: Download tarball
         uses: actions/download-artifact@v4
         with:
           name: src
 
+      - name: Set up build
+        uses: ./.github/actions/setup-build
+        with:
+          features: latex2html
+
       - name: Determine distname
-        run: |
-          echo "distname=$(basename *.tar.gz .tar.gz)-manual-html" >> $GITHUB_ENV
-
-      - name: Uncompress tarball
-        run: |
-          tar -xf *.tar.gz --strip-components 1
-          rm *.tar.gz
-
-      # Currently, cache-apt-pkgs-action doesn't work for LaTeX.
-      # https://github.com/awalsh128/cache-apt-pkgs-action/issues/57
-      # - name: Install LaTeX2HTML
-      #   uses: awalsh128/cache-apt-pkgs-action@v1
-      #   with:
-      #     packages: latex2html  # shares the same cache with build-doc-pdf
-      #     version: 1.0
-
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get -y install latex2html
+        run: echo "distname=$DISTNAME-manual-html" >>"$GITHUB_ENV"
 
       - name: Build HTML files
         run: |
-          autoreconf -i
-          ./configure --disable-dependency-tracking --disable-scalar --disable-threaded --disable-native --without-gmp --without-zlib
           make -C doc/manual latex2html
           (
             cd doc/manual/manual
@@ -342,9 +258,8 @@ jobs:
         with:
           path: artifacts
 
-      - name: Determine distname
-        run: |
-          echo "distname=$(basename artifacts/src/*.tar.gz .tar.gz)" >> $GITHUB_ENV
+      - name: Determine DISTNAME
+        run: echo "DISTNAME=$(basename artifacts/src/*.tar.gz .tar.gz)" >>"$GITHUB_ENV"
 
       - name: Print all artifacts
         run: ls -l -R artifacts
@@ -357,7 +272,7 @@ jobs:
           mv artifacts/doc-pdf/*.pdf dist
           make_tar_gz() {
             if ls artifacts/$2 >/dev/null 2>&1; then
-              pkgname=$distname-$1
+              pkgname=$DISTNAME-$1
               mkdir $pkgname
               mv artifacts/$2 $pkgname
               chmod +x $pkgname/*form*
@@ -367,7 +282,7 @@ jobs:
           }
           make_zip() {
             if ls artifacts/$2 >/dev/null 2>&1; then
-              pkgname=$distname-$1
+              pkgname=$DISTNAME-$1
               mkdir $pkgname
               mv artifacts/$2 $pkgname
               chmod +x $pkgname/*form*
