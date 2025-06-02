@@ -13,19 +13,25 @@ jobs:
   # Simple tests on Linux; except the ParFORM case, they probably pass unless
   # the committer has forgotten running "make check".
   check:
-    name: Test (${{ matrix.test }}) for ${{ matrix.bin }}${{ matrix.nthreads && format(' -w{0}', matrix.nthreads) || '' }}
+    name: Test (${{ matrix.test }}) for ${{ matrix.bin }}${{ matrix.nthreads && format(' -w{0}', matrix.nthreads) || '' }}${{ matrix.flint && format(' (flint - {0})', matrix.flint) || '' }}
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
         include:
-          - {bin: form, test: default}
-          - {bin: tform, test: default}
-          - {bin: tform, test: default, nthreads: 2}
+          - {bin: form,    test: default}
+          - {bin: tform,   test: default}
+          - {bin: tform,   test: default, nthreads: 2}
+          - {bin: form,    test: default, flint: no}
+          - {bin: tform,   test: default, flint: no}
+          - {bin: tform,   test: default, nthreads: 2, flint: no}
           - {bin: parform, test: default, timeout: 15}
-          - {bin: form, test: extra, timeout: 60}
-          - {bin: tform, test: extra, timeout: 60}
-          - {bin: tform, test: extra, nthreads: 2, timeout: 60}
+          - {bin: form,    test: extra,   timeout: 60}
+          - {bin: tform,   test: extra,   timeout: 60}
+          - {bin: tform,   test: extra,   timeout: 60, nthreads: 2}
+          - {bin: form,    test: extra,   timeout: 60, flint: no}
+          - {bin: tform,   test: extra,   timeout: 60, flint: no}
+          - {bin: tform,   test: extra,   timeout: 60, nthreads: 2, flint: no}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -35,7 +41,7 @@ jobs:
       - name: Install dependencies
         uses: awalsh128/cache-apt-pkgs-action@v1
         with:
-          packages: libmpfr-dev libzstd-dev libflint-dev
+          packages: libflint-dev libmpfr-dev libzstd-dev
           # We need to handle a bug that may cause cache key conflicts.
           # See: https://github.com/awalsh128/cache-apt-pkgs-action/pull/150
           version: ${{ runner.arch }}-1.0
@@ -56,6 +62,10 @@ jobs:
           esac
           case ${{ matrix.bin }} in
             vorm|tvorm|parvorm) opts="$opts --enable-debug";;
+          esac
+          case "${{ matrix.flint }}" in
+            no) opts="$opts --without-flint";;
+            *)  opts="$opts --with-flint";;
           esac
           opts="$opts --with-gmp --with-zlib --with-zstd"
           autoreconf -i
@@ -140,7 +150,7 @@ jobs:
       - name: Install dependencies
         uses: awalsh128/cache-apt-pkgs-action@v1
         with:
-          packages: libmpfr-dev libzstd-dev libflint-dev valgrind
+          packages: libflint-dev libmpfr-dev libzstd-dev valgrind
           # We need to handle a bug that may cause cache key conflicts.
           # See: https://github.com/awalsh128/cache-apt-pkgs-action/pull/150
           version: ${{ runner.arch }}-1.0
@@ -194,18 +204,24 @@ jobs:
   # Generate LCOV coverage data to be posted to coveralls.io. Note that
   # we measure code coverage only for tests checked with Valgrind.
   coverage:
-    name: Code coverage (${{ matrix.test }}) for ${{ matrix.bin }}${{ matrix.nthreads && format(' -w{0}', matrix.nthreads) || '' }}
+    name: Code coverage (${{ matrix.test }}) for ${{ matrix.bin }}${{ matrix.nthreads && format(' -w{0}', matrix.nthreads) || '' }}${{ matrix.flint && format(' (flint - {0})', matrix.flint) || '' }}
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
         include:
-          - {bin: vorm, test: default}
+          - {bin: vorm,  test: default}
           - {bin: tvorm, test: default}
           - {bin: tvorm, test: default, nthreads: 2}
-          - {bin: vorm, test: extra, timeout: 60}
-          - {bin: tvorm, test: extra, timeout: 60}
-          - {bin: tvorm, test: extra, nthreads: 2, timeout: 60}
+          - {bin: vorm,  test: extra,   timeout: 60}
+          - {bin: tvorm, test: extra,   timeout: 60}
+          - {bin: tvorm, test: extra,   timeout: 60, nthreads: 2}
+          - {bin: vorm,  test: default, flint: no}
+          - {bin: tvorm, test: default, flint: no}
+          - {bin: tvorm, test: default, nthreads: 2, flint: no}
+          - {bin: vorm,  test: extra,   timeout: 60, flint: no}
+          - {bin: tvorm, test: extra,   timeout: 60, flint: no}
+          - {bin: tvorm, test: extra,   timeout: 60, nthreads: 2, flint: no}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -215,7 +231,7 @@ jobs:
       - name: Install dependencies
         uses: awalsh128/cache-apt-pkgs-action@v1
         with:
-          packages: lcov libmpfr-dev libzstd-dev libflint-dev
+          packages: lcov libflint-dev libmpfr-dev libzstd-dev
           # We need to handle a bug that may cause cache key conflicts.
           # See: https://github.com/awalsh128/cache-apt-pkgs-action/pull/150
           version: ${{ runner.arch }}-1.0
@@ -226,6 +242,10 @@ jobs:
           case ${{ matrix.bin }} in
             vorm)    opts="$opts --enable-scalar --disable-threaded --disable-parform";;
             tvorm)   opts="$opts --disable-scalar --enable-threaded --disable-parform";;
+          esac
+          case "${{ matrix.flint }}" in
+            no) opts="$opts --without-flint";;
+            *)  opts="$opts --with-flint";;
           esac
           opts="$opts --enable-debug --enable-coverage --with-gmp --with-zlib --with-zstd"
           autoreconf -i
@@ -271,7 +291,7 @@ jobs:
       - name: Coveralls Parallel
         uses: coverallsapp/github-action@v2
         with:
-          flag-name: ${{ matrix.bin }}${{ matrix.nthreads && format(' -w{0}', matrix.nthreads) || '' }} (${{ matrix.test }})
+          flag-name: ${{ matrix.bin }}${{ matrix.nthreads && format(' -w{0}', matrix.nthreads) || '' }} (${{ matrix.test }})${{ matrix.flint && format(' (flint - {0})', matrix.flint) || '' }}
           parallel: true
 
   # Post LCOV coverage data to coveralls.io.
