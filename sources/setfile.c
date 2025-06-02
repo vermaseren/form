@@ -776,6 +776,18 @@ int AllocSetups(VOID)
 		AM.TempDir = strDup1((UBYTE *)(sp->value),"tempdir");
 	}
 */
+
+/*
+	As part of the setup, we possibly need to work around a flint multi-threading
+	bug which was fixed in version 3.1.0. This function should be called by the
+	master only, before the worker threads start processing terms.
+*/
+#ifdef WITHFLINT
+#if __FLINT_RELEASE < 30100
+	flint_startup_init();
+#endif
+#endif
+
 	return(error);
 }
 

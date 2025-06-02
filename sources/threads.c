@@ -1896,7 +1896,11 @@ bucketstolen:;
 EndOfThread:;
 /*
 	This is the end of the thread. We cleanup and exit.
+	If we are using flint, call the per-thread cleanup function. This keep valgrind happy.
 */
+#ifdef WITHFLINT
+	flint_final_cleanup_thread();
+#endif
 	FinalizeOneThread(identity);
 	return(0);
 ProcErr:
@@ -1999,7 +2003,11 @@ void *RunSortBot(void *dummy)
 EndOfThread:;
 /*
 	This is the end of the thread. We cleanup and exit.
+	If we are using flint, call the per-thread cleanup function. This keep valgrind happy.
 */
+#ifdef WITHFLINT
+	flint_final_cleanup_thread();
+#endif
 	FinalizeOneThread(identity);
 	return(0);
 }
