@@ -84,6 +84,13 @@ SRCBASE += \
 	fwin.h
 endif
 
+if WITHFLINT
+SRCBASE += \
+	flintinterface.cc \
+	flintinterface.h \
+	flintwrap.cc
+endif
+
 if WITHFLOAT
 SRCBASE += \
 	evaluate.c \

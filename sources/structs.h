@@ -1872,6 +1872,7 @@ struct C_const {
                                         1 : On, every module (set by On sortreallocate;)
                                         2 : On, single module (set by #sortreallocate) */
     int     PrintBacktraceFlag;    /* Print backtrace on terminate? */
+    int    FlintPolyFlag;          /* Use Flint for polynomial arithmetic */
 	int     doloopstacksize;
 	int     dolooplevel;
     int     CheckpointFlag;        /**< Tells preprocessor whether checkpoint code must executed.
@@ -1944,19 +1945,19 @@ struct C_const {
     UBYTE   debugFlags[MAXFLAGS+2];    /* On/Off Flag number(s) */
 #ifdef WITHFLOAT
 #if defined(WITHPTHREADS)
-	PADPOSITION(50,12+3*MAXNEST,76,48+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17+sizeof(pthread_mutex_t));
+	PADPOSITION(50,12+3*MAXNEST,77,48+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17+sizeof(pthread_mutex_t));
 #elif defined(WITHMPI)
-	PADPOSITION(50,12+3*MAXNEST,76,49+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17);
+	PADPOSITION(50,12+3*MAXNEST,77,49+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17);
 #else
-	PADPOSITION(48,12+3*MAXNEST,74,48+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17);
+	PADPOSITION(48,12+3*MAXNEST,75,48+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17);
 #endif
 #else
 #if defined(WITHPTHREADS)
-	PADPOSITION(50,8+3*MAXNEST,76,48+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17+sizeof(pthread_mutex_t));
+	PADPOSITION(50,8+3*MAXNEST,77,48+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17+sizeof(pthread_mutex_t));
 #elif defined(WITHMPI)
-	PADPOSITION(50,8+3*MAXNEST,76,49+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17);
+	PADPOSITION(50,8+3*MAXNEST,77,49+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17);
 #else
-	PADPOSITION(48,8+3*MAXNEST,74,48+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17);
+	PADPOSITION(48,8+3*MAXNEST,75,48+3*MAXNEST+MAXREPEAT,COMMERCIALSIZE+MAXFLAGS+4+sizeof(LIST)*17);
 #endif
 #endif
 };
