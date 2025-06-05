@@ -3772,6 +3772,10 @@ is the default for normal form builds.}
 \leftvitem{3.5cm}{finalstats\index{off!finalstats}}
 \rightvitem{13cm}{Turns off the last line of statistics that is normally 
 printed at the end of the run (introduced in version 3.2).}
+
+\leftvitem{3.5cm}{flint\index{off!flint}}
+\rightvitem{13cm}{Disables the interface to FLINT; use FORM's built-in
+polynomial routines.}
  
 \leftvitem{3.5cm}{highfirst\index{off!highfirst}}
 \rightvitem{13cm}{Puts the sorting in a low first mode.}
@@ -3951,6 +3955,25 @@ follows is zero, statistics are never printed when sorting the small buffer.}
 \leftvitem{3.5cm}{finalstats\index{on!finalstats}}
 \rightvitem{13cm}{Determines whether \FORM\ prints a final line of run time 
 statistics at the end of the run. Default is on.}
+
+\leftvitem{3.5cm}{flint\index{on!flint}}
+\rightvitem{13cm}{Enables the interface to FLINT for polynomial operations.
+This is the default if \FORM\ has been compiled with FLINT support.
+Currently this supports
+PolyRatFun\index{polyratfun} (\ref{substapolyratfun}),
+FactArg\index{factarg} (\ref{substafactarg}),
+FactDollar\index{factdollar}\index{prefactdollar} (\ref{prefactdollar},
+\ref{substafactdollar}),
+div\_\index{div\_}\index{function!div\_} (\ref{fundiv}),
+rem\_\index{rem\_}\index{function!rem\_} (\ref{funrem}),
+mul\_\index{mul\_}\index{function!mul\_} (\ref{funmul}),
+gcd\_\index{gcd\_}\index{function!gcd\_} (\ref{fungcd}),
+and inverse\_\index{inverse\_}\index{function!inverse\_} (\ref{funinverse}).
+\FORM\ still uses its built-in routines for Factorize\index{factorize}
+(\ref{substafactorize})
+and when using Modulus\index{modulus} (\ref{substamodulus}) mode.
+Note that occasionally the overall sign of gcd\_ may differ from that of the
+built-in routine.}
  
 \leftvitem{3.5cm}{highfirst\index{on!highfirst}}
 \rightvitem{13cm}{In this mode polynomials are sorted in a way that high 
