@@ -454,7 +454,15 @@ AC_ARG_WITH([flint],
 AS_IF([test "x$with_flint" != xno],
 	[flag=:
 	AS_IF([$flag], [AC_CHECK_HEADER([flint/flint.h], [], [flag=false])])
-	AS_IF([$flag], [AC_CHECK_LIB([flint], [fmpz_mpoly_init], [LIBS="-lflint $LIBS"], [flag=false])])
+	AS_IF([$flag],
+		[# Check how to link against the math library.
+		AC_SEARCH_LIBS([pow], [m])
+		AS_IF([test "x$ac_cv_search_pow" = "xno"],
+			[flag=false],
+			[AS_IF([test "x$ac_cv_search_pow" = "xnone required"],
+				[MATH_LIBS=""],
+				[MATH_LIBS="$ac_cv_search_pow"])])])
+	AS_IF([$flag], [AC_CHECK_LIB([flint], [fmpz_mpoly_init], [LIBS="-lflint $MATH_LIBS $LIBS"], [flag=false], [$MATH_LIBS])])
 	AS_IF([$flag],
 		[AC_DEFINE(WITHFLINT, [], [Define to use flint for polynomial arithmetic.])
 		with_flint=yes],
