@@ -27,6 +27,9 @@ extern "C" {
 static_assert(sizeof(WORD) == sizeof(int32_t), "flint interface expects 32bit WORD");
 static_assert(sizeof(UWORD) == sizeof(uint32_t), "flint interface expects 32bit WORD");
 static_assert(BITSINWORD == 32, "flint interface expects 32bit WORD");
+static_assert(sizeof(ulong) == sizeof(uint64_t), "flint interface expects ulong is uint64_t");
+static_assert(sizeof(slong) == sizeof(int64_t), "flint interface expects slong is int64_t");
+
 /*
  * Flint functions take arguments or return values which may be "slong" or "ulong" in its
  * documentation, and these are int64_t and uint64_t respectively.
@@ -152,7 +155,7 @@ WORD* flint::divmod_poly(PHEAD const WORD *a, const WORD *b, const bool return_r
 	// Get the leading coefficient of pb. fmpz_poly_pseudo_divrem returns only the scaling power.
 	fmpz_poly_get_coeff_fmpz(scale.d, pb.d, fmpz_poly_degree(pb.d));
 
-	fmpz_poly_pseudo_divrem(div.d, rem.d, &scale_power, pa.d, pb.d);
+	fmpz_poly_pseudo_divrem(div.d, rem.d, (ulong*)&scale_power, pa.d, pb.d);
 
 	// The quotient must be multiplied by the denominator of the divisor
 	fmpz_poly_mul(div.d, div.d, denpb.d);
@@ -262,7 +265,7 @@ WORD* flint::factorize_mpoly(PHEAD const WORD *argin, WORD *argout, const bool w
 		vector<int64_t> base_term_exponents(var_map.size(), 0);
 
 		for ( int64_t j = 0; j < fmpz_mpoly_length(base.d, ctx.d); j++ ) {
-			fmpz_mpoly_get_term_exp_si(base_term_exponents.data(), base.d, j, ctx.d);
+			fmpz_mpoly_get_term_exp_si((slong*)base_term_exponents.data(), base.d, (slong)j, ctx.d);
 
 			for ( size_t k = 0; k < var_map.size(); k++ ) {
 				if ( base_term_exponents[k] > 0 && ( var_map_inv.at(k) > max_var ||
@@ -492,8 +495,8 @@ uint64_t flint::from_argument_mpoly(fmpz_mpoly_t poly, fmpz_mpoly_t denpoly, con
 		vector<uint64_t> exponents(var_map.size(), 0);
 		exponents[var_map.at(*(args+1))] = 1;
 
-		fmpz_mpoly_set_coeff_ui_ui(poly, (uint64_t)1, exponents.data(), ctx);
-		fmpz_mpoly_set_ui(denpoly, (uint64_t)1, ctx);
+		fmpz_mpoly_set_coeff_ui_ui(poly, (ulong)1, (ulong*)exponents.data(), ctx);
+		fmpz_mpoly_set_ui(denpoly, (ulong)1, ctx);
 		return 2;
 	}
 
@@ -551,7 +554,7 @@ uint64_t flint::from_argument_mpoly(fmpz_mpoly_t poly, fmpz_mpoly_t denpoly, con
 
 	}
 	// Assemble denpoly.
-	fmpz_mpoly_set_coeff_fmpz_ui(denpoly, den_coeff.d, neg_exponents.data(), ctx);
+	fmpz_mpoly_set_coeff_fmpz_ui(denpoly, den_coeff.d, (ulong*)neg_exponents.data(), ctx);
 
 
 	// For the term coefficients
@@ -596,7 +599,7 @@ uint64_t flint::from_argument_mpoly(fmpz_mpoly_t poly, fmpz_mpoly_t denpoly, con
 
 		// Push the term to the mpoly, remember to sort when finished! This is much faster than using
 		// fmpz_mpoly_set_coeff_fmpz_ui when the terms arrive in the "wrong order".
-		fmpz_mpoly_push_term_fmpz_ui(poly, coeff.d, exponents.data(), ctx);
+		fmpz_mpoly_push_term_fmpz_ui(poly, coeff.d, (ulong*)exponents.data(), ctx);
 
 		if ( !with_arghead && *term_stop == 0 ) {
 			break;
@@ -770,7 +773,7 @@ WORD flint::fmpz_get_form(fmpz_t z, WORD *a) {
 	}
 	else if ( nlimbs == 2 ) {
 		uint64_t limb_hi = 0, limb_lo = 0;
-		fmpz_get_uiui(&limb_hi, &limb_lo, z);
+		fmpz_get_uiui((ulong*)&limb_hi, (ulong*)&limb_lo, z);
 		a[0] = (WORD)(limb_lo & 0xFFFFFFFF);
 			na++;
 		a[1] = (WORD)(limb_lo >> BITSINWORD);
@@ -784,7 +787,7 @@ WORD flint::fmpz_get_form(fmpz_t z, WORD *a) {
 	}
 	else {
 		vector<uint64_t> limb_data(nlimbs, 0);
-		fmpz_get_ui_array(limb_data.data(), nlimbs, z);
+		fmpz_get_ui_array((ulong*)limb_data.data(), (slong)nlimbs, z);
 		for ( long i = 0; i < nlimbs; i++ ) {
 			a[2*i] = (WORD)(limb_data[i] & 0xFFFFFFFF);
 			na++;
@@ -858,7 +861,7 @@ void flint::fmpz_set_form(fmpz_t z, UWORD *a, WORD na) {
 				limb_data[i] = (uint64_t)a[2*i];
 			}
 		}
-		fmpz_set_ui_array(z, limb_data.data(), nlimbs);
+		fmpz_set_ui_array(z, (ulong*)limb_data.data(), nlimbs);
 	}
 
 	// Finally set the sign.
@@ -1826,7 +1829,7 @@ uint64_t flint::to_argument_mpoly(PHEAD WORD *out, const bool with_arghead,
 			if ( fmpz_is_one(coeff.d) && fmpz_is_one(den.d) ) {
 				// The coefficient is one. Now check the symbol powers:
 
-				fmpz_mpoly_get_term_exp_si(exponents.data(), poly, 0, ctx);
+				fmpz_mpoly_get_term_exp_si((slong*)exponents.data(), poly, 0, ctx);
 				int64_t use_fast = 0;
 				uint32_t fast_symbol = 0;
 
@@ -1859,7 +1862,7 @@ uint64_t flint::to_argument_mpoly(PHEAD WORD *out, const bool with_arghead,
 
 	for ( int64_t i = 0; i < n_terms; i++ ) {
 
-		fmpz_mpoly_get_term_exp_si(exponents.data(), poly, i, ctx);
+		fmpz_mpoly_get_term_exp_si((slong*)exponents.data(), poly, i, ctx);
 
 		fmpz_mpoly_get_term_coeff_fmpz(coeff.d, poly, i, ctx);
 		fmpz_set(den.d, denscale);
