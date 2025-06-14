@@ -1756,9 +1756,9 @@ int InsideDollar(PHEAD WORD *ll, WORD level)
 	olddefer = AR.DeferFlag;
 	AR.DeferFlag = 0;
 	while ( --numvar >= 0 ) {
-	  numdol = *ll++;
-	  d = Dollars + numdol;
-	  {
+		numdol = *ll++;
+		d = Dollars + numdol;
+		{
 #ifdef WITHPTHREADS
 		int nummodopt, dtype = -1;
 		if ( AS.MultiThreaded && ( AC.mparallelflag == PARALLELFLAG ) ) {
@@ -1778,7 +1778,16 @@ int InsideDollar(PHEAD WORD *ll, WORD level)
 		}
 #endif
 		newd = DolToTerms(BHEAD numdol);
-		if ( newd == 0 || newd->where[0] == 0 ) continue;
+		if ( newd == 0 ) {
+			continue;
+		}
+		if ( newd->where[0] == 0 ) {
+			// DolToTerms potentially allocates memory. Free it.
+			// The free below is inside the while loop.
+			if ( newd->factors ) M_free(newd->factors,"Dollar factors");
+			M_free(newd,"Copy of dollar variable");
+			continue;
+		}
 		r = newd->where;
 		NewSort(BHEAD0);
 		while ( *r ) {	/* Sum over the terms */
@@ -1822,7 +1831,7 @@ int InsideDollar(PHEAD WORD *ll, WORD level)
 #endif
 		if ( newd->factors ) M_free(newd->factors,"Dollar factors");
 		M_free(newd,"Copy of dollar variable");
-	  }
+		}
 	}
 idcall:;
 	AR.Cnumlhs = oldnumlhs;

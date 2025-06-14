@@ -3789,3 +3789,25 @@ P G;
 assert succeeded?
 assert result("G") =~ expr("389")
 *--#] PullReq535 :
+*--#[ PullReq652 :
+#-
+Off statistics;
+#$a = 0;
+Local test = 1;
+$b = 0;
+* Test no leaks when working inside a 0 dollar variable
+#inside $a
+	Multiply 2;
+#endinside
+Inside $a;
+	Multiply 2;
+EndInside;
+Inside $b;
+	Multiply 2;
+EndInside;
+ModuleOption local $a,$b;
+Print;
+.end
+assert succeeded?
+assert result("test") =~ expr("1")
+*--#] PullReq652 :
