@@ -1118,7 +1118,9 @@ WORD PutBracket(PHEAD WORD *termin)
 	WORD *bbb = 0, *bind, *binst = 0, bwild = 0, *bss = 0, *bns = 0, bset = 0;
 	term1 = AT.WorkPointer+1;
 	term2 = (WORD *)(((UBYTE *)(term1)) + AM.MaxTer);
-	if ( ( (WORD *)(((UBYTE *)(term2)) + AM.MaxTer) ) > AT.WorkTop ) return(MesWork());
+	if ( ( (WORD *)(((UBYTE *)(term2)) + AM.MaxTer) ) > AT.WorkTop ) {
+		MesWork();
+	}
 	if ( AR.BracketOn < 0 ) {
 		t2 = term1; t1 = term2;		/* AntiBracket */
 	}

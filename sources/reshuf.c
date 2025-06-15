@@ -1875,7 +1875,7 @@ WORD DoPartitions(PHEAD WORD *term, WORD level)
 			t2 = twhere+twhere[1];
 			to = termout = AT.WorkPointer;
 			if ( termout + *term + part.numpart*FUNHEAD + AM.MaxTal >= AT.WorkTop ) {
-				return(MesWork());
+				MesWork();
 			}
 			for ( i = 0; i < ncoeffnum; i++ ) coeff[i] = coeffnum[i];
 			ncoeff = ncoeffnum;

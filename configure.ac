@@ -267,6 +267,17 @@ AS_IF([test $ok != yes],
 		[ok=yes;
 		AC_DEFINE([HAVE_POPCNT], [1], [Define to 1 if you have __popcnt function.])])
 	AC_MSG_RESULT($ok)])
+AC_MSG_CHECKING([__attribute__((noreturn))])
+AC_LINK_IFELSE(
+	[AC_LANG_PROGRAM([extern void fatal() __attribute__((noreturn));], [return 0;])],
+	[
+		AC_DEFINE(NORETURN, [__attribute__((noreturn))], [The "noreturn" function attribute.])
+		AC_MSG_RESULT([yes])
+	],
+	[
+		AC_DEFINE(NORETURN, [], [The "noreturn" function attribute.])
+		AC_MSG_RESULT([no])
+	])
 
 # Check for inline
 AC_C_INLINE

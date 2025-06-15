@@ -53,7 +53,7 @@ static char hex[] = {'0','1','2','3','4','5','6','7','8','9',
  		#[ Error0 :
 */
 
-VOID Error0(char *s)
+NORETURN VOID Error0(char *s)
 {
 	MesPrint("=== %s",s);
 	Terminate(-1);
@@ -64,7 +64,7 @@ VOID Error0(char *s)
  		#[ Error1 :
 */
 
-VOID Error1(char *s, UBYTE *t)
+NORETURN VOID Error1(char *s, UBYTE *t)
 {
 	MesPrint("@%s %s",s,t);
 	Terminate(-1);
@@ -75,7 +75,7 @@ VOID Error1(char *s, UBYTE *t)
  		#[ Error2 :
 */
 
-VOID Error2(char *s1, char *s2, UBYTE *t)
+NORETURN VOID Error2(char *s1, char *s2, UBYTE *t)
 {
 	MesPrint("@%s%s %s",s1,s2,t);
 	Terminate(-1);
@@ -86,12 +86,11 @@ VOID Error2(char *s1, char *s2, UBYTE *t)
  		#[ MesWork :
 */
 
-int MesWork(VOID)
+NORETURN VOID MesWork(VOID)
 {
 	MesPrint("=== Workspace overflow. %l bytes is not enough.",AM.WorkSize);
 	MesPrint("=== Change parameter WorkSpace in %s",setupfilename);
 	Terminate(-1);
-	return(-1);
 }
 
 /*
