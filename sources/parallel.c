@@ -1558,7 +1558,9 @@ int PF_Processor(EXPRESSIONS e, WORD i, WORD LastExpression)
 	}
 #endif
 
-	if ( ( (WORD *)(((UBYTE *)(AT.WorkPointer)) + AM.MaxTer ) ) > AT.WorkTop ) return(MesWork());
+	if ( ( (WORD *)(((UBYTE *)(AT.WorkPointer)) + AM.MaxTer ) ) > AT.WorkTop ) {
+		MesWork();
+	}
 
 	/* For redefine statements. */
 	if ( AC.numpfirstnum > 0 ) {
