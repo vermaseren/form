@@ -53,6 +53,8 @@ jobs:
     defaults:
       run:
         shell: ${{ matrix.shell }} {0}
+    env:
+      FLINT_VERSION: 3.3.0
     strategy:
       fail-fast: false
       matrix:
@@ -68,8 +70,7 @@ jobs:
           # The macos-14 runner image is based on the arm64 architecture.
           - {os: macos-14, shell: bash, bin: form}
           - {os: macos-14, shell: bash, bin: tform}
-          # NOTE: Windows native executables have too many problems.
-          # We include them in artifacts but not in releases.
+          # NOTE: Windows native executables may have some problems.
           # Unfortunately, "allow-failure" is not available on GitHub Actions
           # (https://github.com/actions/toolkit/issues/399).
           # We have to use "continue-on-error", instead.
@@ -95,8 +96,76 @@ jobs:
             mingw-w64-x86_64-gcc
             mingw-w64-x86_64-gmp
             mingw-w64-x86_64-mpfr
-            mingw-w64-x86_64-zlib
             mingw-w64-x86_64-ruby
+            mingw-w64-x86_64-zlib
+
+        # --static fails on macOS but we want to statically link
+        # the brewed gmp. The linker supports neither -Wl,-static nor
+        # -l:libgmp.a to make partial static links possible.
+        # As a workaround, we make a library directory with libgmp.a
+        # but without libgmp.dylib so that the linker has to link libgmp.a.
+        # The same for other libraries.
+        # Note that the Homebrew installation path for Apple Silicon (arm64)
+        # differs from the one on macOS Intel (x86-64).
+      - name: Set up statically linked libraries (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          mkdir static-lib
+          if [ "$RUNNER_ARCH" == "ARM64" ]; then
+            brew_dir=/opt/homebrew
+            # Include directories, not located in the usual places,
+            # must be explicitly appended to the include paths.
+            export CPATH="$brew_dir/opt/gmp/include:$brew_dir/opt/mpfr/include:/opt/homebrew/opt/zstd/include${CPATH:+":$CPATH"}"
+            echo "CPATH=$CPATH" >>"$GITHUB_ENV"
+          else
+            brew_dir=/usr/local
+          fi
+          ln -s $brew_dir/opt/gmp/lib/libgmp.a static-lib/libgmp.a
+          ln -s $brew_dir/opt/mpfr/lib/libmpfr.a static-lib/libmpfr.a
+          ln -s $brew_dir/opt/zstd/lib/libzstd.a static-lib/libzstd.a
+          export LIBRARY_PATH="$(pwd)/static-lib${LIBRARY_PATH:+":$LIBRARY_PATH"}"
+          echo "LIBRARY_PATH=$LIBRARY_PATH" >>"$GITHUB_ENV"
+
+      - name: Get cache key
+        run: |
+          # See: https://github.com/actions/upload-artifact/issues/231
+          echo "ImageOS=$ImageOS" >>"$GITHUB_ENV"
+          echo "ImageVersion=$ImageVersion" >>"$GITHUB_ENV"
+
+      - name: Cache FLINT
+        id: cache-flint
+        uses: actions/cache@v4
+        with:
+          path: lib/flint
+          # Here, we set a conservative cache key so that the cache is not reused
+          # when the version or environment changes even slightly.
+          key: flint-${{ env.FLINT_VERSION }}-${{ runner.os }}-${{ runner.arch }}-${{ env.ImageOS }}-${{ env.ImageVersion }}
+
+      # Unfortunately, the flint packages lack the static library,
+      # so we need to build it from source.
+      - name: Build FLINT unless cached
+        if: steps.cache-flint.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p build/flint
+          cd build/flint
+          # See: https://github.com/flintlib/flint/issues/2311
+          wget https://github.com/flintlib/flint/releases/download/v$FLINT_VERSION/flint-$FLINT_VERSION.tar.gz
+          tar -xf *.tar.gz
+          rm *.tar.gz
+          cd flint-*
+          ./configure --prefix=$GITHUB_WORKSPACE/lib/flint --enable-static --disable-shared
+          make -j 4
+          # Test temporarily disabled.
+          # See: https://github.com/flintlib/flint/issues/2058
+          # make -j 4 check
+          make install
+
+      - name: Set FLINT paths
+        run: |
+          export CPATH="$(pwd)/lib/flint/include${CPATH:+":$CPATH"}"
+          echo "CPATH=$CPATH" >>"$GITHUB_ENV"
+          export LIBRARY_PATH="$(pwd)/lib/flint/lib${LIBRARY_PATH:+":$LIBRARY_PATH"}"
+          echo "LIBRARY_PATH=$LIBRARY_PATH" >>"$GITHUB_ENV"
 
       - name: Download tarball
         uses: actions/download-artifact@v4
@@ -110,54 +179,27 @@ jobs:
 
       - name: Configure
         run: |
-          opts='--disable-dependency-tracking --disable-scalar --disable-threaded --disable-native --enable-static-link --with-gmp --with-zlib --with-zstd'
+          opts='--disable-dependency-tracking --disable-scalar --disable-threaded --disable-native --enable-static-link --with-gmp --with-zlib --with-zstd --with-flint'
           case ${{ matrix.bin }} in
             form)  opts="$opts --enable-scalar";;
             tform) opts="$opts --enable-threaded";;
           esac
-          # --static fails on macOS but we want to statically link
-          # the brewed gmp. The linker supports neither -Wl,-static nor
-          # -l:libgmp.a to make partial static links possible.
-          # As a workaround, we make a library directory with libgmp.a
-          # but without libgmp.dylib so that the linker has to link libgmp.a.
-          # The same for other libraries.
-          # Note that the Homebrew installation path for Apple Silicon (arm64)
-          # differs from the one on macOS Intel (x86-64).
           if [ "$RUNNER_OS" == "macOS" ]; then
-            mkdir static-lib
-            if [ "$RUNNER_ARCH" == "ARM64" ]; then
-              ln -s /opt/homebrew/opt/gmp/lib/libgmp.a static-lib/libgmp.a
-              ln -s /opt/homebrew/opt/mpfr/lib/libmpfr.a static-lib/libmpfr.a
-              ln -s /opt/homebrew/opt/zstd/lib/libzstd.a static-lib/libzstd.a
-              # Include directories, not located in the usual places,
-              # must be explicitly appended to the include paths.
-              export CPATH="/opt/homebrew/opt/gmp/include:/opt/homebrew/opt/mpfr/include:/opt/homebrew/opt/zstd/include:${CPATH:-}"
-            else
-              ln -s /usr/local/opt/gmp/lib/libgmp.a static-lib/libgmp.a
-              ln -s /usr/local/opt/mpfr/lib/libmpfr.a static-lib/libmpfr.a
-              ln -s /usr/local/opt/zstd/lib/libzstd.a static-lib/libzstd.a
-            fi
-            export LIBRARY_PATH="$(pwd)/static-lib:${LIBRARY_PATH:-}"
             opts="$opts --disable-static-link"
           fi
           if [ "$RUNNER_OS" == "Windows" ]; then
             opts="$opts --with-api=windows"
           fi
-          ./configure $opts
+          if ! ./configure $opts; then
+            cat config.log
+            exit 1
+          fi
 
       - name: Build
         id: build
         continue-on-error: ${{ runner.os == 'Windows' }}
-        run: |
-          if [ "$RUNNER_OS" == "macOS" ]; then
-            if [ "$RUNNER_ARCH" == "ARM64" ]; then
-              export CPATH="/opt/homebrew/opt/gmp/include:/opt/homebrew/opt/mpfr/include:/opt/homebrew/opt/zstd/include:${CPATH:-}"
-            fi
-            export LIBRARY_PATH="$(pwd)/static-lib:${LIBRARY_PATH:-}"
-          fi
-          make -j 4
+        run: make -j 4
 
-      # NOTE: Currently, many tests on Windows miserably fail.
       - name: Test
         if: steps.build.outcome == 'success' && steps.build.conclusion == 'success'
         continue-on-error: ${{ runner.os == 'Windows' }}
