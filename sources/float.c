@@ -2321,15 +2321,15 @@ int EvaluateEuler(PHEAD WORD *term, WORD level, WORD par)
 */
 			AT.WorkPointer += depth;
 			if ( first ) {
-				if ( *t == MZV ) CalculateMZV(aux4,indexes,depth);
-				else if ( *t == EULER ) CalculateEuler(aux4,indexes,depth);
-				else if ( *t == MZVHALF ) CalculateMZVhalf(aux4,indexes,depth);
+				if ( *t == MZV ) CalculateMZV(aux4,(int *)indexes,depth);
+				else if ( *t == EULER ) CalculateEuler(aux4,(int *)indexes,depth);
+				else if ( *t == MZVHALF ) CalculateMZVhalf(aux4,(int *)indexes,depth);
 				first = 0;
 			}
 			else {
-				if ( *t == MZV ) CalculateMZV(aux5,indexes,depth);
-				else if ( *t == EULER ) CalculateEuler(aux5,indexes,depth);
-				else if ( *t == MZVHALF ) CalculateMZVhalf(aux5,indexes,depth);
+				if ( *t == MZV ) CalculateMZV(aux5,(int *)indexes,depth);
+				else if ( *t == EULER ) CalculateEuler(aux5,(int *)indexes,depth);
+				else if ( *t == MZVHALF ) CalculateMZVhalf(aux5,(int *)indexes,depth);
 				mpf_mul(aux4,aux4,aux5);
 			}
 			*t = 0;
