@@ -296,6 +296,7 @@ endinside;
 P " a=%$;", $a;
 $a = f($a);
 P " a=%$;", $a;
+ModuleOption local $a;
 .end
 assert succeeded?
 assert result("a", 0) =~ expr("f*f(1)")
@@ -407,6 +408,7 @@ inexpression F3;
     multiply num($F3[$i]);
   enddo;
 endinexpression;
+ModuleOption local $i,$F3;
 
 .sort
 
@@ -527,6 +529,7 @@ L   Diagrams=
 
    $color = $color * topo($topo);
 
+   ModuleOption noparallel;
 .sort
 L Color = `$color';
 P;
@@ -834,6 +837,7 @@ L F = 1;
 #$x = x;
 id $x^n? = 1;
 P;
+ModuleOption local $x;
 .end
 assert succeeded?
 assert result("F") =~ expr("1")
@@ -845,6 +849,7 @@ L F = x^3 * y^5 * p.q^6;
 #$x = x*y*p.q;
 id $x^n? = z^n;
 P;
+ModuleOption local $x;
 .end
 assert succeeded?
 assert result("F") =~ expr("p.q^3*y^2*z^3")
@@ -1623,6 +1628,7 @@ if ($n == 0);
   P "Error: F[%$] == %$", $x, $y;
   redefine failed "1";
 endif;
+ModuleOption local $n,$x,$y;
 .sort:test;
 
 #if `failed'
@@ -1685,6 +1691,7 @@ L G = 1 + x + x^2;
 $x = f(count_(x,1));
 multiply $x;
 P;
+ModuleOption local $x;
 .end
 assert succeeded?
 assert result("F") =~ expr("f(0) + f(0)*x + f(0)*x^2")
@@ -1814,6 +1821,7 @@ L F = f(x1,...,x4);
 id f(?a$a) = 1;
 multiply distrib_(1,1,f,dummy_,$a);
 P;
+ModuleOption local $a;
 .end
 assert succeeded?
 assert result("F") =~ expr("f(x1) + f(x2) + f(x3) + f(x4)")
@@ -2512,6 +2520,7 @@ DropCoefficient;
 Multiply tag($i);
 $i = $i+1;
 Print +s;
+ModuleOption noparallel;
 .sort
 
 * Everything should cancel in the end, and we should get zero.
@@ -2574,6 +2583,7 @@ DropCoefficient;
 Multiply tag($i);
 $i = $i+1;
 Print +s;
+ModuleOption noparallel;
 .sort
 
 * Everything should cancel in the end, and we should get zero.
@@ -3789,3 +3799,88 @@ P G;
 assert succeeded?
 assert result("G") =~ expr("389")
 *--#] PullReq535 :
+*--#[ PullReq649_1 :
+* Test warning message when modifying a dollar variable forces
+* a module into sequential mode
+
+*  need an expression with a non-zero value
+Local expr = 1;
+*  and a new module, since parallel execution does not work
+*  in the module defining an expression
+.sort
+$a = 1;
+.end
+#require threaded?
+assert warning?("This module is forced to run in sequential mode due to $-variable: $a")
+*--#] PullReq649_1 :
+*--#[ PullReq649_2 :
+* same as `PullReq649_1` with a longer variable name
+Local expr = 1;
+.sort
+$n1MdWu6rNU1d29yW3ukhzV7YuY = 1;
+.end
+#require threaded?
+assert warning?("This module is forced to run in sequential mode due to $-variable: $n1MdWu6rNU1d29yW3ukhzV7YuY")
+*--#] PullReq649_2 :
+*--#[ PullReq649_3 :
+* assigning in the preprocessor should not veto parallel execution
+Local expr = 1;
+.sort
+#$a = 1;
+.end
+assert succeeded?
+*--#] PullReq649_3 :
+*--#[ PullReq649_4 :
+* assigning through pattern matching
+Local expr = 1;
+.sort
+Symbol x;
+id x?$a = x;
+.end
+#require threaded?
+assert warning?("This module is forced to run in sequential mode due to $-variable: $a")
+*--#] PullReq649_4 :
+* don't veto parallel execution if there is a matching moduleoption statement
+*--#[ PullReq649_5 :
+Local expr = 1;
+.sort
+$a = 1;
+moduleoption local $a;
+.end
+assert succeeded?
+*--#] PullReq649_5 :
+*--#[ PullReq649_6 :
+Local expr = 1;
+.sort
+$a = 1;
+moduleoption sum $a;
+.end
+assert succeeded?
+*--#] PullReq649_6 :
+*--#[ PullReq649_7 :
+Local expr = 1;
+.sort
+$a = 1;
+moduleoption minimum $a;
+.end
+assert succeeded?
+*--#] PullReq649_7 :
+*--#[ PullReq649_8 :
+Local expr = 1;
+.sort
+$a = 1;
+moduleoption maximum $a;
+.end
+assert succeeded?
+*--#] PullReq649_8 :
+*--#[ PullReq649_9 :
+* *do veto* if the moduleoption statement is for the wrong variable
+Local expr = 1;
+.sort
+#$b = 1;
+$a = 1;
+moduleoption local $b;
+.end
+#require threaded?
+assert warning?("This module is forced to run in sequential mode due to $-variable: $a")
+*--#] PullReq649_9 :

@@ -802,7 +802,7 @@ WORD DoExecute(WORD par, WORD skip)
 			/* The user switched off the parallel execution explicitly. */
 		}
 		else if ( AC.mparallelflag & NOPARALLEL_DOLLAR ) {
-			if ( AC.WarnFlag >= 2 ) {  /* HighWarning */
+			if ( AC.WarnFlag >= 1 ) {  /* Warning */
 				int i, j, k, n;
 				UBYTE *s, *s1;
 				s = strDup1((UBYTE *)"","NOPARALLEL_DOLLAR s");
@@ -825,7 +825,7 @@ WORD DoExecute(WORD par, WORD skip)
 					s1 = AddToString(s1,(UBYTE *)"s",0);
 				s1 = AddToString(s1,(UBYTE *)": ",0);
 				s1 = AddToString(s1,s,0);
-				HighWarning((char *)s1);
+				Warning((char *)s1);
 				M_free(s,"NOPARALLEL_DOLLAR s");
 				M_free(s1,"NOPARALLEL_DOLLAR s1");
 			}

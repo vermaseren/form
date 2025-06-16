@@ -519,6 +519,7 @@ EOF
     #$a = 0;
     if ( count(x,1) > $a ) $a = count_(x,1);
     Print "      >> After %t the maximum power of x is %$",$a;
+    ModuleOption noparallel; * suppresses noparallel warning
     #write "     ># $a = `$a'"
     .sort
     #write "     ># $a = `$a'"
@@ -729,6 +730,7 @@ assert result("G") =~ expr("
     id,all,$t*replace_(<p1,p1?>,...,<p5,p5?>) =
          $t*replace(<p1,q1>,...,<p5,q5>);
     Print +s;
+    ModuleOption local $t; * allow parallel execution
     .end
     assert succeeded?
     assert result("F") =~ expr("
@@ -1330,6 +1332,7 @@ assert result("F") =~ expr("
       Print "Factor %$ of %$ is %$",$i,$b,$b[$i];
     enddo;
     Print;
+    ModuleOption noparallel; * suppresses noparallel warning
     .end
     assert succeeded?
     assert result("F", 0) =~ expr("
