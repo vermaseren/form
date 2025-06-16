@@ -296,6 +296,7 @@ endinside;
 P " a=%$;", $a;
 $a = f($a);
 P " a=%$;", $a;
+ModuleOption local $a;
 .end
 assert succeeded?
 assert result("a", 0) =~ expr("f*f(1)")
@@ -407,6 +408,7 @@ inexpression F3;
     multiply num($F3[$i]);
   enddo;
 endinexpression;
+ModuleOption local $i,$F3;
 
 .sort
 
@@ -527,6 +529,7 @@ L   Diagrams=
 
    $color = $color * topo($topo);
 
+   ModuleOption noparallel;
 .sort
 L Color = `$color';
 P;
@@ -834,6 +837,7 @@ L F = 1;
 #$x = x;
 id $x^n? = 1;
 P;
+ModuleOption local $x;
 .end
 assert succeeded?
 assert result("F") =~ expr("1")
@@ -845,6 +849,7 @@ L F = x^3 * y^5 * p.q^6;
 #$x = x*y*p.q;
 id $x^n? = z^n;
 P;
+ModuleOption local $x;
 .end
 assert succeeded?
 assert result("F") =~ expr("p.q^3*y^2*z^3")
@@ -1623,6 +1628,7 @@ if ($n == 0);
   P "Error: F[%$] == %$", $x, $y;
   redefine failed "1";
 endif;
+ModuleOption local $n,$x,$y;
 .sort:test;
 
 #if `failed'
@@ -1685,6 +1691,7 @@ L G = 1 + x + x^2;
 $x = f(count_(x,1));
 multiply $x;
 P;
+ModuleOption local $x;
 .end
 assert succeeded?
 assert result("F") =~ expr("f(0) + f(0)*x + f(0)*x^2")
@@ -1814,6 +1821,7 @@ L F = f(x1,...,x4);
 id f(?a$a) = 1;
 multiply distrib_(1,1,f,dummy_,$a);
 P;
+ModuleOption local $a;
 .end
 assert succeeded?
 assert result("F") =~ expr("f(x1) + f(x2) + f(x3) + f(x4)")
@@ -2512,6 +2520,7 @@ DropCoefficient;
 Multiply tag($i);
 $i = $i+1;
 Print +s;
+ModuleOption noparallel;
 .sort
 
 * Everything should cancel in the end, and we should get zero.
@@ -2574,6 +2583,7 @@ DropCoefficient;
 Multiply tag($i);
 $i = $i+1;
 Print +s;
+ModuleOption noparallel;
 .sort
 
 * Everything should cancel in the end, and we should get zero.
