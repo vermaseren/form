@@ -4447,7 +4447,7 @@ NoGood:			MesPrint("&Unrecognized word: %s",inp);
 				inp = p;
 				SKIPBRA4(p);
 				c = *++p; *p = 0; *inp = ',';
-				if ( CoFindLoop(inp) ) goto endofif;
+				if ( CoFindLoop(inp) ) { error = 1; goto endofif; }
 				s = u = C->lhs[C->numlhs];
 				while ( u < C->Pointer ) *w++ = *u++;
 				C->numlhs--; C->Pointer = s;
@@ -4996,7 +4996,8 @@ int DoFindLoop(UBYTE *inp, int mode)
 	int type, aflag, lflag, indflag, outflag, error = 0, sym;
 	while ( *inp == ',' ) inp++;
 	if ( ( s = SkipAName(inp) ) == 0 ) {
-syntax:	MesPrint("&Proper syntax is:");
+syntax:
+		MesPrint("&Proper syntax is:");
 		MesPrint("%s",messfind[mode]);
 		return(1);
 	}
@@ -5005,6 +5006,7 @@ syntax:	MesPrint("&Proper syntax is:");
 		|| type != CFUNCTION || ( ( sym = (functions[funnum].symmetric) & ~REVERSEORDER )
 		!= SYMMETRIC && sym != ANTISYMMETRIC ) ) {
 		MesPrint("&%s should be a (anti)symmetric function or tensor",inp);
+		error = 1;
 	}
 	funnum += FUNCTION;
 	*s = c; inp = s;
@@ -5073,6 +5075,7 @@ syntax:	MesPrint("&Proper syntax is:");
 		}
 		else {
 			MesPrint("&Unrecognized option in FindLoop or ReplaceLoop: %s",inp);
+			error = 1;
 			*s = c; inp = s;
 			while ( *inp && *inp != ',' ) inp++;
 		}
@@ -5112,7 +5115,13 @@ int CoFindLoop(UBYTE *inp)
 */
 
 int CoReplaceLoop(UBYTE *inp)
-{ return(DoFindLoop(inp,REPLACELOOP)); }
+{
+	int error = DoFindLoop(inp,REPLACELOOP);
+	if ( error ) {
+		Terminate(-1);
+	}
+	return(error);
+}
 
 /*
   	#] CoReplaceLoop : 
