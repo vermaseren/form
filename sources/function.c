@@ -692,7 +692,7 @@ int ChainIn(PHEAD WORD *term, WORD funnum)
 {
 	GETBIDENTITY
 	WORD *t, *tend, *m, *tt, *ts;
-	int action;
+	int action, normFlag = 0;
 	if ( funnum < 0 ) {	/* Dollar to be expanded */
 		funnum = DolToFunction(BHEAD -funnum);
 		if ( AN.ErrorInDollar || funnum <= 0 ) {
@@ -714,6 +714,7 @@ int ChainIn(PHEAD WORD *term, WORD funnum)
 			tt = t;
 			if ( t >= tend || *t != funnum ) continue;
 			action = 1;
+			normFlag = 1;
 			while ( t < tend && *t == funnum ) {
 				ts = t + t[1];
 				t += FUNHEAD;
@@ -726,6 +727,14 @@ int ChainIn(PHEAD WORD *term, WORD funnum)
 			break;
 		}
 	} while ( action );
+
+	if ( normFlag ) {
+		/* We need to check the newly-constructed arguments w.r.t symmetry properties */
+		MarkDirty(term, DIRTYSYMFLAG);
+		AT.WorkPointer = term + *term;
+		Normalize(BHEAD term);
+	}
+
 	return(0);
 }
 
