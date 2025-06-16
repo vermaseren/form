@@ -8,6 +8,10 @@ extern "C" {
 #include "form3.h"
 }
 
+#if defined(WINDOWS)
+// flint.h defines WORD(xx), which conflicts with the one defined in form3.h.
+#undef WORD
+#endif
 
 #include <flint/flint.h>
 #if __FLINT_RELEASE >= 30000
@@ -19,6 +23,11 @@ extern "C" {
 #include <flint/fmpz_poly.h>
 #include <flint/fmpz_poly_factor.h>
 
+#if defined(WINDOWS)
+// Redefine WORD here to match form3.h.
+#undef WORD
+#define WORD FORM_WORD
+#endif
 
 #include <cassert>
 #include <cstdint>
