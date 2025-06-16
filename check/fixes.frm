@@ -3799,7 +3799,6 @@ P G;
 assert succeeded?
 assert result("G") =~ expr("389")
 *--#] PullReq535 :
-
 *--#[ PullReq649_1 :
 * Test warning message when modifying a dollar variable forces
 * a module into sequential mode
@@ -3814,7 +3813,6 @@ $a = 1;
 #require threaded?
 assert warning?("This module is forced to run in sequential mode due to $-variable: $a")
 *--#] PullReq649_1 :
-
 *--#[ PullReq649_2 :
 * same as `PullReq649_1` with a longer variable name
 Local expr = 1;
@@ -3824,7 +3822,6 @@ $n1MdWu6rNU1d29yW3ukhzV7YuY = 1;
 #require threaded?
 assert warning?("This module is forced to run in sequential mode due to $-variable: $n1MdWu6rNU1d29yW3ukhzV7YuY")
 *--#] PullReq649_2 :
-
 *--#[ PullReq649_3 :
 * assigning in the preprocessor should not veto parallel execution
 Local expr = 1;
@@ -3833,7 +3830,6 @@ Local expr = 1;
 .end
 assert succeeded?
 *--#] PullReq649_3 :
-
 *--#[ PullReq649_4 :
 * assigning through pattern matching
 Local expr = 1;
@@ -3844,7 +3840,6 @@ id x?$a = x;
 #require threaded?
 assert warning?("This module is forced to run in sequential mode due to $-variable: $a")
 *--#] PullReq649_4 :
-
 * don't veto parallel execution if there is a matching moduleoption statement
 *--#[ PullReq649_5 :
 Local expr = 1;
@@ -3854,7 +3849,6 @@ moduleoption local $a;
 .end
 assert succeeded?
 *--#] PullReq649_5 :
-
 *--#[ PullReq649_6 :
 Local expr = 1;
 .sort
@@ -3863,7 +3857,6 @@ moduleoption sum $a;
 .end
 assert succeeded?
 *--#] PullReq649_6 :
-
 *--#[ PullReq649_7 :
 Local expr = 1;
 .sort
@@ -3872,7 +3865,6 @@ moduleoption minimum $a;
 .end
 assert succeeded?
 *--#] PullReq649_7 :
-
 *--#[ PullReq649_8 :
 Local expr = 1;
 .sort
@@ -3881,7 +3873,6 @@ moduleoption maximum $a;
 .end
 assert succeeded?
 *--#] PullReq649_8 :
-
 *--#[ PullReq649_9 :
 * *do veto* if the moduleoption statement is for the wrong variable
 Local expr = 1;
