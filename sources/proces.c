@@ -3841,6 +3841,8 @@ CommonEnd:
 					AT.WorkPointer = term + *term;
 					if ( ChainIn(BHEAD term,C->lhs[level][2]) ) goto GenCall;
 					AT.WorkPointer = term + *term;
+					/* Symmetry properties might mean the term has vanished */
+					if ( *term == 0 ) goto Return0;
 					if ( *term != lter ) *AN.RepPoint = 1;
 					}
 					break;
