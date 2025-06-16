@@ -3794,6 +3794,33 @@ assert stdout =~ exact_pattern(<<'EOF')
    {}: -10 -20 30
 EOF
 *--#] Issue599 : 
+*--#[ Issue633 :
+s x,y,z;
+c f;
+v p;
+g ff1 = f(5*x) + f(-5*x) + f(-x) + f(x);
+g ff2 = f(5*p) + f(-5*p) + f(-p) + f(p);
+factarg f;
+print;
+.end
+assert succeeded?
+assert result("ff1") =~ expr("f(x) + f(-5,x) + f(-1,x) + f(5,x)")
+assert result("ff2") =~ expr("f(p) + f(-5,p) + f(-1,p) + f(5,p)")
+*--#] Issue633 :
+*--#[ Issue633_2 :
+on oldfactarg;
+s x,y,z;
+c f;
+v p;
+g ff1 = f(5*x) + f(-5*x) + f(-x) + f(x);
+g ff2 = f(5*p) + f(-5*p) + f(-p) + f(p);
+factarg f;
+print;
+.end
+assert succeeded?
+assert result("ff1") =~ expr("f(x) + f(x,-1,1) + f(x,-1,5) + f(x,5)")
+assert result("ff2") =~ expr("f(p) + f(p,-1,1) + f(p,-1,5) + f(p,5)")
+*--#] Issue633_2 :
 *--#[ Issue642 :
 #-
 Off statistics;

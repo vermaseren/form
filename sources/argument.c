@@ -1043,9 +1043,15 @@ do_shift:
 							continue;
 						}
 						else if ( *t == -MINVECTOR ) {
-							*r1++ = -VECTOR; t++; *r1++ = *t++;
-							*r1++ = -SNUMBER; *r1++ = -1;
-							*r1++ = -SNUMBER; *r1++ = 1;
+							if ( AC.OldFactArgFlag == NEWFACTARG ) {
+								*r1++ = -SNUMBER; *r1++ = -1;
+								*r1++ = -VECTOR; t++; *r1++ = *t++;
+							}
+							else {
+								*r1++ = -VECTOR; t++; *r1++ = *t++;
+								*r1++ = -SNUMBER; *r1++ = -1;
+								*r1++ = -SNUMBER; *r1++ = 1;
+							}
 							continue;
 						}
 					}
