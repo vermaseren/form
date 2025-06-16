@@ -499,6 +499,7 @@ Factor 4 of -y^4+x^4 is y^2+x^2
       Print "Factor %$ of %$ is %$",$i,$b,$b[$i];
     enddo;
     Print;
+    ModuleOption noparallel; * suppresses noparallel warning with TFORM
     .end
 Factor 1 of -y^4+x^4 is -1
 Factor 2 of -y^4+x^4 is y-x
