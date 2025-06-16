@@ -2317,26 +2317,43 @@ redoshort:
 */
 					while ( mm < rr ) { num++; NEXTARG(mm); }
 					if ( num < t[FUNHEAD+2] ) { pnco[nnco++] = t; break; }
+					/* Replace "putfirst_" with the resulting function code. mm goes to arg start. */
 					*t = -t[FUNHEAD]; mm = t+FUNHEAD+3;
+					/* Set i to the arg number we are putting first, then move mm to its start. */
 					i = t[FUNHEAD+2];
 					while ( --i > 0 ) { NEXTARG(mm); }
-					tt = TermMalloc("Select_"); /* Move selected out of the way */
-                    tt1 = tt;
+					/* Keep a pointer to the arguments trailing the selected: */
+					WORD *argTail = mm;
+					NEXTARG(argTail);
+					tt = TermMalloc("Select_"); /* Move selected out of the way into tmp space */
+					tt1 = tt;
+					/* Normal argument: */
 					if ( *mm > 0 ) {
 						for ( i = 0; i < *mm; i++ ) *tt1++ = mm[i];
 					}
+					/* Fast-notation function: single word */
 					else if ( *mm <= -FUNCTION ) { *tt1++ = *mm; }
+					/* Fast-notation symbol, number etc: two words */
 					else { *tt1++ = mm[0]; *tt1++ = mm[1]; }
+					/* Put tt2 at the start of the original arguments */
 					tt2 = t+FUNHEAD+3;
+					/* Copy leading original arguments after the new first, in the tmp space. */
 					while ( tt2 < mm ) *tt1++ = *tt2++;
+					/* i contains the size so far. tt1 goes to the start of the tmp space.
+						tt2 to the final argument location (we overwrite "putfirst_") */
 					i = tt1-tt; tt1 = tt; tt2 = t+FUNHEAD;
+					/* Copy everything so far to its final place */
 					NCOPY(tt2,tt1,i);
+					/* We are finished with the tmp space */
 					TermFree(tt,"Select_");
-					NEXTARG(mm);
-					while ( mm < rr ) *tt2++ = *mm++;
+					/* Now copy the trailing args. Use the stored pointer, *mm has been edited
+						during the copy to tt2 above! NEXTARG(mm) would produce nonsense. */
+					while ( argTail < rr ) *tt2++ = *argTail++;
+					/* Set the size of all function args */
 					t[1] = tt2 - t;
+					/* Now copy the rest of the term, and set the final term size */
 					rr = term + *term;
-					while ( mm < rr ) *tt2++ = *mm++;
+					while ( argTail < rr ) *tt2++ = *argTail++;
 					*term = tt2-term;
 					goto Restart;
 				}
