@@ -68,7 +68,7 @@
 		DICT_ALLNUMBERS, DICT_RATIONALONLY, DICT_INTEGERONLY, DICT_NONUMBERS
 */
 
-VOID TransformRational(UWORD *a, WORD na)
+void TransformRational(UWORD *a, WORD na)
 {
 	DICTIONARY *dict;
 	WORD i, j, nb, i1, i2; UWORD *b;
@@ -215,7 +215,7 @@ NoAction:
   	#[ IsMultiplySign:
 */
 
-UBYTE *IsMultiplySign(VOID)
+UBYTE *IsMultiplySign(void)
 {
 	DICTIONARY *dict;
 	int i;
@@ -235,7 +235,7 @@ UBYTE *IsMultiplySign(VOID)
   	#[ IsExponentSign:
 */
 
-UBYTE *IsExponentSign(VOID)
+UBYTE *IsExponentSign(void)
 {
 	DICTIONARY *dict;
 	int i;
@@ -880,7 +880,7 @@ int SetDictionaryOptions(UBYTE *options)
   	#[ UnSetDictionary :
 */
 
-void UnSetDictionary(VOID)
+void UnSetDictionary(void)
 {
 	AO.CurrentDictionary = 0;
 	AO.CurDictNumbers = -1;

@@ -275,7 +275,7 @@ static int PF_CheckRecoveryFile()
 }
 #endif
 
-int CheckRecoveryFile(VOID)
+int CheckRecoveryFile(void)
 {
 	int ret = 0;
 #ifdef WITHMPI
@@ -330,7 +330,7 @@ int CheckRecoveryFile(VOID)
  *  Deletes the recovery files. It is called by CleanUp() in the case of a
  *  successful completion.
  */
-void DeleteRecoveryFile(VOID)
+void DeleteRecoveryFile(void)
 {
 	if ( done_snapshot ) {
 		remove(recoveryfile);
@@ -361,7 +361,7 @@ void DeleteRecoveryFile(VOID)
 /**
  *  Returns pointer to recovery filename. 
  */
-char *RecoveryFilename(VOID)
+char *RecoveryFilename(void)
 {
 	return(recoveryfile);
 }
@@ -396,7 +396,7 @@ static char *InitName(char *str, char *ext)
  *  This functions should only be called once to avoid memory leaks and after
  *  AM.TempDir has been initialized.
  */
-void InitRecovery(VOID)
+void InitRecovery(void)
 {
 	int lenpath = AM.TempDir ? strlen((char*)AM.TempDir)+1 : 0;
 #ifdef WITHMPI

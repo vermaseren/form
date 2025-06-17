@@ -1407,7 +1407,7 @@ int poly_factorize_expression(EXPRESSIONS expr) {
 
 					// sort and store in buffer
 					WORD *buffer;
-					if (EndSort(BHEAD (WORD *)((VOID *)(&buffer)),2) < 0) return -1;
+					if (EndSort(BHEAD (WORD *)((void *)(&buffer)),2) < 0) return -1;
 					
 					LONG bufsize=0;
 					for (WORD *t=buffer; *t!=0; t+=*t)

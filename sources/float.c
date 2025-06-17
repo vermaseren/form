@@ -1058,7 +1058,7 @@ int MulRatToFloat(PHEAD WORD *outfun, WORD *infun, UWORD *formrat, WORD nrat)
  		#[ SetupMZVTables :
 */
 
-void SetupMZVTables(VOID)
+void SetupMZVTables(void)
 {
 /*
 	Sets up a table of N+1 mpf_t floats with variable precision.
@@ -1161,7 +1161,7 @@ void SetupMZVTables(VOID)
  		#[ SetupMPFTables :
 */
 
-void SetupMPFTables(VOID)
+void SetupMPFTables(void)
 {
 	size_t nt = sizeof(mp_limb_t);
 	int prec, prec1, i;
@@ -1234,7 +1234,7 @@ void SetupMPFTables(VOID)
  		#[ ClearMZVTables :
 */
 
-void ClearMZVTables(VOID)
+void ClearMZVTables(void)
 {
 #ifdef WITHPTHREADS
 	int id, totnum;

@@ -114,7 +114,7 @@ int CatchDollar(int par)
 	AT.WorkPointer = oldwork;
 	AN.tryterm = 0; /* for now */
 	dbuffer = 0;
-	if ( ( retval = EndSort(BHEAD (WORD *)((VOID *)(&dbuffer)),2) ) < 0 ) { error = 1; }
+	if ( ( retval = EndSort(BHEAD (WORD *)((void *)(&dbuffer)),2) ) < 0 ) { error = 1; }
 	LowerSortLevel();
 	if ( retval <= 1 || dbuffer == 0 ) {
 		d->type = DOLZERO;
@@ -439,7 +439,7 @@ NoChangeOne:;
 			AT.WorkPointer = ww;
 		}
 		AN.tryterm = 0; /* for now */
-		if ( ( newsize = EndSort(BHEAD (WORD *)((VOID *)(&ss)),2) ) < 0 ) {
+		if ( ( newsize = EndSort(BHEAD (WORD *)((void *)(&ss)),2) ) < 0 ) {
 			AN.ncmod = oldncmod;
 			return(1);
 		}
@@ -1796,7 +1796,7 @@ int InsideDollar(PHEAD WORD *ll, WORD level)
 			AT.WorkPointer = oldwork;
 		}
 		AN.tryterm = 0; /* for now */
-		if ( EndSort(BHEAD (WORD *)((VOID *)(&dbuffer)),2) < 0 ) { error = 1; break; }
+		if ( EndSort(BHEAD (WORD *)((void *)(&dbuffer)),2) < 0 ) { error = 1; break; }
 		if ( d->where && d->where != &(AM.dollarzero) ) M_free(d->where,"old buffer of dollar");
 		d->where = dbuffer;
 		if ( dbuffer == 0 || *dbuffer == 0 ) {
@@ -2188,7 +2188,7 @@ WORD *TranslateExpression(UBYTE *s)
 	AR.Eside = oldEside;
 	AT.WorkPointer = w;
 	AN.tryterm = 0; /* for now */
-	if ( EndSort(BHEAD (WORD *)((VOID *)(&outbuffer)),2) < 0 ) { LowerSortLevel(); return(0); }
+	if ( EndSort(BHEAD (WORD *)((void *)(&outbuffer)),2) < 0 ) { LowerSortLevel(); return(0); }
 	LowerSortLevel();
 	C->Pointer = C->Buffer + oldcpointer;
 	C->numrhs = oldnumrhs;

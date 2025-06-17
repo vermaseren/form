@@ -1030,7 +1030,7 @@ WORD HowMany(PHEAD WORD *ifcode, WORD *term)
  		#[ DoubleIfBuffers :
 */
 
-VOID DoubleIfBuffers(VOID)
+void DoubleIfBuffers(void)
 {
 	int newmax, i;
 	WORD *newsumcheck;
@@ -1132,7 +1132,7 @@ SWITCHTABLE *FindCase(WORD nswitch, WORD ncase)
  		#[ DoubleSwitchBuffers :
 */
 
-int DoubleSwitchBuffers(VOID)
+int DoubleSwitchBuffers(void)
 {
 	int newmax, i;
 	SWITCH *newarray;
@@ -1181,7 +1181,7 @@ int DoubleSwitchBuffers(VOID)
 		Sorts an array of WORDs. No adding of equal objects.
 */
 
-VOID SwitchSplitMergeRec(SWITCHTABLE *array,WORD num,SWITCHTABLE *auxarray)
+void SwitchSplitMergeRec(SWITCHTABLE *array,WORD num,SWITCHTABLE *auxarray)
 {
 	WORD n1,n2,i,j,k;
 	SWITCHTABLE *t1,*t2, t;
@@ -1210,7 +1210,7 @@ VOID SwitchSplitMergeRec(SWITCHTABLE *array,WORD num,SWITCHTABLE *auxarray)
 */
 }
 
-VOID SwitchSplitMerge(SWITCHTABLE *array,WORD num)
+void SwitchSplitMerge(SWITCHTABLE *array,WORD num)
 {
 	SWITCHTABLE *auxarray = (SWITCHTABLE *)Malloc1(sizeof(SWITCHTABLE)*num/2,"SwitchSplitMerge");
 	SwitchSplitMergeRec(array,num,auxarray);

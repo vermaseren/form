@@ -122,7 +122,7 @@ void SetfFloatPrecision(LONG prec)
  		#[ ClearfFloat :
 */
 
-void ClearfFloat(VOID)
+void ClearfFloat(void)
 {
 #ifdef WITHPTHREADS
 	int totnum = AM.totalnumberofthreads, id;

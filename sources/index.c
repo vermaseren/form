@@ -328,7 +328,7 @@ found:
 	DON'T forget AR.SortType to be put into e->bracketinfo->SortType
 */
 
-VOID PutBracketInIndex(PHEAD WORD *term, POSITION *newpos)
+void PutBracketInIndex(PHEAD WORD *term, POSITION *newpos)
 {
 	GETBIDENTITY
 	BRACKETINDEX *bi, *b1, *b2, *b3;
@@ -575,7 +575,7 @@ void ClearBracketIndex(WORD numexp)
 	Note: This routine is thread-safe
 */
 
-VOID OpenBracketIndex(WORD nexpr)
+void OpenBracketIndex(WORD nexpr)
 {
 	EXPRESSIONS e = Expressions + nexpr;
 	BRACKETINFO *bi;

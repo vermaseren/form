@@ -72,14 +72,14 @@ UBYTE *StrCopy(UBYTE *from, UBYTE *to)
 
 /*
  		#] StrCopy : 
- 		#[ AddToLine :			VOID AddToLine(s)
+ 		#[ AddToLine :			void AddToLine(s)
 
 	Puts the characters of s in the outputline. If the line becomes
 	filled it is written.
 
 */
 
-VOID AddToLine(UBYTE *s)
+void AddToLine(UBYTE *s)
 {
 	UBYTE *Out;
 	LONG num;
@@ -176,10 +176,10 @@ VOID AddToLine(UBYTE *s)
 
 /*
  		#] AddToLine : 
- 		#[ FiniLine :			VOID FiniLine()
+ 		#[ FiniLine :			void FiniLine()
 */
 
-VOID FiniLine(VOID)
+void FiniLine(void)
 {
 	UBYTE *Out;
 	WORD i;
@@ -258,13 +258,13 @@ VOID FiniLine(VOID)
 
 /*
  		#] FiniLine : 
- 		#[ IniLine :			VOID IniLine(extrablank)
+ 		#[ IniLine :			void IniLine(extrablank)
 
 	Initializes the output line for the type of output
 
 */
 
-VOID IniLine(WORD extrablank)
+void IniLine(WORD extrablank)
 {
 	UBYTE *Out;
 	Out = AO.OutputLine;
@@ -290,7 +290,7 @@ VOID IniLine(WORD extrablank)
 
 /*
  		#] IniLine : 
- 		#[ LongToLine :			VOID LongToLine(a,na)
+ 		#[ LongToLine :			void LongToLine(a,na)
 
 	Puts a Long integer in the output line. If it is only a single
 	word long it is put in the line as a single token.
@@ -300,7 +300,7 @@ VOID IniLine(WORD extrablank)
 
 static UBYTE *LLscratch = 0;
 
-VOID LongToLine(UWORD *a, WORD na)
+void LongToLine(UWORD *a, WORD na)
 {
 	UBYTE *OutScratch;
 	if ( LLscratch == 0 ) {
@@ -325,7 +325,7 @@ VOID LongToLine(UWORD *a, WORD na)
 
 /*
  		#] LongToLine : 
- 		#[ RatToLine :			VOID RatToLine(a,na)
+ 		#[ RatToLine :			void RatToLine(a,na)
 
 	Puts a rational number in the output line. The sign is ignored.
 
@@ -334,7 +334,7 @@ VOID LongToLine(UWORD *a, WORD na)
 static UBYTE *RLscratch = 0;
 static UWORD *RLscratE = 0;
 
-VOID RatToLine(UWORD *a, WORD na)
+void RatToLine(UWORD *a, WORD na)
 {
 	GETIDENTITY
 	WORD adenom, anumer;
@@ -511,7 +511,7 @@ VOID RatToLine(UWORD *a, WORD na)
 
 /*
  		#] RatToLine : 
- 		#[ TalToLine :			VOID TalToLine(x)
+ 		#[ TalToLine :			void TalToLine(x)
 
 	Writes the unsigned number x to the output as a single token.
 	Par indicates the number of leading blanks in the line.
@@ -519,7 +519,7 @@ VOID RatToLine(UWORD *a, WORD na)
 
 */
 
-VOID TalToLine(UWORD x)
+void TalToLine(UWORD x)
 {
 	UBYTE t[BITSINWORD/3+1];
 	UBYTE *s;
@@ -536,7 +536,7 @@ VOID TalToLine(UWORD x)
 
 /*
  		#] TalToLine : 
- 		#[ TokenToLine :		VOID TokenToLine(s)
+ 		#[ TokenToLine :		void TokenToLine(s)
 
 	Puts s in the output buffer. If it doesn't fit the buffer is
 	flushed first. This routine keeps tokens as one unit.
@@ -548,7 +548,7 @@ VOID TalToLine(UWORD x)
 	digits!
 */
 
-VOID TokenToLine(UBYTE *s)
+void TokenToLine(UBYTE *s)
 {
 	UBYTE *t, *Out;
 	LONG num, i = 0, j;
@@ -649,7 +649,7 @@ VOID TokenToLine(UBYTE *s)
 
 /*
  		#] TokenToLine : 
- 		#[ CodeToLine :			VOID CodeToLine(name,number,mode)
+ 		#[ CodeToLine :			void CodeToLine(name,number,mode)
 
 	Writes a name and possibly its number to output as a single token.
 
@@ -668,7 +668,7 @@ UBYTE *CodeToLine(WORD number, UBYTE *Out)
  		#[ MultiplyToLine :
 */
 
-void MultiplyToLine(VOID)
+void MultiplyToLine(void)
 {
 	int i;
 	if ( AO.CurrentDictionary > 0 && AO.CurDictSpecials > 0
@@ -710,10 +710,10 @@ UBYTE *AddArrayIndex(WORD num,UBYTE *out)
 
 /*
  		#] AddArrayIndex : 
- 		#[ PrtTerms :			VOID PrtTerms()
+ 		#[ PrtTerms :			void PrtTerms()
 */
 
-VOID PrtTerms(VOID)
+void PrtTerms(void)
 {
 	UWORD a[2];
 	WORD na;
@@ -794,7 +794,7 @@ void PrintTime(UBYTE *mess)
  		#] PrintTime : 
   	#] schryf-Utilities : 
  	#[ schryf-Writes :
- 		#[ WriteLists :			VOID WriteLists()
+ 		#[ WriteLists :			void WriteLists()
 
 	Writes the namelists. If mode > 0 also the internal codes are given.
 
@@ -807,7 +807,7 @@ static UBYTE *rsymname[] = {
 	 (UBYTE *)"(-cyclic)",(UBYTE *)"(-reversecyclic)"
 	,(UBYTE *)"(-symmetric)",(UBYTE *)"(-antisymmetric)" };
 
-VOID WriteLists(VOID)
+void WriteLists(void)
 {
 	GETIDENTITY
 	WORD i, j, k, *skip;
@@ -1415,13 +1415,13 @@ void WriteDictionary(DICTIONARY *dict)
 
 /*
  		#] WriteDictionary : 
- 		#[ WriteArgument :		VOID WriteArgument(WORD *t)
+ 		#[ WriteArgument :		void WriteArgument(WORD *t)
 
 		Write a single argument field. The general field goes to
 		WriteExpression and the fast field is dealt with here.
 */
 
-VOID WriteArgument(WORD *t)
+void WriteArgument(WORD *t)
 {
 	UBYTE buffer[180];
 	UBYTE *Out;
@@ -2498,7 +2498,7 @@ WORD WriteExpression(WORD *terms, LONG ltot)
 		Writes all expressions that should be written
 */
 
-WORD WriteAll(VOID)
+WORD WriteAll(void)
 {
 	GETIDENTITY
 	WORD lbrac, first;

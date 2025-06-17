@@ -399,7 +399,7 @@ int PutInSpectator(WORD *term,WORD specnum)
   	#[ FlushSpectators :
 */
 
-void FlushSpectators(VOID)
+void FlushSpectators(void)
 {
 	SPECTATOR *sp = AM.SpectatorFiles;
 	FILEHANDLE *fh;

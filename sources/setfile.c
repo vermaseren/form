@@ -129,7 +129,7 @@ SETUPPARAMETERS setupparameters[] =
  		#[ DoSetups :
 */
 
-int DoSetups(VOID)
+int DoSetups(void)
 {
 	UBYTE *setbuffer, *s, *t, *u /*, c */;
 	int errors = 0;
@@ -271,7 +271,7 @@ restart:;
 				}
 				*t = 0;
 				if ( sp->flags == USEDFLAG && sp->value != 0 )
-						M_free((VOID *)(sp->value),"Process option");
+						M_free((void *)(sp->value),"Process option");
 				sp->value = (LONG)strDup1(s2,"Process option");
 				sp->flags = USEDFLAG;
 				break;
@@ -289,7 +289,7 @@ restart:;
 					break;
 				}
 				if ( sp->flags == USEDFLAG && sp->value != 0 )
-					M_free((VOID *)(sp->value),"Process option");
+					M_free((void *)(sp->value),"Process option");
 				sp->value = (LONG)strDup1(s2,"Process option");
 				sp->flags = USEDFLAG;
 				break;
@@ -354,7 +354,7 @@ SETUPPARAMETERS *GetSetupPar(UBYTE *s)
  		#[ RecalcSetups :
 */
 
-int RecalcSetups(VOID)
+int RecalcSetups(void)
 {
 	SETUPPARAMETERS *sp, *sp1;
 
@@ -401,7 +401,7 @@ int RecalcSetups(VOID)
  		#[ AllocSetups :
 */
 
-int AllocSetups(VOID)
+int AllocSetups(void)
 {
 	SETUPPARAMETERS *sp;
 	LONG LargeSize, SmallSize, SmallEsize, TermsInSmall, IOsize;
@@ -745,7 +745,7 @@ int AllocSetups(VOID)
 		AT.StoreCache = AT.StoreCacheAlloc;
 		sa = AT.StoreCache;
 		for ( j = 0; j < AM.NumStoreCaches; j++ ) {
-			sb = (STORECACHE)(VOID *)((UBYTE *)sa+size);
+			sb = (STORECACHE)(void *)((UBYTE *)sa+size);
 			if ( j == AM.NumStoreCaches-1 ) {
 				sa->next = 0;
 			}
@@ -808,7 +808,7 @@ int AllocSetups(VOID)
 	and have that included into the LaTeX file.
 */
 
-VOID WriteSetup(VOID)
+void WriteSetup(void)
 {
 	int n = sizeof(setupparameters)/sizeof(SETUPPARAMETERS);
 	SETUPPARAMETERS *sp;
@@ -1016,7 +1016,7 @@ SORTING *AllocSort(LONG inLargeSize, LONG inSmallSize, LONG inSmallEsize, LONG i
  		#[ AllocSortFileName :
 */
 
-VOID AllocSortFileName(SORTING *sort)
+void AllocSortFileName(SORTING *sort)
 {
 	GETIDENTITY
 	char *s, *t;
@@ -1119,7 +1119,7 @@ void DeAllocFileHandle(FILEHANDLE *fh)
  		#[ MakeSetupAllocs :
 */
 
-int MakeSetupAllocs(VOID)
+int MakeSetupAllocs(void)
 {
 	if ( RecalcSetups() || AllocSetups() ) return(1);
 	else return(0);
@@ -1139,7 +1139,7 @@ int MakeSetupAllocs(VOID)
 
 #define SETBUFSIZE 257
 
-int TryFileSetups(VOID)
+int TryFileSetups(void)
 {
 	LONG oldstreamposition;
 	int oldstream;
@@ -1225,7 +1225,7 @@ eoi:
  		#[ TryEnvironment :
 */
 
-int TryEnvironment(VOID)
+int TryEnvironment(void)
 {
 	char *s, *t, *u, varname[100];
 	int i,imax = sizeof(setupparameters)/sizeof(SETUPPARAMETERS);

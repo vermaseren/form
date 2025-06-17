@@ -52,14 +52,14 @@
 /*
   	#] Includes : 
   	#[ RekenRational :
- 		#[ Pack :			VOID Pack(a,na,b,nb)
+ 		#[ Pack :			void Pack(a,na,b,nb)
 
 	Packs the contents of the numerator a and the denominator b into
 	one normalized fraction a.
 
 */
 
-VOID Pack(UWORD *a, WORD *na, UWORD *b, WORD nb)
+void Pack(UWORD *a, WORD *na, UWORD *b, WORD nb)
 {
 	WORD c, sgn = 1, i;
 	UWORD *to,*from;
@@ -90,14 +90,14 @@ VOID Pack(UWORD *a, WORD *na, UWORD *b, WORD nb)
 
 /*
  		#] Pack : 
- 		#[ UnPack :			VOID UnPack(a,na,denom,numer)
+ 		#[ UnPack :			void UnPack(a,na,denom,numer)
 
 	Determines the sizes of the numerator and the denominator in the
 	normalized fraction a with length na.
 
 */
 
-VOID UnPack(UWORD *a, WORD na, WORD *denom, WORD *numer)
+void UnPack(UWORD *a, WORD na, WORD *denom, WORD *numer)
 {
 	UWORD *pos;
 	WORD i, sgn = na;
@@ -793,14 +793,14 @@ WORD AddPLon(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 
 /*
  		#] AddPLon : 
- 		#[ SubPLon :		VOID SubPLon(a,na,b,nb,c,nc)
+ 		#[ SubPLon :		void SubPLon(a,na,b,nb,c,nc)
 
 	Subtracts b from a. Assumes that a > b. Result in c.
 	c can be a or b.
 
 */
 
-VOID SubPLon(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
+void SubPLon(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 {
 	UWORD borrow = 0, e, nd = 0;
 	while ( nb ) {
@@ -1293,7 +1293,7 @@ RaisOvl:
  *   - Caching is done in AT.small_power[]. This array is extended
  *     if necessary.
  */
-VOID RaisPowCached (PHEAD WORD x, WORD n, UWORD **c, WORD *nc) {
+void RaisPowCached (PHEAD WORD x, WORD n, UWORD **c, WORD *nc) {
 
 	int i,j;
 	WORD new_small_power_maxx, new_small_power_maxn, ID;
@@ -1437,7 +1437,7 @@ int NormalModulus(UWORD *a,WORD *na)
  *	becomes too difficult and the table too long.
  */
 
-int MakeInverses(VOID)
+int MakeInverses(void)
 {
 	WORD n = AC.cmod[0], i, inv2;
 	if ( AC.ncmod != 1 ) return(1);
@@ -1703,13 +1703,13 @@ WORD Remain4(UWORD *a, WORD *na)
 
 /*
  		#] Remain4 : 
- 		#[ PrtLong :		VOID PrtLong(a,na,s)
+ 		#[ PrtLong :		void PrtLong(a,na,s)
 
 	Puts the long number a in string s.
 
 */
 
-VOID PrtLong(UWORD *a, WORD na, UBYTE *s)
+void PrtLong(UWORD *a, WORD na, UBYTE *s)
 {
 	GETIDENTITY
 	WORD q, i;
@@ -1836,7 +1836,7 @@ WORD GetLong(UBYTE *s, UWORD *a, WORD *na)
 		else naa = 1;            \
 	}
 
-VOID GCD(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
+void GCD(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 {
 	int ja = 0, jb = 0, j;
 	UWORD *r,*t;
@@ -3360,7 +3360,7 @@ WORD TakeNormalModulus (UWORD *a, WORD *na, UWORD *c, WORD nc, WORD par)
  		#[ MakeModTable :	WORD MakeModTable()
 */
 
-WORD MakeModTable(VOID)
+WORD MakeModTable(void)
 {
 	LONG size, i, j, n;
 	n = ABS(AC.ncmod);

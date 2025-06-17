@@ -53,7 +53,7 @@ static char hex[] = {'0','1','2','3','4','5','6','7','8','9',
  		#[ Error0 :
 */
 
-VOID Error0(char *s)
+void Error0(char *s)
 {
 	MesPrint("=== %s",s);
 	Terminate(-1);
@@ -64,7 +64,7 @@ VOID Error0(char *s)
  		#[ Error1 :
 */
 
-VOID Error1(char *s, UBYTE *t)
+void Error1(char *s, UBYTE *t)
 {
 	MesPrint("@%s %s",s,t);
 	Terminate(-1);
@@ -75,7 +75,7 @@ VOID Error1(char *s, UBYTE *t)
  		#[ Error2 :
 */
 
-VOID Error2(char *s1, char *s2, UBYTE *t)
+void Error2(char *s1, char *s2, UBYTE *t)
 {
 	MesPrint("@%s%s %s",s1,s2,t);
 	Terminate(-1);
@@ -86,7 +86,7 @@ VOID Error2(char *s1, char *s2, UBYTE *t)
  		#[ MesWork :
 */
 
-int MesWork(VOID)
+int MesWork(void)
 {
 	MesPrint("=== Workspace overflow. %l bytes is not enough.",AM.WorkSize);
 	MesPrint("=== Change parameter WorkSpace in %s",setupfilename);
@@ -787,7 +787,7 @@ dollarzero:				*t++ = '0'; *t = 0;
  		#[ Warning :
 */
 
-VOID Warning(char *s)
+void Warning(char *s)
 {
 	iswarning = 1;
 	if ( AC.WarnFlag ) MesPrint("&Warning: %s",s);
@@ -799,7 +799,7 @@ VOID Warning(char *s)
  		#[ HighWarning :
 */
 
-VOID HighWarning(char *s)
+void HighWarning(char *s)
 {
 	iswarning = 1;
 	if ( AC.WarnFlag >= 2 ) MesPrint("&Warning: %s",s);
@@ -854,7 +854,7 @@ WORD MesComp(char *s, UBYTE *p, UBYTE *q)
  		#[ PrintTerm :
 */
 
-VOID PrintTerm(WORD *term, char *where)
+void PrintTerm(WORD *term, char *where)
 {
 	UBYTE OutBuf[140];
 	WORD *t, x;
@@ -884,7 +884,7 @@ VOID PrintTerm(WORD *term, char *where)
  		#[ PrintTermC :
 */
 
-VOID PrintTermC(WORD *term, char *where)
+void PrintTermC(WORD *term, char *where)
 {
 	UBYTE OutBuf[140];
 	WORD *t, x;
@@ -918,7 +918,7 @@ VOID PrintTermC(WORD *term, char *where)
  		#[ PrintSubTerm :
 */
 
-VOID PrintSubTerm(WORD *term, char *where)
+void PrintSubTerm(WORD *term, char *where)
 {
 	UBYTE OutBuf[140];
 	WORD *t;
@@ -940,7 +940,7 @@ VOID PrintSubTerm(WORD *term, char *where)
  		#[ PrintWords :
 */
 
-VOID PrintWords(WORD *buffer, LONG number)
+void PrintWords(WORD *buffer, LONG number)
 {
 	UBYTE OutBuf[140];
 	WORD *t;

@@ -1583,7 +1583,7 @@ WORD AllOnePI(WORD *term,WORD level)
   	#[ RemoveBridges :
 */
 
-int RemoveBridges(VOID)
+int RemoveBridges(void)
 {
 	return(0);
 }

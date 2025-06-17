@@ -168,26 +168,20 @@
 	The typedefs are to allow the compilers to do better error checking.
 */
 
-/*
-	icc doesn't like the typedef void VOID; Neither does g++ on the apple
-	Hence we work the old fashioned way:
-*/
-#define VOID void
-
 #ifdef ANSI
-typedef VOID (*PVFUNWP)(WORD *);
+typedef void (*PVFUNWP)(WORD *);
 #ifdef INTELCOMPILER
-typedef VOID (*PVFUNV)();
+typedef void (*PVFUNV)();
 typedef int (*CFUN)();
 #else
-typedef VOID (*PVFUNV)(VOID);
-typedef int (*CFUN)(VOID);
+typedef void (*PVFUNV)(void);
+typedef int (*CFUN)(void);
 #endif
 typedef int (*TFUN)(UBYTE *);
 typedef int (*TFUN1)(UBYTE *,int);
 #else
-typedef VOID (*PVFUNWP)();
-typedef VOID (*PVFUNV)();
+typedef void (*PVFUNWP)();
+typedef void (*PVFUNV)();
 typedef int (*CFUN)();
 typedef int (*TFUN)();
 typedef int (*TFUN1)();

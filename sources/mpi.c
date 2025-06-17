@@ -1022,7 +1022,7 @@ typedef struct longMultiStruct {
 } PF_LONGMULTI;
 
 static UBYTE *PF_longPackBuf = NULL;
-static VOID *PF_longPackSmallBuf = NULL;
+static void *PF_longPackSmallBuf = NULL;
 static int PF_longPackPos = 0;
 static int PF_longPackTop = 0;
 static PF_LONGMULTI *PF_longMultiRoot = NULL;
@@ -1244,7 +1244,7 @@ static int PF_longPackInit(void)
 	if ( ret != MPI_SUCCESS ) return(ret);
 
 	PF_longPackSmallBuf =
-			(VOID*)Malloc1(sizeof(UBYTE)*PF_longPackTop,"PF_longPackSmallBuf");
+			(void*)Malloc1(sizeof(UBYTE)*PF_longPackTop,"PF_longPackSmallBuf");
 
 	PF_longPackTop = PF_packsize;
 	PF_longMultiRoot =
@@ -1815,7 +1815,7 @@ int PF_LongMultiBroadcast(void)
 */
 		if ( PF_longPackN > 1 ) {
 			if ( PF_longMultiPreparePrefix() ) return(-1);
-			ret = MPI_Bcast((VOID*)PF_longMultiTop->buffer,
+			ret = MPI_Bcast((void*)PF_longMultiTop->buffer,
 			                PF_packsize,MPI_PACKED,MASTER,PF_COMM);
 			if ( ret != MPI_SUCCESS ) return(ret);
 /*
@@ -1830,7 +1830,7 @@ int PF_LongMultiBroadcast(void)
 			Just broadcast all the chunks:
 */
 		for ( i = 0; i < PF_longPackN; i++ ) {
-			ret = MPI_Bcast((VOID*)PF_longMultiTop->buffer,
+			ret = MPI_Bcast((void*)PF_longMultiTop->buffer,
 			                PF_packsize,MPI_PACKED,MASTER,PF_COMM);
 			if ( ret != MPI_SUCCESS ) return(ret);
 			PF_longMultiTop = PF_longMultiTop->next;
@@ -1845,11 +1845,11 @@ int PF_LongMultiBroadcast(void)
 		Get the first chunk; it can be either the only data chunk, or
 		an auxiliary chunk, if the data do not fit the single chunk:
 */
-	ret = MPI_Bcast((VOID*)PF_longMultiRoot->buffer,
+	ret = MPI_Bcast((void*)PF_longMultiRoot->buffer,
 	                PF_packsize,MPI_PACKED,MASTER,PF_COMM);
 	if ( ret != MPI_SUCCESS ) return(ret);
 
-	ret = MPI_Unpack((VOID*)PF_longMultiRoot->buffer,
+	ret = MPI_Unpack((void*)PF_longMultiRoot->buffer,
 	                 PF_packsize,
 	                 &(PF_longMultiRoot->packpos),
 	                 &PF_longPackN,1,MPI_INT,PF_COMM);
@@ -1872,7 +1872,7 @@ int PF_LongMultiBroadcast(void)
 		nPacks and lastLen fields. Get chunks:
 */
 	for ( PF_longMultiTop = PF_longMultiRoot->next, i = 0; i < PF_longPackN; i++ ) {
-		ret = MPI_Bcast((VOID*)PF_longMultiTop->buffer,
+		ret = MPI_Bcast((void*)PF_longMultiTop->buffer,
 		                PF_packsize,MPI_PACKED,MASTER,PF_COMM);
 		if ( ret != MPI_SUCCESS ) return(ret);
 		if ( i == 0 ) {   /* The first chunk, it contains extra "1". */
@@ -1880,7 +1880,7 @@ int PF_LongMultiBroadcast(void)
 /*
 				Extract this 1 into tmp and forget about it.
 */
-			ret = MPI_Unpack((VOID*)PF_longMultiTop->buffer,
+			ret = MPI_Unpack((void*)PF_longMultiTop->buffer,
 			                 PF_packsize,
 			                 &(PF_longMultiTop->packpos),
 			                 &tmp,1,MPI_INT,PF_COMM);

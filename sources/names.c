@@ -599,7 +599,7 @@ int GetDollar(UBYTE *name)
   	#[ DumpTree :
 */
 
-VOID DumpTree(NAMETREE *nametree)
+void DumpTree(NAMETREE *nametree)
 {
 	if ( nametree->headnode >= 0
 		&& nametree->namebuffer && nametree->namenode ) {
@@ -612,7 +612,7 @@ VOID DumpTree(NAMETREE *nametree)
   	#[ DumpNode :
 */
 
-VOID DumpNode(NAMETREE *nametree, WORD node, WORD depth)
+void DumpNode(NAMETREE *nametree, WORD node, WORD depth)
 {
 	NAMENODE *n;
 	int i;
@@ -693,7 +693,7 @@ int CompactifyTree(NAMETREE *nametree,WORD par)
   	#[ CopyTree :
 */
 
-VOID CopyTree(NAMETREE *newtree, NAMETREE *oldtree, WORD node, WORD par)
+void CopyTree(NAMETREE *newtree, NAMETREE *oldtree, WORD node, WORD par)
 {
 	NAMENODE *n, *m;
 	UBYTE *s, *t;
@@ -781,7 +781,7 @@ VOID CopyTree(NAMETREE *newtree, NAMETREE *oldtree, WORD node, WORD par)
   	#[ LinkTree :
 */
 
-VOID LinkTree(NAMETREE *tree, WORD offset, WORD numnodes)
+void LinkTree(NAMETREE *tree, WORD offset, WORD numnodes)
 {
 /*
 	Makes the tree into a binary tree
@@ -812,7 +812,7 @@ VOID LinkTree(NAMETREE *tree, WORD offset, WORD numnodes)
   	#[ MakeNameTree :
 */
 
-NAMETREE *MakeNameTree(VOID)
+NAMETREE *MakeNameTree(void)
 {
 	NAMETREE *n;
 	n = (NAMETREE *)Malloc1(sizeof(NAMETREE),"new nametree");
@@ -831,7 +831,7 @@ NAMETREE *MakeNameTree(VOID)
   	#[ FreeNameTree :
 */
 
-VOID FreeNameTree(NAMETREE *n)
+void FreeNameTree(NAMETREE *n)
 {
 	if ( n ) {
 		if ( n->namebuffer ) M_free(n->namebuffer,"nametree->namebuffer");
@@ -846,7 +846,7 @@ VOID FreeNameTree(NAMETREE *n)
   	#[ WildcardNames :
 */
 
-void ClearWildcardNames(VOID)
+void ClearWildcardNames(void)
 {
 	AC.NumWildcardNames = 0;
 }
@@ -3125,7 +3125,7 @@ void ResetVariables(int par)
   	#[ RemoveDollars :
 */
 
-void RemoveDollars(VOID)
+void RemoveDollars(void)
 {
 	DOLLARS d;
 	CBUF *C = cbuf + AM.dbufnum;

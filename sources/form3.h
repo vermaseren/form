@@ -188,7 +188,6 @@
 #include <io.h>
 #include <fcntl.h>
 /* Undefine/rename conflicted symbols. */
-#undef VOID  /* WinNT.h */
 #undef MAXLONG  /* WinNT.h */
 #define WORD FORM_WORD  /* WinDef.h */
 #define LONG FORM_LONG /* WinNT.h */
@@ -297,7 +296,6 @@ STATIC_ASSERT(sizeof(INT128) == 16);
 #define WORDSIZE32 1
 #endif
 
-typedef void VOID;
 typedef signed char SBYTE;
 typedef unsigned char UBYTE;
 typedef unsigned int UINT;
