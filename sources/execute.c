@@ -208,7 +208,7 @@ WORD CleanExpr(WORD par)
 
 */
 
-WORD PopVariables(VOID)
+WORD PopVariables(void)
 {
 	GETIDENTITY
 	WORD i, j, retval;
@@ -379,7 +379,7 @@ WORD PopVariables(VOID)
  		#[ MakeGlobal :
 */
 
-VOID MakeGlobal(VOID)
+void MakeGlobal(void)
 {
 	WORD i, j, *pp, *mm;
 	UWORD *p, *m;
@@ -480,7 +480,7 @@ VOID MakeGlobal(VOID)
  		#[ TestDrop :
 */
 
-VOID TestDrop(VOID)
+void TestDrop(void)
 {
 	EXPRESSIONS e;
 	WORD j;
@@ -1620,7 +1620,7 @@ NextSymbol2:;
  		#[ SpecialCleanup :
 */
 
-VOID SpecialCleanup(PHEAD0)
+void SpecialCleanup(PHEAD0)
 {
 	GETBIDENTITY
 	if ( AT.previousEfactor ) M_free(AT.previousEfactor,"Efactor cache");
@@ -1634,7 +1634,7 @@ VOID SpecialCleanup(PHEAD0)
 
 #ifndef WITHPTHREADS
 
-void SetMods(VOID)
+void SetMods(void)
 {
 	int i, n;
 	if ( AN.cmod != 0 ) M_free(AN.cmod,"AN.cmod");
@@ -1652,7 +1652,7 @@ void SetMods(VOID)
 
 #ifndef WITHPTHREADS
 
-void UnSetMods(VOID)
+void UnSetMods(void)
 {
 	if ( AN.cmod != 0 ) M_free(AN.cmod,"AN.cmod");
 	AN.cmod = 0;
@@ -2397,7 +2397,7 @@ LONG SizeOfExpression(WORD num)
  		#[ UpdatePositions :
 */
 
-void UpdatePositions(VOID)
+void UpdatePositions(void)
 {
 	EXPRESSIONS e = Expressions;
 	POSITION *old;

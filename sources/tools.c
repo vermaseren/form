@@ -820,7 +820,7 @@ LONG GetStreamPosition(STREAM *stream)
  		#[ PositionStream :
 */
 
-VOID PositionStream(STREAM *stream, LONG position)
+void PositionStream(STREAM *stream, LONG position)
 {
 	POSITION scrpos;
 	if ( position >= stream->bufferposition
@@ -953,7 +953,7 @@ irrend:					MesPrint("@Irregular end of reverse include file.");
  		#[ StartFiles :
 */
 
-VOID StartFiles(VOID)
+void StartFiles(void)
 {
 	int i = CreateHandle();
 	filelist[i] = Ustdout;
@@ -1075,7 +1075,7 @@ int CreateLogFile(char *name)
  		#[ CloseFile :
 */
 
-VOID CloseFile(int handle)
+void CloseFile(int handle)
 {
 	if ( handle >= 0 ) {
 		FILES *f;	/* we need this variable to be thread-safe */
@@ -1159,7 +1159,7 @@ int CopyFile(char *source, char *dest)
 		Conclusion: MALLOCDEBUG will have to be a bit unsafe
 */
 
-int CreateHandle(VOID)
+int CreateHandle(void)
 {
 	int i, j;
 #ifndef MALLOCDEBUG
@@ -1173,9 +1173,9 @@ int CreateHandle(VOID)
         i = 0;
 	}
 	else if ( numinfilelist >= filelistsize ) {
-        VOID **fl = (VOID **)filelist;
+        void **fl = (void **)filelist;
         i = filelistsize;
-        if ( DoubleList((VOID ***)(&fl),&filelistsize,(int)sizeof(FILES *),
+        if ( DoubleList((void ***)(&fl),&filelistsize,(int)sizeof(FILES *),
 			"list of open files") != 0 ) Terminate(-1);
 		filelist = (FILES **)fl;
 		for ( j = i; j < filelistsize; j++ ) filelist[j] = 0;
@@ -1368,7 +1368,7 @@ WRITEFILE WriteFile = &PF_WriteFileToFile;
  		#[ SeekFile :
 */
 
-VOID SeekFile(int handle, POSITION *offset, int origin)
+void SeekFile(int handle, POSITION *offset, int origin)
 {
 	FILES *f;
 	RWLOCKR(AM.handlelock);
@@ -1403,7 +1403,7 @@ LONG TellFile(int handle)
 	return(BASEPOSITION(pos));
 }
 
-VOID TELLFILE(int handle, POSITION *position)
+void TELLFILE(int handle, POSITION *position)
 {
 	FILES *f;
 	RWLOCKR(AM.handlelock);
@@ -1465,7 +1465,7 @@ int SetPosFile(int handle, fpos_t *pospointer)
 		is very slow.
 */
 
-VOID SynchFile(int handle)
+void SynchFile(int handle)
 {
 	FILES *f;
 	if ( handle >= 0 ) {
@@ -1487,7 +1487,7 @@ VOID SynchFile(int handle)
 		is very slow.
 */
 
-VOID TruncateFile(int handle)
+void TruncateFile(int handle)
 {
 	FILES *f;
 	if ( handle >= 0 ) {
@@ -1607,7 +1607,7 @@ int CloseChannel(char *name)
 		currently ignored.
 */
 
-void UpdateMaxSize(VOID)
+void UpdateMaxSize(void)
 {
 	POSITION position, sumsize;
 	int i;
@@ -1780,7 +1780,7 @@ int StrLen(UBYTE *s)
  		#[ NumToStr :
 */
 
-VOID NumToStr(UBYTE *s, LONG x)
+void NumToStr(UBYTE *s, LONG x)
 {
 	UBYTE *t, str[24];
 	ULONG xx;
@@ -1804,7 +1804,7 @@ VOID NumToStr(UBYTE *s, LONG x)
 		The type of output is given by type, the string by str and the
 		number of characters in it by num
 */
-VOID WriteString(int type, UBYTE *str, int num)
+void WriteString(int type, UBYTE *str, int num)
 {
 	int error = 0;
 
@@ -1838,7 +1838,7 @@ VOID WriteString(int type, UBYTE *str, int num)
 		number of characters in it by num
 */
 
-VOID WriteUnfinString(int type, UBYTE *str, int num)
+void WriteUnfinString(int type, UBYTE *str, int num)
 {
 	int error = 0;
 
@@ -2087,7 +2087,7 @@ static char notime[] = "";
 #endif
 #endif
 
-UBYTE *MakeDate(VOID)
+UBYTE *MakeDate(void)
 {
 #ifdef ANSI
 	time_t tp;
@@ -2198,7 +2198,7 @@ one_byte set_sub(set_of_char set, set_of_char set1, set_of_char set2)
  		#[ iniTools :
 */
 
-VOID iniTools(VOID)
+void iniTools(void)
 {
 #ifdef MALLOCPROTECT
 	if ( mprotectInit() ) exit(0);
@@ -2218,9 +2218,9 @@ char *dummymessage = "Malloc";
 INILOCK(MallocLock)
 #endif
  
-VOID *Malloc(LONG size)
+void *Malloc(LONG size)
 {
-	VOID *mem;
+	void *mem;
 #ifdef MALLOCDEBUG
 	char *t, *u;
 	int i;
@@ -2234,7 +2234,7 @@ VOID *Malloc(LONG size)
 #ifdef MALLOCDEBUG
 	size += 2*BANNER;
 #endif
-	mem = (VOID *)M_alloc(size);
+	mem = (void *)M_alloc(size);
 	if ( mem == 0 ) {
 #ifndef MALLOCDEBUG
 		MLOCK(ErrorMessageLock);
@@ -2300,9 +2300,9 @@ VOID *Malloc(LONG size)
 		Gives the user some idea of what is happening.
 */
 
-VOID *Malloc1(LONG size, const char *messageifwrong)
+void *Malloc1(LONG size, const char *messageifwrong)
 {
-	VOID *mem;
+	void *mem;
 #ifdef MALLOCDEBUG
 	char *t, *u;
 	int i;
@@ -2319,7 +2319,7 @@ VOID *Malloc1(LONG size, const char *messageifwrong)
 #ifdef MALLOCDEBUG
 	size += 2*BANNER;
 #endif
-	mem = (VOID *)M_alloc(size);
+	mem = (void *)M_alloc(size);
 	if ( mem == 0 ) {
 #ifndef MALLOCDEBUG
 		MLOCK(ErrorMessageLock);
@@ -2380,7 +2380,7 @@ VOID *Malloc1(LONG size, const char *messageifwrong)
  		#[ M_free :
 */
 
-void M_free(VOID *x, const char *where)
+void M_free(void *x, const char *where)
 {
 #ifdef MALLOCDEBUG
 	char *t = (char *)x;
@@ -2513,8 +2513,8 @@ void M_print()
 
 #else
 
-void M_check1(VOID) {}
-void M_print(VOID) {}
+void M_check1(void) {}
+void M_print(void) {}
 
 #endif
 
@@ -2547,7 +2547,7 @@ void M_print(VOID) {}
 #define TERMMEMSTARTNUM 16
 #define TERMEXTRAWORDS 10
 
-VOID TermMallocAddMemory(PHEAD0)
+void TermMallocAddMemory(PHEAD0)
 {
 	WORD *newbufs;
 	int i, extra;
@@ -2593,7 +2593,7 @@ WORD *TermMalloc2(PHEAD char *text)
 	return(AT.TermMemHeap[--AT.TermMemTop]);
 }
  
-VOID TermFree2(PHEAD WORD *TermMem, char *text)
+void TermFree2(PHEAD WORD *TermMem, char *text)
 {
 #ifdef TERMMALLOCDEBUG
 
@@ -2651,7 +2651,7 @@ VOID TermFree2(PHEAD WORD *TermMem, char *text)
 UWORD **DebugHeap3, **DebugHeap4;
 #endif
 
-VOID NumberMallocAddMemory(PHEAD0)
+void NumberMallocAddMemory(PHEAD0)
 {
 	UWORD *newbufs;
 	WORD extra;
@@ -2695,7 +2695,7 @@ UWORD *NumberMalloc2(PHEAD char *text)
 	return(AT.NumberMemHeap[--AT.NumberMemTop]);
 }
  
-VOID NumberFree2(PHEAD UWORD *NumberMem, char *text)
+void NumberFree2(PHEAD UWORD *NumberMem, char *text)
 {
 #ifdef TERMMALLOCDEBUG
 	int i;
@@ -2725,7 +2725,7 @@ VOID NumberFree2(PHEAD UWORD *NumberMem, char *text)
 	Similar to NumberMalloc
  */
 
-VOID CacheNumberMallocAddMemory(PHEAD0)
+void CacheNumberMallocAddMemory(PHEAD0)
 {
 	UWORD *newbufs;
 	WORD extra;
@@ -2756,7 +2756,7 @@ UWORD *CacheNumberMalloc2(PHEAD char *text)
 	return(AT.CacheNumberMemHeap[--AT.CacheNumberMemTop]);
 }
  
-VOID CacheNumberFree2(PHEAD UWORD *NumberMem, char *text)
+void CacheNumberFree2(PHEAD UWORD *NumberMem, char *text)
 {
 	DUMMYUSE(text);
 	AT.CacheNumberMemHeap[AT.CacheNumberMemTop++] = NumberMem;
@@ -2777,7 +2777,7 @@ VOID CacheNumberFree2(PHEAD UWORD *NumberMem, char *text)
 	If the list has not been initialized yet we start with 12 elements.
 */
 
-VOID *FromList(LIST *L)
+void *FromList(LIST *L)
 {
 	void *newlist;
 	int i, *old, *newL;
@@ -2803,7 +2803,7 @@ VOID *FromList(LIST *L)
 		Same as FromList, but we zero excess variables.
 */
 
-VOID *From0List(LIST *L)
+void *From0List(LIST *L)
 {
 	void *newlist;
 	int i, *old, *newL;
@@ -2832,7 +2832,7 @@ VOID *From0List(LIST *L)
 	We allow at most MAXVARIABLES elements!
 */
 
-VOID *FromVarList(LIST *L)
+void *FromVarList(LIST *L)
 {
 	void *newlist;
 	int i, *old, *newL;
@@ -2874,11 +2874,11 @@ VOID *FromVarList(LIST *L)
  		#[ DoubleList :
 */
 
-int DoubleList(VOID ***lijst, int *oldsize, int objectsize, char *nameoftype)
+int DoubleList(void ***lijst, int *oldsize, int objectsize, char *nameoftype)
 {
-	VOID **newlist;
+	void **newlist;
 	LONG i, newsize, fullsize;
-	VOID **to, **from;
+	void **to, **from;
 	static LONG maxlistsize = (LONG)(MAXPOSITIVE);
 	if ( *lijst == 0 ) {
 		if ( *oldsize > 0 ) newsize = *oldsize;
@@ -2892,10 +2892,10 @@ int DoubleList(VOID ***lijst, int *oldsize, int objectsize, char *nameoftype)
 		}
 		newsize = maxlistsize;
 	}
-	fullsize = ( newsize * objectsize + sizeof(VOID *)-1 ) & (-sizeof(VOID *));
-	newlist = (VOID **)Malloc1(fullsize,nameoftype);
+	fullsize = ( newsize * objectsize + sizeof(void *)-1 ) & (-sizeof(void *));
+	newlist = (void **)Malloc1(fullsize,nameoftype);
 	if ( *lijst ) {	/* Now some punning. DANGEROUS CODE in principle */
-		to = newlist; from = *lijst; i = (*oldsize * objectsize)/sizeof(VOID *);
+		to = newlist; from = *lijst; i = (*oldsize * objectsize)/sizeof(void *);
 /*
 #ifdef MALLOCDEBUG
 if ( filelist ) MesPrint("    oldsize: %l, objectsize: %d, fullsize: %l"
@@ -2926,11 +2926,11 @@ if ( filelist ) MesPrint("    oldsize: %l, objectsize: %d, fullsize: %l"
  		#[ DoubleLList :
 */
 
-int DoubleLList(VOID ***lijst, LONG *oldsize, int objectsize, char *nameoftype)
+int DoubleLList(void ***lijst, LONG *oldsize, int objectsize, char *nameoftype)
 {
-	VOID **newlist;
+	void **newlist;
 	LONG i, newsize, fullsize;
-	VOID **to, **from;
+	void **to, **from;
 	static LONG maxlistsize = (LONG)(MAXLONG);
 	if ( *lijst == 0 ) {
 		if ( *oldsize > 0 ) newsize = *oldsize;
@@ -2944,10 +2944,10 @@ int DoubleLList(VOID ***lijst, LONG *oldsize, int objectsize, char *nameoftype)
 		}
 		newsize = maxlistsize;
 	}
-	fullsize = ( newsize * objectsize + sizeof(VOID *)-1 ) & (-sizeof(VOID *));
-	newlist = (VOID **)Malloc1(fullsize,nameoftype);
+	fullsize = ( newsize * objectsize + sizeof(void *)-1 ) & (-sizeof(void *));
+	newlist = (void **)Malloc1(fullsize,nameoftype);
 	if ( *lijst ) {	/* Now some punning. DANGEROUS CODE in principle */
-		to = newlist; from = *lijst; i = (*oldsize * objectsize)/sizeof(VOID *);
+		to = newlist; from = *lijst; i = (*oldsize * objectsize)/sizeof(void *);
 /*
 #ifdef MALLOCDEBUG
 if ( filelist ) MesPrint("    oldsize: %l, objectsize: %d, fullsize: %l"
@@ -3831,7 +3831,7 @@ LONG Timer(int par)
 		Routine for debugging purposes
 */
 
-int Crash(VOID)
+int Crash(void)
 {
 	int retval;
 #ifdef DEBUGGING

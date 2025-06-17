@@ -1804,7 +1804,7 @@ WORD execterm(PHEAD WORD *term, WORD level)
 			buffer1 = 0;
 		}
 		AN.tryterm = 1;
-		if ( EndSort(BHEAD (WORD *)((VOID *)(&buffer1)),2) < 0 ) goto exectermerr;
+		if ( EndSort(BHEAD (WORD *)((void *)(&buffer1)),2) < 0 ) goto exectermerr;
 		tryterm = AN.tryterm; AN.tryterm = 0;
 		level = AR.Cnumlhs;
 	} while ( AR.Cnumlhs < maxisat );

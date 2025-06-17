@@ -129,7 +129,7 @@ static KEYWORD precommands[] = {
 		If there are no more streams we let this be known.
 */
 
-UBYTE GetInput(VOID)
+UBYTE GetInput(void)
 {
 	UBYTE c;
 	while ( AC.CurrentStream ) {
@@ -158,7 +158,7 @@ UBYTE GetInput(VOID)
  		#[ ClearPushback :
 */
 
-VOID ClearPushback(VOID)
+void ClearPushback(void)
 {
 	pushbackchar = 0;
 }
@@ -486,7 +486,7 @@ endofloop:;
  		#[ CharOut :
 */
 
-VOID CharOut(UBYTE c)
+void CharOut(UBYTE c)
 {
 	if ( c == LINEFEED ) {
 		AM.OutBuffer[AP.InOutBuf++] = c;
@@ -507,7 +507,7 @@ VOID CharOut(UBYTE c)
  		#[ UnsetAllowDelay :
 */
 
-VOID UnsetAllowDelay(VOID)
+void UnsetAllowDelay(void)
 {
 	if ( ThePreVar != 0 ) {
 		if ( ThePreVar->nargs > 0 ) AP.AllowDelay = 0;
@@ -817,7 +817,7 @@ int PutPreVar(UBYTE *name, UBYTE *value, UBYTE *args, int mode)
  		#[ PopPreVars :
 */
 
-VOID PopPreVars(int tonumber)
+void PopPreVars(int tonumber)
 {
 	PREVAR *p = &(PreVar[NumPre]);
 	while ( NumPre > tonumber ) {
@@ -832,7 +832,7 @@ VOID PopPreVars(int tonumber)
  		#[ IniModule :
 */
 
-VOID IniModule(int type)
+void IniModule(int type)
 {
 	GETIDENTITY
 	WORD **w, i;
@@ -934,7 +934,7 @@ VOID IniModule(int type)
  		#[ IniSpecialModule :
 */
 
-VOID IniSpecialModule(int type)
+void IniSpecialModule(int type)
 {
 	DUMMYUSE(type);
 }
@@ -944,7 +944,7 @@ VOID IniSpecialModule(int type)
  		#[ PreProcessor :
 */
 
-VOID PreProcessor(VOID)
+void PreProcessor(void)
 {
 	int moduletype = FIRSTMODULE;
 	int specialtype = 0;
@@ -1163,7 +1163,7 @@ endmodule:			if ( error2 == 0 && AM.qError == 0 ) {
  		#[ PreProInstruction :
 */
 
-int PreProInstruction(VOID)
+int PreProInstruction(void)
 {
 	UBYTE *s, *t;
 	KEYWORD *key;
@@ -1424,7 +1424,7 @@ dodollar:		s = sstart;
 			position = s - AP.preStart;
 			if ( AP.preFill ) fillpos = AP.preFill - AP.preStart;
 			ppp = &(AP.preStart); /* to avoid a compiler warning */
-			if ( DoubleLList((VOID ***)ppp,&AP.pSize,sizeof(UBYTE),
+			if ( DoubleLList((void ***)ppp,&AP.pSize,sizeof(UBYTE),
 			"instruction buffer") ) { *s = 0; oldmode = mode; return(-1); }
 			AP.preStop = AP.preStart + AP.pSize-3;
 			s = AP.preStart + position;
@@ -1529,7 +1529,7 @@ doall:;			if ( AP.eat < 0 ) {
 				LONG position = s - AC.iBuffer;
 				LONG position2 = AC.iPointer - AC.iBuffer;
 				UBYTE **ppp = &(AC.iBuffer); /* to avoid a compiler warning */
-				if ( DoubleLList((VOID ***)ppp,&AC.iBufferSize
+				if ( DoubleLList((void ***)ppp,&AC.iBufferSize
 				,sizeof(UBYTE),"statement buffer") ) {
 					*s = 0; retval = -1; AP.iBufError = 1;
 				}
@@ -1701,7 +1701,7 @@ int ExpandTripleDots(int par)
 				if ( par == 0 ) {
 					LONG position2 = AC.iPointer - AC.iBuffer;
 					ppp = &(AC.iBuffer); /* to avoid a compiler warning */
-					if ( DoubleLList((VOID ***)ppp,&AC.iBufferSize
+					if ( DoubleLList((void ***)ppp,&AC.iBufferSize
 						,sizeof(UBYTE),"statement buffer") ) {
 							Terminate(-1);
 					}
@@ -1713,7 +1713,7 @@ int ExpandTripleDots(int par)
 					LONG fillpos = 0;
 					if ( AP.preFill ) fillpos = AP.preFill - AP.preStart;
 					ppp = &(AP.preStart); /* to avoid a compiler warning */
-					if ( DoubleLList((VOID ***)ppp,&AP.pSize,sizeof(UBYTE),
+					if ( DoubleLList((void ***)ppp,&AP.pSize,sizeof(UBYTE),
 						"instruction buffer") ) {
 							Terminate(-1);
 					}
@@ -1921,7 +1921,7 @@ theend:			M_free(nums,"Expand ...");
 					LONG position2 = AC.iPointer - AC.iBuffer;
 					UBYTE **ppp;
 					ppp = &(AC.iBuffer); /* to avoid a compiler warning */
-					if ( DoubleLList((VOID ***)ppp,&AC.iBufferSize
+					if ( DoubleLList((void ***)ppp,&AC.iBufferSize
 						,sizeof(UBYTE),"statement buffer") ) {
 							Terminate(-1);
 					}
@@ -3376,7 +3376,7 @@ int DoIf(UBYTE *s)
 	else condition = LOOKINGFORENDIF;
 	if ( AP.PreIfLevel+1 >= AP.MaxPreIfLevel ) {
 		int **ppp = &AP.PreIfStack; /* To avoid a compiler warning */
-		if ( DoubleList((VOID ***)ppp,&AP.MaxPreIfLevel,sizeof(int),
+		if ( DoubleList((void ***)ppp,&AP.MaxPreIfLevel,sizeof(int),
 			"PreIfLevels") ) return(-1);
 	}
 	AP.PreIfStack[++AP.PreIfLevel] = condition;
@@ -3401,7 +3401,7 @@ int DoIfdef(UBYTE *s, int par)
 	else condition = LOOKINGFORENDIF;
 	if ( AP.PreIfLevel+1 >= AP.MaxPreIfLevel ) {
 		int **ppp = &AP.PreIfStack; /* to avoid a compiler warning */
-		if ( DoubleList((VOID ***)ppp,&AP.MaxPreIfLevel,sizeof(int),
+		if ( DoubleList((void ***)ppp,&AP.MaxPreIfLevel,sizeof(int),
 			"PreIfLevels") ) return(-1);
 	}
 	AP.PreIfStack[++AP.PreIfLevel] = condition;
@@ -3613,7 +3613,7 @@ int DoEndInside(UBYTE *s)
 			AT.WorkPointer = oldworkpointer;
 			CleanDollarFactors(d);
 			if ( d->where ) { M_free(d->where,"dollar contents"); d->where = 0; }
-			EndSort(BHEAD (WORD *)((VOID *)(&(d->where))),2);
+			EndSort(BHEAD (WORD *)((void *)(&(d->where))),2);
 			LowerSortLevel();
 			term = d->where; while ( *term ) term += *term;
 			d->size = term - d->where;
@@ -4429,12 +4429,12 @@ int PreSkip(UBYTE *start, UBYTE *stop, int mode)
  		#[ StartPrepro :
 */
 
-VOID StartPrepro(VOID)
+void StartPrepro(void)
 {
 	int **ppp;
 	AP.MaxPreIfLevel = 2;
 	ppp = &AP.PreIfStack;
-	if ( DoubleList((VOID ***)ppp,&AP.MaxPreIfLevel,sizeof(int),
+	if ( DoubleList((void ***)ppp,&AP.MaxPreIfLevel,sizeof(int),
 			"PreIfLevels") ) Terminate(-1);
 	AP.PreIfLevel = 0; AP.PreIfStack[0] = EXECUTINGIF;
 
@@ -5110,7 +5110,7 @@ flagerror:
 		a stream.
 */
 
-UBYTE *PreCalc(VOID)
+UBYTE *PreCalc(void)
 {
 	UBYTE *buff, *s = 0, *t, *newb, c;
 	int size, i, n, parlevel = 0, bralevel = 0;

@@ -634,10 +634,10 @@ nextlevel:;
 
 /*
  		#] TestMatch : 
- 		#[ Substitute :			VOID Substitute(term,pattern,power)
+ 		#[ Substitute :			void Substitute(term,pattern,power)
 */
 
-VOID Substitute(PHEAD WORD *term, WORD *pattern, WORD power)
+void Substitute(PHEAD WORD *term, WORD *pattern, WORD power)
 {
 	GETBIDENTITY
 	WORD *TemTerm;
@@ -1965,7 +1965,7 @@ dotensor:
 
 /*
  		#] TestSelect : 
- 		#[ SubsInAll :			VOID SubsInAll()
+ 		#[ SubsInAll :			void SubsInAll()
 
 		This routine takes a match in id,all and stores it away in
 		the AT.allbufnum 'compiler' buffer, after taking out the pattern.
@@ -1979,7 +1979,7 @@ dotensor:
 		(to be done later).
 */
 
-VOID SubsInAll(PHEAD0)
+void SubsInAll(PHEAD0)
 {
 	GETBIDENTITY
 	WORD *TemTerm;
@@ -2140,7 +2140,7 @@ VOID SubsInAll(PHEAD0)
 		wildcard resolutions adapted by an offset.
 */
 
-VOID TransferBuffer(int from,int to,int spectator)
+void TransferBuffer(int from,int to,int spectator)
 {
 	CBUF *C  = cbuf + spectator;
 	CBUF *Cf = cbuf + from;

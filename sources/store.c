@@ -45,7 +45,7 @@
 
 */
 
-WORD OpenTemp(VOID)
+WORD OpenTemp(void)
 {
 	GETIDENTITY
 	if ( AR.outfile->handle >= 0 ) {
@@ -61,7 +61,7 @@ WORD OpenTemp(VOID)
  		#[ SeekScratch :
 */
 
-VOID SeekScratch(FILEHANDLE *fi, POSITION *pos)
+void SeekScratch(FILEHANDLE *fi, POSITION *pos)
 {
 	*pos = fi->POposition;
 	ADDPOS(*pos,(TOLONG(fi->POfill)-TOLONG(fi->PObuffer)));
@@ -72,7 +72,7 @@ VOID SeekScratch(FILEHANDLE *fi, POSITION *pos)
  		#[ SetEndScratch :
 */
 
-VOID SetEndScratch(FILEHANDLE *f, POSITION *position)
+void SetEndScratch(FILEHANDLE *f, POSITION *position)
 {
 	if ( f->handle < 0 ) {
 		SETBASEPOSITION(*position,(f->POfull-f->PObuffer)*sizeof(WORD));
@@ -86,7 +86,7 @@ VOID SetEndScratch(FILEHANDLE *f, POSITION *position)
  		#[ SetEndHScratch :
 */
 
-VOID SetEndHScratch(FILEHANDLE *f, POSITION *position)
+void SetEndHScratch(FILEHANDLE *f, POSITION *position)
 {
 	if ( f->handle < 0 ) {
 		SETBASEPOSITION(*position,(f->POfull-f->PObuffer)*sizeof(WORD));
@@ -112,7 +112,7 @@ VOID SetEndHScratch(FILEHANDLE *f, POSITION *position)
  		#[ SetScratch :
 */
 
-VOID SetScratch(FILEHANDLE *f, POSITION *position)
+void SetScratch(FILEHANDLE *f, POSITION *position)
 {
 	GETIDENTITY
 	POSITION possize;
@@ -187,7 +187,7 @@ endpos:
 
 */
 
-WORD RevertScratch(VOID)
+WORD RevertScratch(void)
 {
 	GETIDENTITY
 	FILEHANDLE *f;
@@ -232,7 +232,7 @@ WORD RevertScratch(VOID)
 
 */
 
-WORD ResetScratch(VOID)
+WORD ResetScratch(void)
 {
 	GETIDENTITY
 	FILEHANDLE *f;
@@ -1818,7 +1818,7 @@ PastErr:
 
 /*
  		#] GetFromStore : 
- 		#[ DetVars :			VOID DetVars(term)
+ 		#[ DetVars :			void DetVars(term)
 
 	Determines which variables are used in term.
 
@@ -1827,7 +1827,7 @@ PastErr:
 
 */
 
-VOID DetVars(WORD *term, WORD par)
+void DetVars(WORD *term, WORD par)
 {
 	GETIDENTITY
 	WORD *stopper;
@@ -2318,7 +2318,7 @@ ErrNextS:
  *  @return  = 0 everything okay, != 0 an error occurred
  */
 
-WORD SetFileIndex(VOID)
+WORD SetFileIndex(void)
 {
 	GETIDENTITY
 	int i, j = sizeof(FILEINDEX)/(sizeof(LONG));
@@ -4062,17 +4062,17 @@ static unsigned int CompactifySizeof(unsigned int size)
  *  @return   = 0 everything okay, != 0 an error occurred
  */
 
-WORD ReadSaveHeader(VOID)
+WORD ReadSaveHeader(void)
 {
 	/* Read-only tables of function pointers for conversions. */
-	static VOID (*flipJumpTable[4])(UBYTE *) =
+	static void (*flipJumpTable[4])(UBYTE *) =
 		{ Flip16, Flip32, Flip64, Flip128 };
-	static VOID (*resizeJumpTable[4][4])(UBYTE *, UBYTE *) = /* "own x saved"-sizes  */
+	static void (*resizeJumpTable[4][4])(UBYTE *, UBYTE *) = /* "own x saved"-sizes  */
 		{ { Resize16t16,  Resize32t16,  Resize64t16,  Resize128t16  },
 		  { Resize16t32,  Resize32t32,  Resize64t32,  Resize128t32  },
 		  { Resize16t64,  Resize32t64,  Resize64t64,  Resize128t64  },
 		  { Resize16t128, Resize32t128, Resize64t128, Resize128t128 } };
-	static VOID (*resizeNCJumpTable[4][4])(UBYTE *, UBYTE *) = /* "own x saved"-sizes  */
+	static void (*resizeNCJumpTable[4][4])(UBYTE *, UBYTE *) = /* "own x saved"-sizes  */
 		{ { Resize16t16,  Resize32t16NC,  Resize64t16NC,  Resize128t16NC  },
 		  { Resize16t32,  Resize32t32,  Resize64t32NC,  Resize128t32NC  },
 		  { Resize16t64,  Resize32t64,  Resize64t64,  Resize128t64NC  },

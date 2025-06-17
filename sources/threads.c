@@ -124,7 +124,7 @@ static LONG numberofterms;
  *	Starts our identity administration.
  */
 
-void StartIdentity(VOID)
+void StartIdentity(void)
 {
 	pthread_key_create(&identitykey,FinishIdentity);
 }
@@ -181,7 +181,7 @@ int SetIdentity(int *identityretval)
  *	one of the BARG macros rather than the ARG macros.
  */
 
-int WhoAmI(VOID)
+int WhoAmI(void)
 {
 	int *identity;
 /*
@@ -209,7 +209,7 @@ int WhoAmI(VOID)
  *	at the startup of TFORM.
  */
 
-VOID BeginIdentities(VOID)
+void BeginIdentities(void)
 {
 	StartIdentity();
 	SetIdentity(&identityretval);
@@ -226,7 +226,7 @@ VOID BeginIdentities(VOID)
  *	specific data in this file.
  */
 
-void StartHandleLock(VOID)
+void StartHandleLock(void)
 {
 	AM.handlelock = dummyrwlock;
 }
@@ -753,7 +753,7 @@ ALLPRIVATES *InitializeOneThread(int identity)
 		AT.StoreCacheAlloc = (STORECACHE)Malloc1(size*AM.NumStoreCaches,"StoreCaches");
 		sa = AT.StoreCache = AT.StoreCacheAlloc;
 		for ( i = 0; i < AM.NumStoreCaches; i++ ) {
-			sb = (STORECACHE)(VOID *)((UBYTE *)sa+size);
+			sb = (STORECACHE)(void *)((UBYTE *)sa+size);
 			if ( i == AM.NumStoreCaches-1 ) {
 				sa->next = 0;
 			}
@@ -805,7 +805,7 @@ void FinalizeOneThread(int identity)
  *	to do it ourselves.
  */
 
-VOID ClearAllThreads(VOID)
+void ClearAllThreads(void)
 {
 	int i;
 	MasterWaitAll();
@@ -829,7 +829,7 @@ VOID ClearAllThreads(VOID)
  *	to do it ourselves.
  */
 
-VOID TerminateAllThreads(VOID)
+void TerminateAllThreads(void)
 {
 	int i;
 	for ( i = 1; i <= numberofworkers; i++ ) {
@@ -983,7 +983,7 @@ void WriteTimerInfo(LONG* ti,LONG* sti)
  *	To be called at the end of the TFORM run.
  */
 
-LONG GetWorkerTimes(VOID)
+LONG GetWorkerTimes(void)
 {
 	LONG retval = 0;
 	int i;
@@ -1173,7 +1173,7 @@ int BalanceRunThread(PHEAD int identity, WORD *term, WORD level)
  *	Initializes the scratch files at the start of the execution of a module.
  */
 
-void SetWorkerFiles(VOID)
+void SetWorkerFiles(void)
 {
 	int id;
 	ALLPRIVATES *B, *B0 = AB[0];
@@ -2059,7 +2059,7 @@ void IAmAvailable(int identity)
  *	(writing point and reading point). Still to be investigated.
  */
 
-int GetAvailableThread(VOID)
+int GetAvailableThread(void)
 {
 	int retval = -1;
 	LOCK(availabilitylock);
@@ -2087,7 +2087,7 @@ int GetAvailableThread(VOID)
  *	@return the identity of an available thread or -1 if none is available.
  */
 
-int ConditionalGetAvailableThread(VOID)
+int ConditionalGetAvailableThread(void)
 {
 	int retval = -1;
 	if ( topofavailables > 0 ) {
@@ -2265,7 +2265,7 @@ int ThreadClaimedBlock(int identity)
  *	The return value is the identity of the process that wakes up the master.
  */
 
-int MasterWait(VOID)
+int MasterWait(void)
 {
 	int retval;
 	LOCK(wakeupmasterlock);
@@ -2312,7 +2312,7 @@ int MasterWaitThread(int identity)
  *	It goes to sleep and waits for a wakeup call in ThreadWait
  */
 
-void MasterWaitAll(VOID)
+void MasterWaitAll(void)
 {
 	LOCK(wakeupmasterlock);
 	while ( topofavailables < numberofworkers ) {
@@ -2334,7 +2334,7 @@ void MasterWaitAll(VOID)
  *	sortbots to start their task.
  */
 
-void MasterWaitAllSortBots(VOID)
+void MasterWaitAllSortBots(void)
 {
 	LOCK(wakeupsortbotlock);
 	while ( topsortbotavailables < numberofsortbots ) {
@@ -2356,7 +2356,7 @@ void MasterWaitAllSortBots(VOID)
  *	It goes to sleep and waits for a wakeup call.
  */
 
-void MasterWaitAllBlocks(VOID)
+void MasterWaitAllBlocks(void)
 {
 	LOCK(wakeupmasterlock);
 	while ( numberclaimed < numberofworkers ) {
@@ -2485,7 +2485,7 @@ int SendOneBucket(int type)
  *	efficiency in the running of the Multiple Zeta Values program.
  */
 
-int InParallelProcessor(VOID)
+int InParallelProcessor(void)
 {
 	GETIDENTITY
 	int i, id, retval = 0, num = 0;
@@ -3223,7 +3223,7 @@ ProcErr:;
  *	from a thread that has not done anything yet.
  */
 
-int LoadReadjusted(VOID)
+int LoadReadjusted(void)
 {
 	ALLPRIVATES *B0 = AB[0];
 	THREADBUCKET *thr = 0, *thrtogo = 0;
@@ -3608,7 +3608,7 @@ SortBotOut(PHEAD WORD *term)
  *	This routine is run by the master when we don't use the sortbots.
  */
 
-int MasterMerge(VOID)
+int MasterMerge(void)
 {
 	ALLPRIVATES *B0 = AB[0], *B = 0;
 	SORTING *S = AT0.SS;
@@ -4089,7 +4089,7 @@ ReturnError:
  *	This routine is run as master. Hence B = B0. Etc.
  */
 
-int SortBotMasterMerge(VOID)
+int SortBotMasterMerge(void)
 {
 	FILEHANDLE *fin, *fout;
 	ALLPRIVATES *B = AB[0], *BB;
@@ -4870,7 +4870,7 @@ int UpdateSortBlocks(int numworkers)
  *	system by telling the sortbot which threads provide their input.
  */
 
-void DefineSortBotTree(VOID)
+void DefineSortBotTree(void)
 {
 	ALLPRIVATES *B;
 	int n, i, from;
@@ -5042,7 +5042,7 @@ int TreatIndexEntry(PHEAD LONG n)
   	#[ SetHideFiles :
 */
 
-void SetHideFiles(VOID) {
+void SetHideFiles(void) {
 	int i;
 	ALLPRIVATES *B, *B0 = AB[0];
 	for ( i = 1; i <= numberofworkers; i++ ) {
@@ -5073,7 +5073,7 @@ void SetHideFiles(VOID) {
   	#[ IniFbufs :
 */
 
-void IniFbufs(VOID)
+void IniFbufs(void)
 {
 	int i;
 	for ( i = 0; i < AM.totalnumberofthreads; i++ ) {
@@ -5086,7 +5086,7 @@ void IniFbufs(VOID)
   	#[ SetMods :
 */
 
-void SetMods(VOID)
+void SetMods(void)
 {
 	ALLPRIVATES *B;
 	int i, n, j;
@@ -5105,7 +5105,7 @@ void SetMods(VOID)
   	#[ UnSetMods :
 */
 
-void UnSetMods(VOID)
+void UnSetMods(void)
 {
 	ALLPRIVATES *B;
 	int j;
@@ -5121,7 +5121,7 @@ void UnSetMods(VOID)
   	#[ find_Horner_MCTS_expand_tree_threaded :
 */
  
-void find_Horner_MCTS_expand_tree_threaded(VOID) {
+void find_Horner_MCTS_expand_tree_threaded(void) {
 	int id;
 	while (( id = GetAvailableThread() ) < 0)
 		MasterWait();	
@@ -5133,7 +5133,7 @@ void find_Horner_MCTS_expand_tree_threaded(VOID) {
   	#[ optimize_expression_given_Horner_threaded :
 */
  
-extern void optimize_expression_given_Horner_threaded(VOID) {
+extern void optimize_expression_given_Horner_threaded(void) {
 	int id;
 	while (( id = GetAvailableThread() ) < 0)
 		MasterWait();	

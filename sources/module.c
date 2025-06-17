@@ -254,7 +254,7 @@ int CoModOption(UBYTE *s)
  		#[ SetSpecialMode :
 */
 
-VOID SetSpecialMode(int moduletype, int specialtype)
+void SetSpecialMode(int moduletype, int specialtype)
 {
 	DUMMYUSE(moduletype); DUMMYUSE(specialtype);
 }
@@ -263,7 +263,7 @@ VOID SetSpecialMode(int moduletype, int specialtype)
  		#] SetSpecialMode : 
  		#[ MakeGlobal :
 
-VOID MakeGlobal()
+void MakeGlobal()
 {
 }
 
@@ -296,7 +296,7 @@ int ExecModule(int moduletype)
  		#[ ExecStore :
 */
 
-int ExecStore(VOID)
+int ExecStore(void)
 {
 	return(0);
 }
@@ -311,7 +311,7 @@ int ExecStore(VOID)
 			What to do with files we write to
 */
 
-VOID FullCleanUp(VOID)
+void FullCleanUp(void)
 {
 	int j;
 
@@ -777,7 +777,7 @@ int DonotinParallel(UBYTE *s)
  		#[ DoExecStatement :
 */
 
-int DoExecStatement(VOID)
+int DoExecStatement(void)
 {
 #ifdef WITHSYSTEM
 	FLUSHCONSOLE;
@@ -794,7 +794,7 @@ int DoExecStatement(VOID)
  		#[ DoPipeStatement :
 */
 
-int DoPipeStatement(VOID)
+int DoPipeStatement(void)
 {
 #ifdef WITHPIPE
 	FLUSHCONSOLE;

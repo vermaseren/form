@@ -77,7 +77,7 @@ LONG numcompares;
 /*
   	#] Includes : 
 	#[ SortUtilities :
-		#[ WriteStats :				VOID WriteStats(lspace,par,checkLogType)
+		#[ WriteStats :				void WriteStats(lspace,par,checkLogType)
 */
  
 char *toterms[] = { "   ", " >>", "-->" };
@@ -98,7 +98,7 @@ char *toterms[] = { "   ", " >>", "-->" };
  *		S->GenTerms.
  */
 
-VOID WriteStats(POSITION *plspace, WORD par, WORD checkLogType)
+void WriteStats(POSITION *plspace, WORD par, WORD checkLogType)
 {
 	GETIDENTITY
 	LONG millitime, y = 0x7FFFFFFFL >> 1;
@@ -2298,7 +2298,7 @@ WORD AddPoly(PHEAD WORD **ps1, WORD **ps2)
 
 /*
  		#] AddPoly : 
- 		#[ AddArgs :				VOID AddArgs(arg1,arg2,to)
+ 		#[ AddArgs :				void AddArgs(arg1,arg2,to)
 */
  
 #define INSLENGTH(x)  w[1] = FUNHEAD+ARGHEAD+x; w[FUNHEAD] = ARGHEAD+x;
@@ -2310,7 +2310,7 @@ WORD AddPoly(PHEAD WORD **ps1, WORD **ps2)
  *	@param m  Pointer to where the answer should be.
  */
 
-VOID AddArgs(PHEAD WORD *s1, WORD *s2, WORD *m)
+void AddArgs(PHEAD WORD *s1, WORD *s2, WORD *m)
 {
 	GETBIDENTITY
 	WORD i1, i2;
@@ -3300,7 +3300,7 @@ LONG ComPress(WORD **ss, LONG *n)
 
 /*
  		#] ComPress : 
- 		#[ SplitMerge :				VOID SplitMerge(Point,number)
+ 		#[ SplitMerge :				void SplitMerge(Point,number)
 */
 /**
  *		Algorithm by J.A.M.Vermaseren (31-7-1988)
@@ -3592,7 +3592,7 @@ LONG SplitMerge(PHEAD WORD **Pointer, LONG number)
 
 /*
  		#] SplitMerge : 
- 		#[ GarbHand :				VOID GarbHand()
+ 		#[ GarbHand :				void GarbHand()
 */
 /**
  *		Garbage collection that takes place when the small extension is full
@@ -3609,7 +3609,7 @@ LONG SplitMerge(PHEAD WORD **Pointer, LONG number)
  *		polyfun or polyratfun is active.
  */
 
-VOID GarbHand(VOID)
+void GarbHand(void)
 {
 	GETIDENTITY
 	SORTING *S = AT.SS;
@@ -4613,7 +4613,7 @@ StoreCall:
 
 /*
  		#] StoreTerm : 
- 		#[ StageSort :				VOID StageSort(FILEHANDLE *fout)
+ 		#[ StageSort :				void StageSort(FILEHANDLE *fout)
 */
 /**
  *		Prepares a stage 4 or higher sort.
@@ -4621,7 +4621,7 @@ StoreCall:
  *		can be merged in one pass.
  */
 
-VOID StageSort(FILEHANDLE *fout)
+void StageSort(FILEHANDLE *fout)
 {
 	GETIDENTITY
 	SORTING *S = AT.SS;
@@ -4806,7 +4806,7 @@ WORD SortWild(WORD *w, WORD nw)
 
 /*
  		#] SortWild : 
- 		#[ CleanUpSort :			VOID CleanUpSort(num)
+ 		#[ CleanUpSort :			void CleanUpSort(num)
 */
 /**
  *		Partially or completely frees function sort buffers.
@@ -4906,13 +4906,13 @@ void CleanUpSort(int num)
 
 /*
  		#] CleanUpSort : 
- 		#[ LowerSortLevel :         VOID LowerSortLevel()
+ 		#[ LowerSortLevel :         void LowerSortLevel()
 */
 /**
  *		Lowers the level in the sort system.
  */
 
-VOID LowerSortLevel(VOID)
+void LowerSortLevel(void)
 {
 	GETIDENTITY
 	if ( AR.sLevel >= 0 ) {
@@ -5031,7 +5031,7 @@ Illegal:
 		Sorts an array of WORDs. No adding of equal objects.
 */
 
-VOID SimpleSplitMergeRec(WORD *array,WORD num,WORD *auxarray)
+void SimpleSplitMergeRec(WORD *array,WORD num,WORD *auxarray)
 {
 	WORD n1,n2,i,j,k,*t1,*t2;
 	if ( num < 2 ) return;
@@ -5059,7 +5059,7 @@ VOID SimpleSplitMergeRec(WORD *array,WORD num,WORD *auxarray)
 */
 }
 
-VOID SimpleSplitMerge(WORD *array,WORD num)
+void SimpleSplitMerge(WORD *array,WORD num)
 {
 	WORD *auxarray = Malloc1(sizeof(WORD)*num/2,"SimpleSplitMerge");
 	SimpleSplitMergeRec(array,num,auxarray);

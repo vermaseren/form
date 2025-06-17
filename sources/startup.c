@@ -539,7 +539,7 @@ NoFile:
 		.clear instructions if so desired without using interpretation
 */
 
-int OpenInput(VOID)
+int OpenInput(void)
 {
 	int oldNoShowInput = AC.NoShowInput;
 	UBYTE c;
@@ -663,7 +663,7 @@ UBYTE *defaulttempfilename = (UBYTE *)"xformxxx.str";
    instead of the "xxx". (Previously FORM used 5 digits and this value was 14) */
 #define DEFAULTFNAMELENGTH 16
 
-VOID ReserveTempFiles(int par)
+void ReserveTempFiles(int par)
 {
 	GETIDENTITY
 	SETUPPARAMETERS *sp;
@@ -902,7 +902,7 @@ classic:;
 ALLPRIVATES *DummyPointer = 0;
 #endif
 
-VOID StartVariables(VOID)
+void StartVariables(void)
 {
 	int i, ii;
 	PUTZERO(AM.zeropos);
@@ -1313,7 +1313,7 @@ VOID StartVariables(VOID)
  		#[ StartMore :
 */
 
-VOID StartMore(VOID)
+void StartMore(void)
 {
 #ifdef WITHEXTERNALCHANNEL
 	/*If env.variable "FORM_PIPES" is defined, we have to initialize 
@@ -1351,7 +1351,7 @@ VOID StartMore(VOID)
 		This routine initializes the parameters that may change during the run.
 */
 
-WORD IniVars(VOID)
+WORD IniVars(void)
 {
 #ifdef WITHPTHREADS
 	GETIDENTITY
@@ -1593,7 +1593,7 @@ static int trappedTerminate = 0;
 #ifdef INTSIGHANDLER
 static int onErrSig(int i)
 #else
-static VOID onErrSig(int i)
+static void onErrSig(int i)
 #endif
 {
 	if (exitInProgress){
@@ -1611,9 +1611,9 @@ static VOID onErrSig(int i)
 }
 
 #ifdef INTSIGHANDLER
-static VOID setNewSig(int i, int (*handler)(int))
+static void setNewSig(int i, int (*handler)(int))
 #else
-static VOID setNewSig(int i, void (*handler)(int))
+static void setNewSig(int i, void (*handler)(int))
 #endif
 {
 	if(! (i<NSIG) )/* Invalid signal -- see comments in the file */
@@ -1623,7 +1623,7 @@ static VOID setNewSig(int i, void (*handler)(int))
 		signal(i,handler);
 }
 
-VOID setSignalHandlers(VOID)
+void setSignalHandlers(void)
 {
 	/* Reset various unrecoverable error signals:*/
 	setNewSig(SIGSEGV,onErrSig);
@@ -1660,7 +1660,7 @@ ALLPRIVATES *ABdummy[10];
 int main(int argc, char **argv)
 {
 	int retval;
-	bzero((VOID *)(&A),sizeof(A)); /* make sure A is initialized at zero */
+	bzero((void *)(&A),sizeof(A)); /* make sure A is initialized at zero */
 	iniTools();
 #ifdef TRAPSIGNALS
 	setSignalHandlers();
@@ -1756,7 +1756,7 @@ int main(int argc, char **argv)
 
 */
 
-VOID CleanUp(WORD par)
+void CleanUp(WORD par)
 {
 	GETIDENTITY
 	int i;
@@ -1845,7 +1845,7 @@ dontremove:;
 
 static int firstterminate = 1;
 
-VOID TerminateImpl(int errorcode, const char* file, int line, const char* function)
+void TerminateImpl(int errorcode, const char* file, int line, const char* function)
 {
 	if ( errorcode && firstterminate ) {
 		firstterminate = 0;
@@ -2082,7 +2082,7 @@ void PrintDeprecation(const char *feature, const char *issue) {
  		#[ PrintRunningTime :
 */
 
-VOID PrintRunningTime(VOID)
+void PrintRunningTime(void)
 {
 #if (defined(WITHPTHREADS) && (defined(WITHPOSIXCLOCK) || defined(WINDOWS))) || defined(WITHMPI)
 	LONG mastertime;
@@ -2123,7 +2123,7 @@ VOID PrintRunningTime(VOID)
  		#[ GetRunningTime :
 */
 
-LONG GetRunningTime(VOID)
+LONG GetRunningTime(void)
 {
 #if defined(WITHPTHREADS) && (defined(WITHPOSIXCLOCK) || defined(WINDOWS))
 	LONG mastertime;

@@ -1508,14 +1508,14 @@ GotOne:;
 
 /*
  		#] ResolveSet : 
- 		#[ ClearWild :			VOID ClearWild()
+ 		#[ ClearWild :			void ClearWild()
 
 	Clears the current wildcard settings and makes them ready for
 	CheckWild and AddWild.
 
 */
 
-VOID ClearWild(PHEAD0)
+void ClearWild(PHEAD0)
 {
 	GETBIDENTITY
 	WORD n, nn, *w;

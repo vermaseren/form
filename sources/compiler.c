@@ -306,7 +306,7 @@ LONG insubexpbuffers = 0;
 		Search in table 2 can be binary.
 */
 
-VOID inictable(VOID)
+void inictable(void)
 {
 	KEYWORD *k = com1commands;
 	int i, j, ksize;
@@ -665,7 +665,7 @@ int CompileStatement(UBYTE *in)
  		#[ TestTables :
 */
 
-int TestTables(VOID)
+int TestTables(void)
 {
 	FUNCTIONS f = functions;
 	TABLES t;
@@ -788,8 +788,8 @@ int CompileSubExpressions(SBYTE *tokens)
 				Terminate(-1);
 			}
 			if ( subexpbuffers+insubexpbuffers >= topsubexpbuffers ) {
-				DoubleBuffer((void **)((VOID *)(&subexpbuffers))
-				,(void **)((VOID *)(&topsubexpbuffers)),sizeof(SUBBUF),"subexpbuffers");
+				DoubleBuffer((void **)((void *)(&subexpbuffers))
+				,(void **)((void *)(&topsubexpbuffers)),sizeof(SUBBUF),"subexpbuffers");
 			}
 			subexpbuffers[insubexpbuffers].subexpnum = num;
 			subexpbuffers[insubexpbuffers].buffernum = AC.cbufnum;
@@ -1977,8 +1977,8 @@ int CodeFactors(SBYTE *tokens)
 					Terminate(-1);
 				}
 				if ( subexpbuffers+insubexpbuffers >= topsubexpbuffers ) {
-					DoubleBuffer((void **)((VOID *)(&subexpbuffers))
-					,(void **)((VOID *)(&topsubexpbuffers)),sizeof(SUBBUF),"subexpbuffers");
+					DoubleBuffer((void **)((void *)(&subexpbuffers))
+					,(void **)((void *)(&topsubexpbuffers)),sizeof(SUBBUF),"subexpbuffers");
 				}
 				subexpbuffers[insubexpbuffers].subexpnum = subexp;
 				subexpbuffers[insubexpbuffers].buffernum = AC.cbufnum;
@@ -2218,8 +2218,8 @@ dopowerd:
 		Terminate(-1);
 	}
 	if ( subexpbuffers+insubexpbuffers >= topsubexpbuffers ) {
-		DoubleBuffer((void **)((VOID *)(&subexpbuffers))
-		,(void **)((VOID *)(&topsubexpbuffers)),sizeof(SUBBUF),"subexpbuffers");
+		DoubleBuffer((void **)((void *)(&subexpbuffers))
+		,(void **)((void *)(&topsubexpbuffers)),sizeof(SUBBUF),"subexpbuffers");
 	}
 	subexpbuffers[insubexpbuffers].subexpnum = subexp;
 	subexpbuffers[insubexpbuffers].buffernum = AC.cbufnum;
@@ -2265,8 +2265,8 @@ WORD GenerateFactors(WORD n,WORD inc)
 		Terminate(-1);
 	}
 	if ( subexpbuffers+insubexpbuffers >= topsubexpbuffers ) {
-		DoubleBuffer((void **)((VOID *)(&subexpbuffers))
-		,(void **)((VOID *)(&topsubexpbuffers)),sizeof(SUBBUF),"subexpbuffers");
+		DoubleBuffer((void **)((void *)(&subexpbuffers))
+		,(void **)((void *)(&topsubexpbuffers)),sizeof(SUBBUF),"subexpbuffers");
 	}
 	subexpbuffers[insubexpbuffers].subexpnum = subexp;
 	subexpbuffers[insubexpbuffers].buffernum = AC.cbufnum;

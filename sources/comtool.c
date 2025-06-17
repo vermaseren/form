@@ -44,7 +44,7 @@
  *
  * @return  The ID number for the new compiler buffer.
  */
-int inicbufs(VOID)
+int inicbufs(void)
 {
 	int i, num = AC.cbufList.num;
 	CBUF *C = cbuf;
@@ -191,7 +191,7 @@ WORD *AddLHS(int num)
 	C->numlhs++;
 	if ( C->numlhs >= (C->maxlhs-2) ) {
 		WORD ***ppp = &(C->lhs);	/* to avoid compiler warning */
-		if ( DoubleList((VOID ***)ppp,&(C->maxlhs),sizeof(WORD *),
+		if ( DoubleList((void ***)ppp,&(C->maxlhs),sizeof(WORD *),
 		"statement lists") ) Terminate(-1);
 	}
 	C->lhs[C->numlhs] = C->Pointer;

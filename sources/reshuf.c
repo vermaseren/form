@@ -127,7 +127,7 @@ WORD ReNumber(PHEAD WORD *term)
 
 */
 
-VOID FunLevel(PHEAD WORD *term)
+void FunLevel(PHEAD WORD *term)
 {
 	GETBIDENTITY
 	WORD *t, *tstop, *r, *fun;
@@ -433,7 +433,7 @@ Return0:
 		always been missing. Routine made 29-jan-2007.
 */
 
-VOID MoveDummies(PHEAD WORD *term, WORD shift)
+void MoveDummies(PHEAD WORD *term, WORD shift)
 {
 	GETBIDENTITY
 	WORD maxval = AN.IndDum;

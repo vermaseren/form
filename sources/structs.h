@@ -979,7 +979,7 @@ typedef WORD (*FINISHUFFLE)(WORD *);
 typedef WORD (*DO_UFFLE)(WORD *,WORD,WORD,WORD);
 
 #ifdef WITHPTHREADS
-typedef WORD (*COMPAREDUMMY)(VOID *,WORD *,WORD *,WORD);
+typedef WORD (*COMPAREDUMMY)(void *,WORD *,WORD *,WORD);
 #else
 typedef WORD (*COMPAREDUMMY)(WORD *,WORD *,WORD);
 #endif
@@ -1985,7 +1985,7 @@ struct S_const {
     WORD    *Oldvflags;            /* ( ) vflags in (old) expression */
     WORD    *Olduflags;            /* ( ) uflags in (old) expression */
 #ifdef WITHFLOAT
-    VOID    *delta_1;
+    void    *delta_1;
 #endif
     int     NumOldOnFile;          /* (S) Number of expressions in OldOnFile */
     int     NumOldNumFactors;      /* (S) Number of expressions in OldNumFactors */
@@ -2160,10 +2160,10 @@ struct T_const {
 #ifdef WITHFLOAT
     int     *indi1;
     int     *indi2;
-    VOID    *mpf_tab1;
-    VOID    *mpf_tab2;
-    VOID    *aux_;
-    VOID    *auxr_;
+    void    *mpf_tab1;
+    void    *mpf_tab2;
+    void    *aux_;
+    void    *auxr_;
 #endif
     PARTI   partitions;
     LONG    sBer;                  /* (T) Size of the Bernoullis buffer */
@@ -2463,18 +2463,18 @@ struct O_const {
     UBYTE   *wpoin;                /* (O) Only when storing file {local?} */
     UBYTE   *DollarOutBuffer;      /* (O) Outputbuffer for Dollars */
     UBYTE   *CurBufWrt;            /* (O) Name of currently written expr. */
-    VOID    (*FlipWORD)(UBYTE *);  /* ()  Function pointers for translations. Initialized by ReadSaveHeader() */
-    VOID    (*FlipLONG)(UBYTE *);
-    VOID    (*FlipPOS)(UBYTE *);
-    VOID    (*FlipPOINTER)(UBYTE *);
-    VOID    (*ResizeData)(UBYTE *,int,UBYTE *,int);
-    VOID    (*ResizeWORD)(UBYTE *,UBYTE *);
-    VOID    (*ResizeNCWORD)(UBYTE *,UBYTE *);
-    VOID    (*ResizeLONG)(UBYTE *,UBYTE *);
-    VOID    (*ResizePOS)(UBYTE *,UBYTE *);
-    VOID    (*ResizePOINTER)(UBYTE *,UBYTE *);
-    VOID    (*CheckPower)(UBYTE *);
-    VOID    (*RenumberVec)(UBYTE *);
+    void    (*FlipWORD)(UBYTE *);  /* ()  Function pointers for translations. Initialized by ReadSaveHeader() */
+    void    (*FlipLONG)(UBYTE *);
+    void    (*FlipPOS)(UBYTE *);
+    void    (*FlipPOINTER)(UBYTE *);
+    void    (*ResizeData)(UBYTE *,int,UBYTE *,int);
+    void    (*ResizeWORD)(UBYTE *,UBYTE *);
+    void    (*ResizeNCWORD)(UBYTE *,UBYTE *);
+    void    (*ResizeLONG)(UBYTE *,UBYTE *);
+    void    (*ResizePOS)(UBYTE *,UBYTE *);
+    void    (*ResizePOINTER)(UBYTE *,UBYTE *);
+    void    (*CheckPower)(UBYTE *);
+    void    (*RenumberVec)(UBYTE *);
 	DICTIONARY **Dictionaries;
 	UBYTE	*tensorList;           /* Dynamically allocated list with functions that are tensorial. */
     WORD    *inscheme;             /* for feeding a Horner scheme to Optimize */
@@ -2644,7 +2644,7 @@ typedef struct AllGlobals {
 #define BHEAD0 B
 #else
 #define PHEAD
-#define PHEAD0 VOID
+#define PHEAD0 void
 #define BHEAD
 #define BHEAD0
 #endif

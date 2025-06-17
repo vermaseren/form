@@ -149,10 +149,6 @@ Uncomment to get a self-consistent program:
 #else
 #define FORM_INLINE inline
 #endif
-/*
-	from declare.h:
-*/
-#define VOID void
 
 /* 
 	From form3.h:
@@ -169,7 +165,7 @@ extern int (*setKillModeForExternalChannel)(int signum, int sentToWholeGroup);
 #include "form3.h"
 #endif /*ifdef SELFTEST ... else*/
 /*
-pid_t  getExternalChannelPid(VOID);
+pid_t  getExternalChannelPid(void);
 */
 /*
   	#] Selftest initializing: 
@@ -213,7 +209,7 @@ int setKillModeForExternalChannelFailure(int signum, int sentToWholeGroup)
 	return(-1);
 }/*setKillModeForExternalChannelFailure*/
 
-int getcFromExtChannelFailure(VOID)
+int getcFromExtChannelFailure(void)
 {
 	return(-2);
 }/*getcFromExtChannelFailure*/
@@ -223,7 +219,7 @@ int (*setTerminatorForExternalChannel)(char *buffer) =
 	&setTerminatorForExternalChannelFailure;
 int (*setKillModeForExternalChannel)(int signum, int sentToWholeGroup) =
 	&setKillModeForExternalChannelFailure;
-int (*getcFromExtChannel)(VOID) = &getcFromExtChannelFailure;
+int (*getcFromExtChannel)(void) = &getcFromExtChannelFailure;
 #endif
 /*
   	#] FailureFunctions: 
@@ -236,8 +232,8 @@ int openExternalChannel(UBYTE *cmd, int daemonize, UBYTE *shellname, UBYTE *stde
 int initPresetExternalChannels(UBYTE *theline, int thetimeout) { DUMMYUSE(theline); DUMMYUSE(thetimeout); return(-1); };
 int closeExternalChannel(int n) { DUMMYUSE(n); return(-1); };
 int selectExternalChannel(int n) { DUMMYUSE(n); return(-1); };
-int getCurrentExternalChannel(VOID) { return(0); };
-void closeAllExternalChannels(VOID) {};
+int getCurrentExternalChannel(void) { return(0); };
+void closeAllExternalChannels(void) {};
 #else /*ifndef WITHEXTERNALCHANNEL*/
 /*
   	#] Stubs : 
@@ -343,7 +339,7 @@ int PutPreVar(UBYTE *a,UBYTE *b,UBYTE *c,int i)
 */
 
 /*Initialize one cell of handler:*/
-static FORM_INLINE VOID extHandlerInit(EXTHANDLE *h)
+static FORM_INLINE void extHandlerInit(EXTHANDLE *h)
 {
 	h->pid=-1;
 	h->gpid=-1;
@@ -356,7 +352,7 @@ static FORM_INLINE VOID extHandlerInit(EXTHANDLE *h)
 }/*extHandlerInit*/
 
 /* Copies each field of handler:*/
-static FORM_INLINE VOID extHandlerSwallowCopy(EXTHANDLE *to, EXTHANDLE *from)
+static FORM_INLINE void extHandlerSwallowCopy(EXTHANDLE *to, EXTHANDLE *from)
 {
 	to->pid=from->pid;
 	to->gpid=from->gpid;
@@ -376,7 +372,7 @@ static FORM_INLINE VOID extHandlerSwallowCopy(EXTHANDLE *to, EXTHANDLE *from)
 
 /*Allocates memory for fields of handler which have no fixed
  storage size and initializes some fields:*/
-static FORM_INLINE VOID 
+static FORM_INLINE void 
 extHandlerAlloc(EXTHANDLE *h, char *cmd, char *shellname, char *stderrname)
 {
 	h->IBfill=h->IBfull=h->INbuf=
@@ -399,7 +395,7 @@ extHandlerAlloc(EXTHANDLE *h, char *cmd, char *shellname, char *stderrname)
 }/*extHandlerAlloc*/
 
 /*Disallocates dynamically allocated fields of a handler:*/
-static FORM_INLINE VOID extHandlerFree(EXTHANDLE *h)
+static FORM_INLINE void extHandlerFree(EXTHANDLE *h)
 {
 	if(h->stderrname) M_free(h->stderrname,"External channel stderr name");
 	if(h->shellname) M_free(h->shellname,"External channel shell name");
@@ -410,7 +406,7 @@ static FORM_INLINE VOID extHandlerFree(EXTHANDLE *h)
 }/*extHandlerFree*/
 /* Closes all descriptors, kills the external process, frees all internal fields,
 BUT does NOT free the main container:*/
-static VOID destroyExternalChannel(EXTHANDLE *h)
+static void destroyExternalChannel(EXTHANDLE *h)
 {
 	/*Note, this function works in parallel mode correctly, see comments below.*/
 
@@ -514,7 +510,7 @@ int oldflags = fcntl (desc, F_GETFD, 0);
 /* Adds the integer fd to the array fifo of length top+1 so that 
 the array is ascendantly ordered. It is supposed that all 0 -- top-1
 elements in the array are already ordered:*/
-static VOID pushDescriptor(int *fifo, int top, int fd)
+static void pushDescriptor(int *fifo, int top, int fd)
 {
 	if ( top == 0 ) {
 		fifo[top] = fd;
@@ -536,7 +532,7 @@ static VOID pushDescriptor(int *fifo, int top, int fd)
 
 /*Close all descriptors greater or equal than startFrom except those
   listed in the ascendantly ordered array usedFd of length top:*/
-static FORM_INLINE VOID closeAllDescriptors(int startFrom, int *usedFd, int top)
+static FORM_INLINE void closeAllDescriptors(int startFrom, int *usedFd, int top)
 {
 int n,maxfd;
 	for(n=0;n<top; n++){
@@ -553,7 +549,7 @@ int n,maxfd;
 
 typedef int L_APIPE[2];
 /*Closes both pipe descriptors if not -1:*/
-static VOID closepipe(L_APIPE *thepipe)
+static void closepipe(L_APIPE *thepipe)
 {
   if( (*thepipe)[0] != -1) close ((*thepipe)[0]);
   if( (*thepipe)[1] != -1) close ((*thepipe)[1]);
@@ -772,7 +768,7 @@ int setKillModeForExternalChannelOk(int signum, int sentToWholeGroup)
 returns EOF. If the external process is finished completely, the function closes 
 the channel (and returns EOF). If the external process was finished, the function
 returns EOF:*/
-int getcFromExtChannelOk(VOID)
+int getcFromExtChannelOk(void)
 {
 mysighandler_t oldPIPE = 0;
 EXTHANDLE *h;
@@ -1519,7 +1515,7 @@ int closeExternalChannel(int n)
   	#] closeExternalChannel : 
   	#[ closeAllExternalChannels :
 */
-void closeAllExternalChannels(VOID)
+void closeAllExternalChannels(void)
 {
 int i;
 	for(i=0; i<externalChannelsListFill; i++)
@@ -1542,7 +1538,7 @@ int i;
   	#[ getExternalChannelPid :
 */
 #ifdef SELFTEST
-pid_t getExternalChannelPid(VOID)
+pid_t getExternalChannelPid(void)
 {
   if(externalChannelsListTop!=0)
 		return(externalChannelsListTop ->pid);
@@ -1554,7 +1550,7 @@ pid_t getExternalChannelPid(VOID)
   	#[ getCurrentExternalChannel :
 */
 
-int getCurrentExternalChannel(VOID)
+int getCurrentExternalChannel(void)
 {
 
 	if ( externalChannelsListTop != 0 )

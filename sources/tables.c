@@ -1896,7 +1896,7 @@ int CoTBhelp(UBYTE *s)
 	This gains one space. Hence we have to be very careful
 */
 
-VOID ReWorkT(WORD *term, WORD *funs, WORD numfuns)
+void ReWorkT(WORD *term, WORD *funs, WORD numfuns)
 {
 	WORD *tstop, *tend, *m, *t, *tt, *mm, *mmm, *r, *rr;
 	int i, j;
@@ -2289,7 +2289,7 @@ WORD ApplyReset(WORD level)
   	#[ TableReset :
 */
 
-WORD TableReset(VOID)
+WORD TableReset(void)
 {
 	TABLES T;
 	int i;
@@ -2316,7 +2316,7 @@ int LoadTableElement(DBASE *d, TABLE *T, WORD num)
 	Releases all TableBases
 */
 
-int ReleaseTB(VOID)
+int ReleaseTB(void)
 {
 	DBASE *d;
 	int i;

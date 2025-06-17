@@ -61,7 +61,7 @@ WORD printscratch[2];
  *	        return on the spot by calling Terminate.
  */
  
-WORD Processor(VOID)
+WORD Processor(void)
 {
 	GETIDENTITY
 	WORD *term, *t, i, retval = 0, size;
