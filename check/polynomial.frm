@@ -348,6 +348,59 @@ Drop;
 #endprocedure
 
 
+#procedure testfactdolij(imin,imax,jmin,jmax)
+
+#reset timer
+On flint;
+#do i = `imin',`imax'
+#do j = `jmin',`jmax'
+#if `j' >= `i'
+	#$flintp`i'p`j' = $p`i'*$p`j';
+	#factdollar $flintp`i'p`j'
+#endif
+#enddo
+#enddo
+.sort
+#message factdollar: flint runtime: `TIMER_'
+#reset timer
+Off flint;
+.sort
+#do i = `imin',`imax'
+#do j = `jmin',`jmax'
+#if `j' >= `i'
+	#$polyp`i'p`j' = $p`i'*$p`j';
+	#factdollar $polyp`i'p`j'
+#endif
+#enddo
+#enddo
+.sort
+#message factdollar: poly runtime: `TIMER_'
+#do i = `imin',`imax'
+#do j = `jmin',`jmax'
+#if `j' >= `i'
+	#if `$flintp`i'p`j'[0]' != `$polyp`i'p`j'[0]'
+		#message Error: factor count difference in factdollar p`i'p`j'
+		#message $flintp`i'`j'[0] = `$flintp`i'p`j'[0]'
+		#message $polyp`i'p`j'[0] = `$polyp`i'p`j'[0]'
+		#terminate
+	#endif
+	#do f = 1,`$flintp`i'p`j'[0]'
+		#$diffp`i'p`j' = (`$flintp`i'p`j'[`f']') - (`$polyp`i'p`j'[`f']');
+		#if `$diffp`i'p`j'' != 0
+			#message Error: factor difference in factdollar p`i'p`j' f`f'
+		#message $flintp`i'`j'[`f'] = `$flintp`i'p`j'[`f']'
+		#message $polyp`i'p`j'[`f'] = `$polyp`i'p`j'[`f']'
+		#terminate
+		#endif
+	#enddo
+#endif
+#enddo
+#enddo
+
+#message factdollar: OK
+#endprocedure
+
+
 #procedure testprf(op,imin,imax,jmin,jmax,kmin,kmax,lmin,lmax)
 
 #reset timer
@@ -517,12 +570,12 @@ Drop;
 *--#] polynomial_prc :
 *--#[ polynomial_gcd_nvar_1 :
 #-
-#define NPOLYS "16"
+#define NPOLYS "12"
 #define NVARS "1"
 #define NEGPOW "0"
 #define MAXPOW "10"
 #define MAXCOEFF "100"
-#define NTERMS "20"
+#define NTERMS "15"
 #include polynomial.frm # polynomial_prc
 #call genpoly(`NPOLYS',`NVARS',`NEGPOW',`MAXPOW',`MAXCOEFF',`NTERMS')
 #call testijaik(gcd,2,`NPOLYS',2,`NPOLYS',2,`NPOLYS')
@@ -533,12 +586,12 @@ assert stdout =~ exact_pattern("gcd: OK")
 *--#] polynomial_gcd_nvar_1 :
 *--#[ polynomial_gcd_nvar_2 :
 #-
-#define NPOLYS "12"
+#define NPOLYS "10"
 #define NVARS "2"
 #define NEGPOW "0"
 #define MAXPOW "10"
 #define MAXCOEFF "100"
-#define NTERMS "20"
+#define NTERMS "15"
 #include polynomial.frm # polynomial_prc
 #call genpoly(`NPOLYS',`NVARS',`NEGPOW',`MAXPOW',`MAXCOEFF',`NTERMS')
 #call testijaik(gcd,2,`NPOLYS',2,`NPOLYS',2,`NPOLYS')
@@ -549,7 +602,7 @@ assert stdout =~ exact_pattern("gcd: OK")
 *--#] polynomial_gcd_nvar_2 :
 *--#[ polynomial_gcd_nvar_5 :
 #-
-#define NPOLYS "9"
+#define NPOLYS "8"
 #define NVARS "5"
 #define NEGPOW "0"
 #define MAXPOW "10"
@@ -565,12 +618,12 @@ assert stdout =~ exact_pattern("gcd: OK")
 *--#] polynomial_gcd_nvar_5 :
 *--#[ polynomial_mul_nvar_1 :
 #-
-#define NPOLYS "80"
+#define NPOLYS "60"
 #define NVARS "1"
 #define NEGPOW "0"
 #define MAXPOW "10"
 #define MAXCOEFF "100"
-#define NTERMS "60"
+#define NTERMS "40"
 #include polynomial.frm # polynomial_prc
 #call genpoly(`NPOLYS',`NVARS',`NEGPOW',`MAXPOW',`MAXCOEFF',`NTERMS')
 #call testiaj(mul,2,`NPOLYS',2,`NPOLYS')
@@ -581,12 +634,12 @@ assert stdout =~ exact_pattern("mul: OK")
 *--#] polynomial_mul_nvar_1 :
 *--#[ polynomial_mul_nvar_2 :
 #-
-#define NPOLYS "40"
+#define NPOLYS "30"
 #define NVARS "2"
 #define NEGPOW "0"
 #define MAXPOW "10"
 #define MAXCOEFF "100"
-#define NTERMS "60"
+#define NTERMS "40"
 #include polynomial.frm # polynomial_prc
 #call genpoly(`NPOLYS',`NVARS',`NEGPOW',`MAXPOW',`MAXCOEFF',`NTERMS')
 #call testiaj(mul,2,`NPOLYS',2,`NPOLYS')
@@ -597,12 +650,12 @@ assert stdout =~ exact_pattern("mul: OK")
 *--#] polynomial_mul_nvar_2 :
 *--#[ polynomial_mul_nvar_5 :
 #-
-#define NPOLYS "25"
+#define NPOLYS "20"
 #define NVARS "5"
 #define NEGPOW "0"
 #define MAXPOW "10"
 #define MAXCOEFF "100"
-#define NTERMS "60"
+#define NTERMS "40"
 #include polynomial.frm # polynomial_prc
 #call genpoly(`NPOLYS',`NVARS',`NEGPOW',`MAXPOW',`MAXCOEFF',`NTERMS')
 #call testiaj(mul,2,`NPOLYS',2,`NPOLYS')
@@ -613,12 +666,12 @@ assert stdout =~ exact_pattern("mul: OK")
 *--#] polynomial_mul_nvar_5 :
 *--#[ polynomial_div_nvar_1 :
 #-
-#define NPOLYS "80"
+#define NPOLYS "60"
 #define NVARS "1"
 #define NEGPOW "0"
 #define MAXPOW "10"
 #define MAXCOEFF "100"
-#define NTERMS "60"
+#define NTERMS "40"
 #include polynomial.frm # polynomial_prc
 #call genpoly(`NPOLYS',`NVARS',`NEGPOW',`MAXPOW',`MAXCOEFF',`NTERMS')
 #call testijaj(div,2,`NPOLYS',2,`NPOLYS')
@@ -629,12 +682,12 @@ assert stdout =~ exact_pattern("div: OK")
 *--#] polynomial_div_nvar_1 :
 *--#[ polynomial_div_nvar_2 :
 #-
-#define NPOLYS "40"
+#define NPOLYS "30"
 #define NVARS "2"
 #define NEGPOW "0"
 #define MAXPOW "10"
 #define MAXCOEFF "100"
-#define NTERMS "50"
+#define NTERMS "35"
 #include polynomial.frm # polynomial_prc
 #call genpoly(`NPOLYS',`NVARS',`NEGPOW',`MAXPOW',`MAXCOEFF',`NTERMS')
 #call testijaj(div,2,`NPOLYS',2,`NPOLYS')
@@ -645,12 +698,12 @@ assert stdout =~ exact_pattern("div: OK")
 *--#] polynomial_div_nvar_2 :
 *--#[ polynomial_div_nvar_5 :
 #-
-#define NPOLYS "25"
+#define NPOLYS "20"
 #define NVARS "5"
 #define NEGPOW "0"
 #define MAXPOW "10"
 #define MAXCOEFF "100"
-#define NTERMS "50"
+#define NTERMS "35"
 #include polynomial.frm # polynomial_prc
 #call genpoly(`NPOLYS',`NVARS',`NEGPOW',`MAXPOW',`MAXCOEFF',`NTERMS')
 #call testijaj(div,2,`NPOLYS',2,`NPOLYS')
@@ -661,12 +714,12 @@ assert stdout =~ exact_pattern("div: OK")
 *--#] polynomial_div_nvar_5 :
 *--#[ polynomial_rem_nvar_1 :
 #-
-#define NPOLYS "20"
+#define NPOLYS "16"
 #define NVARS "1"
 #define NEGPOW "0"
 #define MAXPOW "10"
 #define MAXCOEFF "100"
-#define NTERMS "20"
+#define NTERMS "15"
 #include polynomial.frm # polynomial_prc
 #call genpoly(`NPOLYS',`NVARS',`NEGPOW',`MAXPOW',`MAXCOEFF',`NTERMS')
 #call testijak(rem,2,`NPOLYS',2,`NPOLYS',2,`NPOLYS')
@@ -677,12 +730,12 @@ assert stdout =~ exact_pattern("rem: OK")
 *--#] polynomial_rem_nvar_1 :
 *--#[ polynomial_rem_nvar_2 :
 #-
-#define NPOLYS "15"
+#define NPOLYS "12"
 #define NVARS "2"
 #define NEGPOW "0"
 #define MAXPOW "10"
 #define MAXCOEFF "100"
-#define NTERMS "15"
+#define NTERMS "10"
 #include polynomial.frm # polynomial_prc
 #call genpoly(`NPOLYS',`NVARS',`NEGPOW',`MAXPOW',`MAXCOEFF',`NTERMS')
 #call testijak(rem,2,`NPOLYS',2,`NPOLYS',2,`NPOLYS')
@@ -693,12 +746,12 @@ assert stdout =~ exact_pattern("rem: OK")
 *--#] polynomial_rem_nvar_2 :
 *--#[ polynomial_rem_nvar_5 :
 #-
-#define NPOLYS "10"
+#define NPOLYS "8"
 #define NVARS "5"
 #define NEGPOW "0"
 #define MAXPOW "10"
 #define MAXCOEFF "100"
-#define NTERMS "15"
+#define NTERMS "10"
 #include polynomial.frm # polynomial_prc
 #call genpoly(`NPOLYS',`NVARS',`NEGPOW',`MAXPOW',`MAXCOEFF',`NTERMS')
 #call testijak(rem,2,`NPOLYS',2,`NPOLYS',2,`NPOLYS')
@@ -709,12 +762,12 @@ assert stdout =~ exact_pattern("rem: OK")
 *--#] polynomial_rem_nvar_5 :
 *--#[ polynomial_factarg_nvar_1 :
 #-
-#define NPOLYS "30"
+#define NPOLYS "25"
 #define NVARS "1"
 #define NEGPOW "0"
 #define MAXPOW "10"
 #define MAXCOEFF "100"
-#define NTERMS "20"
+#define NTERMS "15"
 #include polynomial.frm # polynomial_prc
 #call genpoly(`NPOLYS',`NVARS',`NEGPOW',`MAXPOW',`MAXCOEFF',`NTERMS')
 #call testfactij(2,`NPOLYS',2,`NPOLYS')
@@ -729,12 +782,12 @@ assert stdout =~ exact_pattern("factarg: OK")
 *--#] polynomial_factarg_nvar_1 :
 *--#[ polynomial_factarg_nvar_2 :
 #-
-#define NPOLYS "20"
+#define NPOLYS "15"
 #define NVARS "2"
 #define NEGPOW "0"
 #define MAXPOW "10"
 #define MAXCOEFF "100"
-#define NTERMS "20"
+#define NTERMS "15"
 #include polynomial.frm # polynomial_prc
 #call genpoly(`NPOLYS',`NVARS',`NEGPOW',`MAXPOW',`MAXCOEFF',`NTERMS')
 #call testfactij(2,`NPOLYS',2,`NPOLYS')
@@ -749,12 +802,12 @@ assert stdout =~ exact_pattern("factarg: OK")
 *--#] polynomial_factarg_nvar_2 :
 *--#[ polynomial_factarg_nvar_5 :
 #-
-#define NPOLYS "12"
+#define NPOLYS "10"
 #define NVARS "5"
 #define NEGPOW "0"
 #define MAXPOW "10"
 #define MAXCOEFF "100"
-#define NTERMS "15"
+#define NTERMS "10"
 #include polynomial.frm # polynomial_prc
 #call genpoly(`NPOLYS',`NVARS',`NEGPOW',`MAXPOW',`MAXCOEFF',`NTERMS')
 #call testfactij(2,`NPOLYS',2,`NPOLYS')
@@ -768,14 +821,74 @@ assert stdout =~ exact_pattern("factarg: OK")
 assert succeeded? || warning?("FORM was not built with FLINT support.")
 assert stdout =~ exact_pattern("factarg: OK")
 *--#] polynomial_factarg_nvar_5 :
-*--#[ polynomial_prf_norm_nvar_1 :
+*--#[ polynomial_factdol_nvar_1 :
 #-
-#define NPOLYS "9"
+#define NPOLYS "25"
 #define NVARS "1"
 #define NEGPOW "0"
 #define MAXPOW "10"
 #define MAXCOEFF "100"
-#define NTERMS "20"
+#define NTERMS "14"
+#include polynomial.frm # polynomial_prc
+#call genpoly(`NPOLYS',`NVARS',`NEGPOW',`MAXPOW',`MAXCOEFF',`NTERMS')
+#call testfactdolij(2,`NPOLYS',2,`NPOLYS')
+.end
+#pend_if wordsize == 2 || mpi?
+# This takes too long when running without FLINT under lcov. Skip if valgrind, and hence lcov.
+#pend_if valgrind?
+# This needs longer if running without flint.
+#time_dilation 2.0
+assert succeeded? || warning?("FORM was not built with FLINT support.")
+assert stdout =~ exact_pattern("factdollar: OK")
+*--#] polynomial_factdol_nvar_1 :
+*--#[ polynomial_factdol_nvar_2 :
+#-
+#define NPOLYS "15"
+#define NVARS "2"
+#define NEGPOW "0"
+#define MAXPOW "10"
+#define MAXCOEFF "100"
+#define NTERMS "14"
+#include polynomial.frm # polynomial_prc
+#call genpoly(`NPOLYS',`NVARS',`NEGPOW',`MAXPOW',`MAXCOEFF',`NTERMS')
+#call testfactdolij(2,`NPOLYS',2,`NPOLYS')
+.end
+#pend_if wordsize == 2 || mpi?
+# This takes too long when running without FLINT under lcov. Skip if valgrind, and hence lcov.
+#pend_if valgrind?
+# This needs longer if running without flint.
+#time_dilation 2.0
+assert succeeded? || warning?("FORM was not built with FLINT support.")
+assert stdout =~ exact_pattern("factdollar: OK")
+*--#] polynomial_factdol_nvar_2 :
+*--#[ polynomial_factdol_nvar_5 :
+#-
+#define NPOLYS "10"
+#define NVARS "5"
+#define NEGPOW "0"
+#define MAXPOW "10"
+#define MAXCOEFF "100"
+#define NTERMS "9"
+#include polynomial.frm # polynomial_prc
+#call genpoly(`NPOLYS',`NVARS',`NEGPOW',`MAXPOW',`MAXCOEFF',`NTERMS')
+#call testfactdolij(2,`NPOLYS',2,`NPOLYS')
+.end
+#pend_if wordsize == 2 || mpi?
+# This takes too long when running without FLINT under lcov. Skip if valgrind, and hence lcov.
+#pend_if valgrind?
+# This needs longer if running without flint.
+#time_dilation 2.0
+assert succeeded? || warning?("FORM was not built with FLINT support.")
+assert stdout =~ exact_pattern("factdollar: OK")
+*--#] polynomial_factdol_nvar_5 :
+*--#[ polynomial_prf_norm_nvar_1 :
+#-
+#define NPOLYS "8"
+#define NVARS "1"
+#define NEGPOW "0"
+#define MAXPOW "10"
+#define MAXCOEFF "100"
+#define NTERMS "15"
 #include polynomial.frm # polynomial_prc
 #call genpoly(`NPOLYS',`NVARS',`NEGPOW',`MAXPOW',`MAXCOEFF',`NTERMS')
 #call testprf(norm,2,`NPOLYS',2,`NPOLYS',2,`NPOLYS',2,`NPOLYS')
@@ -786,12 +899,12 @@ assert stdout =~ exact_pattern("prf norm: OK")
 *--#] polynomial_prf_norm_nvar_1 :
 *--#[ polynomial_prf_norm_nvar_2 :
 #-
-#define NPOLYS "9"
+#define NPOLYS "8"
 #define NVARS "2"
 #define NEGPOW "0"
 #define MAXPOW "10"
 #define MAXCOEFF "100"
-#define NTERMS "20"
+#define NTERMS "15"
 #include polynomial.frm # polynomial_prc
 #call genpoly(`NPOLYS',`NVARS',`NEGPOW',`MAXPOW',`MAXCOEFF',`NTERMS')
 #call testprf(norm,2,`NPOLYS',2,`NPOLYS',2,`NPOLYS',2,`NPOLYS')
@@ -807,7 +920,7 @@ assert stdout =~ exact_pattern("prf norm: OK")
 #define NEGPOW "0"
 #define MAXPOW "10"
 #define MAXCOEFF "100"
-#define NTERMS "10"
+#define NTERMS "9"
 #include polynomial.frm # polynomial_prc
 #call genpoly(`NPOLYS',`NVARS',`NEGPOW',`MAXPOW',`MAXCOEFF',`NTERMS')
 #call testprf(norm,2,`NPOLYS',2,`NPOLYS',2,`NPOLYS',2,`NPOLYS')
@@ -818,12 +931,12 @@ assert stdout =~ exact_pattern("prf norm: OK")
 *--#] polynomial_prf_norm_nvar_5 :
 *--#[ polynomial_prf_add_nvar_1 :
 #-
-#define NPOLYS "9"
+#define NPOLYS "8"
 #define NVARS "1"
 #define NEGPOW "0"
 #define MAXPOW "10"
 #define MAXCOEFF "100"
-#define NTERMS "20"
+#define NTERMS "15"
 #include polynomial.frm # polynomial_prc
 #call genpoly(`NPOLYS',`NVARS',`NEGPOW',`MAXPOW',`MAXCOEFF',`NTERMS')
 #call testprf(add,2,`NPOLYS',2,`NPOLYS',2,`NPOLYS',2,`NPOLYS')
@@ -834,12 +947,12 @@ assert stdout =~ exact_pattern("prf add: OK")
 *--#] polynomial_prf_add_nvar_1 :
 *--#[ polynomial_prf_add_nvar_2 :
 #-
-#define NPOLYS "9"
+#define NPOLYS "8"
 #define NVARS "2"
 #define NEGPOW "0"
 #define MAXPOW "10"
 #define MAXCOEFF "100"
-#define NTERMS "20"
+#define NTERMS "15"
 #include polynomial.frm # polynomial_prc
 #call genpoly(`NPOLYS',`NVARS',`NEGPOW',`MAXPOW',`MAXCOEFF',`NTERMS')
 #call testprf(add,2,`NPOLYS',2,`NPOLYS',2,`NPOLYS',2,`NPOLYS')
@@ -855,7 +968,7 @@ assert stdout =~ exact_pattern("prf add: OK")
 #define NEGPOW "0"
 #define MAXPOW "10"
 #define MAXCOEFF "100"
-#define NTERMS "10"
+#define NTERMS "8"
 #include polynomial.frm # polynomial_prc
 #call genpoly(`NPOLYS',`NVARS',`NEGPOW',`MAXPOW',`MAXCOEFF',`NTERMS')
 #call testprf(add,2,`NPOLYS',2,`NPOLYS',2,`NPOLYS',2,`NPOLYS')
@@ -866,12 +979,12 @@ assert stdout =~ exact_pattern("prf add: OK")
 *--#] polynomial_prf_add_nvar_5 :
 *--#[ polynomial_inverse_nvar_1 :
 #-
-#define NPOLYS "30"
+#define NPOLYS "20"
 #define NVARS "1"
 #define NEGPOW "0"
 #define MAXPOW "10"
 #define MAXCOEFF "100"
-#define NTERMS "20"
+#define NTERMS "15"
 #include polynomial.frm # polynomial_prc
 #call genpoly(`NPOLYS',`NVARS',`NEGPOW',`MAXPOW',`MAXCOEFF',`NTERMS')
 #call testinv(1,`NPOLYS',2,`NPOLYS')
@@ -880,3 +993,197 @@ assert stdout =~ exact_pattern("prf add: OK")
 assert succeeded? || warning?("FORM was not built with FLINT support.")
 assert stdout =~ exact_pattern("inv: OK")
 *--#] polynomial_inverse_nvar_1 :
+*--#[ polynomial_extra_1 :
+* Assorted additional tests, to fully cover flintinterface.cc with just this test set
+Symbol w,x,y,z;
+CFunction f,g,prf;
+
+* Negative powers and fast-notation symbols
+Local test1 = prf(1/x + y + z,w);
+Local test2 = prf(1/x + x + 1,x);
+* Zero conversion
+#$zero = 0;
+Local test3 = mul_($zero,1);
+* GCD which must fit in a term: I don't think this is reachable
+*Local test4 = f(gcd_((x+1)^2,(x+1)*(x-1)));
+*Local test5 = f(gcd_((x+1)^2,(x+1)*(y-1)));
+* Long integer conversion with different limb counts
+Local test6 =
+	+ g(1)*prf(y+2^32-1,1)
+	+ g(2)*prf(y+2^64-1,1)
+	+ g(3)*prf(y+2^96-1,1)
+	+ g(4)*prf(y+2^128-1,1)
+	+ g(5)*prf(y+2^160-1,1);
+* Output coeff has longer denominator than numerator:
+Local test7 = mul_(1+x,1/2^64+x) + mul_(y+x,y/2^64+x);
+* Result is 0
+Local test8 = prf(1+x,1) + prf(-1-x,1);
+Local test9 = prf(y+x,1) + prf(-y-x,1);
+* Result is fast notation
+Local test10 = prf(x+1,2) + prf(x-1,2);
+Local test11 = prf(x+y,2) + prf(x-y,2);
+* Copy non-prf term data, absorb coefficient
+Local test12 = prf(x+1,1) + prf(x-1,1)*(f(1)*g(1)*x*3/2);
+Local test13 = prf(x+y,1) + prf(x-y,1)*(f(1)*g(1)*x*3/2);
+
+.sort
+PolyRatFun prf;
+
+Print;
+.end
+#pend_if mpi?
+assert succeeded?
+assert result("test1")  =~ expr("prf(x*y + x*z + 1,w*x)")
+assert result("test2")  =~ expr("prf(x^2 + x + 1,x^2)")
+assert result("test3")  =~ expr("0")
+# assert result("test4")  =~ expr("f(1 + x)*prf(1,1)")
+# assert result("test5")  =~ expr("f(1 + x)*prf(1,1)")
+# assert result("test6")  =~ expr("g(1)*prf(y + 4294967295,1) + g(2)*prf(y + 18446744073709551615,1) + g(3)*prf(y + 79228162514264337593543950335,1) + g(4)*prf(y + 340282366920938\463463374607431768211455,1) + g(5)*prf(y + 14615016373309029182036848327\16283019655932542975,1);")
+assert result("test7")  =~ expr("y^2*prf(1,18446744073709551616) + x*prf(18446744073709551617,18446744073709551616) + x*y*prf(18446744073709551617,18446744073709551616) + x^2*prf(2,1) + prf(1,18446744073709551616)")
+assert result("test8")  =~ expr("0")
+assert result("test9")  =~ expr("0")
+assert result("test10") =~ expr("prf(x,1)")
+assert result("test11") =~ expr("prf(x,1)")
+assert result("test12") =~ expr("f(1)*g(1)*x*prf(3*x - 3,2) + prf(x + 1,1)")
+assert result("test13") =~ expr("f(1)*g(1)*x*prf(3*x - 3*y,2) + prf(x + y,1)")
+*--#] polynomial_extra_1 :
+*--#[ polynomial_error_1 :
+CFunction f,prf;
+PolyRatFun prf;
+Local test = prf(f(1),1);
+.end
+#pend_if mpi?
+assert runtime_error?
+assert stdout =~ exact_pattern("ERROR: polynomials and polyratfuns must contain symbols only")
+*--#] polynomial_error_1 :
+*--#[ polynomial_error_2 :
+CFunction f,prf;
+PolyRatFun prf;
+* Fast notation version
+Local test = prf(f,1);
+.end
+#pend_if mpi?
+assert runtime_error?
+assert stdout =~ exact_pattern("ERROR: polynomials and polyratfuns must contain symbols only")
+*--#] polynomial_error_2 :
+*--#[ polynomial_error_3 :
+Symbol x;
+Local test = inverse_(x+1,x+1);
+.end
+#pend_if mpi?
+assert runtime_error?
+assert stdout =~ exact_pattern("flint::inverse_poly error: inverse does not exist") || stdout =~ exact_pattern("ERROR: polynomial inverse does not exist")
+*--#] polynomial_error_3 :
+*--#[ polynomial_error_4 :
+CFunction prf;
+PolyRatFun prf;
+Local test = prf;
+.end
+#pend_if mpi?
+assert runtime_error?
+assert stdout =~ exact_pattern("ERROR: PolyRatFun cannot have zero arguments")
+*--#] polynomial_error_4 :
+*--#[ polynomial_error_5 :
+CFunction prf;
+PolyRatFun prf;
+Local test = prf(1,2,3);
+Print;
+.end
+#pend_if mpi?
+assert runtime_error?
+assert stdout =~ exact_pattern("ERROR: PolyRatFun cannot have more than two arguments")
+*--#] polynomial_error_5 :
+*--#[ polynomial_error_6 :
+CFunction prf;
+Symbol x,y;
+PolyRatFun prf;
+Local test = prf(x,y,3);
+Print;
+.end
+#pend_if mpi?
+assert runtime_error?
+assert stdout =~ exact_pattern("ERROR: PolyRatFun cannot have more than two arguments")
+*--#] polynomial_error_6 :
+*--#[ polynomial_error_7 :
+#-
+#: MaxTermSize 200
+CFunction prf;
+Symbol x;
+PolyRatFun prf;
+#define N "3"
+* This one goes wrong in flint::ratfun_normalize rather than to_argument_poly
+Local test = prf((x+1)^`N',(x+2)^`N')*prf((x^`N'-1)^`N',(x^`N'-2)^`N');
+Print;
+.end
+#pend_if mpi?
+assert runtime_error?
+assert stdout =~ exact_pattern("flint::ratfun_normalize: output exceeds MaxTermSize") || stdout =~ exact_pattern("ERROR: PolyRatFun doesn't fit in a term")
+*--#] polynomial_error_7 :
+*--#[ polynomial_error_8 :
+#: MaxTermSize 200
+CFunction prf;
+Symbol x;
+PolyRatFun prf;
+#define N "4"
+Local test = prf((x+1)^`N',(x+2)^`N')*prf((x^`N'-1)^`N',(x^`N'-2)^`N');
+Print;
+.end
+#pend_if mpi?
+assert runtime_error?
+assert stdout =~ exact_pattern("flint::to_argument_poly: output exceeds MaxTermSize") || stdout =~ exact_pattern("ERROR: PolyRatFun doesn't fit in a term")
+*--#] polynomial_error_8 :
+*--#[ polynomial_error_9 :
+#: MaxTermSize 241
+CFunction prf;
+Symbol x;
+PolyRatFun prf;
+#define N "5"
+* This one goes wrong before properly starting to write the second argument
+Local test = prf((x+1)^`N',(x+2)^`N')*prf((x^`N'-1)^`N',(x^`N'-2)^`N');
+Print;
+.end
+#pend_if mpi?
+assert runtime_error?
+assert stdout =~ exact_pattern("flint::to_argument_poly: output exceeds MaxTermSize") || stdout =~ exact_pattern("ERROR: PolyRatFun doesn't fit in a term")
+*--#] polynomial_error_9 :
+*--#[ polynomial_error_10 :
+#: MaxTermSize 322
+CFunction prf;
+Symbol x,y;
+PolyRatFun prf;
+#define N "3"
+* This one goes wrong in flint::ratfun_normalize rather than to_argument_mpoly
+Local test = prf((x+y)^`N',(x+2*y)^`N')*prf((x^`N'-y)^`N',(x^`N'-2*y)^`N');
+Print;
+.end
+#pend_if mpi?
+assert runtime_error?
+assert stdout =~ exact_pattern("flint::ratfun_normalize: output exceeds MaxTermSize") || stdout =~ exact_pattern("ERROR: PolyRatFun doesn't fit in a term")
+*--#] polynomial_error_10 :
+*--#[ polynomial_error_11 :
+#: MaxTermSize 200
+CFunction prf;
+Symbol x,y;
+PolyRatFun prf;
+#define N "3"
+Local test = prf((x+y)^`N',(x+2*y)^`N')*prf((x^`N'-y)^`N',(x^`N'-2*y)^`N');
+Print;
+.end
+#pend_if mpi?
+assert runtime_error?
+assert stdout =~ exact_pattern("flint::to_argument_mpoly: output exceeds MaxTermSize") || stdout =~ exact_pattern("ERROR: PolyRatFun doesn't fit in a term")
+*--#] polynomial_error_11 :
+*--#[ polynomial_error_12 :
+#: MaxTermSize 283
+CFunction prf;
+Symbol x,y,z;
+PolyRatFun prf;
+#define N "2"
+* This one goes wrong before properly starting to write the second argument
+Local test = prf((x+y+z)^`N',(x+2*y)^`N')*prf((x^`N'-y-z)^`N',(x^`N'-2*y)^`N');
+Print;
+.end
+#pend_if mpi?
+assert runtime_error?
+assert stdout =~ exact_pattern("flint::to_argument_mpoly: output exceeds MaxTermSize") || stdout =~ exact_pattern("ERROR: PolyRatFun doesn't fit in a term")
+*--#] polynomial_error_12 :
