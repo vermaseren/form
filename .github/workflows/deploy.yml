@@ -74,8 +74,10 @@ jobs:
           # Unfortunately, "allow-failure" is not available on GitHub Actions
           # (https://github.com/actions/toolkit/issues/399).
           # We have to use "continue-on-error", instead.
-          - {os: windows-2019, shell: msys2, bin: form}
-          - {os: windows-2019, shell: msys2, bin: tform}
+          - {os: windows-2019, shell: msys2, msystem: mingw64, bin: form}
+          - {os: windows-2019, shell: msys2, msystem: mingw64, bin: tform}
+          - {os: windows-11-arm, shell: msys2, msystem: clangarm64, bin: form}
+          - {os: windows-11-arm, shell: msys2, msystem: clangarm64, bin: tform}
     steps:
       - name: Install dependencies (Ubuntu)
         if: runner.os == 'Linux'
@@ -86,18 +88,36 @@ jobs:
           # See: https://github.com/awalsh128/cache-apt-pkgs-action/pull/150
           version: ${{ runner.arch }}-1.0
 
-      - name: Install dependencies (Windows)
-        if: runner.os == 'Windows'
+      - name: Install dependencies (Windows/mingw64)
+        if: matrix.shell == 'msys2' && matrix.msystem == 'mingw64'
         uses: msys2/setup-msys2@v2
         with:
           update: true
+          msystem: ${{ matrix.msystem }}
           install: >-
             make
+            mingw-w64-x86_64-diffutils
             mingw-w64-x86_64-gcc
             mingw-w64-x86_64-gmp
             mingw-w64-x86_64-mpfr
             mingw-w64-x86_64-ruby
             mingw-w64-x86_64-zlib
+
+      - name: Install dependencies (Windows/clangarm64)
+        if: matrix.shell == 'msys2' && matrix.msystem == 'clangarm64'
+        uses: msys2/setup-msys2@v2
+        with:
+          update: true
+          msystem: ${{ matrix.msystem }}
+          install: >-
+            m4
+            make
+            mingw-w64-clang-aarch64-diffutils
+            mingw-w64-clang-aarch64-gcc-compat
+            mingw-w64-clang-aarch64-gmp
+            mingw-w64-clang-aarch64-mpfr
+            mingw-w64-clang-aarch64-ruby
+            mingw-w64-clang-aarch64-zlib
 
         # --static fails on macOS but we want to statically link
         # the brewed gmp. The linker supports neither -Wl,-static nor
@@ -422,6 +442,7 @@ jobs:
           make_tar_gz x86_64-osx '*-macos-13/*form'
           make_tar_gz arm64-osx '*-macos-14/*form'
           make_zip x86_64-windows '*-windows-2019/*form.exe'
+          make_zip arm64-windows '*-windows-11-arm/*form.exe'
 
       - name: Summarize files for distribution
         run: |
