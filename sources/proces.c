@@ -99,7 +99,9 @@ WORD Processor(void)
 	AR.CompressPointer = AR.CompressBuffer;
 	AR.NoCompress = AC.NoCompress;
 	term = AT.WorkPointer;
-	if ( ( (WORD *)(((UBYTE *)(AT.WorkPointer)) + AM.MaxTer) ) > AT.WorkTop ) return(MesWork());
+	if ( ( (WORD *)(((UBYTE *)(AT.WorkPointer)) + AM.MaxTer) ) > AT.WorkTop ) {
+		MesWork();
+	}
 	UpdatePositions();
 	C->rhs[C->numrhs+1] = C->Pointer;
 	AR.KeptInHold = 0;

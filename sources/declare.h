@@ -410,7 +410,7 @@ static inline ULONG LongAbs(LONG x)
  */
 static inline int UnsignedToInt(unsigned int x)
 {
-	extern void TerminateImpl(int, const char*, int, const char*);
+	extern void TerminateImpl(int, const char*, int, const char*) NORETURN;
 	if ( x <= INT_MAX ) return(x);
 	if ( x >= (unsigned int)INT_MIN )
 		return((int)(x - (unsigned int)INT_MIN) + INT_MIN);
@@ -420,7 +420,7 @@ static inline int UnsignedToInt(unsigned int x)
 
 static inline WORD UWordToWord(UWORD x)
 {
-	extern void TerminateImpl(int, const char*, int, const char*);
+	extern void TerminateImpl(int, const char*, int, const char*) NORETURN;
 	if ( x <= WORD_MAX_VALUE ) return(x);
 	if ( x >= (UWORD)WORD_MIN_VALUE )
 		return((WORD)(x - (UWORD)WORD_MIN_VALUE) + WORD_MIN_VALUE);
@@ -430,7 +430,7 @@ static inline WORD UWordToWord(UWORD x)
 
 static inline LONG ULongToLong(ULONG x)
 {
-	extern void TerminateImpl(int, const char*, int, const char*);
+	extern void TerminateImpl(int, const char*, int, const char*) NORETURN;
 	if ( x <= LONG_MAX_VALUE ) return(x);
 	if ( x >= (ULONG)LONG_MIN_VALUE )
 		return((LONG)(x - (ULONG)LONG_MIN_VALUE) + LONG_MIN_VALUE);
@@ -791,7 +791,7 @@ extern void   PositionStream(STREAM *,LONG);
 extern int    ReverseStatements(STREAM *);
 extern int    ProcessOption(UBYTE *,UBYTE *,int);
 extern int    DoSetups(void);
-extern void   TerminateImpl(int, const char *,int, const char *);
+extern void   TerminateImpl(int, const char *,int, const char *) NORETURN;
 extern NAMENODE *GetNode(NAMETREE *,UBYTE *);
 extern int    AddName(NAMETREE *,UBYTE *,WORD,WORD,int *);
 extern int    GetName(NAMETREE *,UBYTE *,WORD *,int);
@@ -990,7 +990,7 @@ extern int    DoPolyratfun(UBYTE *);
 extern int    CompileStatement(UBYTE *);
 extern UBYTE *ToToken(UBYTE *);
 extern int    GetDollar(UBYTE *);
-extern int    MesWork(void);
+extern void   MesWork(void) NORETURN;
 extern int    MesPrint(const char *,...);
 extern int    MesCall(char *);
 extern UBYTE *NumCopy(WORD,UBYTE *);
