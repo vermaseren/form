@@ -62,6 +62,7 @@
 */
 
 #include "form3.h"
+#include <signal.h>
 #ifdef WITHFLOAT
 #include <gmp.h>
 
@@ -1264,6 +1265,13 @@ void *RunThread(void *dummy)
 	POSITION *ppdef;
 	EXPRESSIONS e;
 	DUMMYUSE(dummy);
+
+	/* Block SIGALRM so that the "timeout" signal can't be delivered here */
+	sigset_t sig_set;
+	sigemptyset(&sig_set);
+	sigaddset(&sig_set, SIGALRM);
+	pthread_sigmask(SIG_BLOCK, &sig_set, NULL);
+
 	identity = SetIdentity(&identityretv);
 	threadpointers[identity] = pthread_self();
 	B = InitializeOneThread(identity);
@@ -1926,6 +1934,13 @@ void *RunSortBot(void *dummy)
 	int identity, wakeupsignal, identityretv;
 	ALLPRIVATES *B, *BB;
 	DUMMYUSE(dummy);
+
+	/* Block SIGALRM so that the "timeout" signal can't be delivered here */
+	sigset_t sig_set;
+	sigemptyset(&sig_set);
+	sigaddset(&sig_set, SIGALRM);
+	pthread_sigmask(SIG_BLOCK, &sig_set, NULL);
+
 	identity = SetIdentity(&identityretv);
 	threadpointers[identity] = pthread_self();
 	B = InitializeOneThread(identity);
