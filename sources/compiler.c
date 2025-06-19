@@ -267,32 +267,30 @@ LONG insubexpbuffers = 0;
 	subexpbuffers = (SUBBUF *)Malloc1(256*sizeof(SUBBUF),"subexpbuffers");\
 	topsubexpbuffers = subexpbuffers+256; } insubexpbuffers = 0; }
 
-#if defined(ILP32)
-
-#define PUTNUMBER128(t,n) { if ( n >= 16384 ) { \
-				*t++ = n/(128*128); *t++ = (n/128)%128; *t++ = n%128; } \
-			else if ( n >= 128 ) { *t++ = n/128; *t++ = n%128; }      \
-			else *t++ = n; }
-#define PUTNUMBER100(t,n) { if ( n >= 10000 ) { \
-				*t++ = n/10000; *t++ = (n/100)%100; *t++ = n%100; } \
-			else if ( n >= 100 ) { *t++ = n/100; *t++ = n%100; }   \
-			else *t++ = n; }
-
-#elif ( defined(LLP64) || defined(LP64) )
-
-#define PUTNUMBER128(t,n) { if ( n >= 2097152 ) { \
+#if BITSINWORD == 32
+	#define PUTNUMBER128(t,n) { if ( n >= 2097152 ) { \
 				*t++ = ((n/128)/128)/128; *t++ = ((n/128)/128)%128; *t++ = (n/128)%128; *t++ = n%128; } \
 			else if ( n >= 16384 ) { \
 				*t++ = n/(128*128); *t++ = (n/128)%128; *t++ = n%128; } \
 			else if ( n >= 128 ) { *t++ = n/128; *t++ = n%128; }      \
 			else *t++ = n; }
-#define PUTNUMBER100(t,n) { if ( n >= 1000000 ) { \
+	#define PUTNUMBER100(t,n) { if ( n >= 1000000 ) { \
 				*t++ = ((n/100)/100)/100; *t++ = ((n/100)/100)%100; *t++ = (n/100)%100; *t++ = n%100; } \
 			else if ( n >= 10000 ) { \
 				*t++ = n/10000; *t++ = (n/100)%100; *t++ = n%100; } \
 			else if ( n >= 100 ) { *t++ = n/100; *t++ = n%100; }   \
 			else *t++ = n; }
-
+#elif BITSINWORD == 16
+	#define PUTNUMBER128(t,n) { if ( n >= 16384 ) { \
+				*t++ = n/(128*128); *t++ = (n/128)%128; *t++ = n%128; } \
+			else if ( n >= 128 ) { *t++ = n/128; *t++ = n%128; }      \
+			else *t++ = n; }
+	#define PUTNUMBER100(t,n) { if ( n >= 10000 ) { \
+				*t++ = n/10000; *t++ = (n/100)%100; *t++ = n%100; } \
+			else if ( n >= 100 ) { *t++ = n/100; *t++ = n%100; }   \
+			else *t++ = n; }
+#else
+	#error Only 64-bit and 32-bit platforms are supported.
 #endif
 
 /*

@@ -204,7 +204,7 @@ static void PrintHeader(int with_full_info)
 #ifdef WINDOWS
 	PrintDeprecation("the native Windows version", "issues/623");
 #endif
-#ifdef ILP32
+#if BITSINWORD == 16
 	PrintDeprecation("the 32-bit version", "issues/624");
 #endif
 #ifdef WITHMPI

@@ -59,18 +59,21 @@
 typedef long MLONG;
 */
 
-#define MAXBASES 16 
-#ifdef WORDSIZE32
-#define NUMOBJECTS 1024
-#define MAXINDEXSIZE 1000000000L
-#define NAMETABLESIZE 1008
-#define ELEMENTSIZE 256
+#if BITSINWORD == 32
+	#define MAXBASES 16 
+	#define NUMOBJECTS 1024
+	#define MAXINDEXSIZE 1000000000L
+	#define NAMETABLESIZE 1008
+	#define ELEMENTSIZE 256
+#elif BITSINWORD == 16
+	#define NUMOBJECTS 100
+	#define MAXINDEXSIZE 33000000L
+	#define NAMETABLESIZE 1008
+	#define ELEMENTSIZE 128
 #else
-#define NUMOBJECTS 100
-#define MAXINDEXSIZE 33000000L
-#define NAMETABLESIZE 1008
-#define ELEMENTSIZE 128
+	#error Only 64-bit and 32-bit platforms are supported.
 #endif
+
 
 int minosread(FILE *f,char *buffer,MLONG size);
 int minoswrite(FILE *f,char *buffer,MLONG size);

@@ -59,7 +59,6 @@
 #ifdef LINUX32
 #define UNIX
 #define LINUX
-#define ILP32
 #define _FILE_OFFSET_BITS 64
 #define WITHZLIB
 #define WITHGMP
@@ -69,7 +68,6 @@
 #ifdef LINUX64
 #define UNIX
 #define LINUX
-#define LP64
 #define WITHZLIB
 #define WITHGMP
 #define WITHPOSIXCLOCK
@@ -78,14 +76,12 @@
 
 #ifdef APPLE32
 #define UNIX
-#define ILP32
 #define _FILE_OFFSET_BITS 64
 #define WITHZLIB
 #endif
 
 #ifdef APPLE64
 #define UNIX
-#define LP64
 #define WITHZLIB
 #define WITHGMP
 #define WITHPOSIXCLOCK
@@ -96,17 +92,11 @@
 
 #ifdef CYGWIN32
 #define UNIX
-#define ILP32
 #endif
 
 #ifdef _MSC_VER
 #define WINDOWS
 #define _CRT_SECURE_NO_WARNINGS
-#if defined(_WIN64)
-#define LLP64
-#elif defined(_WIN32)
-#define ILP32
-#endif
 #endif
 
 /*
@@ -202,67 +192,41 @@
 
 #include <stdint.h>
 
-/*
- * Data model. ILP32 or LLP64 or LP64 must be defined.
- *
- * Here we define basic types WORD, LONG and their unsigned versions
- * UWORD and ULONG. LONG must be double size of WORD. Their actual types
- * are system-dependent. BITSINWORD and BITSINLONG are also defined.
- */
-#if defined(ILP32)
-
-typedef short WORD;
-typedef long LONG;
-typedef unsigned short UWORD;
-typedef unsigned long ULONG;
-#define BITSINWORD 16
-#define BITSINLONG 32
-
-#define WORD_MIN_VALUE SHRT_MIN
-#define WORD_MAX_VALUE SHRT_MAX
-#define LONG_MIN_VALUE LONG_MIN
-#define LONG_MAX_VALUE LONG_MAX
-
-#elif defined(LLP64)
-
-typedef int WORD;
-typedef long long LONG;
-typedef unsigned int UWORD;
-typedef unsigned long long ULONG;
-#define BITSINWORD 32
-#define BITSINLONG 64
-
-#define WORD_MIN_VALUE INT_MIN
-#define WORD_MAX_VALUE INT_MAX
-#define LONG_MIN_VALUE LLONG_MIN
-#define LONG_MAX_VALUE LLONG_MAX
-
-#elif defined(LP64)
-
-typedef int WORD;
-typedef long LONG;
-typedef unsigned int UWORD;
-typedef unsigned long ULONG;
-#define BITSINWORD 32
-#define BITSINLONG 64
-
-#define WORD_MIN_VALUE INT_MIN
-#define WORD_MAX_VALUE INT_MAX
-#define LONG_MIN_VALUE LONG_MIN
-#define LONG_MAX_VALUE LONG_MAX
-
+#if UINTPTR_MAX == UINT64_MAX
+	typedef int32_t WORD;
+	typedef int64_t LONG;
+	typedef uint32_t UWORD;
+	typedef uint64_t ULONG;
+	#define BITSINWORD 32
+	#define BITSINLONG 64
+	#define WORD_MIN_VALUE INT32_MIN
+	#define WORD_MAX_VALUE INT32_MAX
+	#define LONG_MIN_VALUE INT64_MIN
+	#define LONG_MAX_VALUE INT64_MAX
+#elif UINTPTR_MAX == UINT32_MAX
+	typedef int16_t WORD;
+	typedef int32_t LONG;
+	typedef uint16_t UWORD;
+	typedef uint32_t ULONG;
+	#define BITSINWORD 16
+	#define BITSINLONG 32
+	#define WORD_MIN_VALUE INT16_MIN
+	#define WORD_MAX_VALUE INT16_MAX
+	#define LONG_MIN_VALUE INT32_MIN
+	#define LONG_MAX_VALUE INT32_MAX
 #else
-#error ILP32 or LLP64 or LP64 must be defined!
+	#error Can not detect if this is a 32-bit or 64-bit platform.
 #endif
 
 STATIC_ASSERT(sizeof(WORD) * 8 == BITSINWORD);
 STATIC_ASSERT(sizeof(LONG) * 8 == BITSINLONG);
 STATIC_ASSERT(sizeof(WORD) * 2 == sizeof(LONG));
 STATIC_ASSERT(sizeof(LONG) >= sizeof(int *));
-
-#if BITSINWORD == 32
-#define WORDSIZE32 1
-#endif
+STATIC_ASSERT(sizeof(LONG) >= sizeof(int *));
+STATIC_ASSERT(sizeof(int *) >= sizeof(int));
+STATIC_ASSERT(sizeof(int) >= sizeof(WORD));
+STATIC_ASSERT(sizeof(WORD) >= sizeof(char));
+STATIC_ASSERT(sizeof(char) == 1);
 
 typedef signed char SBYTE;
 typedef unsigned char UBYTE;
@@ -440,6 +404,8 @@ template<typename T> struct calc {
 #include "structs.h"
 #include "declare.h"
 #include "variable.h"
+
+STATIC_ASSERT(sizeof(off_t) >= sizeof(LONG));
 
 /*
  * The interface to file routines for UNIX or non-UNIX (Windows).

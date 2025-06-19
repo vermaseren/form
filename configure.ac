@@ -292,59 +292,6 @@ AS_IF([test "x$with_api" = xwindows],
 AM_CONDITIONAL([ONUNIX], [test "x$with_api" = xposix])
 AM_CONDITIONAL([ONWINDOWS], [test "x$with_api" = xwindows])
 
-# Check for data model
-AC_CHECK_SIZEOF([char])
-AC_CHECK_SIZEOF([short])
-AC_CHECK_SIZEOF([int])
-AC_CHECK_SIZEOF([long])
-AC_CHECK_SIZEOF([long long])
-AC_CHECK_SIZEOF([void *])
-AC_CHECK_SIZEOF([off_t])
-
-case $ac_cv_sizeof_char-$ac_cv_sizeof_short-$ac_cv_sizeof_int-$ac_cv_sizeof_long-$ac_cv_sizeof_long_long-$ac_cv_sizeof_void_p-$ac_cv_sizeof_off_t in
-	1-2-4-4-*-4-*)
-		# Most of today's 32 bit systems.
-		print_data_model="ILP32"
-		ac_cv_sizeof_WORD=$ac_cv_sizeof_short
-		ac_cv_sizeof_LONG=$ac_cv_sizeof_long
-		AC_DEFINE(ILP32, , [Compiling for ILP32 data model])
-		# We need INT64.
-		AS_IF([test $ac_cv_sizeof_long_long -ne 8],
-			[AC_MSG_FAILURE([64-bit integers are not available])])
-		;;
-	1-2-4-4-8-8-*)
-		# Microsoft Windows (X64/IA-64).
-		print_data_model="LLP64"
-		ac_cv_sizeof_WORD=$ac_cv_sizeof_int
-		ac_cv_sizeof_LONG=$ac_cv_sizeof_long_long
-		AC_DEFINE(LLP64, , [Compiling for LLP64 data model])
-		;;
-	1-2-4-8-*-8-*)
-		# Most Unix and Unix-like systems, e.g., Solaris, Linux and Mac OS X.
-		print_data_model="LP64"
-		ac_cv_sizeof_WORD=$ac_cv_sizeof_int
-		ac_cv_sizeof_LONG=$ac_cv_sizeof_long
-		AC_DEFINE(LP64, , [Compiling for LP64 data model])
-		;;
-	*)
-		AC_MSG_FAILURE([Cannot recognize the data model used in the compiler])
-		;;
-esac
-# Our basic assumption:
-#  sizeof(off_t) >= sizeof(LONG) >= sizeof(void *) >= sizeof(int)
-#                >= sizeof(WORD) >= sizeof(char) == 1.
-flag=:
-$flag && test $ac_cv_sizeof_off_t -lt $ac_cv_sizeof_LONG && flag=false
-$flag && test $ac_cv_sizeof_LONG -lt $ac_cv_sizeof_void_p && flag=false
-$flag && test $ac_cv_sizeof_void_p -lt $ac_cv_sizeof_int && flag=false
-$flag && test $ac_cv_sizeof_int -lt $ac_cv_sizeof_WORD && flag=false
-$flag && test $ac_cv_sizeof_WORD -lt $ac_cv_sizeof_char && flag=false
-$flag && test $ac_cv_sizeof_char -ne 1 && flag=false
-AS_IF([$flag], [], [AC_MSG_FAILURE([Basic assumption sizeof(off_t) >= sizeof(LONG) >= sizeof(void *) >= sizeof(int) >= sizeof(WORD) >= sizeof(char) == 1 does not hold.])])
-# sizeof(off_t) <= 4 means files must <= 2 GB.
-AS_IF([test $ac_cv_sizeof_off_t -le 4], [AC_MSG_WARN([Large files more than 2 GB are not supported])])
-AC_MSG_NOTICE([The data model is $print_data_model])
-
 # Check for gmp
 AC_ARG_WITH([gmp],
 	[AS_HELP_STRING([--with-gmp@<:@=DIR@:>@],
@@ -975,15 +922,7 @@ if test "$my_test_COMPILEFLAGS" != set; then
 			# Use -march=native if available.
 			AX_CHECK_COMPILE_FLAG([-march=native],
 				[COMPILEFLAGS="$COMPILEFLAGS -march=native"],
-				[if test "x$print_data_model" = xILP32; then
-					if test "x$print_cpu" = xPentium; then
-						COMPILEFLAGS="$COMPILEFLAGS -march=i586"
-					elif test "x$print_cpu" = 'xPentium Pro'; then
-						COMPILEFLAGS="$COMPILEFLAGS -march=i686"
-					elif test "x$print_cpu" = xOpteron; then
-						COMPILEFLAGS="$COMPILEFLAGS -march=opteron"
-					fi
-				fi],
+				[],
 				[-Werror])
 		fi
 		# Profiling option.
@@ -1191,7 +1130,7 @@ manoutputdir=$(eval "echo $mandir")
 manoutputdir=$(eval "echo $manoutputdir")
 echo "FORM $VERSION"
 echo
-echo "Compiling for: $print_cpu $print_os ($print_data_model $print_api)"
+echo "Compiling for: $print_cpu $print_os ($print_api)"
 echo
 echo "Optionally linked libraries:"
 atleastone=no
@@ -1389,11 +1328,6 @@ if test "x$build_parvorm" = xyes; then
 fi
 if test $atleastone = no; then
 	echo "    <NONE>"
-fi
-if test $ac_cv_sizeof_off_t -le 4; then
-	echo
-	echo "***CAUTION***  Large files more than 2 GB will be"
-	echo "not supported."
 fi
 if test "x$thread_clock_ok" = xno; then
 	s="none"

@@ -295,13 +295,11 @@ int ReadIndex(DBASE *d)
 	Allocate the pieces one by one (makes it easier to give it back)
 */
 	if ( d->info.numberofindexblocks <= 0 ) return(0);
-#ifndef WORDSIZE32
 	if ( sizeof(INDEXBLOCK)*d->info.numberofindexblocks > MAXINDEXSIZE ) {
 		MesPrint("We need more than %ld bytes for the index.\n",MAXINDEXSIZE);
 		MesPrint("The file %s may not be a proper database\n",d->name);
 		return(-1);
 	}
-#endif
 	size = sizeof(INDEXBLOCK *)*d->info.numberofindexblocks;
 	if ( ( ib = (INDEXBLOCK **)Malloc1(size,"tb,index") ) == 0 ) return(-1);
 	for ( i = 0; i < d->info.numberofindexblocks; i++ ) {
