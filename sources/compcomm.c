@@ -1503,7 +1503,7 @@ int SetExpr(UBYTE *s, int setunset, int par)
 	WORD *w, numexpr;
 	int error = 0, i;
 	UBYTE *name, c;
-	if ( *s == 0 && ( par != INTOHIDE ) ) {
+	if ( *s == 0 ) {
 		for ( i = 0; i < NumExpressions; i++ ) {
 			w = &(Expressions[i].status);
 			*w = SetExprCases(par,setunset,*w);

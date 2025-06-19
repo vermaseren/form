@@ -193,6 +193,23 @@ Print;
 assert succeeded?
 assert result("expr") =~ expr("1")
 *--#] Issue8 : 
+*--#[ Issue10 :
+#-
+Local test1 = 1;
+.sort
+IntoHide;
+* test1 should be multiplied here
+Multiply 2;
+.sort
+* test1 should not be multiplied here
+Multiply 2;
+.sort
+UnHide;
+Print;
+.end
+assert succeeded?
+assert result("test1") =~ expr("2");
+*--#] Issue10 :
 *--#[ Issue21 :
 * Occurs() with two or more terms in function arguments may get freeze
 S x;
