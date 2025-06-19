@@ -1357,134 +1357,143 @@ int SetExprCases(int par, int setunset, int val)
 	switch ( par ) {
 		case SKIP:
 			switch ( val ) {
-		        case SKIPLEXPRESSION:
+				case SKIPLEXPRESSION:
 					if ( !setunset ) val = LOCALEXPRESSION;
-		            break;
-		        case SKIPGEXPRESSION:
+					break;
+				case SKIPGEXPRESSION:
 					if ( !setunset ) val = GLOBALEXPRESSION;
-		            break;
-		        case LOCALEXPRESSION:
+					break;
+				case LOCALEXPRESSION:
 					if ( setunset ) val = SKIPLEXPRESSION;
-		            break;
-		        case GLOBALEXPRESSION:
+					break;
+				case GLOBALEXPRESSION:
 					if ( setunset ) val = SKIPGEXPRESSION;
-		            break;
-		        case INTOHIDEGEXPRESSION:
-		        case INTOHIDELEXPRESSION:
-		        default:
-		            break;
+					break;
+				case INTOHIDEGEXPRESSION:
+				case INTOHIDELEXPRESSION:
+				default:
+					break;
 			}
 			break;
 		case DROP:
 			switch ( val ) {
-		        case SKIPLEXPRESSION:
-		        case LOCALEXPRESSION:
-		        case HIDELEXPRESSION:
+				case SKIPLEXPRESSION:
+				case LOCALEXPRESSION:
+				case HIDELEXPRESSION:
 					if ( setunset ) val = DROPLEXPRESSION;
-		            break;
-		        case DROPLEXPRESSION:
+					break;
+				case DROPLEXPRESSION:
 					if ( !setunset ) val = LOCALEXPRESSION;
-		            break;
-		        case SKIPGEXPRESSION:
-		        case GLOBALEXPRESSION:
-		        case HIDEGEXPRESSION:
+					break;
+				case SKIPGEXPRESSION:
+				case GLOBALEXPRESSION:
+				case HIDEGEXPRESSION:
 					if ( setunset ) val = DROPGEXPRESSION;
-		            break;
-		        case DROPGEXPRESSION:
+					break;
+				case DROPGEXPRESSION:
 					if ( !setunset ) val = GLOBALEXPRESSION;
-		            break;
-		        case HIDDENLEXPRESSION:
+					break;
+				case HIDDENLEXPRESSION:
 				case UNHIDELEXPRESSION:
 					if ( setunset ) val = DROPHLEXPRESSION;
-		            break;
-		        case HIDDENGEXPRESSION:
+					break;
+				case HIDDENGEXPRESSION:
 				case UNHIDEGEXPRESSION:
 					if ( setunset ) val = DROPHGEXPRESSION;
-		            break;
-		        case DROPHLEXPRESSION:
+					break;
+				case DROPHLEXPRESSION:
 					if ( !setunset ) val = HIDDENLEXPRESSION;
-		            break;
-		        case DROPHGEXPRESSION:
+					break;
+				case DROPHGEXPRESSION:
 					if ( !setunset ) val = HIDDENGEXPRESSION;
-		            break;
-		        case INTOHIDEGEXPRESSION:
-		        case INTOHIDELEXPRESSION:
-		        default:
-		            break;
+					break;
+				case INTOHIDEGEXPRESSION:
+				case INTOHIDELEXPRESSION:
+				default:
+					break;
 			}
 			break;
 		case HIDE:
 			switch ( val ) {
 				case DROPLEXPRESSION:
-		        case SKIPLEXPRESSION:
-		        case LOCALEXPRESSION:
+				case SKIPLEXPRESSION:
+				case LOCALEXPRESSION:
 					if ( setunset ) val = HIDELEXPRESSION;
-		            break;
-		        case HIDELEXPRESSION:
+					break;
+				case HIDELEXPRESSION:
 					if ( !setunset ) val = LOCALEXPRESSION;
-		            break;
+					break;
 				case DROPGEXPRESSION:
-		        case SKIPGEXPRESSION:
-		        case GLOBALEXPRESSION:
+				case SKIPGEXPRESSION:
+				case GLOBALEXPRESSION:
 					if ( setunset ) val = HIDEGEXPRESSION;
-		            break;
-		        case HIDEGEXPRESSION:
+					break;
+				case HIDEGEXPRESSION:
 					if ( !setunset ) val = GLOBALEXPRESSION;
-		            break;
-		        case INTOHIDEGEXPRESSION:
-		        case INTOHIDELEXPRESSION:
-		        default:
-		            break;
+					break;
+				case INTOHIDEGEXPRESSION:
+				case INTOHIDELEXPRESSION:
+				default:
+					break;
 			}
 			break;
 		case UNHIDE:
 			switch ( val ) {
-		        case HIDDENLEXPRESSION:
-		        case DROPHLEXPRESSION:
+				case HIDDENLEXPRESSION:
+				case DROPHLEXPRESSION:
 					if ( setunset ) val = UNHIDELEXPRESSION;
-		            break;
+					break;
 				case UNHIDELEXPRESSION:
 					if ( !setunset ) val = HIDDENLEXPRESSION;
-		            break;
-		        case HIDDENGEXPRESSION:
-		        case DROPHGEXPRESSION:
+					break;
+				case HIDDENGEXPRESSION:
+				case DROPHGEXPRESSION:
 					if ( setunset ) val = UNHIDEGEXPRESSION;
-		            break;
+					break;
 				case UNHIDEGEXPRESSION:
 					if ( !setunset ) val = HIDDENGEXPRESSION;
-		            break;
-		        case INTOHIDEGEXPRESSION:
-		        case INTOHIDELEXPRESSION:
-		        default:
-		            break;
+					break;
+				case INTOHIDEGEXPRESSION:
+				case INTOHIDELEXPRESSION:
+				default:
+					break;
 			}
 			break;
 		case INTOHIDE:
 			switch ( val ) {
-		        case HIDDENLEXPRESSION:
-		        case HIDDENGEXPRESSION:
+				case HIDDENLEXPRESSION:
+				case HIDDENGEXPRESSION:
 					MesPrint("&Expression is already hidden");
 					return(-1);
-		        case DROPHLEXPRESSION:
-		        case DROPHGEXPRESSION:
+				case DROPHLEXPRESSION:
+				case DROPHGEXPRESSION:
 				case UNHIDELEXPRESSION:
 				case UNHIDEGEXPRESSION:
-					MesPrint("&Cannot unhide and put intohide expression in the same module");
-					return(-1);
+					if ( setunset ) {
+						MesPrint("&Cannot unhide/drop and put intohide expression in the same module");
+						return(-1);
+					}
+					break;
 				case LOCALEXPRESSION:
 				case DROPLEXPRESSION:
-		        case SKIPLEXPRESSION:
+				case SKIPLEXPRESSION:
 				case HIDELEXPRESSION:
 					if ( setunset ) val = INTOHIDELEXPRESSION;
 					break;
 				case GLOBALEXPRESSION:
 				case DROPGEXPRESSION:
-		        case SKIPGEXPRESSION:
+				case SKIPGEXPRESSION:
 				case HIDEGEXPRESSION:
 					if ( setunset ) val = INTOHIDEGEXPRESSION;
 					break;
-		        default:
-		            break;
+				case INTOHIDELEXPRESSION:
+					if ( !setunset ) val = LOCALEXPRESSION;
+					break;
+				case INTOHIDEGEXPRESSION:
+					if ( !setunset ) val = GLOBALEXPRESSION;
+					break;
+				default:
+					break;
 			}
 			break;
 		default:
@@ -1503,12 +1512,12 @@ int SetExpr(UBYTE *s, int setunset, int par)
 	WORD *w, numexpr;
 	int error = 0, i;
 	UBYTE *name, c;
-	if ( *s == 0 && ( par != INTOHIDE ) ) {
+	if ( *s == 0 ) {
 		for ( i = 0; i < NumExpressions; i++ ) {
 			w = &(Expressions[i].status);
 			*w = SetExprCases(par,setunset,*w);
 			if ( *w < 0 ) error = 1;
-			if ( par == HIDE && setunset == 1 )
+			if ( ( par == HIDE || par == INTOHIDE ) && setunset == 1 )
 				Expressions[i].hidelevel = AC.HideLevel;
 		}
 		return(0);
@@ -1604,6 +1613,13 @@ int CoIntoHide(UBYTE *inp) {
 
 /*
   	#] CoIntoHide : 
+  	#[ CoNoIntoHide :
+*/
+
+int CoNoIntoHide(UBYTE *inp) { return(SetExpr(inp,0,INTOHIDE)); }
+
+/*
+  	#] CoNoIntoHide : 
   	#[ CoNoHide :
 */
 

@@ -182,6 +182,7 @@ static KEYWORD com2commands[] = {
 	,{"ndrop",          (TFUN)CoNoDrop,           SPECIFICATION,PARTEST}
 	,{"nfactorize",     (TFUN)CoNFactorize,       TOOUTPUT,     PARTEST}
 	,{"nhide",          (TFUN)CoNoHide,           SPECIFICATION,PARTEST}
+	,{"nintohide",      (TFUN)CoNoIntoHide,       SPECIFICATION,PARTEST}
 	,{"normalize",      (TFUN)CoNormalize,        STATEMENT,    PARTEST}
 	,{"notinparallel",  (TFUN)CoNotInParallel,    SPECIFICATION,PARTEST}
 	,{"nskip",          (TFUN)CoNoSkip,           SPECIFICATION,PARTEST}
