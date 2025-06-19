@@ -3459,6 +3459,35 @@ Here all active expressions will be transferred to the hide file except for
 the expressions \verb:F1: and \verb:F2:. \vspace{10mm}
 
 %--#] nhide : 
+%--#[ nintohide :
+
+\section{nintohide}
+\label{substanintohide}
+
+\noindent \begin{tabular}{ll}
+Type & Specification statement\\
+Syntax & nintohide; \\
+       & nintohide {\tt<}list of expressions{\tt>};
+\\ See also & hide (\ref{substahide}),
+              unhide (\ref{substaunhide}),
+              nunhide (\ref{substanunhide}),
+              pushhide (\ref{substapushhide}),
+              pophide (\ref{substapophide}),
+              intohide (\ref{substaintohide})
+\end{tabular} \vspace{4mm}
+
+\noindent In its first variety\index{nintohide} this statement undoes all
+intohide\index{intohide} plans that exist thus far in the current module. In the
+second variety it does this only for the specified active\index{active}
+expressions. See the intohide statement in \ref{substaintohide}. Example:
+\begin{verbatim}
+   Intohide;
+   Nintohide F1,F2;
+\end{verbatim}
+Here all active expressions will be transferred to the hide file at the end of the
+current module, except for the expressions \verb:F1: and \verb:F2:. \vspace{10mm}
+
+%--#] nhide : 
 %--#[ normalize :
 
 \section{normalize}

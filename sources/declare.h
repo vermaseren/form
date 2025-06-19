@@ -1159,6 +1159,7 @@ extern int    CoPushHide(UBYTE *);
 extern int    CoPopHide(UBYTE *);
 extern int    CoHide(UBYTE *);
 extern int    CoIntoHide(UBYTE *);
+extern int    CoNoIntoHide(UBYTE *);
 extern int    CoNoHide(UBYTE *);
 extern int    CoUnHide(UBYTE *);
 extern int    CoNoUnHide(UBYTE *);

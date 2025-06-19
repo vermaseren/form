@@ -196,8 +196,10 @@ assert result("expr") =~ expr("1")
 *--#[ Issue10 :
 #-
 Local test1 = 1;
+Local test2 = 1;
 .sort
 IntoHide;
+NIntoHide test2;
 * test1 should be multiplied here
 Multiply 2;
 .sort
@@ -209,6 +211,7 @@ Print;
 .end
 assert succeeded?
 assert result("test1") =~ expr("2");
+assert result("test2") =~ expr("4");
 *--#] Issue10 :
 *--#[ Issue21 :
 * Occurs() with two or more terms in function arguments may get freeze
