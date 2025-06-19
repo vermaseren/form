@@ -701,12 +701,19 @@ WORD *poly_ratfun_add (PHEAD WORD *t1, WORD *t2) {
 	// Fix sign
 	if (den.sign() == -1) { num*=poly(BHEAD -1); den*=poly(BHEAD -1); }
 
-	// Check size
-	if (num.size_of_form_notation() + den.size_of_form_notation() + 3 >= AM.MaxTer/(int)sizeof(WORD)) {
+	// Check size: include FUNHEAD for the prf itself, an ARGHEAD each for num and den,
+	// and 3 for the final coeff "1/1". We don't know here what the rest of the term looks like,
+	// but it certainly has at least its total size (so +1):
+	if ((num.size_of_form_notation() + den.size_of_form_notation() + FUNHEAD + 2*ARGHEAD + 3 + 1)
+		> AM.MaxTer/(int)sizeof(WORD)) {
+
 		MLOCK(ErrorMessageLock);
 		MesPrint ("ERROR: PolyRatFun doesn't fit in a term");
-		MesPrint ("(1) num size = %d, den size = %d, MaxTermSize = %d words",num.size_of_form_notation(),
-				den.size_of_form_notation(),AM.MaxTer/sizeof(WORD));
+		MesPrint ("(1) num size = %d, den size = %d, rest = %d, MaxTermSize = %d words",
+				num.size_of_form_notation()+ARGHEAD,
+				den.size_of_form_notation()+ARGHEAD,
+				FUNHEAD + 3 + 1,
+				AM.MaxTer/sizeof(WORD));
 		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
@@ -853,12 +860,18 @@ int poly_ratfun_normalize (PHEAD WORD *term) {
 	// Fix sign
 	if (den1.sign() == -1) { num1*=poly(BHEAD -1); den1*=poly(BHEAD -1); }
 
-	// Check size
-	if (num1.size_of_form_notation() + den1.size_of_form_notation() + 3 >= AM.MaxTer/(int)sizeof(WORD)) {
+	// Check size: include FUNHEAD for the prf itself, an ARGHEAD each for num and den,
+	// s-term for the copied term so far, and 3 for final coeff "1/1"
+	if ((num1.size_of_form_notation() + den1.size_of_form_notation() + FUNHEAD + 2*ARGHEAD
+		+ s-term + 3) > AM.MaxTer/(int)sizeof(WORD)) {
+
 		MLOCK(ErrorMessageLock);
 		MesPrint ("ERROR: PolyRatFun doesn't fit in a term");
-		MesPrint ("(2) num size = %d, den size = %d, MaxTermSize = %d words",num1.size_of_form_notation(),
-				den1.size_of_form_notation(),AM.MaxTer/sizeof(WORD));
+		MesPrint ("(2) num size = %d, den size = %d, rest = %d, MaxTermSize = %d words",
+				num1.size_of_form_notation()+ARGHEAD,
+				den1.size_of_form_notation()+ARGHEAD,
+				FUNHEAD + s-term + 3,
+				AM.MaxTer/sizeof(WORD));
 		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}

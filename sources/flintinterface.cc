@@ -1376,9 +1376,10 @@ void flint::ratfun_add_mpoly(PHEAD const WORD *t1, const WORD *t2, WORD *out,
 	const bool with_arghead = true;
 	const bool must_fit_term = true;
 	const bool write = true;
-	out += flint::to_argument_mpoly(BHEAD out, with_arghead, must_fit_term, write, out-args_size,
+	// prev_size + 4, to account for final term size and coeff of "1/1"
+	out += flint::to_argument_mpoly(BHEAD out, with_arghead, must_fit_term, write, out-args_size+4,
 		num1.d, var_map, ctx.d);
-	out += flint::to_argument_mpoly(BHEAD out, with_arghead, must_fit_term, write, out-args_size,
+	out += flint::to_argument_mpoly(BHEAD out, with_arghead, must_fit_term, write, out-args_size+4,
 		den1.d, var_map, ctx.d);
 
 	*args_size = out - args_size + 1; // The +1 is to include the function ID
@@ -1426,9 +1427,10 @@ void flint::ratfun_add_poly(PHEAD const WORD *t1, const WORD *t2, WORD *out,
 	const bool with_arghead = true;
 	const bool must_fit_term = true;
 	const bool write = true;
-	out += flint::to_argument_poly(BHEAD out, with_arghead, must_fit_term, write, out-args_size,
+	// prev_size + 4, to account for final term size and coeff of "1/1"
+	out += flint::to_argument_poly(BHEAD out, with_arghead, must_fit_term, write, out-args_size+4,
 		num1.d, var_map);
-	out += flint::to_argument_poly(BHEAD out, with_arghead, must_fit_term, write, out-args_size,
+	out += flint::to_argument_poly(BHEAD out, with_arghead, must_fit_term, write, out-args_size+4,
 		den1.d, var_map);
 
 	*args_size = out - args_size + 1; // The +1 is to include the function ID
@@ -1497,15 +1499,15 @@ void flint::ratfun_normalize_mpoly(PHEAD WORD *term, const var_map_t &var_map) {
 	const bool with_arghead = true;
 	const bool must_fit_term = true;
 	const bool write = true;
-	out += flint::to_argument_mpoly(BHEAD out, with_arghead, must_fit_term, write, out-args_size,
+	out += flint::to_argument_mpoly(BHEAD out, with_arghead, must_fit_term, write, out-term_size,
 		num1.d, var_map, ctx.d);
-	out += flint::to_argument_mpoly(BHEAD out, with_arghead, must_fit_term, write, out-args_size,
+	out += flint::to_argument_mpoly(BHEAD out, with_arghead, must_fit_term, write, out-term_size,
 		den1.d, var_map, ctx.d);
 
 	*args_size = out - args_size + 1; // The +1 is to include the function ID
 
 	// +3 for the coefficient of 1/1, which is added after the check
-	if ( sizeof(WORD)*(*args_size+3) >= (size_t)AM.MaxTer ) {
+	if ( sizeof(WORD)*(out-term_size+3) > (size_t)AM.MaxTer ) {
 		MLOCK(ErrorMessageLock);
 		MesPrint("flint::ratfun_normalize: output exceeds MaxTermSize");
 		MUNLOCK(ErrorMessageLock);
@@ -1579,15 +1581,15 @@ void flint::ratfun_normalize_poly(PHEAD WORD *term, const var_map_t &var_map) {
 	const bool with_arghead = true;
 	const bool must_fit_term = true;
 	const bool write = true;
-	out += flint::to_argument_poly(BHEAD out, with_arghead, must_fit_term, write, out-args_size,
+	out += flint::to_argument_poly(BHEAD out, with_arghead, must_fit_term, write, out-term_size,
 		num1.d, var_map);
-	out += flint::to_argument_poly(BHEAD out, with_arghead, must_fit_term, write, out-args_size,
+	out += flint::to_argument_poly(BHEAD out, with_arghead, must_fit_term, write, out-term_size,
 		den1.d, var_map);
 
 	*args_size = out - args_size + 1; // The +1 is to include the function ID
 
 	// +3 for the coefficient of 1/1, which is added after the check
-	if ( sizeof(WORD)*(*args_size+3) >= (size_t)AM.MaxTer ) {
+	if ( sizeof(WORD)*(out-term_size+3) > (size_t)AM.MaxTer ) {
 		MLOCK(ErrorMessageLock);
 		MesPrint("flint::ratfun_normalize: output exceeds MaxTermSize");
 		MUNLOCK(ErrorMessageLock);
