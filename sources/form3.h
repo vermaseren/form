@@ -60,7 +60,6 @@
 #define UNIX
 #define LINUX
 #define ILP32
-#define SIZEOF_LONG_LONG 8
 #define _FILE_OFFSET_BITS 64
 #define WITHZLIB
 #define WITHGMP
@@ -80,7 +79,6 @@
 #ifdef APPLE32
 #define UNIX
 #define ILP32
-#define SIZEOF_LONG_LONG 8
 #define _FILE_OFFSET_BITS 64
 #define WITHZLIB
 #endif
@@ -99,7 +97,6 @@
 #ifdef CYGWIN32
 #define UNIX
 #define ILP32
-#define SIZEOF_LONG_LONG 8
 #endif
 
 #ifdef _MSC_VER
@@ -109,7 +106,6 @@
 #define LLP64
 #elif defined(_WIN32)
 #define ILP32
-#define SIZEOF_LONG_LONG 8
 #endif
 #endif
 
@@ -204,14 +200,14 @@
 #error UNIX or WINDOWS must be defined!
 #endif
 
+#include <stdint.h>
+
 /*
  * Data model. ILP32 or LLP64 or LP64 must be defined.
  *
  * Here we define basic types WORD, LONG and their unsigned versions
  * UWORD and ULONG. LONG must be double size of WORD. Their actual types
  * are system-dependent. BITSINWORD and BITSINLONG are also defined.
- * INT16, INT32 (also INT64 and INT128 if available) are used for
- * system independent saved expressions (store.c).
  */
 #if defined(ILP32)
 
@@ -221,20 +217,6 @@ typedef unsigned short UWORD;
 typedef unsigned long ULONG;
 #define BITSINWORD 16
 #define BITSINLONG 32
-#define INT16 short
-#define INT32 int
-#undef INT64
-#undef INT128
-
-#ifdef SIZEOF_LONG_LONG
-#if SIZEOF_LONG_LONG == 8
-#define INT64 long long
-#endif
-#endif
-
-#ifndef INT64
-#error INT64 is not available!
-#endif
 
 #define WORD_MIN_VALUE SHRT_MIN
 #define WORD_MAX_VALUE SHRT_MAX
@@ -249,10 +231,6 @@ typedef unsigned int UWORD;
 typedef unsigned long long ULONG;
 #define BITSINWORD 32
 #define BITSINLONG 64
-#define INT16 short
-#define INT32 int
-#define INT64 long long
-#undef INT128
 
 #define WORD_MIN_VALUE INT_MIN
 #define WORD_MAX_VALUE INT_MAX
@@ -267,10 +245,6 @@ typedef unsigned int UWORD;
 typedef unsigned long ULONG;
 #define BITSINWORD 32
 #define BITSINLONG 64
-#define INT16 short
-#define INT32 int
-#define INT64 long
-#undef INT128
 
 #define WORD_MIN_VALUE INT_MIN
 #define WORD_MAX_VALUE INT_MAX
@@ -285,12 +259,6 @@ STATIC_ASSERT(sizeof(WORD) * 8 == BITSINWORD);
 STATIC_ASSERT(sizeof(LONG) * 8 == BITSINLONG);
 STATIC_ASSERT(sizeof(WORD) * 2 == sizeof(LONG));
 STATIC_ASSERT(sizeof(LONG) >= sizeof(int *));
-STATIC_ASSERT(sizeof(INT16) == 2);
-STATIC_ASSERT(sizeof(INT32) == 4);
-STATIC_ASSERT(sizeof(INT64) == 8);
-#ifdef INT128
-STATIC_ASSERT(sizeof(INT128) == 16);
-#endif
 
 #if BITSINWORD == 32
 #define WORDSIZE32 1
@@ -300,7 +268,7 @@ typedef signed char SBYTE;
 typedef unsigned char UBYTE;
 typedef unsigned int UINT;
 typedef ULONG RLONG;  /* Used in reken.c. */
-typedef INT64 MLONG;  /* See commentary in minos.h. */
+typedef int64_t MLONG;  /* See commentary in minos.h. */
 /*
  * NOTE: we don't use the standard _Bool (or C++ bool) because its size is
  * implementation-dependent and messes up the traditional PADXXX macros.

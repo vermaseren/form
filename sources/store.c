@@ -3521,13 +3521,6 @@ void ExprStatus(EXPRESSIONS e)
  		#[ Flip :
 */
 
-#ifndef INT16
-#error "INT16 not defined!"
-#endif
-#ifndef INT32
-#error "INT32 not defined!"
-#endif
-
 /**
  *  Flips the endianness. This function will be called via function pointers.
  *  See struct O_const and ReadSaveHeader().
@@ -3558,36 +3551,36 @@ static void FlipN(UBYTE *p, int length)
  */
 static void Flip16(UBYTE *p)
 {
-	INT16 in = *((INT16 *)p);
-	INT16 out = (INT16)( (((in) >> 8) & 0x00FF) | (((in) << 8) & 0xFF00) );
-	*((INT16 *)p) = out;
+	uint16_t in = *((uint16_t *)p);
+	uint16_t out = (uint16_t)( (((in) >> 8) & UINT16_C(0x00FF)) | (((in) << 8) & UINT16_C(0xFF00)) );
+	*((uint16_t *)p) = out;
 }
 
 /** @see Flip16() */
 static void Flip32(UBYTE *p)
 {
-	INT32 in = *((INT32 *)p);
-	INT32 out =
-		( (((in) >> 24) & 0x000000FF) | (((in) >>  8) & 0x0000FF00) | \
-		  (((in) <<  8) & 0x00FF0000) | (((in) << 24) & 0xFF000000) );
-	*((INT32 *)p) = out;
+	uint32_t in = *((uint32_t *)p);
+	uint32_t out =
+		( (((in) >> 24) & UINT32_C(0x000000FF)) | (((in) >>  8) & UINT32_C(0x0000FF00)) | \
+		  (((in) <<  8) & UINT32_C(0x00FF0000)) | (((in) << 24) & UINT32_C(0xFF000000)) );
+	*((uint32_t *)p) = out;
 }
 
 /** @see Flip16() */
-#ifdef INT64
+#ifdef UINT64_C
 static void Flip64(UBYTE *p)
 {
-	INT64 in = *((INT64 *)p);
-	INT64 out =
-		( (((in) >> 56) & (INT64)0x00000000000000FFLL) | (((in) >> 40) & (INT64)0x000000000000FF00LL) | \
-		  (((in) >> 24) & (INT64)0x0000000000FF0000LL) | (((in) >>  8) & (INT64)0x00000000FF000000LL) | \
-		  (((in) <<  8) & (INT64)0x000000FF00000000LL) | (((in) << 24) & (INT64)0x0000FF0000000000LL) | \
-		  (((in) << 40) & (INT64)0x00FF000000000000LL) | (((in) << 56) & (INT64)0xFF00000000000000LL) );
-	*((INT64 *)p) = out;
+	uint64_t in = *((uint64_t *)p);
+	uint64_t out =
+		( (((in) >> 56) & UINT64_C(0x00000000000000FF)) | (((in) >> 40) & UINT64_C(0x000000000000FF00)) | \
+		  (((in) >> 24) & UINT64_C(0x0000000000FF0000)) | (((in) >>  8) & UINT64_C(0x00000000FF000000)) | \
+		  (((in) <<  8) & UINT64_C(0x000000FF00000000)) | (((in) << 24) & UINT64_C(0x0000FF0000000000)) | \
+		  (((in) << 40) & UINT64_C(0x00FF000000000000)) | (((in) << 56) & UINT64_C(0xFF00000000000000)) );
+	*((uint64_t *)p) = out;
 }
 #else
 static void Flip64(UBYTE *p) { FlipN(p, 8); }
-#endif /* INT64 */
+#endif /* UINT64_C */
 
 /** @see Flip16() */
 static void Flip128(UBYTE *p) { FlipN(p, 16); }
@@ -3650,28 +3643,28 @@ static void ResizeDataLE(UBYTE *src, int slen, UBYTE *dst, int dlen)
  */
 static void Resize16t16(UBYTE *src, UBYTE *dst)
 {
-	*((INT16 *)dst) = *((INT16 *)src);
+	*((int16_t *)dst) = *((int16_t *)src);
 }
 
 /** @see Resize16t16() */
 static void Resize16t32(UBYTE *src, UBYTE *dst)
 {
-	INT16 in = *((INT16 *)src);
-	INT32 out = (INT32)in;
-	*((INT32 *)dst) = out;
+	int16_t in = *((int16_t *)src);
+	int32_t out = (int32_t)in;
+	*((int32_t *)dst) = out;
 }
 
 /** @see Resize16t16() */
-#ifdef INT64
+#ifdef INT64_C
 static void Resize16t64(UBYTE *src, UBYTE *dst)
 {
-	INT16 in = *((INT16 *)src);
-	INT64 out = (INT64)in;
-	*((INT64 *)dst) = out;
+	int16_t in = *((int16_t *)src);
+	int64_t out = (int64_t)in;
+	*((int64_t *)dst) = out;
 }
 #else
 static void Resize16t64(UBYTE *src, UBYTE *dst) { AO.ResizeData(src, 2, dst, 8); }
-#endif /* INT64 */
+#endif /* INT64_C */
 
 /** @see Resize16t16() */
 static void Resize16t128(UBYTE *src, UBYTE *dst) { AO.ResizeData(src, 2, dst, 16); }
@@ -3679,33 +3672,33 @@ static void Resize16t128(UBYTE *src, UBYTE *dst) { AO.ResizeData(src, 2, dst, 16
 /** @see Resize16t16() */
 static void Resize32t32(UBYTE *src, UBYTE *dst)
 {
-	*((INT32 *)dst) = *((INT32 *)src);
+	*((int32_t *)dst) = *((int32_t *)src);
 }
 
 /** @see Resize16t16() */
-#ifdef INT64
+#ifdef INT64_C
 static void Resize32t64(UBYTE *src, UBYTE *dst)
 {
-	INT32 in = *((INT32 *)src);
-	INT64 out = (INT64)in;
-	*((INT64 *)dst) = out;
+	int32_t in = *((int32_t *)src);
+	int64_t out = (int64_t)in;
+	*((int64_t *)dst) = out;
 }
 #else
 static void Resize32t64(UBYTE *src, UBYTE *dst) { AO.ResizeData(src, 4, dst, 8); }
-#endif /* INT64 */
+#endif /* INT64_C */
 
 /** @see Resize16t16() */
 static void Resize32t128(UBYTE *src, UBYTE *dst) { AO.ResizeData(src, 4, dst, 16); }
 
 /** @see Resize16t16() */
-#ifdef INT64
+#ifdef INT64_C
 static void Resize64t64(UBYTE *src, UBYTE *dst)
 {
-	*((INT64 *)dst) = *((INT64 *)src);
+	*((int64_t *)dst) = *((int64_t *)src);
 }
 #else
 static void Resize64t64(UBYTE *src, UBYTE *dst) { AO.ResizeData(src, 8, dst, 8); }
-#endif /* INT64 */
+#endif /* INT64_C */
 
 /** @see Resize16t16() */
 static void Resize64t128(UBYTE *src, UBYTE *dst) { AO.ResizeData(src, 8, dst, 16); }
@@ -3716,10 +3709,10 @@ static void Resize128t128(UBYTE *src, UBYTE *dst) { AO.ResizeData(src, 16, dst, 
 /** @see Resize16t16() */
 static void Resize32t16(UBYTE *src, UBYTE *dst)
 {
-	INT32 in = *((INT32 *)src);
-	INT16 out = (INT16)in;
+	int32_t in = *((int32_t *)src);
+	int16_t out = (int16_t)in;
 	if ( in > (1<<15)-1 || in < -(1<<15)+1 ) AO.resizeFlag |= 1;
-	*((INT16 *)dst) = out;
+	*((int16_t *)dst) = out;
 }
 
 /**
@@ -3730,56 +3723,56 @@ static void Resize32t16(UBYTE *src, UBYTE *dst)
  */
 static void Resize32t16NC(UBYTE *src, UBYTE *dst)
 {
-	INT32 in = *((INT32 *)src);
-	INT16 out = (INT16)in;
-	*((INT16 *)dst) = out;
+	int32_t in = *((int32_t *)src);
+	int16_t out = (int16_t)in;
+	*((int16_t *)dst) = out;
 }
 
-#ifdef INT64
+#ifdef INT64_C
 /** @see Resize16t16() */
 static void Resize64t16(UBYTE *src, UBYTE *dst)
 {
-	INT64 in = *((INT64 *)src);
-	INT16 out = (INT16)in;
+	int64_t in = *((int64_t *)src);
+	int16_t out = (int16_t)in;
 	if ( in > (1<<15)-1 || in < -(1<<15)+1 ) AO.resizeFlag |= 1;
-	*((INT16 *)dst) = out;
+	*((int16_t *)dst) = out;
 }
 /** @see Resize32t16NC() */
 static void Resize64t16NC(UBYTE *src, UBYTE *dst)
 {
-	INT64 in = *((INT64 *)src);
-	INT16 out = (INT16)in;
-	*((INT16 *)dst) = out;
+	int64_t in = *((int64_t *)src);
+	int16_t out = (int16_t)in;
+	*((int16_t *)dst) = out;
 }
 #else
 /** @see Resize16t16() */
 static void Resize64t16(UBYTE *src, UBYTE *dst) { AO.ResizeData(src, 8, dst, 2); }
 /** @see Resize32t16NC() */
 static void Resize64t16NC(UBYTE *src, UBYTE *dst) { AO.ResizeData(src, 8, dst, 2); }
-#endif /* INT64 */
+#endif /* INT64_C */
 
-#ifdef INT64
+#ifdef INT64_C
 /** @see Resize16t16() */
 static void Resize64t32(UBYTE *src, UBYTE *dst)
 {
-	INT64 in = *((INT64 *)src);
-	INT32 out = (INT32)in;
-	if ( in > ((INT64)1<<31)-1 || in < -((INT64)1<<31)+1 ) AO.resizeFlag |= 1;
-	*((INT32 *)dst) = out;
+	int64_t in = *((int64_t *)src);
+	int32_t out = (int32_t)in;
+	if ( in > (INT64_C(1)<<31)-1 || in < -(INT64_C(1)<<31)+1 ) AO.resizeFlag |= 1;
+	*((int32_t *)dst) = out;
 }
 /** @see Resize32t16NC() */
 static void Resize64t32NC(UBYTE *src, UBYTE *dst)
 {
-	INT64 in = *((INT64 *)src);
-	INT32 out = (INT32)in;
-	*((INT32 *)dst) = out;
+	int64_t in = *((int64_t *)src);
+	int32_t out = (int32_t)in;
+	*((int32_t *)dst) = out;
 }
 #else
 /** @see Resize16t16() */
 static void Resize64t32(UBYTE *src, UBYTE *dst) { AO.ResizeData(src, 8, dst, 4); }
 /** @see Resize32t16NC() */
 static void Resize64t32NC(UBYTE *src, UBYTE *dst) { AO.ResizeData(src, 8, dst, 4); }
-#endif /* INT64 */
+#endif /* INT64_C */
 
 /** @see Resize16t16() */
 static void Resize128t16(UBYTE *src, UBYTE *dst) { AO.ResizeData(src, 16, dst, 2); }
@@ -3812,14 +3805,14 @@ static void Resize128t64NC(UBYTE *src, UBYTE *dst) { AO.ResizeData(src, 16, dst,
  */
 static void CheckPower32(UBYTE *p)
 {
-	if ( *((INT32 *)p) < -MAXPOWER ) {
+	if ( *((int32_t *)p) < -MAXPOWER ) {
 		AO.powerFlag |= 0x01;
-		*((INT32 *)p) = -MAXPOWER;
+		*((int32_t *)p) = -MAXPOWER;
 	}
-	p += sizeof(INT32);
-	if ( *((INT32 *)p) > MAXPOWER ) {
+	p += sizeof(int32_t);
+	if ( *((int32_t *)p) > MAXPOWER ) {
 		AO.powerFlag |= 0x02;
-		*((INT32 *)p) = MAXPOWER;
+		*((int32_t *)p) = MAXPOWER;
 	}
 }
 
@@ -3832,13 +3825,13 @@ static void CheckPower32(UBYTE *p)
  */
 static void RenumberVec32(UBYTE *p)
 {
-/*	INT32 wildoffset = *((INT32 *)AO.SaveHeader.wildoffset); */
+/*	int32_t wildoffset = *((int32_t *)AO.SaveHeader.wildoffset); */
 	void *dummy = (void *)AO.SaveHeader.wildoffset;  /* to remove a warning about strict-aliasing rules in gcc */
-	INT32 wildoffset = *(INT32 *)dummy;
-	INT32 in = *((INT32 *)p);
+	int32_t wildoffset = *(int32_t *)dummy;
+	int32_t in = *((int32_t *)p);
 	in = in + 2*wildoffset;
 	in = in - 2*WILDOFFSET;
-	*((INT32 *)p) = in;
+	*((int32_t *)p) = in;
 }
 
 /*
@@ -3862,14 +3855,14 @@ static void RenumberVec32(UBYTE *p)
 static void ResizeCoeff32(UBYTE **bout, UBYTE *bend, UBYTE *top)
 {
 	int i;
-	INT32 sign;
-	INT32 *in, *p;
-	INT32 *out = (INT32 *)*bout;
-	INT32 *end = (INT32 *)bend;
+	int32_t sign;
+	int32_t *in, *p;
+	int32_t *out = (int32_t *)*bout;
+	int32_t *end = (int32_t *)bend;
 
 	if ( sizeof(WORD) == 2 ) {
 		/* 4 -> 2 */
-		INT32 len = (end - 1 - out) / 2;
+		int32_t len = (end - 1 - out) / 2;
 		int zeros = 2;
 		p = out + len - 1;
 
@@ -3902,41 +3895,41 @@ static void ResizeCoeff32(UBYTE **bout, UBYTE *bend, UBYTE *top)
 	}
 	else {
 		/* 2 -> 4 */
-		INT32 len = (end - 1 - out) / 2;
+		int32_t len = (end - 1 - out) / 2;
 		if ( len == 1 ) {
-			*out = *(unsigned INT16 *)out;
+			*out = *(uint16_t *)out;
 			++out;
-			*out = *(unsigned INT16 *)out;
+			*out = *(uint16_t *)out;
 			++out;
 			++out;
 		}
 		else {
 			p = out;
-			*out = *(unsigned INT16 *)out;
+			*out = *(uint16_t *)out;
 			in = out + 1;
 			for ( i = 1; i < len; ++i ) {
 				/* shift */
-				*out = (unsigned INT32)(*(unsigned INT16 *)out)
-					+ ((unsigned INT32)(*(unsigned INT16 *)in) << 16);
+				*out = (uint32_t)(*(uint16_t *)out)
+					+ ((uint32_t)(*(uint16_t *)in) << 16);
 				++in;
 				if ( ++i == len ) break;
 				/* copy */
 				++out;
-				*out = *(unsigned INT16 *)in;
+				*out = *(uint16_t *)in;
 				++in;
 			}
 			++out;
-			*out = *(unsigned INT16 *)in;
+			*out = *(uint16_t *)in;
 			++in;
 			for ( i = 1; i < len; ++i ) {
 				/* shift */
-				*out = (unsigned INT32)(*(unsigned INT16 *)out)
-					+ ((unsigned INT32)(*(unsigned INT16 *)in) << 16);
+				*out = (uint32_t)(*(uint16_t *)out)
+					+ ((uint32_t)(*(uint16_t *)in) << 16);
 				++in;
 				if ( ++i == len ) break;
 				/* copy */
 				++out;
-				*out = *(unsigned INT16 *)in;
+				*out = *(uint16_t *)in;
 				++in;
 			}
 			++out;
@@ -3945,7 +3938,7 @@ static void ResizeCoeff32(UBYTE **bout, UBYTE *bend, UBYTE *top)
 			++out;
 		}
 
-		if ( out > (INT32 *)top ) {
+		if ( out > (int32_t *)top ) {
 			MesPrint("Error in resizing coefficient!");
 		}
 
@@ -4738,11 +4731,11 @@ ReadSaveTerm32(UBYTE *bin, UBYTE *binend, UBYTE **bout, UBYTE *boutend, UBYTE *t
 	GETIDENTITY
 
 	UBYTE *boutbuf;
-	INT32 len, j, id;
-	INT32 *r, *t, *coeff, *end, *newtermsize, *rend;
-	INT32 *newsubtermp;
-	INT32 *in = (INT32 *)bin;
-	INT32 *out = (INT32 *)*bout;
+	int32_t len, j, id;
+	int32_t *r, *t, *coeff, *end, *newtermsize, *rend;
+	int32_t *newsubtermp;
+	int32_t *in = (int32_t *)bin;
+	int32_t *out = (int32_t *)*bout;
 
 	/* if called recursively the term is already decompressed in buffer.
 	   is this the case? */
@@ -4751,16 +4744,16 @@ ReadSaveTerm32(UBYTE *bin, UBYTE *binend, UBYTE **bout, UBYTE *boutend, UBYTE *t
 		len = *out;
 		end = out + len;
 		r = in + 1;
-		rend = (INT32 *)boutend;
+		rend = (int32_t *)boutend;
 		coeff = end - ABS(*(end-1));
-		newtermsize = (INT32 *)*bout;
+		newtermsize = (int32_t *)*bout;
 		out = newtermsize + 1;
 	}
 	else {
 		/* do decompression of necessary. always return if the space in the
 		   buffer is not sufficient */
-		INT32 rbuf;
-		r = (INT32 *)AR.CompressBuffer;
+		int32_t rbuf;
+		r = (int32_t *)AR.CompressBuffer;
 		rbuf = *r;
 		len = j = *in;
 		/* first copy from AR.CompressBuffer if necessary */
@@ -4777,7 +4770,7 @@ ReadSaveTerm32(UBYTE *bin, UBYTE *binend, UBYTE **bout, UBYTE *boutend, UBYTE *t
 			++out;
 			*r++ = len;
 			while ( ++j <= 0 ) {
-				INT32 bb = *r++;
+				int32_t bb = *r++;
 				*out++ = bb;
 			}
 			j = *in++;
@@ -4811,14 +4804,14 @@ ReadSaveTerm32(UBYTE *bin, UBYTE *binend, UBYTE **bout, UBYTE *boutend, UBYTE *t
 		}
 		/* second copy from input buffer */
 		while ( --j >= 0 ) {
-			INT32 bb = *in++;
+			int32_t bb = *in++;
 			*r++ = *out++ = bb;
 		}
 
 		rend = r;
-		r = (INT32 *)AR.CompressBuffer + 1;
+		r = (int32_t *)AR.CompressBuffer + 1;
 		coeff = end - ABS(*(end-1));
-		newtermsize = (INT32 *)*bout;
+		newtermsize = (int32_t *)*bout;
 		out = newtermsize + 1;
 	}
 
@@ -4836,10 +4829,10 @@ ReadSaveTerm32(UBYTE *bin, UBYTE *binend, UBYTE **bout, UBYTE *boutend, UBYTE *t
 				++out; ++r; /* symbol number */
 				/* if exponent is too big, rewrite as exponent function */
 				if ( ABS(*out) >= MAXPOWER ) { 
-					INT32 *a, *b;
-					INT32 n;
-					INT32 num = *(out-1);
-					INT32 exp = *out;
+					int32_t *a, *b;
+					int32_t n;
+					int32_t num = *(out-1);
+					int32_t exp = *out;
 					coeff += 9;
 					end += 9;
 					t += 9;
@@ -4876,11 +4869,11 @@ ReadSaveTerm32(UBYTE *bin, UBYTE *binend, UBYTE **bout, UBYTE *boutend, UBYTE *t
 				++out; ++r;
 				/* if exponent is too big, rewrite as exponent function */
 				if ( ABS(*out) >= MAXPOWER ) { 
-					INT32 *a, *b;
-					INT32 n;
-					INT32 num1 = *(out-2);
-					INT32 num2 = *(out-1);
-					INT32 exp = *out;
+					int32_t *a, *b;
+					int32_t n;
+					int32_t num1 = *(out-2);
+					int32_t num2 = *(out-1);
+					int32_t exp = *out;
 					coeff += 17;
 					end += 17;
 					t += 17;
@@ -4926,9 +4919,9 @@ ReadSaveTerm32(UBYTE *bin, UBYTE *binend, UBYTE **bout, UBYTE *boutend, UBYTE *t
 			}
 		}
 		else if ( id == INDEX ) {
-/*			INT32 vectoroffset = -2 * *((INT32 *)AO.SaveHeader.wildoffset); */
+/*			int32_t vectoroffset = -2 * *((int32_t *)AO.SaveHeader.wildoffset); */
 			void *dummy = (void *)AO.SaveHeader.wildoffset;  /* to remove a warning about strict-aliasing rules in gcc */
-			INT32 vectoroffset = -2 * *((INT32 *)dummy);
+			int32_t vectoroffset = -2 * *((int32_t *)dummy);
 			while ( out < t ) {
 				/* if there is a vector, renumber it */
 				if ( *out < vectoroffset ) {
@@ -4954,9 +4947,9 @@ ReadSaveTerm32(UBYTE *bin, UBYTE *binend, UBYTE **bout, UBYTE *boutend, UBYTE *t
 			out = t;
 		}
 		else if ( id == GAMMA || id == LEVICIVITA || (id >= FUNCTION && AO.tensorList[id]) ) {
-/*			INT32 vectoroffset = -2 * *((INT32 *)AO.SaveHeader.wildoffset); */
+/*			int32_t vectoroffset = -2 * *((int32_t *)AO.SaveHeader.wildoffset); */
 			void *dummy = (void *)AO.SaveHeader.wildoffset;  /* to remove a warning about strict-aliasing rules in gcc */
-			INT32 vectoroffset = -2 * *((INT32 *)dummy);
+			int32_t vectoroffset = -2 * *((int32_t *)dummy);
 			while ( out < t ) {
 				/* if there is a vector as an argument, renumber it */
 				if ( *out < vectoroffset ) {
@@ -4966,7 +4959,7 @@ ReadSaveTerm32(UBYTE *bin, UBYTE *binend, UBYTE **bout, UBYTE *boutend, UBYTE *t
 			}
 		}
 		else if ( id >= FUNCTION ) {
-			INT32 *argEnd;
+			int32_t *argEnd;
 			UBYTE *newbin;
 
 			++out; ++r; /* dirty flags */
@@ -4986,9 +4979,9 @@ ReadSaveTerm32(UBYTE *bin, UBYTE *binend, UBYTE **bout, UBYTE *boutend, UBYTE *t
 							if ( sizeof(WORD) == 2 ) {
 								/* resize if needed */
 								if ( *out > (1<<15)-1 || *out < -(1<<15)+1 ) {
-									INT32 *a, *b;
-									INT32 n;
-									INT32 num = *out;
+									int32_t *a, *b;
+									int32_t n;
+									int32_t num = *out;
 									coeff += 6;
 									end += 6;
 									argEnd += 6;
@@ -5042,14 +5035,14 @@ ReadSaveTerm32(UBYTE *bin, UBYTE *binend, UBYTE **bout, UBYTE *boutend, UBYTE *t
 				}
 				else {
 					/* long arguments */
-					INT32 *newargsize = out;
+					int32_t *newargsize = out;
 					argEnd = out + *out;
 					++out; ++r;
 					++out; ++r; /* dirty flags */
 					while ( out < argEnd ) {
-						INT32 *keepsizep = out + *out;
-						INT32 lenbuf = *out;
-						INT32 **ppp = &out; /* to avoid a compiler warning */
+						int32_t *keepsizep = out + *out;
+						int32_t lenbuf = *out;
+						int32_t **ppp = &out; /* to avoid a compiler warning */
 						/* recursion */
 						newbin = ReadSaveTerm32((UBYTE *)r, binend, (UBYTE **)ppp, (UBYTE *)rend, top, 1);
 						r += lenbuf;
@@ -5059,9 +5052,9 @@ ReadSaveTerm32(UBYTE *bin, UBYTE *binend, UBYTE **bout, UBYTE *boutend, UBYTE *t
 						/* if the term done by recursion has changed in size,
 						   we need to move the rest of the data accordingly */
 						if ( out > keepsizep ) {
-							INT32 *a, *b;
-							INT32 n;
-							INT32 extention = out - keepsizep;
+							int32_t *a, *b;
+							int32_t n;
+							int32_t extention = out - keepsizep;
 							a = r;
 							b = out;
 							n = rend - r;
@@ -5072,9 +5065,9 @@ ReadSaveTerm32(UBYTE *bin, UBYTE *binend, UBYTE **bout, UBYTE *boutend, UBYTE *t
 							t += extention;
 						}
 						else if ( out < keepsizep ) {
-							INT32 *a, *b;
-							INT32 n;
-							INT32 extention = keepsizep - out;
+							int32_t *a, *b;
+							int32_t n;
+							int32_t extention = keepsizep - out;
 							a = keepsizep;
 							b = out;
 							n = rend - r;
@@ -5112,7 +5105,7 @@ ReadSaveTerm32(UBYTE *bin, UBYTE *binend, UBYTE **bout, UBYTE *boutend, UBYTE *t
 		return ( bin );
 	}
 
-	*newtermsize = (INT32 *)*bout - newtermsize;
+	*newtermsize = (int32_t *)*bout - newtermsize;
 
 	return ( (UBYTE *)in );
 }
