@@ -554,7 +554,7 @@ int GetVar(UBYTE *name, WORD *type, WORD *number, int wantedtype, int par)
   	#[ EntVar :
 */
 
-WORD EntVar(WORD type, UBYTE *name, WORD x, WORD y, WORD z, WORD d)
+int EntVar(WORD type, UBYTE *name, WORD x, WORD y, WORD z, WORD d)
 {
 	switch ( type ) {
 		case CSYMBOL:

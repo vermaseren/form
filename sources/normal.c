@@ -51,7 +51,7 @@ void RatToFloat(mpf_t result, UWORD *formrat, int ratsize);
  		#[ CompareFunctions :
 */
 
-WORD CompareFunctions(WORD *fleft,WORD *fright)
+int CompareFunctions(WORD *fleft,WORD *fright)
 {
 	WORD k, kk;
 	if ( AC.properorderflag ) {
@@ -115,7 +115,7 @@ WORD CompareFunctions(WORD *fleft,WORD *fright)
 	of such funny functions.
 */
 
-WORD Commute(WORD *fleft, WORD *fright)
+int Commute(WORD *fleft, WORD *fright)
 {
 	WORD fun1, fun2;
 	if ( *fleft == DOLLAREXPRESSION || *fright == DOLLAREXPRESSION ) return(0);
@@ -190,7 +190,7 @@ WORD Commute(WORD *fleft, WORD *fright)
 
 */
 
-WORD Normalize(PHEAD WORD *term)
+int Normalize(PHEAD WORD *term)
 {
 /*
   	#[ Declarations :
@@ -216,7 +216,8 @@ WORD Normalize(PHEAD WORD *term)
 	WORD *n_coef, ncoef;				/* Accumulator for the coefficient */
 	WORD *n_llnum, *lnum, nnum;
 	WORD *termout, oldtoprhs = 0, subtype;
-	WORD ReplaceType, ReplaceVeto = 0, didcontr, regval = 0;
+	WORD ReplaceType, ReplaceVeto = 0, didcontr;
+	int regval = 0;
 	WORD *ReplaceSub;
 	WORD *fillsetexp;
 	CBUF *C = cbuf+AT.ebufnum;
@@ -4193,7 +4194,7 @@ FromNorm:
  		#[ ExtraSymbol :
 */
 
-WORD ExtraSymbol(WORD sym, WORD pow, WORD nsym, WORD *ppsym, WORD *ncoef)
+int ExtraSymbol(WORD sym, WORD pow, WORD nsym, WORD *ppsym, WORD *ncoef)
 {
 	WORD *m, i;
 	i = nsym;
@@ -4255,7 +4256,7 @@ WORD ExtraSymbol(WORD sym, WORD pow, WORD nsym, WORD *ppsym, WORD *ncoef)
  		#[ DoTheta :
 */
 
-WORD DoTheta(PHEAD WORD *t)
+int DoTheta(PHEAD WORD *t)
 {
 	GETBIDENTITY
 	WORD k, *r1, *r2, *tstop, type;
@@ -4352,7 +4353,7 @@ WORD DoTheta(PHEAD WORD *t)
  		#[ DoDelta :
 */
 
-WORD DoDelta(WORD *t)
+int DoDelta(WORD *t)
 {
 	WORD k, *r1, *r2, *tstop, isnum, isnum2, type = *t;
 	if ( AC.BracketNormalize ) return(-1);
@@ -5268,7 +5269,7 @@ int TestFunFlag(PHEAD WORD *tfun)
   	#[ BracketNormalize :
 */
 
-WORD BracketNormalize(PHEAD WORD *term)
+int BracketNormalize(PHEAD WORD *term)
 {
 	WORD *stop = term+*term-3, *t, *tt, *tstart, *r;
 	WORD *oldwork = AT.WorkPointer;

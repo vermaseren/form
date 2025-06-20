@@ -53,10 +53,11 @@
 		non-commuting objects are involved.
 */
 
-WORD MatchE(PHEAD WORD *pattern, WORD *fun, WORD *inter, WORD par)
+int MatchE(PHEAD WORD *pattern, WORD *fun, WORD *inter, WORD par)
 {
 	GETBIDENTITY
-	WORD *m, *t, *r, i, retval;
+	WORD *m, *t, *r, i;
+	int retval;
 	WORD *mstop, *tstop, j, newvalue, newfun;
 	WORD fixvec[MAXMATCH],wcvec[MAXMATCH],fixind[MAXMATCH],wcind[MAXMATCH];
 	WORD tfixvec[MAXMATCH],tfixind[MAXMATCH];
@@ -142,8 +143,8 @@ WORD MatchE(PHEAD WORD *pattern, WORD *fun, WORD *inter, WORD par)
 				else return(1);
 			}
 /*			newter = instart; */
-			i = ScanFunctions(BHEAD newpat,inter,par);
-			return(i);
+			retval = ScanFunctions(BHEAD newpat,inter,par);
+			return(retval);
 		}
 /*
 		Now the recursion
@@ -440,7 +441,7 @@ NoCaseB:		m = AN.WildValue;
 		hit in the assignment of wildcards though.
 */
 
-WORD Permute(PERM *perm, WORD first)
+int Permute(PERM *perm, WORD first)
 {
 	WORD *s, c, i, j;
 	if ( first ) {
@@ -474,7 +475,7 @@ WORD Permute(PERM *perm, WORD first)
 	Like Permute, but works on an array of pointers
 */
 
-WORD PermuteP(PERMP *perm, WORD first)
+int PermuteP(PERMP *perm, WORD first)
 {
 	WORD **s, *c, i, j;
 	if ( first ) {
@@ -506,7 +507,7 @@ WORD PermuteP(PERMP *perm, WORD first)
   	#[ Distribute :
 */
 
-WORD Distribute(DISTRIBUTE *d, WORD first)
+int Distribute(DISTRIBUTE *d, WORD first)
 {
 	WORD *to, *from, *inc, *from2, i, j;
 	if ( first ) {

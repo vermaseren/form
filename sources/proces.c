@@ -61,10 +61,11 @@ WORD printscratch[2];
  *	        return on the spot by calling Terminate.
  */
  
-WORD Processor(void)
+int Processor(void)
 {
 	GETIDENTITY
-	WORD *term, *t, i, retval = 0, size;
+	WORD *term, *t, i, size;
+	int retval = 0;
 	EXPRESSIONS e;
 	POSITION position;
 	WORD last, LastExpression, fromspectator;
@@ -2171,7 +2172,7 @@ EndTest2:;
  *		Special attention should be given to nested functions!
  */
 
-WORD InFunction(PHEAD WORD *term, WORD *termout)
+int InFunction(PHEAD WORD *term, WORD *termout)
 {
 	GETBIDENTITY
 	WORD *m, *t, *r, *rr, sign = 1, oldncmod;
@@ -2741,8 +2742,8 @@ TooLarge:
  *		@return  Normal conventions (OK = 0).
  */
 
-WORD InsertTerm(PHEAD WORD *term, WORD replac, WORD extractbuff, WORD *position, WORD *termout,
-                WORD tepos)
+int InsertTerm(PHEAD WORD *term, WORD replac, WORD extractbuff, WORD *position, WORD *termout,
+               WORD tepos)
 {
 	GETBIDENTITY
 	WORD *m, *t, *r, i, l2, j;
@@ -3064,7 +3065,7 @@ WORD *PasteTerm(PHEAD WORD number, WORD *accum, WORD *position, WORD times, WORD
  *		@param tepos   the position of the subterm in term to be replaced
  */
 
-WORD FiniTerm(PHEAD WORD *term, WORD *accum, WORD *termout, WORD number, WORD tepos)
+int FiniTerm(PHEAD WORD *term, WORD *accum, WORD *termout, WORD number, WORD tepos)
 {
 	GETBIDENTITY
 	WORD *m, *t, *r, i, numacc, l2, ipp;
@@ -3263,11 +3264,12 @@ static LONG debugcounter = 0;
  *		sorting routines.
  */
 
-WORD Generator(PHEAD WORD *term, WORD level)
+int Generator(PHEAD WORD *term, WORD level)
 {
 	GETBIDENTITY
 	WORD replac, *accum, *termout, *t, i, j, tepos, applyflag = 0, *StartBuf;
-	WORD *a, power, power1, DumNow = AR.CurDum, oldtoprhs, oldatoprhs, retnorm, extractbuff;
+	WORD *a, power, power1, DumNow = AR.CurDum, oldtoprhs, oldatoprhs, extractbuff;
+	int ret;
 	int *RepSto = AN.RepPoint, iscopy = 0;
 	CBUF *C = cbuf+AM.rbufnum, *CC = cbuf + AT.ebufnum, *CCC = cbuf + AT.aebufnum;
 	LONG posisub, oldcpointer, oldacpointer;
@@ -3293,8 +3295,8 @@ ReStart:
 Renormalize:
 		AN.PolyNormFlag = 0;
 		AN.idfunctionflag = 0;
-		if ( ( retnorm = Normalize(BHEAD term) ) != 0 ) {
-			if ( retnorm > 0 ) {
+		if ( ( ret = Normalize(BHEAD term) ) != 0 ) {
+			if ( ret > 0 ) {
 				if ( AT.WorkPointer < term + *term ) AT.WorkPointer = term + *term;
 				goto ReStart;
 			}
@@ -3376,25 +3378,25 @@ SkipCount:	level++;
 					if ( PutBracket(BHEAD term) ) return(-1);
 					AN.RepPoint = RepSto;
 					*AT.WorkPointer = 0;
-					i = StoreTerm(BHEAD termout);
+					ret = StoreTerm(BHEAD termout);
 					AT.WorkPointer = termout;
 					CC->numrhs = oldtoprhs;
 					CC->Pointer = CC->Buffer + oldcpointer;
 					CCC->numrhs = oldatoprhs;
 					CCC->Pointer = CCC->Buffer + oldacpointer;
-					return(i);
+					return(ret);
 				}
 				else {
 					if ( AT.WorkPointer < term + *term ) AT.WorkPointer = term + *term;
 					if ( AT.WorkPointer >= AT.WorkTop ) goto OverWork;
 					*AT.WorkPointer = 0;
 					AN.RepPoint = RepSto;
-					i = StoreTerm(BHEAD term);
+					ret = StoreTerm(BHEAD term);
 					CC->numrhs = oldtoprhs;
 					CC->Pointer = CC->Buffer + oldcpointer;
 					CCC->numrhs = oldatoprhs;
 					CCC->Pointer = CCC->Buffer + oldacpointer;
-					return(i);
+					return(ret);
 				}
 			}
 			i = C->lhs[level][0];
@@ -3780,14 +3782,14 @@ CommonEnd:
 					level = C->lhs[level][2];
 					break;
 				  case TYPETERM:
-					retnorm = execterm(BHEAD term,level);
+					ret = execterm(BHEAD term,level);
 					AN.RepPoint = RepSto;
 					AR.CurDum = DumNow;
 					CC->numrhs = oldtoprhs;
 					CC->Pointer = CC->Buffer + oldcpointer;
 					CCC->numrhs = oldatoprhs;
 					CCC->Pointer = CCC->Buffer + oldacpointer;
-					return(retnorm);
+					return(ret);
 				  case TYPEDETCURDUM:
 					AT.WorkPointer = term + *term;
 					AR.CurDum = DetCurDum(BHEAD term);
@@ -4614,8 +4616,8 @@ OverWork:
 char freezestring[] = "freeze<-xxxx";
 #endif
 
-WORD DoOnePow(PHEAD WORD *term, WORD power, WORD nexp, WORD * accum,
-              WORD *aa, WORD level, WORD *freeze)
+int DoOnePow(PHEAD WORD *term, WORD power, WORD nexp, WORD * accum,
+             WORD *aa, WORD level, WORD *freeze)
 {
 	GETBIDENTITY
 	POSITION oldposition, startposition;
@@ -4835,7 +4837,7 @@ PowCall2:;
  *		             multiplying term by term we call Generator again.
  */
 
-WORD Deferred(PHEAD WORD *term, WORD level)
+int Deferred(PHEAD WORD *term, WORD level)
 {
 	GETBIDENTITY
 	POSITION startposition;
@@ -4963,7 +4965,7 @@ DefCall:;
  *		inside a function or dollar variable.
  */
 
-WORD PrepPoly(PHEAD WORD *term,WORD par)
+int PrepPoly(PHEAD WORD *term,WORD par)
 {
 	GETBIDENTITY
 	WORD count = 0, i, jcoef, ncoef;
@@ -5351,12 +5353,13 @@ endofit:;
  *		@return Normal conventions (OK = 0).
  */
 
-WORD PolyFunMul(PHEAD WORD *term)
+int PolyFunMul(PHEAD WORD *term)
 {
 	GETBIDENTITY
 	WORD *t, *fun1, *fun2, *t1, *t2, *m, *w, *ww, *tt1, *tt2, *tt4, *arg1, *arg2;
 	WORD *tstop, i, dirty = 0, OldPolyFunPow = AR.PolyFunPow, minp1, minp2;
-	WORD n1, n2, i1, i2, l1, l2, l3, l4, action = 0, noac = 0, retval = 0;
+	WORD n1, n2, i1, i2, l1, l2, l3, l4, action = 0, noac = 0;
+	int retval = 0;
 	if ( AR.PolyFunType == 2 && AR.PolyFunExp == 1 ) {
 		WORD pow = 0, pow1;
 		t = term + 1; t1 = term + *term; t1 -= ABS(t1[-1]);

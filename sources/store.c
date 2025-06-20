@@ -45,7 +45,7 @@
 
 */
 
-WORD OpenTemp(void)
+void OpenTemp(void)
 {
 	GETIDENTITY
 	if ( AR.outfile->handle >= 0 ) {
@@ -53,7 +53,6 @@ WORD OpenTemp(void)
 		AR.outfile->POposition = AR.outfile->filesize;
 		AR.outfile->POfill = AR.outfile->PObuffer;
 	}
-	return(0);
 }
 
 /*
@@ -187,7 +186,7 @@ endpos:
 
 */
 
-WORD RevertScratch(void)
+int RevertScratch(void)
 {
 	GETIDENTITY
 	FILEHANDLE *f;
@@ -232,7 +231,7 @@ WORD RevertScratch(void)
 
 */
 
-WORD ResetScratch(void)
+int ResetScratch(void)
 {
 	GETIDENTITY
 	FILEHANDLE *f;
@@ -770,7 +769,7 @@ LoadRead:
 		If par > 0 we have to remove the expressions from the namelists.
 */
 
-WORD DeleteStore(WORD par)
+int DeleteStore(WORD par)
 {
 	GETIDENTITY
 	char *s;
@@ -871,7 +870,7 @@ WORD DeleteStore(WORD par)
 
 */
 
-WORD PutInStore(INDEXENTRY *ind, WORD num)
+int PutInStore(INDEXENTRY *ind, WORD num)
 {
 	GETIDENTITY
 	INDEXENTRY *newind;
@@ -1519,7 +1518,7 @@ FullTerm:
 
 */
 
-WORD GetMoreFromMem(WORD *term, WORD **tpoin)
+int GetMoreFromMem(WORD *term, WORD **tpoin)
 {
 	GETIDENTITY
 	WORD *t, *r, *m, *h, *tstop, i, j, inc, same;
@@ -2014,7 +2013,7 @@ Tensors:
 
 */
 
-WORD ToStorage(EXPRESSIONS e, POSITION *length)
+int ToStorage(EXPRESSIONS e, POSITION *length)
 {
 	GETIDENTITY
 	WORD *w, i, j;
@@ -2318,7 +2317,7 @@ ErrNextS:
  *  @return  = 0 everything okay, != 0 an error occurred
  */
 
-WORD SetFileIndex(void)
+int SetFileIndex(void)
 {
 	GETIDENTITY
 	int i, j = sizeof(FILEINDEX)/(sizeof(LONG));
@@ -2367,7 +2366,7 @@ WORD SetFileIndex(void)
 		things work....
 */
 
-WORD VarStore(UBYTE *s, WORD n, WORD name, WORD namesize)
+int VarStore(UBYTE *s, WORD n, WORD name, WORD namesize)
 {
 	GETIDENTITY
 	UBYTE *t, *u;
@@ -2425,7 +2424,7 @@ WORD VarStore(UBYTE *s, WORD n, WORD name, WORD namesize)
 
 */
 
-WORD TermRenumber(WORD *term, RENUMBER renumber, WORD nexpr)
+int TermRenumber(WORD *term, RENUMBER renumber, WORD nexpr)
 {
 	WORD *stopper;
 /*!!!
@@ -3962,7 +3961,7 @@ static void ResizeCoeff32(UBYTE **bout, UBYTE *bend, UBYTE *top)
  *  @param  handle  specifies open file to which header will be written
  *  @return         = 0 everything okay, != 0 an error occurred
  */
-WORD WriteStoreHeader(WORD handle)
+LONG WriteStoreHeader(WORD handle)
 {
 	/* template of the STOREHEADER */
 	static STOREHEADER sh = {
@@ -4055,7 +4054,7 @@ static unsigned int CompactifySizeof(unsigned int size)
  *  @return   = 0 everything okay, != 0 an error occurred
  */
 
-WORD ReadSaveHeader(void)
+int ReadSaveHeader(void)
 {
 	/* Read-only tables of function pointers for conversions. */
 	static void (*flipJumpTable[4])(UBYTE *) =
@@ -4173,7 +4172,7 @@ WORD ReadSaveHeader(void)
  *                   point to allocated, big enough memory.
  *  @return          = 0 everything okay, != 0 an error occurred
  */
-WORD ReadSaveIndex(FILEINDEX *fileind)
+LONG ReadSaveIndex(FILEINDEX *fileind)
 {
 	/* do we need some translation for the FILEINDEX? */
 	if ( AO.transFlag ) {
@@ -4359,7 +4358,7 @@ WORD ReadSaveIndex(FILEINDEX *fileind)
  *                   variable structure
  *  @return          = 0 everything okay, != 0 an error occurred
  */
-WORD ReadSaveVariables(UBYTE *buffer, UBYTE *top, LONG *size, LONG *outsize,\
+LONG ReadSaveVariables(UBYTE *buffer, UBYTE *top, LONG *size, LONG *outsize,\
                        INDEXENTRY *ind, LONG *stage)
 {
 	/* do we need some translation for the variables? */
@@ -5136,7 +5135,7 @@ ReadSaveTerm32(UBYTE *bin, UBYTE *binend, UBYTE **bout, UBYTE *boutend, UBYTE *t
  *  @param  outsize  number of written bytes
  *  @return          = 0 everything okay, != 0 an error occurred
  */
-WORD ReadSaveExpression(UBYTE *buffer, UBYTE *top, LONG *size, LONG *outsize)
+LONG ReadSaveExpression(UBYTE *buffer, UBYTE *top, LONG *size, LONG *outsize)
 {
 	if ( AO.transFlag ) {
 		UBYTE *in, *end, *out, *outend, *p;

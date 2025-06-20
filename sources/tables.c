@@ -331,7 +331,7 @@ int FindTableTree(TABLES T, WORD *tp, int inc)
   	#[ DoTableExpansion :
 */
 
-WORD DoTableExpansion(WORD *term, WORD level)
+int DoTableExpansion(WORD *term, WORD level)
 {
 	GETIDENTITY
 	WORD *t, *tstop, *stopper, *termout, *m, *mm, *tp, *r, xx;
@@ -1411,10 +1411,11 @@ finishup:;
 	We need the arguments of TestUse to see for which tables it is to be done
 */
 
-WORD TestUse(WORD *term, WORD level)
+int TestUse(WORD *term, WORD level)
 {
 	WORD *tstop, *t, *m, *tstart, tabnum;
-	WORD *funs, numfuns, error = 0;
+	WORD *funs, numfuns;
+	int error = 0;
 	TABLES T;
 	LONG i;
 	CBUF *C = cbuf+AM.rbufnum;
@@ -1977,7 +1978,7 @@ inc:		j = t[1];
   	#[ Apply :
 */
 
-WORD Apply(WORD *term, WORD level)
+void Apply(WORD *term, WORD level)
 {
 	WORD *funs, numfuns;
 	TABLES T;
@@ -2014,7 +2015,6 @@ WORD Apply(WORD *term, WORD level)
 	Note that we actually gain one space. 
 */
 	ReWorkT(term,funs,numfuns);
-	return(0);
 }
 
 /*
@@ -2253,7 +2253,7 @@ int ApplyExec(WORD *term, int maxtogo, WORD level)
   	#[ ApplyReset :
 */
 
-WORD ApplyReset(WORD level)
+void ApplyReset(WORD level)
 {
 	WORD *funs, numfuns;
 	TABLES T;
@@ -2281,7 +2281,6 @@ WORD ApplyReset(WORD level)
 			}
 		}
 	}
-	return(0);
 }
 
 /*
@@ -2289,7 +2288,7 @@ WORD ApplyReset(WORD level)
   	#[ TableReset :
 */
 
-WORD TableReset(void)
+void TableReset(void)
 {
 	TABLES T;
 	int i;
@@ -2299,7 +2298,6 @@ WORD TableReset(void)
 			functions[i].tabl = T->spare;
 		}
 	}
-	return(0);
 }
 
 /*

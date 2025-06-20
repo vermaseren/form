@@ -821,7 +821,7 @@ int MesCall(char *s)
  		#[ MesCerr :
 */
 
-WORD MesCerr(char *s, UBYTE *t)
+int MesCerr(char *s, UBYTE *t)
 {
 	UBYTE *u, c;
 	WORD i = 11;
@@ -840,7 +840,7 @@ WORD MesCerr(char *s, UBYTE *t)
  		#[ MesComp :
 */
 
-WORD MesComp(char *s, UBYTE *p, UBYTE *q)
+int MesComp(char *s, UBYTE *p, UBYTE *q)
 {
 	UBYTE c;
 	c = *++q; *q = 0;

@@ -277,7 +277,7 @@ InVe:
 		Note that the whole setup asks for recursions.
 */
 
-WORD DoIfStatement(PHEAD WORD *ifcode, WORD *term)
+int DoIfStatement(PHEAD WORD *ifcode, WORD *term)
 {
 	GETBIDENTITY
 	WORD *ifstop, *ifp;

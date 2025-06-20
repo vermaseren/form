@@ -1351,7 +1351,7 @@ void StartMore(void)
 		This routine initializes the parameters that may change during the run.
 */
 
-WORD IniVars(void)
+void IniVars(void)
 {
 #ifdef WITHPTHREADS
 	GETIDENTITY
@@ -1575,7 +1575,6 @@ WORD IniVars(void)
 	AC.cbufnum = AM.rbufnum;		/* Select the default compiler buffer */
 	AC.HideLevel = 0;
 	AP.PreAssignFlag = 0;
-	return(0);
 }
 
 /*

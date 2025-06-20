@@ -58,7 +58,7 @@
 	to any of these sets.
 */
 
-WORD FindOnly(PHEAD WORD *term, WORD *pattern)
+int FindOnly(PHEAD WORD *term, WORD *pattern)
 {
 	GETBIDENTITY
 	WORD *t, *m;
@@ -416,7 +416,7 @@ EndLoop:;
 
 */
 
-WORD FindOnce(PHEAD WORD *term, WORD *pattern)
+int FindOnce(PHEAD WORD *term, WORD *pattern)
 {
 	GETBIDENTITY
 	WORD *t, *m;
@@ -1067,7 +1067,7 @@ WORD FindMulti(PHEAD WORD *term, WORD *pattern)
 
 */
 
-WORD FindRest(PHEAD WORD *term, WORD *pattern)
+int FindRest(PHEAD WORD *term, WORD *pattern)
 {
 	GETBIDENTITY
 	WORD *t, *m, *tt, wild, regular;

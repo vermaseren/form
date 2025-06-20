@@ -347,12 +347,12 @@ NoWildArg:
 
 #ifdef OLDTOPO
 
-WORD GenTopologies(PHEAD WORD *term,WORD level)
+int GenTopologies(PHEAD WORD *term,WORD level)
 {
 	WORD *t1, *tt1, *tstop, *t, *tt;
 	WORD *oldworkpointer = AT.WorkPointer;
 	WORD option1 = 0, option2 = 0, setoption = -1;
-	WORD retval;
+	int retval;
 /*
 
 	We have to go through the testing procedure again, because there could

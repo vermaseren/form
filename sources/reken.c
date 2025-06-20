@@ -123,7 +123,7 @@ void UnPack(UWORD *a, WORD na, WORD *denom, WORD *numer)
 
 */
 
-WORD Mully(PHEAD UWORD *a, WORD *na, UWORD *b, WORD nb)
+int Mully(PHEAD UWORD *a, WORD *na, UWORD *b, WORD nb)
 {
 	GETBIDENTITY
 	UWORD *d, *e;
@@ -169,7 +169,7 @@ MullyEr:
 
 */
 
-WORD Divvy(PHEAD UWORD *a, WORD *na, UWORD *b, WORD nb)
+int Divvy(PHEAD UWORD *a, WORD *na, UWORD *b, WORD nb)
 {
 	GETBIDENTITY
 	UWORD *d,*e;
@@ -207,7 +207,7 @@ DivvyEr:
  		#[ AddRat :			WORD AddRat(a,na,b,nb,c,nc)
 */
 
-WORD AddRat(PHEAD UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
+int AddRat(PHEAD UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 {
 	GETBIDENTITY
 	UWORD *d, *e, *f, *g;
@@ -375,7 +375,7 @@ AddRer1:
 
 */
 
-WORD MulRat(PHEAD UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
+int MulRat(PHEAD UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 {
 	WORD i;
 	WORD sgn = 1;
@@ -497,10 +497,11 @@ WORD MulRat(PHEAD UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 
 */
 
-WORD DivRat(PHEAD UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
+int DivRat(PHEAD UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 {
 	GETBIDENTITY
 	WORD i, j;
+	int ret;
 	UWORD *xd,*xe,xx;
 	if ( !nb ) {
 		MLOCK(ErrorMessageLock);
@@ -511,10 +512,10 @@ WORD DivRat(PHEAD UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 	j = i = (nb >= 0)? nb: -nb;
 	xd = b; xe = b + i;
 	do { xx = *xd; *xd++ = *xe; *xe++ = xx; } while ( --j > 0 );
-	j = MulRat(BHEAD a,na,b,nb,c,nc);
+	ret = MulRat(BHEAD a,na,b,nb,c,nc);
 	xd = b; xe = b + i;
 	do { xx = *xd; *xd++ = *xe; *xe++ = xx; } while ( --i > 0 );
-	return(j);
+	return(ret);
 }
 
 /*
@@ -527,7 +528,7 @@ WORD DivRat(PHEAD UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 
 */
 
-WORD Simplify(PHEAD UWORD *a, WORD *na, UWORD *b, WORD *nb)
+int Simplify(PHEAD UWORD *a, WORD *na, UWORD *b, WORD *nb)
 {
 	GETBIDENTITY
 	UWORD *x1,*x2,*x3;
@@ -644,7 +645,7 @@ SimpErr:
 		the GCD of the numerators divided by the GCD of the denominators
 */
 
-WORD AccumGCD(PHEAD UWORD *a, WORD *na, UWORD *b, WORD nb)
+int AccumGCD(PHEAD UWORD *a, WORD *na, UWORD *b, WORD nb)
 {
 	GETBIDENTITY
 	WORD nna,nnb,numa,numb,dena,denb,numc,denc;
@@ -702,7 +703,7 @@ int TakeRatRoot(UWORD *a, WORD *n, WORD power)
 
 */
 
-WORD AddLong(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
+int AddLong(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 {
 	WORD sgn, res;
 	if ( na < 0 ) {
@@ -747,7 +748,7 @@ WORD AddLong(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 	c can be a or b.
 */
 
-WORD AddPLon(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
+int AddPLon(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 {
 	UWORD carry = 0, e, nd = 0;
 	while ( na && nb ) {
@@ -838,7 +839,7 @@ void SubPLon(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 
 */
 
-WORD MulLong(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
+int MulLong(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 {
 	WORD sgn = 1;
 	UWORD i, *ic, *ia;
@@ -941,7 +942,7 @@ MulLov:
 
 */
 
-WORD BigLong(UWORD *a, WORD na, UWORD *b, WORD nb)
+int BigLong(UWORD *a, WORD na, UWORD *b, WORD nb)
 {
 	a += na;
 	b += nb;
@@ -969,8 +970,8 @@ WORD BigLong(UWORD *a, WORD na, UWORD *b, WORD nb)
 
 */
 
-WORD DivLong(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c,
-             WORD *nc, UWORD *d, WORD *nd)
+int DivLong(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c,
+            WORD *nc, UWORD *d, WORD *nd)
 {
 	WORD sgna = 1, sgnb = 1, ne, nf, ng, nh;
 	WORD i, ni;
@@ -1225,7 +1226,7 @@ WORD DivLong(UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c,
 	The method that is used works with a bitdecomposition of b.
 */
 
-WORD RaisPow(PHEAD UWORD *a, WORD *na, UWORD b)
+int RaisPow(PHEAD UWORD *a, WORD *na, UWORD b)
 {
 	GETBIDENTITY
 	WORD i, nu;
@@ -1582,7 +1583,7 @@ int GetLongModInverses(PHEAD UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *ia, WO
 
 */
 
-WORD Product(UWORD *a, WORD *na, WORD b)
+int Product(UWORD *a, WORD *na, WORD b)
 {
 	WORD i, sgn = 1;
 	RLONG t, u;
@@ -1771,7 +1772,7 @@ void PrtLong(UWORD *a, WORD na, UBYTE *s)
 	is accumulated.
 */
 
-WORD GetLong(UBYTE *s, UWORD *a, WORD *na)
+int GetLong(UBYTE *s, UWORD *a, WORD *na)
 {
 /*
 	UWORD digit;
@@ -1988,7 +1989,7 @@ toobad:
   	#[ Old Routine :
 */
 
-WORD GcdLong(PHEAD UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
+int GcdLong(PHEAD UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 {
 	GETBIDENTITY
 	if ( !na || !nb ) {
@@ -2273,7 +2274,7 @@ GcdErr:
 	of GCDMAX.
 */
 
-WORD GcdLong(PHEAD UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
+int GcdLong(PHEAD UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 {
 	GETBIDENTITY
 	UWORD x,y,z;
@@ -2664,7 +2665,7 @@ GcdErr:
  		#[ GetBinom :		WORD GetBinom(a,na,i1,i2)
 */
 
-WORD GetBinom(UWORD *a, WORD *na, WORD i1, WORD i2)
+int GetBinom(UWORD *a, WORD *na, WORD i1, WORD i2)
 {
 	GETIDENTITY
 	WORD j, k, l;
@@ -2698,9 +2699,9 @@ CalledFrom:
 		in c. c is allowed to be equal to a.
 */
 
-WORD LcmLong(PHEAD UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
+int LcmLong(PHEAD UWORD *a, WORD na, UWORD *b, WORD nb, UWORD *c, WORD *nc)
 {
-	WORD error = 0;
+	int error = 0;
 	UWORD *d = NumberMalloc("LcmLong");
 	UWORD *e = NumberMalloc("LcmLong");
 	UWORD *f = NumberMalloc("LcmLong");
@@ -3099,7 +3100,7 @@ WORD CompCoef(WORD *term1, WORD *term2)
 
 */
 
-WORD Modulus(WORD *term)
+int Modulus(WORD *term)
 {
 	WORD *t;
 	WORD n1;
@@ -3146,7 +3147,7 @@ WORD Modulus(WORD *term)
 		This may not be a good idea. To be checked.
 */
 
-WORD TakeModulus(UWORD *a, WORD *na, UWORD *cmodvec, WORD ncmod, WORD par)
+int TakeModulus(UWORD *a, WORD *na, UWORD *cmodvec, WORD ncmod, WORD par)
 {
 	GETIDENTITY
 	UWORD *c, *d, *e, *f, *g, *h;
@@ -3318,7 +3319,7 @@ ModErr:
 		added by Jan [01-09-2010]
 */
 
-WORD TakeNormalModulus (UWORD *a, WORD *na, UWORD *c, WORD nc, WORD par)
+int TakeNormalModulus (UWORD *a, WORD *na, UWORD *c, WORD nc, WORD par)
 {
 	WORD n;
 	WORD nhalfc;
@@ -3360,7 +3361,7 @@ WORD TakeNormalModulus (UWORD *a, WORD *na, UWORD *c, WORD nc, WORD par)
  		#[ MakeModTable :	WORD MakeModTable()
 */
 
-WORD MakeModTable(void)
+int MakeModTable(void)
 {
 	LONG size, i, j, n;
 	n = ABS(AC.ncmod);

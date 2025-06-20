@@ -2243,7 +2243,7 @@ dopowerd:
 
 WORD GenerateFactors(WORD n,WORD inc)
 {
-	WORD subexp;
+	int subexp;
 	int i, error = 0;
 	SBYTE *s;
 	SBYTE *tokenbuffer = (SBYTE *)Malloc1(8*n*sizeof(SBYTE),"GenerateFactors");

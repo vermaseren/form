@@ -48,7 +48,7 @@
 		function
 */
 
-WORD MakeDirty(WORD *term, WORD *x, WORD par)
+int MakeDirty(WORD *term, WORD *x, WORD par)
 {
 	WORD *next, *n;
 	if ( !par ) {
@@ -370,7 +370,7 @@ recycle:
 			1 if they are OK.
 */
 
-WORD CompGroup(PHEAD WORD type, WORD **args, WORD *a1, WORD *a2, WORD num)
+int CompGroup(PHEAD WORD type, WORD **args, WORD *a1, WORD *a2, WORD num)
 {
 	GETBIDENTITY
 	WORD *t1, *t2, i1, i2, n, k;
@@ -515,7 +515,7 @@ int FullSymmetrize(PHEAD WORD *fun, int type)
 					   >0 -> must have right number of arguments
 */
 
-WORD SymGen(PHEAD WORD *term, WORD *params, WORD num, WORD level)
+int SymGen(PHEAD WORD *term, WORD *params, WORD num, WORD level)
 {
 	GETBIDENTITY
 	WORD *t, *r, *m;
@@ -630,7 +630,7 @@ NextFun:
 
 */
 
-WORD SymFind(PHEAD WORD *term, WORD *params)
+int SymFind(PHEAD WORD *term, WORD *params)
 {
 	GETBIDENTITY
 	WORD *t, *r, *m;
@@ -823,7 +823,7 @@ int ChainOut(PHEAD WORD *term, WORD funnum)
 		?a,?b give a match that later turns out to be useless.
 */
 
-WORD MatchFunction(PHEAD WORD *pattern, WORD *interm, WORD *wilds)
+int MatchFunction(PHEAD WORD *pattern, WORD *interm, WORD *wilds)
 {
 	GETBIDENTITY
 	WORD *m, *t, *r, i;
@@ -1613,7 +1613,7 @@ NoCaseB:
 	function. This will take care of whatever happens in MatchE etc.
 */
 
-WORD ScanFunctions(PHEAD WORD *inpat, WORD *inter, WORD par)
+int ScanFunctions(PHEAD WORD *inpat, WORD *inter, WORD par)
 {
 	GETBIDENTITY
 	WORD i, *m, *t, *r, sym, psym;

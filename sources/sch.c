@@ -1539,7 +1539,7 @@ UBYTE *specfunnames[NUMSPECS] = {
 	, (UBYTE *)"invfac" };
 */
 
-WORD WriteSubTerm(WORD *sterm, WORD first)
+int WriteSubTerm(WORD *sterm, WORD first)
 {
 	UBYTE buffer[80];
 	UBYTE *Out, closepar[2] = { (UBYTE)')', 0};
@@ -1948,7 +1948,7 @@ WORD WriteSubTerm(WORD *sterm, WORD first)
 
 */
 
-WORD WriteInnerTerm(WORD *term, WORD first)
+int WriteInnerTerm(WORD *term, WORD first)
 {
 	WORD *t, *s, *s1, *s2, n, i, pow;
 #ifdef WITHFLOAT
@@ -2145,7 +2145,7 @@ WORD WriteInnerTerm(WORD *term, WORD first)
 
 */
 
-WORD WriteTerm(WORD *term, WORD *lbrac, WORD first, WORD prtf, WORD br)
+int WriteTerm(WORD *term, WORD *lbrac, WORD first, WORD prtf, WORD br)
 {
 	WORD *t, *stopper, *b, n;
 	int oldIsFortran90 = AC.IsFortran90, i;
@@ -2467,7 +2467,7 @@ WrtTmes:				t = term;
 
 */
 
-WORD WriteExpression(WORD *terms, LONG ltot)
+int WriteExpression(WORD *terms, LONG ltot)
 {
 	WORD *stopper;
 	WORD first, btot;
@@ -2498,7 +2498,7 @@ WORD WriteExpression(WORD *terms, LONG ltot)
 		Writes all expressions that should be written
 */
 
-WORD WriteAll(void)
+int WriteAll(void)
 {
 	GETIDENTITY
 	WORD lbrac, first;
@@ -2724,7 +2724,7 @@ AboWrite:
 		Writes one expression from the preprocessor
 */
 
-WORD WriteOne(UBYTE *name, int alreadyinline, int nosemi, WORD plus)
+int WriteOne(UBYTE *name, int alreadyinline, int nosemi, WORD plus)
 {
 	GETIDENTITY
 	WORD number;
