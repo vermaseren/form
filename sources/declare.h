@@ -384,19 +384,19 @@ TP=T+1;while(TP<TT){if(*TP==AR.PolyFun){TP[2]|=(DIRTYFLAG|MUSTCLEANPRF);}TP+=TP[
  */
 static inline unsigned int IntAbs(int x)
 {
-	if ( x >= 0 ) return x;
+	if ( x >= 0 ) return (unsigned int)x;
 	return(-((unsigned int)x));
 }
 
 static inline UWORD WordAbs(WORD x)
 {
-	if ( x >= 0 ) return x;
+	if ( x >= 0 ) return (UWORD)x;
 	return(-((UWORD)x));
 }
 
 static inline ULONG LongAbs(LONG x)
 {
-	if ( x >= 0 ) return x;
+	if ( x >= 0 ) return (ULONG)x;
 	return(-((ULONG)x));
 }
 
@@ -411,7 +411,7 @@ static inline ULONG LongAbs(LONG x)
 static inline int UnsignedToInt(unsigned int x)
 {
 	extern void TerminateImpl(int, const char*, int, const char*);
-	if ( x <= INT_MAX ) return(x);
+	if ( x <= INT_MAX ) return((int)x);
 	if ( x >= (unsigned int)INT_MIN )
 		return((int)(x - (unsigned int)INT_MIN) + INT_MIN);
 	Terminate(1);
@@ -421,7 +421,7 @@ static inline int UnsignedToInt(unsigned int x)
 static inline WORD UWordToWord(UWORD x)
 {
 	extern void TerminateImpl(int, const char*, int, const char*);
-	if ( x <= WORD_MAX_VALUE ) return(x);
+	if ( x <= WORD_MAX_VALUE ) return((WORD)x);
 	if ( x >= (UWORD)WORD_MIN_VALUE )
 		return((WORD)(x - (UWORD)WORD_MIN_VALUE) + WORD_MIN_VALUE);
 	Terminate(1);
@@ -431,7 +431,7 @@ static inline WORD UWordToWord(UWORD x)
 static inline LONG ULongToLong(ULONG x)
 {
 	extern void TerminateImpl(int, const char*, int, const char*);
-	if ( x <= LONG_MAX_VALUE ) return(x);
+	if ( x <= LONG_MAX_VALUE ) return((LONG)x);
 	if ( x >= (ULONG)LONG_MIN_VALUE )
 		return((LONG)(x - (ULONG)LONG_MIN_VALUE) + LONG_MIN_VALUE);
 	Terminate(1);
