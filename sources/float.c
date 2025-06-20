@@ -1164,7 +1164,7 @@ void SetupMZVTables(void)
 void SetupMPFTables(void)
 {
 	size_t nt = sizeof(mp_limb_t);
-	int prec, prec1, i;
+	int prec, prec1, prec2, i;
 #ifdef WITHPTHREADS
 	int Nw, id, totnum;
 	size_t j;
@@ -1173,6 +1173,7 @@ void SetupMPFTables(void)
 	SetFloatPrecision(Nw);
 	prec = (AC.DefaultPrecision + 8*nt-1)/(8*nt);
 	prec1 = prec+1;
+	prec2 = prec+2;
 /*
 	Now the aux variables
 */
@@ -1181,15 +1182,15 @@ void SetupMPFTables(void)
 #endif
     for ( id = 0; id < totnum; id++ ) {
 		if ( AB[id]->T.aux_ ) M_free(AB[id]->T.aux_,"aux_");
-		AB[id]->T.aux_ = (void *)Malloc1(8*(prec1*sizeof(mp_limb_t)+sizeof(mpf_t)),"aux-mp");
+		AB[id]->T.aux_ = (void *)Malloc1(8*(prec2*sizeof(mp_limb_t)+sizeof(mpf_t)),"aux-mp");
 		d = (mp_limb_t *)(((mpf_t *)(AB[id]->T.aux_))+8);
-		for ( j = 0; j < (size_t)(8*prec); j++ ) d[j] = 0;
+		for ( j = 0; j < (size_t)(8*prec1); j++ ) d[j] = 0;
 		for ( i = 0; i < 8; i++ ) {
-			((mpf_t *)(AB[id]->T.aux_))[i]->_mp_prec = prec;
+			((mpf_t *)(AB[id]->T.aux_))[i]->_mp_prec = prec1;
 			((mpf_t *)(AB[id]->T.aux_))[i]->_mp_size = 0;
 			((mpf_t *)(AB[id]->T.aux_))[i]->_mp_exp = 0;
 			((mpf_t *)(AB[id]->T.aux_))[i]->_mp_d = d;
-			d += prec1;
+			d += prec2;
 		}
 		if ( AB[id]->T.indi1 ) M_free(AB[id]->T.indi1,"indi1");
 		AB[id]->T.indi1 = (int *)Malloc1(sizeof(int)*AC.MaxWeight*2,"indi1");
@@ -1204,19 +1205,20 @@ void SetupMPFTables(void)
 	SetFloatPrecision(Nw);
 	prec = (AC.DefaultPrecision + 8*nt-1)/(8*nt);
 	prec1 = prec+1;
+	prec2 = prec+2;
 /*
 	Now the aux variables
 */
 	if ( mpfaux_ ) M_free(mpfaux_,"aux_");
-	AT.aux_ = (void *)Malloc1(8*(prec1*sizeof(mp_limb_t)+sizeof(mpf_t)),"aux_");
+	AT.aux_ = (void *)Malloc1(8*(prec2*sizeof(mp_limb_t)+sizeof(mpf_t)),"aux_");
 	d = (mp_limb_t *)(((mpf_t *)(AT.aux_))+8);
-	for ( j = 0; j < (size_t)(8*prec); j++ ) d[j] = 0;
+	for ( j = 0; j < (size_t)(8*prec1); j++ ) d[j] = 0;
 	for ( i = 0; i < 8; i++ ) {
-		((mpf_t *)(AT.aux_))[i]->_mp_prec = prec;
+		((mpf_t *)(AT.aux_))[i]->_mp_prec = prec1;
 		((mpf_t *)(AT.aux_))[i]->_mp_size = 0;
 		((mpf_t *)(AT.aux_))[i]->_mp_exp = 0;
 		((mpf_t *)(AT.aux_))[i]->_mp_d = d;
-		d += prec1;
+		d += prec2;
 	}
 	if ( AT.indi1 ) M_free(AT.indi1,"indi1");
 	AT.indi1 = (int *)Malloc1(sizeof(int)*AC.MaxWeight*2,"indi1");
