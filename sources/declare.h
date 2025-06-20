@@ -773,7 +773,6 @@ extern void   HighWarning(char *);
 extern int    SpareTable(TABLES);
 
 extern UBYTE *strDup1(UBYTE *,char *);
-extern void  *Malloc(LONG);
 extern void  *Malloc1(LONG,const char *);
 extern int    DoTail(int,UBYTE **);
 extern int    OpenInput(void);
