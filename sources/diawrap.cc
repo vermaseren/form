@@ -414,35 +414,39 @@ void ProcessDiagram(EGraph *eg, void *ti)
 //
 //	Topology counter. We have exaggerated a bit with the eye on the far future.
 //
-	if ( info->numtopo-1 < MAXPOSITIVE ) {
-		*fill++ = TOPO; *fill++ = FUNHEAD+2; FILLFUN(fill)
-		*fill++ = -SNUMBER; *fill++ = (WORD)(info->numtopo-1);
-	}
-	else if ( info->numtopo-1 < FULLMAX-1 ) {
-		*fill++ = TOPO; *fill++ = FUNHEAD+ARGHEAD+4; FILLFUN(fill)
-		*fill++ = ARGHEAD+4; *fill++ = 0; FILLARG(fill)
-		*fill++ = 4;
-		*fill++ = (WORD)((info->numtopo-1) & WORDMASK);
-		*fill++ = 1; *fill++ = 3;
-	}
-	else {	// for now: science fiction
-		*fill++ = TOPO; *fill++ = FUNHEAD+ARGHEAD+6; FILLFUN(fill)
-		*fill++ = ARGHEAD+6; *fill++ = 0; FILLARG(fill)
-		*fill++ = 6; *fill++ = (WORD)((info->numtopo-1) >> BITSINWORD);
-		*fill++ = (WORD)((info->numtopo-1) & WORDMASK);
-		*fill++ = 0; *fill++ = 1; *fill++ = 5;
+	if ( !(info->flags & NOTOPOS) ) {
+		if ( info->numtopo-1 < MAXPOSITIVE ) {
+			*fill++ = TOPO; *fill++ = FUNHEAD+2; FILLFUN(fill)
+			*fill++ = -SNUMBER; *fill++ = (WORD)(info->numtopo-1);
+		}
+		else if ( info->numtopo-1 < FULLMAX-1 ) {
+			*fill++ = TOPO; *fill++ = FUNHEAD+ARGHEAD+4; FILLFUN(fill)
+			*fill++ = ARGHEAD+4; *fill++ = 0; FILLARG(fill)
+			*fill++ = 4;
+			*fill++ = (WORD)((info->numtopo-1) & WORDMASK);
+			*fill++ = 1; *fill++ = 3;
+		}
+		else {	// for now: science fiction
+			*fill++ = TOPO; *fill++ = FUNHEAD+ARGHEAD+6; FILLFUN(fill)
+			*fill++ = ARGHEAD+6; *fill++ = 0; FILLARG(fill)
+			*fill++ = 6; *fill++ = (WORD)((info->numtopo-1) >> BITSINWORD);
+			*fill++ = (WORD)((info->numtopo-1) & WORDMASK);
+			*fill++ = 0; *fill++ = 1; *fill++ = 5;
+		}
 	}
 //
 //	Symmetry factors. We let Normalize do the multiplication.
 //
-	if ( eg->nsym != 1 ) {
-		*fill++ = SNUMBER; *fill++ = 4; *fill++ = (WORD)eg->nsym; *fill++ = -1;
-	}
-	if ( eg->esym != 1 ) {
-		*fill++ = SNUMBER; *fill++ = 4; *fill++ = (WORD)eg->esym; *fill++ = -1;
-	}
-	if ( eg->extperm != 1 ) {
-		*fill++ = SNUMBER; *fill++ = 4; *fill++ = (WORD)eg->extperm; *fill++ = 1;
+	if ( !(info->flags & NOSYMMETRYFACTOR) ) {
+		if ( eg->nsym != 1 ) {
+			*fill++ = SNUMBER; *fill++ = 4; *fill++ = (WORD)eg->nsym; *fill++ = -1;
+		}
+		if ( eg->esym != 1 ) {
+			*fill++ = SNUMBER; *fill++ = 4; *fill++ = (WORD)eg->esym; *fill++ = -1;
+		}
+		if ( eg->extperm != 1 ) {
+			*fill++ = SNUMBER; *fill++ = 4; *fill++ = (WORD)eg->extperm; *fill++ = 1;
+		}
 	}
 //
 //	finish it off
@@ -683,32 +687,36 @@ Bool ProcessTopology(EGraph *eg, void *ti)
 //
 //	Topology counter. We have exaggerated a bit with the eye on the far future.
 //
-	if ( info->numtopo < MAXPOSITIVE ) {
-		*fill++ = TOPO; *fill++ = FUNHEAD+2; FILLFUN(fill)
-		*fill++ = -SNUMBER; *fill++ = (WORD)(info->numtopo);
-	}
-	else if ( info->numtopo < FULLMAX-1 ) {
-		*fill++ = TOPO; *fill++ = FUNHEAD+ARGHEAD+4; FILLFUN(fill)
-		*fill++ = ARGHEAD+4; *fill++ = 0; FILLARG(fill)
-		*fill++ = 4;
-		*fill++ = (WORD)(info->numtopo & WORDMASK);
-		*fill++ = 1; *fill++ = 3;
-	}
-	else {	// for now: science fiction
-		*fill++ = TOPO; *fill++ = FUNHEAD+ARGHEAD+6; FILLFUN(fill)
-		*fill++ = ARGHEAD+6; *fill++ = 0; FILLARG(fill)
-		*fill++ = 6; *fill++ = (WORD)(info->numtopo >> BITSINWORD);
-		*fill++ = (WORD)(info->numtopo & WORDMASK);
-		*fill++ = 0; *fill++ = 1; *fill++ = 5;
+	if ( !(info->flags & NOTOPOS) ) {
+		if ( info->numtopo < MAXPOSITIVE ) {
+			*fill++ = TOPO; *fill++ = FUNHEAD+2; FILLFUN(fill)
+			*fill++ = -SNUMBER; *fill++ = (WORD)(info->numtopo);
+		}
+		else if ( info->numtopo < FULLMAX-1 ) {
+			*fill++ = TOPO; *fill++ = FUNHEAD+ARGHEAD+4; FILLFUN(fill)
+			*fill++ = ARGHEAD+4; *fill++ = 0; FILLARG(fill)
+			*fill++ = 4;
+			*fill++ = (WORD)(info->numtopo & WORDMASK);
+			*fill++ = 1; *fill++ = 3;
+		}
+		else {	// for now: science fiction
+			*fill++ = TOPO; *fill++ = FUNHEAD+ARGHEAD+6; FILLFUN(fill)
+			*fill++ = ARGHEAD+6; *fill++ = 0; FILLARG(fill)
+			*fill++ = 6; *fill++ = (WORD)(info->numtopo >> BITSINWORD);
+			*fill++ = (WORD)(info->numtopo & WORDMASK);
+			*fill++ = 0; *fill++ = 1; *fill++ = 5;
+		}
 	}
 //
 //	Symmetry factors. We let Normalize do the multiplication.
 //
-	if ( eg->nsym != 1 ) {
-		*fill++ = SNUMBER; *fill++ = 4; *fill++ = (WORD)eg->nsym; *fill++ = -1;
-	}
-	if ( eg->esym != 1 ) {
-		*fill++ = SNUMBER; *fill++ = 4; *fill++ = (WORD)eg->esym; *fill++ = -1;
+	if ( !(info->flags & NOSYMMETRYFACTOR) ) {
+		if ( eg->nsym != 1 ) {
+			*fill++ = SNUMBER; *fill++ = 4; *fill++ = (WORD)eg->nsym; *fill++ = -1;
+		}
+		if ( eg->esym != 1 ) {
+			*fill++ = SNUMBER; *fill++ = 4; *fill++ = (WORD)eg->esym; *fill++ = -1;
+		}
 	}
 //
 //	finish it off
@@ -961,7 +969,7 @@ int processVertex(TOPOTYPE *TopoInf, int pointsremaining, int level)
 
 WORD GenTopologies(PHEAD WORD *term, WORD level)
 {
-	Options *opt = new Options;
+	Options opt;
 	int nlegs, nloops, i, identical;
 	TERMINFO info;
 	WORD *t, *t1, *tstop;
@@ -972,6 +980,7 @@ WORD GenTopologies(PHEAD WORD *term, WORD level)
 	info.level = level;
 	info.diaoffset = AR.funoffset;
 	info.flags = 0;
+	info.currentModel = NULL;
  
 	t = term + info.diaoffset;  // the function
 	t1 = t + FUNHEAD;           // its arguments
@@ -987,7 +996,7 @@ WORD GenTopologies(PHEAD WORD *term, WORD level)
 	nloops = t1[1];
 	nlegs = t1[3];
 
-	info.numextern = nlegs;
+	info.numextern = ABS(nlegs);
 
 	for ( i = 0; i <= MAXLEGS; i++ ) { TopoInf.cmind[i] = TopoInf.cmaxd[i] = 0; }
 
@@ -998,31 +1007,29 @@ WORD GenTopologies(PHEAD WORD *term, WORD level)
 	}
 	else TopoInf.vertmax = NULL;
 
-	info.flags |= TOPOLOGIESONLY;  // this is the topologies_ function after all.
 	if ( t1 < tstop && t1[0] == -SNUMBER ) {
-		if ( ( t1[1] &   NONODES ) ==   NONODES ) info.flags |=   NONODES;
-		if ( ( t1[1] & WITHEDGES ) == WITHEDGES ) info.flags |= WITHEDGES;
-		if ( ( t1[1] & WITHBLOCKS ) == WITHBLOCKS ) info.flags |= WITHBLOCKS;
-		if ( ( t1[1] & WITHONEPI ) == WITHONEPI ) info.flags |= WITHONEPI;
-		opt->values[GRCC_OPT_1PI] = ( t1[1] & ONEPARTICLEIRREDUCIBLE ) == ONEPARTICLEIRREDUCIBLE;
-//		opt->values[GRCC_OPT_NoTadpole] = ( t1[1] & NOTADPOLES ) == NOTADPOLES;
-		opt->values[GRCC_OPT_NoTadpole] = ( t1[1] & NOSNAILS ) == NOSNAILS;
-		opt->values[GRCC_OPT_No1PtBlock] = ( t1[1] & NOTADPOLES ) == NOTADPOLES;
-		opt->values[GRCC_OPT_NoExtSelf] = ( t1[1] & NOEXTSELF ) == NOEXTSELF;
-
-		if ( ( t1[1] & WITHINSERTIONS ) == WITHINSERTIONS ) {
-			opt->values[GRCC_OPT_No2PtL1PI] = True;
-			opt->values[GRCC_OPT_NoAdj2PtV] = True;
-			opt->values[GRCC_OPT_No2PtL1PI] = True;
-		}
-		opt->values[GRCC_OPT_SymmInitial] = ( t1[1] & WITHSYMMETRIZE ) == WITHSYMMETRIZE;
+		info.flags = t1[1];
 	}
+	else {
+		info.flags = ONEPARTICLEIRREDUCIBLE | NOEXTSELF | NOTOPOS | NOSYMMETRYFACTOR;
+	}
+	info.flags |= TOPOLOGIESONLY;  // this is the topologies_ function after all.
+	opt.values[GRCC_OPT_Step] = GRCC_AGraph;
+	opt.values[GRCC_OPT_1PI] = !!(info.flags & ONEPARTICLEIRREDUCIBLE);
+	opt.values[GRCC_OPT_NoSelfLoop] = !!(info.flags & NOSNAILS);
+	opt.values[GRCC_OPT_NoTadpole] = !!(info.flags & (NOSNAILS | NOTADPOLES));
+	opt.values[GRCC_OPT_No1PtBlock] = !!(info.flags & (NOSNAILS | NOTADPOLES));
+	opt.values[GRCC_OPT_No2PtL1PI] = !!(info.flags & WITHINSERTIONS);
+	opt.values[GRCC_OPT_NoExtSelf] = !!(info.flags & NOEXTSELF);
+	opt.values[GRCC_OPT_NoAdj2PtV] = !!(info.flags & WITHINSERTIONS);
+	opt.values[GRCC_OPT_Block] = False;
+	opt.values[GRCC_OPT_SymmInitial] = !!(info.flags & WITHSYMMETRIZE);
+	opt.values[GRCC_OPT_SymmFinal] = False;
 
 	info.numdia = 0;
 	info.numtopo = 1;
 
-	opt->setOutAG(ProcessDiagram, &info);
-	opt->setOutMG(ProcessTopology, &info);
+	opt.setOutMG(ProcessTopology, &info);
 //
 //	Now we should sum over all possible vertices and run MGraph for
 //	each combination. This is done by recursion in the processVertex routine
@@ -1031,6 +1038,7 @@ WORD GenTopologies(PHEAD WORD *term, WORD level)
 
 //	First the external nodes.
 
+	identical = 0;
 	if ( nlegs == -2 ) {
 		nlegs = 2;
 		identical = 1;
@@ -1045,7 +1053,7 @@ WORD GenTopologies(PHEAD WORD *term, WORD level)
 		TopoInf.clnum[0] = 2;
 	}
 	TopoInf.ncl = nlegs;
-	TopoInf.opt = opt;
+	TopoInf.opt = &opt;
 
 	if ( points >= MAXPOINTS ) {
 		MLOCK(ErrorMessageLock);
@@ -1059,7 +1067,6 @@ WORD GenTopologies(PHEAD WORD *term, WORD level)
 		MUNLOCK(ErrorMessageLock);
 		Terminate(-1);
 	}
-	delete opt;
 	return(0);
 }
 

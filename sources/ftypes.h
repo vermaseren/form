@@ -1100,6 +1100,10 @@ typedef int (*TFUN1)();
 #define DENSETABLE 1
 #define SPARSETABLE 0
 
+/*
+	Flags for TERMINFO
+*/
+
 #define ONEPARTICLEIRREDUCIBLE 1
 #define WITHINSERTIONS         2
 #define NOTADPOLES             4
@@ -1112,4 +1116,5 @@ typedef int (*TFUN1)();
 #define WITHONEPI            512
 #define NOSNAILS            1024
 #define NOEXTSELF           2048
-
+#define NOTOPOS             4096
+#define NOSYMMETRYFACTOR    8192
