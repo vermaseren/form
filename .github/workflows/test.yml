@@ -25,7 +25,6 @@ jobs:
           - {bin: form,    test: default, flint: no}
           - {bin: tform,   test: default, flint: no}
           - {bin: tform,   test: default, nthreads: 2, flint: no}
-          - {bin: parform, test: default, timeout: 15}
           - {bin: form,    test: extra,   timeout: 60}
           - {bin: tform,   test: extra,   timeout: 60}
           - {bin: tform,   test: extra,   timeout: 60, nthreads: 2}
@@ -46,8 +45,79 @@ jobs:
           # See: https://github.com/awalsh128/cache-apt-pkgs-action/pull/150
           version: ${{ runner.arch }}-1.0
 
-      - name: Install MPI if necessary
-        if: matrix.bin == 'parform' || matrix.bin == 'parvorm'
+      - name: Configure
+        run: |
+          opts='--disable-dependency-tracking'
+          case ${{ matrix.bin }} in
+            form|vorm)       opts="$opts --enable-scalar --disable-threaded --disable-parform";;
+            tform|tvorm)     opts="$opts --disable-scalar --enable-threaded --disable-parform";;
+          esac
+          case ${{ matrix.bin }} in
+            vorm|tvorm|parvorm) opts="$opts --enable-debug";;
+          esac
+          case "${{ matrix.flint }}" in
+            no) opts="$opts --without-flint";;
+            *)  opts="$opts --with-flint";;
+          esac
+          opts="$opts --with-gmp --with-zlib --with-zstd"
+          autoreconf -i
+          ./configure $opts
+
+      - name: Build
+        run: make -C sources -j 4 ${{ matrix.bin }}
+
+      - name: Cache library
+        id: cache-formlib
+        if: contains(fromJson('["extra"]'), matrix.test)
+        uses: actions/cache@v4
+        with:
+          path: formlib
+          key: formlib-${{ matrix.test }}
+
+      - name: Install library if necessary
+        if: steps.cache-formlib.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p formlib
+          case ${{ matrix.test }} in
+            extra)
+              # forcer library for the forcer test in extra
+              wget https://github.com/benruijl/forcer/archive/v1.0.0.tar.gz -O - | tar -x --gzip
+              mv forcer-1.0.0/forcer.h formlib
+              mv forcer-1.0.0/forcer formlib
+              rm -rf forcer-1.0.0
+              # color library for the color test in extra
+              wget https://www.nikhef.nl/~form/maindir/packages/color/color.h -P formlib
+              ;;
+          esac
+
+      - name: Test
+        run: ./check/check.rb ./sources/${{ matrix.bin }} --stat ${{ matrix.nthreads && format('-w{0}', matrix.nthreads) || '' }} ${{ matrix.timeout && format('--timeout {0}', matrix.timeout) || '' }} ${{ matrix.test != 'default' && format('-C {0}', matrix.test) || '' }}
+        env:
+          FORMPATH: ${{ github.workspace }}/formlib
+
+  check-parform:
+    name: Test (${{ matrix.test }}) for ${{ matrix.bin }}${{ matrix.nthreads && format(' -w{0}', matrix.nthreads) || '' }}${{ matrix.flint && format(' (flint - {0})', matrix.flint) || '' }}
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {bin: parform, test: default, timeout: 15}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # ensures a reachable tag
+
+      - name: Install dependencies
+        uses: awalsh128/cache-apt-pkgs-action@v1
+        with:
+          packages: libflint-dev libmpfr-dev libzstd-dev
+          # We need to handle a bug that may cause cache key conflicts.
+          # See: https://github.com/awalsh128/cache-apt-pkgs-action/pull/150
+          version: ${{ runner.arch }}-1.0
+
+      - name: Install MPI
         run: |
           sudo apt update
           sudo apt install -y -q libopenmpi-dev
@@ -56,8 +126,6 @@ jobs:
         run: |
           opts='--disable-dependency-tracking'
           case ${{ matrix.bin }} in
-            form|vorm)       opts="$opts --enable-scalar --disable-threaded --disable-parform";;
-            tform|tvorm)     opts="$opts --disable-scalar --enable-threaded --disable-parform";;
             parform|parvorm) opts="$opts --disable-scalar --disable-threaded --enable-parform";;
           esac
           case ${{ matrix.bin }} in
@@ -108,6 +176,7 @@ jobs:
   # jobs, we divide the tests into smaller parts.
   valgrind-check:
     name: Valgrind check (${{ matrix.test }}) for ${{ matrix.bin }}${{ matrix.nthreads && format(' -w{0}', matrix.nthreads) || '' }} (${{ matrix.group }})
+    needs: [check, check-i386]
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
@@ -205,6 +274,7 @@ jobs:
   # we measure code coverage only for tests checked with Valgrind.
   coverage:
     name: Code coverage (${{ matrix.test }}) for ${{ matrix.bin }}${{ matrix.nthreads && format(' -w{0}', matrix.nthreads) || '' }}${{ matrix.flint && format(' (flint - {0})', matrix.flint) || '' }}
+    needs: [check, check-i386]
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
