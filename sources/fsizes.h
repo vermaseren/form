@@ -194,6 +194,6 @@
 #define MAXLEGS 20
 
 #ifdef WITHFLOAT
-#define MAXWEIGHT 40
+#define MAXWEIGHT 0
 #define DEFAULTPRECISION 1000
 #endif
