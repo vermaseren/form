@@ -53,14 +53,15 @@
 	need to insert a different value (C->lhs[level][2]).
 */
 
-WORD execarg(PHEAD WORD *term, WORD level)
+int execarg(PHEAD WORD *term, WORD level)
 {
 	GETBIDENTITY
 	WORD *t, *r, *m, *v;
 	WORD *start, *stop, *rstop, *r1, *r2 = 0, *r3 = 0, *r4, *r5, *r6, *r7, *r8, *r9;
 	WORD *mm, *mstop, *rnext, *rr, *factor, type, ngcd, nq;
 	CBUF *C = cbuf+AM.rbufnum, *CC = cbuf+AT.ebufnum;
-	WORD i, j, k, oldnumlhs = AR.Cnumlhs, count, action = 0, olddefer = AR.DeferFlag;
+	WORD i, j, k, oldnumlhs = AR.Cnumlhs, count, olddefer = AR.DeferFlag;
+	int action = 0;
 	WORD oldnumrhs = CC->numrhs, size, pow, jj;
 	LONG oldcpointer = CC->Pointer - CC->Buffer, oldppointer = AT.pWorkPointer, lp;
 	WORD *oldwork = AT.WorkPointer, *oldwork2, scale, renorm;
@@ -1766,7 +1767,7 @@ execargerr:
   	#[ execterm :
 */
 
-WORD execterm(PHEAD WORD *term, WORD level)
+int execterm(PHEAD WORD *term, WORD level)
 {
 	GETBIDENTITY
 	CBUF *C = cbuf+AM.rbufnum;
@@ -2534,7 +2535,7 @@ WORD FindArg(PHEAD WORD *a)
  *	If par == 1 it inserts in the cache defined with the FactorCache statement
  */
 
-WORD InsertArg(PHEAD WORD *argin, WORD *argout,int par)
+int InsertArg(PHEAD WORD *argin, WORD *argout,int par)
 {
 	CBUF *C;
 	WORD *a, i, bufnum;

@@ -204,7 +204,7 @@ static void PrintHeader(int with_full_info)
 #ifdef WINDOWS
 	PrintDeprecation("the native Windows version", "issues/623");
 #endif
-#ifdef ILP32
+#if BITSINWORD == 16
 	PrintDeprecation("the 32-bit version", "issues/624");
 #endif
 #ifdef WITHMPI
@@ -1351,7 +1351,7 @@ void StartMore(void)
 		This routine initializes the parameters that may change during the run.
 */
 
-WORD IniVars(void)
+void IniVars(void)
 {
 #ifdef WITHPTHREADS
 	GETIDENTITY
@@ -1575,7 +1575,6 @@ WORD IniVars(void)
 	AC.cbufnum = AM.rbufnum;		/* Select the default compiler buffer */
 	AC.HideLevel = 0;
 	AP.PreAssignFlag = 0;
-	return(0);
 }
 
 /*

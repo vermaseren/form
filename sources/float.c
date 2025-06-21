@@ -1413,7 +1413,7 @@ int ToRat(PHEAD WORD *term, WORD level)
  		#[ AddWithFloat :
 */
 
-WORD AddWithFloat(PHEAD WORD **ps1, WORD **ps2)
+int AddWithFloat(PHEAD WORD **ps1, WORD **ps2)
 {
 	GETBIDENTITY
 	SORTING *S = AT.SS;
@@ -1534,11 +1534,12 @@ Finished:
 		does this as well.
 */
 
-WORD MergeWithFloat(PHEAD WORD **interm1, WORD **interm2)
+int MergeWithFloat(PHEAD WORD **interm1, WORD **interm2)
 {
 	GETBIDENTITY
 	WORD *coef1, *coef2, size1, size2, *fun1, *fun2, *fun3, *tt;
-	WORD sign3,j,jj, *t1, *t2, i, *term1 = *interm1, *term2 = *interm2, retval = 0;
+	WORD sign3,j,jj, *t1, *t2, i, *term1 = *interm1, *term2 = *interm2;
+	int retval = 0;
 	coef1 = term1+*term1; size1 = coef1[-1]; coef1 -= ABS(size1);
 	coef2 = term2+*term2; size2 = coef2[-1]; coef2 -= ABS(size2);
 	if ( AT.SortFloatMode == 3 ) {

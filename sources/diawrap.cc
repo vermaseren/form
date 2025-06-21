@@ -729,7 +729,7 @@ Bool ProcessTopology(EGraph *eg, void *ti)
 //	#] ProcessTopology : 
 //	#[ GenDiagrams :
 
-WORD GenDiagrams(PHEAD WORD *term, WORD level)
+int GenDiagrams(PHEAD WORD *term, WORD level)
 {
 	Model *model;
 	MODEL *m;
@@ -959,7 +959,7 @@ int processVertex(TOPOTYPE *TopoInf, int pointsremaining, int level)
 
 #define TOPO_MAXVERT 10
 
-WORD GenTopologies(PHEAD WORD *term, WORD level)
+int GenTopologies(PHEAD WORD *term, WORD level)
 {
 	Options *opt = new Options;
 	int nlegs, nloops, i, identical;

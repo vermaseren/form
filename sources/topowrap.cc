@@ -120,7 +120,7 @@ int GenerateVertices(TOPOTYPE *TopoInf, int pointsremaining, int level)
 	nvert is the number of elements in vert.
 */
 
-WORD GenerateTopologies(PHEAD WORD nloops, WORD nlegs, WORD setvert, WORD setmax)
+int GenerateTopologies(PHEAD WORD nloops, WORD nlegs, WORD setvert, WORD setmax)
 {
 	TOPOTYPE TopoInf;
 	int i, points, identical = 0;

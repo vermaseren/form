@@ -647,7 +647,7 @@ int SortTheList(int *slist, int num)
 	To facilitate this we copy the relevant arguments into the workspace.
 */
 
-WORD AllLoops(PHEAD WORD *term,WORD level)
+int AllLoops(PHEAD WORD *term,WORD level)
 {
 	CBUF *C = cbuf+AM.rbufnum;
 	WORD vcode = C->lhs[level][2];    /* The input function */
@@ -1120,7 +1120,7 @@ void LoopOutput(PHEAD WORD *term, WORD level, WORD *loop, WORD nloop)
 	given in advance. This endfun can occur only twice.
 */
 
-WORD AllPaths(PHEAD WORD *term,WORD level)
+int AllPaths(PHEAD WORD *term,WORD level)
 {
 	CBUF *C = cbuf+AM.rbufnum;
 	WORD endcode = C->lhs[level][2];    /* The endpoint function */

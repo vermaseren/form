@@ -44,7 +44,7 @@
 		par == 0 after .sort
 */
 
-WORD CleanExpr(WORD par)
+int CleanExpr(WORD par)
 {
 	GETIDENTITY
 	WORD j, n, i;
@@ -208,10 +208,11 @@ WORD CleanExpr(WORD par)
 
 */
 
-WORD PopVariables(void)
+int PopVariables(void)
 {
 	GETIDENTITY
-	WORD i, j, retval;
+	WORD i, j;
+	int retval;
 	UBYTE *s;
 
 	retval = CleanExpr(1);
@@ -612,10 +613,10 @@ restart:;
  		#[ DoExecute :
 */
 
-WORD DoExecute(WORD par, WORD skip)
+int DoExecute(WORD par, WORD skip)
 {
 	GETIDENTITY
-	WORD RetCode = 0;
+	int RetCode = 0;
 	int i, oldmultithreaded = AS.MultiThreaded;
 #ifdef PARALLELCODE
 	int j;
@@ -1108,7 +1109,7 @@ if ( AC.SwitchInArray > 0 ) {
 	15-oct-1991
 */
 
-WORD PutBracket(PHEAD WORD *termin)
+int PutBracket(PHEAD WORD *termin)
 {
 	GETBIDENTITY
 	WORD *t, *t1, *b, i, j, *lastfun;

@@ -59,7 +59,7 @@
 
 */
 
-WORD RatioFind(PHEAD WORD *term, WORD *params)
+int RatioFind(PHEAD WORD *term, WORD *params)
 {
 	GETBIDENTITY
 	WORD *t, *m, *r;
@@ -167,7 +167,7 @@ We have to revise the code for the second case.
 
 */
 
-WORD RatioGen(PHEAD WORD *term, WORD *params, WORD num, WORD level)
+int RatioGen(PHEAD WORD *term, WORD *params, WORD num, WORD level)
 {
 	GETBIDENTITY
 	WORD *t, *m;
@@ -317,8 +317,8 @@ RatioCall:
 
 */
 
-WORD BinomGen(PHEAD WORD *term, WORD level, WORD **tstops, WORD x1, WORD x2,
-              WORD pow1, WORD pow2, WORD sign, UWORD *coef, WORD ncoef)
+int BinomGen(PHEAD WORD *term, WORD level, WORD **tstops, WORD x1, WORD x2,
+             WORD pow1, WORD pow2, WORD sign, UWORD *coef, WORD ncoef)
 {
 	GETBIDENTITY
 	WORD *t, *r;
@@ -392,7 +392,7 @@ WORD BinomGen(PHEAD WORD *term, WORD level, WORD **tstops, WORD x1, WORD x2,
 
 */
 
-WORD DoSumF1(PHEAD WORD *term, WORD *params, WORD replac, WORD level)
+int DoSumF1(PHEAD WORD *term, WORD *params, WORD replac, WORD level)
 {
 	GETBIDENTITY
 	WORD *termout, *t, extractbuff = AT.TMbuff;
@@ -458,7 +458,7 @@ SumF1Call:
 
 */
 
-WORD Glue(PHEAD WORD *term1, WORD *term2, WORD *sub, WORD insert)
+int Glue(PHEAD WORD *term1, WORD *term2, WORD *sub, WORD insert)
 {
 	GETBIDENTITY
 	UWORD *coef;
@@ -517,7 +517,7 @@ WORD Glue(PHEAD WORD *term1, WORD *term2, WORD *sub, WORD insert)
  		#[ DoSumF2 :
 */
 
-WORD DoSumF2(PHEAD WORD *term, WORD *params, WORD replac, WORD level)
+int DoSumF2(PHEAD WORD *term, WORD *params, WORD replac, WORD level)
 {
 	GETBIDENTITY
 	WORD *termout, *t, *from, *sub, *to, extractbuff = AT.TMbuff;

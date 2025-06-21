@@ -2208,97 +2208,16 @@ void iniTools(void)
 
 /*
  		#] iniTools : 
- 		#[ Malloc :
-
-		Malloc routine with built in error checking.
-		This saves lots of messages.
-*/
-#ifdef MALLOCDEBUG
-char *dummymessage = "Malloc";
-INILOCK(MallocLock)
-#endif
- 
-void *Malloc(LONG size)
-{
-	void *mem;
-#ifdef MALLOCDEBUG
-	char *t, *u;
-	int i;
-	LOCK(MallocLock);
-/*	MLOCK(ErrorMessageLock); */
-	if ( size == 0 ) {
-		MesPrint("Asking for 0 bytes in Malloc");
-	}
-#endif
-	if ( ( size & 7 ) != 0 ) { size = size - ( size&7 ) + 8; }
-#ifdef MALLOCDEBUG
-	size += 2*BANNER;
-#endif
-	mem = (void *)M_alloc(size);
-	if ( mem == 0 ) {
-#ifndef MALLOCDEBUG
-		MLOCK(ErrorMessageLock);
-#endif
-		Error0("No memory!");
-#ifndef MALLOCDEBUG
-		MUNLOCK(ErrorMessageLock);
-#else
-/*		MUNLOCK(ErrorMessageLock); */
-#endif
-#ifdef MALLOCDEBUG
-		UNLOCK(MallocLock);
-#endif
-		Terminate(-1);
-	}
-#ifdef MALLOCDEBUG
-	mallocsizes[nummalloclist] = size;
-	mallocstrings[nummalloclist] = dummymessage;
-	malloclist[nummalloclist++] = mem;
-	if ( filelist ) MesPrint("Mem0 at 0x%x, %l bytes",mem,size);
-	{
-		int i = nummalloclist-1;
-		while ( --i >= 0 ) {
-			if ( (char *)mem < (((char *)malloclist[i]) + mallocsizes[i])
-			&& (char *)(malloclist[i]) < ((char *)mem + size) ) {
-				if ( filelist ) MesPrint("This memory overlaps with the block at 0x%x"
-					,malloclist[i]);
-			}
-		}
-	}
-	t = (char *)mem;
-	u = t + size;
-	for ( i = 0; i < (int)BANNER; i++ ) { *t++ = FILLVALUE; *--u = FILLVALUE; }
-	mem = (void *)t;
-	{
-		int j = nummalloclist-1, i;
-		while ( --j >= 0 ) {
-			t = (char *)(malloclist[j]);
-			u = t + mallocsizes[j];
-			for ( i = 0; i < (int)BANNER; i++ ) {
-				u--;
-				if ( *t != FILLVALUE || *u != FILLVALUE ) {
-					MesPrint("Writing outside memory for %s",malloclist[i]);
-/*					MUNLOCK(ErrorMessageLock); */
-					UNLOCK(MallocLock);
-					Terminate(-1);
-				}
-				t--;
-			}
-		}
-	}
-/*	MUNLOCK(ErrorMessageLock); */
-	UNLOCK(MallocLock);
-#endif
-	return(mem);
-}
-
-/*
- 		#] Malloc : 
  		#[ Malloc1 :
 
-		Malloc with more detailed error message.
+		Malloc routine with built in error checking,
+		and a more detailed error message.
 		Gives the user some idea of what is happening.
 */
+
+#ifdef MALLOCDEBUG
+INILOCK(MallocLock)
+#endif
 
 void *Malloc1(LONG size, const char *messageifwrong)
 {

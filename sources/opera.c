@@ -55,7 +55,7 @@
 
 */
 
-WORD EpfFind(PHEAD WORD *term, WORD *params)
+int EpfFind(PHEAD WORD *term, WORD *params)
 {
 	GETBIDENTITY
 	WORD *t, *m, *r, n1 = 0, n2, min = -1, count, fac;
@@ -209,7 +209,7 @@ AllLev:
 
 */
 
-WORD EpfCon(PHEAD WORD *term, WORD *params, WORD num, WORD level)
+int EpfCon(PHEAD WORD *term, WORD *params, WORD num, WORD level)
 {
 	GETBIDENTITY
 	WORD *kron, *perm, *termout, *tstop, size2;
@@ -415,11 +415,12 @@ WORD Trick(WORD *in, TRACES *t)
 
 */
 
-WORD Trace4no(WORD number, WORD *kron, TRACES *t)
+int Trace4no(WORD number, WORD *kron, TRACES *t)
 {
 	WORD i;
 	WORD *p, *m;
-	WORD retval, *stop, oldsign;
+	WORD *stop, oldsign;
+	int retval;
 	if ( !t->sgn ) {		/* Startup */
 		if ( ( number < 0 ) || ( number & 1 ) ) return(0);
 		if ( number <= 2 ) {
@@ -691,13 +692,14 @@ NextE4:			if ( t->lc4 < 0 ) goto NextE3;
 
 */
 
-WORD Trace4(PHEAD WORD *term, WORD *params, WORD num, WORD level)
+int Trace4(PHEAD WORD *term, WORD *params, WORD num, WORD level)
 {
 	GETBIDENTITY
 	TRACES *t;
 	WORD *p, *m, number, i;
 	WORD *OldW;
 	WORD j, minimum, minimum2, *min, *stopper;
+	int ret;
 	OldW = AT.WorkPointer;
 	if ( AN.numtracesctack >= AN.intracestack ) {
 		number = AN.intracestack + 2;
@@ -815,10 +817,10 @@ WORD Trace4(PHEAD WORD *term, WORD *params, WORD num, WORD level)
 		Now the trace is in normal order
 */
 	}
-	number = Trace4Gen(BHEAD t,number);
+	ret = Trace4Gen(BHEAD t,number);
 	AT.WorkPointer = OldW;
 	AN.numtracesctack--;
-	return(number);
+	return(ret);
 }
 
 /*
@@ -853,7 +855,7 @@ WORD Trace4(PHEAD WORD *term, WORD *params, WORD num, WORD level)
 
 */
 
-WORD Trace4Gen(PHEAD TRACES *t, WORD number)
+int Trace4Gen(PHEAD TRACES *t, WORD number)
 {
 	GETBIDENTITY
 	WORD *termout, *stop;
@@ -1379,12 +1381,13 @@ WORD TraceNno(WORD number, WORD *kron, TRACES *t)
  		#[ TraceN :				WORD TraceN(term,params,num,level)
 */
 
-WORD TraceN(PHEAD WORD *term, WORD *params, WORD num, WORD level)
+int TraceN(PHEAD WORD *term, WORD *params, WORD num, WORD level)
 {
 	GETBIDENTITY
 	TRACES *t;
 	WORD *p, *m, number, i;
 	WORD *OldW;
+	int ret;
 	if ( params[3] != GAMMA1 ) {
 		MLOCK(ErrorMessageLock);
 		MesPrint("Gamma5 not allowed in n-trace");
@@ -1426,10 +1429,10 @@ WORD TraceN(PHEAD WORD *term, WORD *params, WORD num, WORD level)
 	t->termp = term;
 	t->factor = params[4];
 	t->allsign = params[5];
-	number = TraceNgen(BHEAD t,number);
+	ret = TraceNgen(BHEAD t,number);
 	AT.WorkPointer = OldW;
 	AN.numtracesctack--;
-	return(number);
+	return(ret);
 }
 
 /*
@@ -1443,7 +1446,7 @@ WORD TraceN(PHEAD WORD *term, WORD *params, WORD num, WORD level)
 
 */
 
-WORD TraceNgen(PHEAD TRACES *t, WORD number)
+int TraceNgen(PHEAD TRACES *t, WORD number)
 {
 	GETBIDENTITY
 	WORD *termout, *stop;
@@ -1828,7 +1831,7 @@ TracCall:
 
 */
 
-WORD Traces(PHEAD WORD *term, WORD *params, WORD num, WORD level)
+int Traces(PHEAD WORD *term, WORD *params, WORD num, WORD level)
 {
 	GETBIDENTITY
 	switch ( AT.TMout[2] ) {	/* Subtype gives dimension */
@@ -1850,7 +1853,7 @@ WORD Traces(PHEAD WORD *term, WORD *params, WORD num, WORD level)
  		#[ TraceFind :			WORD TraceFind(term,params)
 */
 
-WORD TraceFind(PHEAD WORD *term, WORD *params)
+int TraceFind(PHEAD WORD *term, WORD *params)
 {
 	GETBIDENTITY
 	WORD *p, *m, *to;
@@ -1960,7 +1963,7 @@ F7:					if ( AT.TMout[3] == GAMMA7 ) (AT.TMout[4])++;
 		is applied (SR is the reversed string).
 */
 
-WORD Chisholm(PHEAD WORD *term, WORD level)
+int Chisholm(PHEAD WORD *term, WORD level)
 {
 	GETBIDENTITY
 	WORD *t, *r, *m, *s, *tt, *rr;
@@ -2175,7 +2178,7 @@ ChisCall:
  		#[ TenVecFind :			WORD TenVecFind(term,params)
 */
 
-WORD TenVecFind(PHEAD WORD *term, WORD *params)
+int TenVecFind(PHEAD WORD *term, WORD *params)
 {
 	GETBIDENTITY
 	WORD *t, *w, *m, *tstop;
@@ -2309,7 +2312,7 @@ match:
  		#[ TenVec :				WORD TenVec(term,params,num,level)
 */
 
-WORD TenVec(PHEAD WORD *term, WORD *params, WORD num, WORD level)
+int TenVec(PHEAD WORD *term, WORD *params, WORD num, WORD level)
 {
 	GETBIDENTITY
 	WORD *t, *m, *w, *termout, *tstop, *outlist, *ou, *ww, *mm;

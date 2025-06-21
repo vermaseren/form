@@ -125,16 +125,15 @@ extern "C" {
 #  define PF_COMM MPI_COMM_WORLD
 #  define PF_BYTE MPI_BYTE
 #  define PF_INT  MPI_INT
-#  if defined(ILP32)
-#    define PF_WORD MPI_SHORT
-#    define PF_LONG MPI_LONG
-#  elif defined(LLP64)
-#    define PF_WORD MPI_INT
-#    define PF_LONG MPI_LONG_LONG_INT
-#  elif defined(LP64)
-#    define PF_WORD MPI_INT
-#    define PF_LONG MPI_LONG
-#  endif
+#if BITSINWORD == 32
+#  define PF_WORD MPI_INT32_T
+#  define PF_LONG MPI_INT64_T
+#elif BITSINWORD == 16
+#  define PF_WORD MPI_INT16_T
+#  define PF_LONG MPI_INT32_T
+#else
+#  error Can not detect if this is a 32-bit or 64-bit platform.
+#endif
 
 /*
   	#] macros & definitions : 

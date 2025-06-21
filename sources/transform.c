@@ -729,7 +729,7 @@ illsize:					MesPrint("&Illegal value for base in encode/decode transformation")
 
 */
 
-WORD RunTransform(PHEAD WORD *term, WORD *params)
+int RunTransform(PHEAD WORD *term, WORD *params)
 {
 	WORD *t, *tstop, *w, *m, *out, *in, *tt, retval;
 	WORD *fun, *args, *info, *infoend, *onetransform, *funs, *endfun;
@@ -979,7 +979,7 @@ abo:
 		first or work with an array of pointers.
 */
 
-WORD RunEncode(PHEAD WORD *fun, WORD *args, WORD *info)
+int RunEncode(PHEAD WORD *fun, WORD *args, WORD *info)
 {
 	WORD base, *f, *funstop, *fun1, *t, size1, size2, size3, *arg;
 	int num, num1, num2, n, i, i1, i2;
@@ -1166,7 +1166,7 @@ CalledFrom:
  		#[ RunDecode :
 */
 
-WORD RunDecode(PHEAD WORD *fun, WORD *args, WORD *info)
+int RunDecode(PHEAD WORD *fun, WORD *args, WORD *info)
 {
 	WORD base, num, num1, num2, n, *f, *funstop, *fun1, size1, size2, size3, *t;
 	WORD i1, i2, i, sig;
@@ -1336,7 +1336,7 @@ CalledFrom:
 		The output is at first written after fun and in the end overwrites fun.
 */
 
-WORD RunReplace(PHEAD WORD *fun, WORD *args, WORD *info)
+int RunReplace(PHEAD WORD *fun, WORD *args, WORD *info)
 {
 	int n = 0, i, dirty = 0, totarg, nfix, nwild, ngeneral;
 	WORD *t, *tt, *u, *tstop, *info1, *infoend, *oldwork = AT.WorkPointer;
@@ -1814,7 +1814,7 @@ nextt:;
 		Note that we restrict ourselves to short integers and/or single symbols
 */
 
-WORD RunImplode(WORD *fun, WORD *args)
+int RunImplode(WORD *fun, WORD *args)
 {
 	GETIDENTITY
 	WORD *tt, *tstop, totarg, arg1, arg2, num1, num2, i1, n;
@@ -2015,7 +2015,7 @@ moveinto:
  		#[ RunExplode :
 */
 
-WORD RunExplode(PHEAD WORD *fun, WORD *args)
+int RunExplode(PHEAD WORD *fun, WORD *args)
 {
 	WORD arg1, arg2, num1, num2, *tt, *tstop, totarg, *tonew, *newfun;
 	WORD *ff, *f;
@@ -2129,7 +2129,7 @@ OverWork:;
  		#[ RunPermute :
 */
 
-WORD RunPermute(PHEAD WORD *fun, WORD *args, WORD *info)
+int RunPermute(PHEAD WORD *fun, WORD *args, WORD *info)
 {
 	WORD *tt, totarg, *tstop, arg1, arg2, n, num, i, *f, *f1, *f2, *infostop;
 	WORD *in, *iw, withdollar;
@@ -2356,7 +2356,7 @@ OverWork:;
  		#[ RunReverse :
 */
 
-WORD RunReverse(PHEAD WORD *fun, WORD *args)
+int RunReverse(PHEAD WORD *fun, WORD *args)
 {
 	WORD *tt, totarg, *tstop, arg1, arg2, n, num, i, *f, *f1, *f2, i1, i2;
 	if ( *args != ARGRANGE ) {
@@ -2443,7 +2443,7 @@ OverWork:;
  		#[ RunDedup :
 */
 
-WORD RunDedup(PHEAD WORD *fun, WORD *args)
+int RunDedup(PHEAD WORD *fun, WORD *args)
 {
 	WORD *tt, totarg, *tstop, arg1, arg2, n, i, j,k, *f, *f1, *f2, *fd, *fstart;
 	if ( *args != ARGRANGE ) {
@@ -2532,7 +2532,7 @@ WORD RunDedup(PHEAD WORD *fun, WORD *args)
  		#[ RunCycle :
 */
 
-WORD RunCycle(PHEAD WORD *fun, WORD *args, WORD *info)
+int RunCycle(PHEAD WORD *fun, WORD *args, WORD *info)
 {
 	WORD *tt, totarg, *tstop, arg1, arg2, n, num, i, j, *f, *f1, *f2, x, ncyc, cc;
 	if ( *args != ARGRANGE ) {
@@ -2684,7 +2684,7 @@ OverWork:;
  		#[ RunAddArg :
 */
 
-WORD RunAddArg(PHEAD WORD *fun, WORD *args)
+int RunAddArg(PHEAD WORD *fun, WORD *args)
 {
 	WORD *tt, totarg, *tstop, arg1, arg2, n, num, *f, *f1, *f2;
 	WORD scribble[10+ARGHEAD];
@@ -2771,7 +2771,7 @@ WORD RunAddArg(PHEAD WORD *fun, WORD *args)
  		#[ RunMulArg :
 */
 
-WORD RunMulArg(PHEAD WORD *fun, WORD *args)
+int RunMulArg(PHEAD WORD *fun, WORD *args)
 {
 	WORD *t, totarg, *tstop, arg1, arg2, n, *f, nb, *m, i, *w;
 	WORD *scratch, argbuf[20], argsize, *where, *newterm;
@@ -2910,7 +2910,7 @@ WORD RunMulArg(PHEAD WORD *fun, WORD *args)
 		the numbers of the arguments in the range.
 */
 
-WORD RunIsLyndon(PHEAD WORD *fun, WORD *args, int par)
+int RunIsLyndon(PHEAD WORD *fun, WORD *args, int par)
 {
 	WORD *tt, totarg, *tstop, arg1, arg2, arg, num, *f, n, i;
 /*	WORD *f1; */
@@ -3100,7 +3100,7 @@ OverWork:;
  		#[ RunDropArg :
 */
 
-WORD RunDropArg(PHEAD WORD *fun, WORD *args)
+int RunDropArg(PHEAD WORD *fun, WORD *args)
 {
 	WORD *t, *tstop, *f, totarg, arg1, arg2, n;
 
@@ -3126,7 +3126,7 @@ WORD RunDropArg(PHEAD WORD *fun, WORD *args)
  		#[ RunSelectArg :
 */
 
-WORD RunSelectArg(PHEAD WORD *fun, WORD *args)
+int RunSelectArg(PHEAD WORD *fun, WORD *args)
 {
 	WORD *t, *tstop, *f, *tt, totarg, arg1, arg2, n;
 
@@ -3154,9 +3154,10 @@ WORD RunSelectArg(PHEAD WORD *fun, WORD *args)
  		#[ RunZtoHArg :
 */
 
-WORD RunZtoHArg(PHEAD WORD *fun, WORD *args)
+int RunZtoHArg(PHEAD WORD *fun, WORD *args)
 {
-	WORD *tt, totarg, *tstop, arg1, arg2, n, i, *f, *f1, sign = 0;
+	WORD *tt, totarg, *tstop, arg1, arg2, n, i, *f, *f1;
+	int sign = 0;
 	WORD *t, *t1, *t2, *t3;
 	if ( *args != ARGRANGE ) {
 		MLOCK(ErrorMessageLock);
@@ -3209,9 +3210,10 @@ WORD RunZtoHArg(PHEAD WORD *fun, WORD *args)
  		#[ RunHtoZArg :
 */
 
-WORD RunHtoZArg(PHEAD WORD *fun, WORD *args)
+int RunHtoZArg(PHEAD WORD *fun, WORD *args)
 {
-	WORD *tt, totarg, *tstop, arg1, arg2, n, i, *f, *f1, *f2, sign = 0;
+	WORD *tt, totarg, *tstop, arg1, arg2, n, i, *f, *f1, *f2;
+	int sign = 0;
 	WORD *t, *t1, *t2;
 	if ( *args != ARGRANGE ) {
 		MLOCK(ErrorMessageLock);

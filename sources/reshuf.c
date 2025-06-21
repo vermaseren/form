@@ -1041,7 +1041,7 @@ outofrange:
  		#[ MultDo :
 */
 
-WORD MultDo(PHEAD WORD *term, WORD *pattern)
+int MultDo(PHEAD WORD *term, WORD *pattern)
 {
 	GETBIDENTITY
 	WORD *t, *r, i;
@@ -1069,7 +1069,7 @@ WORD MultDo(PHEAD WORD *term, WORD *pattern)
  		#[ TryDo :
 */
 
-WORD TryDo(PHEAD WORD *term, WORD *pattern, WORD level)
+int TryDo(PHEAD WORD *term, WORD *pattern, WORD level)
 {
 	GETBIDENTITY
 	WORD *t, *r, *m, i, j;
@@ -1116,7 +1116,7 @@ WORD TryDo(PHEAD WORD *term, WORD *pattern, WORD level)
 		because there is no knowing how long the field will be.
 */
 
-WORD DoDistrib(PHEAD WORD *term, WORD level)
+int DoDistrib(PHEAD WORD *term, WORD level)
 {
 	GETBIDENTITY
 	WORD *t, *m, *r = 0, *stop, *tstop, *termout, *endhead, *starttail, *parms;
@@ -1376,7 +1376,7 @@ redok:		while ( arg[j] == 1 && j >= 0 ) { j--; k++; }
 		Returns 1 if the arguments in the field are identical.
 */
 
-WORD EqualArg(WORD *parms, WORD num1, WORD num2)
+int EqualArg(WORD *parms, WORD num1, WORD num2)
 {
 	WORD *t1, *t2;
 	WORD i;
@@ -1402,7 +1402,7 @@ WORD EqualArg(WORD *parms, WORD num1, WORD num2)
  		#[ DoDelta3 :
 */
 
-WORD DoDelta3(PHEAD WORD *term, WORD level)
+int DoDelta3(PHEAD WORD *term, WORD level)
 {
 	GETBIDENTITY
 	WORD *t, *m, *m1, *m2, *stopper, *tstop, *termout, *dels, *taken;
@@ -1604,7 +1604,7 @@ nextk:;
 					arguments there will be no action.
 */
 
-WORD TestPartitions(WORD *tfun, PARTI *parti)
+int TestPartitions(WORD *tfun, PARTI *parti)
 {
 	WORD *tnext = tfun + tfun[1];
 	WORD *t, *tt;
@@ -1719,7 +1719,7 @@ No:
 	if we keep needing it.
 */
 
-WORD DoPartitions(PHEAD WORD *term, WORD level)
+int DoPartitions(PHEAD WORD *term, WORD level)
 {
 	WORD x, i, j, im, *fun, ndiff, siz, tensorflag = 0;
 	PARTI part = AT.partitions;
@@ -2004,7 +2004,7 @@ Done:
 	all permutations of the args. This should always fit!
 */
 
-WORD DoPermutations(PHEAD WORD *term, WORD level)
+int DoPermutations(PHEAD WORD *term, WORD level)
 {
 	PERMP perm;
 	WORD *oldworkpointer = AT.WorkPointer, *termout = AT.WorkPointer;
@@ -2092,7 +2092,7 @@ WORD DoPermutations(PHEAD WORD *term, WORD level)
 	groups (0,1) also cause double terms.
 */
 
-WORD DoShuffle(WORD *term, WORD level, WORD fun, WORD option)
+int DoShuffle(WORD *term, WORD level, WORD fun, WORD option)
 {
 	GETIDENTITY
 	SHvariables SHback, *SH = &(AN.SHvar);
@@ -2484,7 +2484,7 @@ Finicall:
 	need to know n1, n2, minval.
 */
 
-WORD DoStuffle(WORD *term, WORD level, WORD fun, WORD option)
+int DoStuffle(WORD *term, WORD level, WORD fun, WORD option)
 {
 	GETIDENTITY
 	SHvariables SHback, *SH = &(AN.SHvar);

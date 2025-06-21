@@ -94,11 +94,12 @@
 	  are errors that occur in TFORM only and that may indicate problems.
 */
 
-WORD TestMatch(PHEAD WORD *term, WORD *level)
+int TestMatch(PHEAD WORD *term, WORD *level)
 {
 	GETBIDENTITY
 	WORD *ll, *m, *w, *llf, *OldWork, *StartWork, *ww, *mm, *t, *OldTermBuffer = 0;
-	WORD power = 0, match = 0, i, msign = 0, ll2;
+	WORD power = 0, i, msign = 0, ll2;
+	int match = 0;
 	int numdollars = 0, protosize, oldallnumrhs;
 	CBUF *C = cbuf+AM.rbufnum, *CC;
 	AT.idallflag = 0;
@@ -1166,7 +1167,7 @@ SubCoef:
 	exponent, denominator.
 
 
-WORD FindSpecial(WORD *term)
+void FindSpecial(WORD *term)
 {
 	WORD *t;
 	WORD *tstop;
@@ -1187,14 +1188,13 @@ WORD FindSpecial(WORD *term)
 		}
 		t += *t;
 	} while ( t < tstop ); }
-	return(0);
 }
 
  		#] FindSpecial : 
  		#[ FindAll :			WORD FindAll(term,pattern,level,par)
 */
 
-WORD FindAll(PHEAD WORD *term, WORD *pattern, WORD level, WORD *par)
+int FindAll(PHEAD WORD *term, WORD *pattern, WORD level, WORD *par)
 {
 	GETBIDENTITY
 	WORD *t, *m, *r, *mm, rnum;
